@@ -22,6 +22,10 @@
   * Role based authentication, with audit system
   * Multilingual support (currently Spanish and English, contributions are welcome)
 
+There is an online demo of the application available at http://sequreisp.sequre.com.ar/[http://sequreisp.sequre.com.ar/]
+  User: admin@sequre.com.ar
+  Pass: 1234
+
 == Requirements
 
 Currently we are using Ubuntu Server for all of our setups, so this instructions apply to Ubuntu or any other Debian based distribution. It is possible to run sequreisp in other Linux distributions but maybe some minor changes are needed.
