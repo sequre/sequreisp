@@ -1,0 +1,66 @@
+<% content_for :title, t('menu.backups') %>
+<% heading t('menu.backups')  %>
+
+<%= render :partial => "shared/empty_submenu" %>
+
+<div class="main">
+  <fieldset class="inputs">
+    <legend><span><%=t 'backup.backup_full_legend' %></span></legend>
+    <ol>
+    <fieldset class="inputs">
+    <% form_tag ({:action => 'create_full'}) do %>
+      <legend><span><%=t 'backup.create_backup_legend' %></span></legend>
+      <li>
+        <%#= link_to t('backup.create_backup_button'), full_backup_path %>
+        <label for="include_graphs">
+          <%= check_box_tag 'include_graphs' %>
+          <%= t('backup.include_graphs', :size => Contract.count/2.0) %>
+        </label>
+      </li>
+      <li>
+        <%= submit_tag t('backup.create_backup_button') %>
+      </li>
+    <% end %>
+    </fieldset>
+    <fieldset class="inputs">
+    <% form_tag({:action => 'upload_full'}, :multipart => true) do %>
+      <legend><span><%=t 'backup.restore_backup_legend' %></span></legend>
+        <li>
+          <label for="backup"><%=t 'backup.backup_file_label' %></label>
+          <%= file_field 'backup_full', 'backup_file' %>
+        </li>
+        <li class="left">
+          <br/>
+          <%= submit_tag t('backup.restore_backup_full_button'), :confirm => t('backup.confirm_restore_backup') %>
+        </li>
+    <% end %>
+    </fieldset>
+    </ol>
+  </fieldset>
+  <fieldset class="inputs">
+    <legend><span><%=t 'backup.backup_db_legend' %></span></legend>
+    <ol>
+    <fieldset class="inputs">
+    <% form_tag ({:action => 'create_db'}) do %>
+      <legend><span><%=t 'backup.create_backup_legend' %></span></legend>
+      <li class="left">
+        <%= submit_tag t('backup.create_backup_button') %>
+      </li>
+    <% end %>
+    </fieldset>
+    <fieldset class="inputs">
+    <% form_tag({:action => 'upload_db'}, :multipart => true) do %>
+      <legend><span><%=t 'backup.restore_backup_legend' %></span></legend>
+      <li>
+        <label for="backup_db"><%=t 'backup.backup_file_label' %></label>
+        <%= file_field 'backup_db', 'backup_file' %>
+      </li>
+      <li class="left">
+        <br/>
+        <%= submit_tag t('backup.restore_backup_db_button'), :confirm => t('backup.confirm_restore_backup') %>
+      </li>
+    <% end %>
+    </fieldset>
+    </ol>
+  </fieldset>
+</div>

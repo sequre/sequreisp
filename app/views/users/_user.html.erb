@@ -1,0 +1,21 @@
+<% unless current_user.may_update_user?(@user) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })  
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @user do |form| %>
+  <%= error_messages @user %>
+  <% form.inputs do %>
+    <%= form.input :name %> 
+    <%= form.input :email %> 
+    <%= form.input :role_name, :as => :select, :collection => User.roles_for_select, :include_blank => false %> 
+    <%= form.input :password %> 
+    <%= form.input :password_confirmation %>
+    <%= form_extensions form%>
+  <% end %>
+  <%= form.buttons if current_user.may_update_user?(@user) or current_user.may_create_user? %>
+<% end %>
+</div>

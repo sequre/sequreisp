@@ -1,0 +1,46 @@
+<% if current_user %>
+  <div id="menu">
+    <ul class="nav">
+      <% if current_user.may_index_clients? %>
+      <li><%= link_to t('menu.clients'), clients_path %></li>
+      <% end %>
+      <% if current_user.may_index_contracts? %>
+      <li><%= link_to t('menu.contracts'), contracts_path %></li>
+      <% end %>
+      <% if current_user.may_index_plans? %>
+      <li><%= link_to t('menu.plans'), plans_path %></li>
+      <% end %>
+      <% if current_user.may_index_providers? %>
+      <li><%= link_to t('menu.providers'), providers_path %></li>
+      <% end %>
+      <% if current_user.may_index_provider_groups? %>
+      <li><%= link_to t('menu.provider_groups'), provider_groups_path %></li>
+      <% end %>
+      <% if current_user.may_index_interfaces? %>
+      <li><%= link_to t('menu.interfaces'), interfaces_path %></li>
+      <% end %>
+      <% if current_user.may_index_users? %>
+      <li><%= link_to t('menu.users'), users_path %></li>
+      <% end %>
+      <% if current_user.may_index_configuration? %>
+      <li><%= link_to t('menu.configuration'), configurations_path %></li>
+      <% end %>
+      <% if current_user.may_index_backup? %>
+      <li><%= link_to t('menu.backups'), backup_path %></li>
+      <% end %>
+      <% if plugins_menu_links.any? %>
+        <li> <a id="plugins_button" href="#"> Plugins </a> </li>
+      <% end %>
+    </ul>
+  </div>
+  <% if plugins_menu_links.any? %>
+    <div id="plugins_menu">
+      <ul id="plugins_nav" class="nav">
+        <% plugins_menu_links.each do |link| %>
+        <li> <%= link %> </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div style="clear:both"> </div>
+<% end #if current_user %>

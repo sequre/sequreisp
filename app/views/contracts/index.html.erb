@@ -1,0 +1,149 @@
+<style type="text/css">
+  #search_client_name_like, #search_ip_like {
+  }
+  .mac_address {
+    font-size: 85%;
+    color: gray;
+  }
+  .public_address {
+    font-size: 85%;
+    font-weight: bold;
+    color: #555;
+  }
+  .forwarded_port {
+    font-size: 85%;
+  }
+</style>
+<script type="text/javascript">
+  $(function(){
+    initMoreToggle('#search_more', '#search_advanced', 'toggle_contracts_search_advanced');
+  })
+</script>
+<% content_for :title, t('menu.contracts') %>
+<% heading (t 'menu.contracts') %>
+<% render_new_button_for :contract %>
+
+
+
+<%= render :partial => "shared/empty_submenu" %>
+
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul>
+    <li>
+      <%= f.label :client_name_like, t('activerecord.attributes.client.name') %>
+      <%= f.text_field :client_name_like %>
+    </li>
+    <li>
+    <%= f.label :ip_like, t('activerecord.attributes.contract.ip') %>
+    <%= f.text_field :ip_like %>
+    </li>
+    <li>
+    <%= f.label :plan_id_equals, t('activerecord.attributes.contract.plan') %>
+    <%= f.collection_select :plan_id_equals, Plan.all, :id, :name, :include_blank => true %>
+    </li>
+    <li>
+    <%= f.label :state_equals, t('activerecord.attributes.contract.state') %>
+    <%= f.select :state_equals, Contract.aasm_states_for_select, :include_blank => true %>
+    </li>
+    <div sytle="clear: both">
+      <li><a id="search_more"><%= I18n.t('buttons.more') %></a><li>
+    </div>
+    <div id="search_advanced">
+      <li>
+        <label><%=t 'activerecord.attributes.contract.forwarded_ports' %></label>
+      </li>
+      <div style="clear: both"></div>
+      <li>
+      <%= f.label :forwarded_ports_provider_id_equals, t('activerecord.attributes.forwarded_port.provider') %>
+      <%= f.collection_select :forwarded_ports_provider_id_equals, Provider.all, :id, :name, :include_blank => true %>
+      </li>
+      <li>
+      <%= f.label :forwarded_ports_public_port_equals, t('activerecord.attributes.forwarded_port.public_port') %>
+      <%= f.text_field :forwarded_ports_public_port_equals %>
+      </li>
+      <li>
+      <%= f.label :forwarded_ports_private_port_equals, t('activerecord.attributes.forwarded_port.private_port') %>
+      <%= f.text_field :forwarded_ports_private_port_equals %>
+      </li>
+      <div style="clear: both"></div>
+      <li>
+      <%= f.label :mac_address_like, t('activerecord.attributes.contract.mac_address') %>
+      <%= f.text_field :mac_address_like %>
+      </li>
+      <li>
+      <%= f.label :public_address_ip_like, t('activerecord.attributes.contract.public_address') %>
+      <%= f.text_field :public_address_ip_like %>
+      </li>
+    </div>
+    <div style="clear: both"></div>
+    <li>
+    <%= f.submit t('buttons.search') %>
+    <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
+<div style="clear: both"></div>
+<ul id="nav" style="float:right">
+  <li><%= link_to t('buttons.export_to_excel'), contracts_csv_path(params) %> </li>
+</ul>
+<div style="clear: both"></div>
+<div class="separador"></div>
+
+<div class="main">
+  <%= page_entries_info @contracts %>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= order @search, :by => :client_name , :as => t('activerecord.attributes.client.name') %></th>
+        <th><%= order @search, :by => :plan_id, :as => t('activerecord.attributes.contract.plan')  %></th>
+        <th><%= order @search, :by => :ip, :ascend_scope => "ascend_by_ip_custom", :descend_scope => "descend_by_ip_custom", :as => t('activerecord.attributes.contract.ip') %></th>
+        <th><%=t 'activerecord.attributes.contract.forwarded_ports' %></th>
+        <th><%= order @search, :by => :state, :as => t('activerecord.attributes.contract.state') %></th>
+        <%= render :partial => "shared/plugins_table_headers" %>
+        <% if current_user.may_update_contracts? or current_user.may_index_contracts? %>
+        <th></th>
+        <% end %>
+        <% if current_user.may_destroy_contract?(Contract.new) %>
+        <th></th>
+        <% end %>
+      </tr>
+
+      <% @contracts.each_with_index do |contract,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td>
+            <%= link_to h(contract.client.name), client_path(contract.client) %><br/>
+            <%= link_to Graph.new(:element => contract).img("day", "small"), graph_path(contract ,:class => "Contract") %>
+          </td>
+          <td><%=link_to h(contract.plan.name), plan_path(contract.plan) %></td>
+          <td>
+            <% if contract.public_address %>
+              <span class="public_address"><%= contract.public_address.ip %>-&gt;</span><%=h contract.ip %>
+            <% else %>
+              <%=h contract.ip %>
+            <% end %>
+            <% if !contract.mac_address.blank? %>
+              <br/><span class="mac_address">(<%= contract.mac_address %>)</span>
+            <% end %>
+          </td>
+          <td><%= contract.forwarded_ports.collect{|fp| "<span class=\"forwarded_port\">#{fp.to_s}</span><br/>"} %></td>
+          <td><%=h t "aasm.contract.#{contract.state}" %></td>
+          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => contract} %>
+          <% if current_user.may_update_contract?(contract) %>
+            <td><%= link_to t('buttons.edit'), edit_contract_path(contract) %></td>
+          <% elsif current_user.may_show_contract?(contract) %>
+            <td><%= link_to t('buttons.show'), contract_path(contract) %></td>
+          <% end %>
+          <% if current_user.may_destroy_contract?(contract) %>
+          <td><%= link_to t('buttons.delete'), contract, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @contracts %>
+</div>
+
+

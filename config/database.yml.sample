@@ -1,0 +1,9 @@
+production:
+  adapter: mysql
+  encoding: utf8
+  reconnect: false
+  database: sequreisp_production
+  pool: 5
+  username: sequreisp
+  password: somepassword 
+  socket: /var/run/mysqld/mysqld.sock

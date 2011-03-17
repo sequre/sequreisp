@@ -1,0 +1,18 @@
+<% unless current_user.may_update_provider_group?(@provider_group) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })  
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @provider_group do |form| %>
+  <%= error_messages @provider_group %>
+  <% form.inputs do %>
+    <%= form.input :name, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :state, :as => :select, :collection => Provider.aasm_states_for_select, :include_blank => false %>
+    <%= form_extensions form%>
+  <% end %>
+  <%= form.buttons if current_user.may_update_provider_group?(@provider_group) or current_user.may_create_provider_group? %>
+<% end %>
+</div>

@@ -1,0 +1,14 @@
+<% if current_user.may_doreload_configuration? and changes_not_applied?%>    
+  <div id="apply_changes_banner">
+    <span id="apply_changes_notice">
+      <%= t('notifications.changes_to_be_applied_notice') %>
+    </span>
+    <div id="apply_changes_button">
+      <% link_to({:controller => "configurations", :action => "doreload"}, :class => "button") do %>
+        <span> <span>
+            <%=  t('menu.apply_changes') %>
+        </span> </span>
+      <% end %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>  
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"  />  
+  <style type="text/css">
+  body {
+    background: #e3e2da;
+    font: 100% Arial,Helvetica,sans-serif;
+  }
+  h1
+  {
+    font-size: 16px;
+    color: #333;
+    margin-left: 25px;
+  }
+  table.providers
+  {
+    line-height: 1.5em;
+    font-size: 13px;
+    background: #fff;
+    margin: 25px;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  .providers th
+  { 
+    border: 1px solid #E3E2DA;
+    font-weight: bold;
+    font-size: 13px;
+    color: #fff;
+    background: #595959;
+    padding: 10px 8px;
+  }
+  .providers td
+  {
+    text-align: center;
+    border: 1px solid #E3E2DA;
+    color: #333;
+    padding: 6px 8px;
+  }
+  .providers tbody tr:hover td
+  {
+    background: #c3c3c3;
+  }
+  td.online {
+    color: green;
+    font-weight: bold;
+  }
+  td.offline {
+    color: red;
+    font-weight: bold;
+  }
+
+  span#date{
+    font-size: 14px;
+    color:#595959;
+    margin-left:25px;
+  }
+  </style>
+</head>  
+<body>  
+  <h1><%= I18n.t('app_mailer.check_physical_links_email.subject') %></h1>
+  <span id="date"><%= Time.now.strftime "%d/%m/%Y, %H:%M hs." %> </span>
+  
+  <table class="providers">
+    <tbody>
+      <tr>
+        <th><%= Interface.human_name %></th>
+        <th><%=t 'activerecord.attributes.interface.kind' %></th>
+        <th><%= Provider.human_name %></th>
+        <th><%=t 'activerecord.attributes.interface.physical_link' %></th>
+      </tr>
+    
+      <% Interface.all.each do |interface| -%>
+        <tr>
+          <td>
+            <%=h interface.name -%>
+          </td>
+          <td><%=h interface.kind -%></td>
+          <td><%=h interface.provider.name if interface.provider -%></td>
+          <td class="<%= interface.status_class -%>"><%=h interface.status -%></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+</body>
+</html> 
+

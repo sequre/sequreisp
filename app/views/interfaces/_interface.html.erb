@@ -1,0 +1,82 @@
+<style type="text/css">
+  #interface_name, #interface_vlan_id {
+    width: 50px;
+  }
+  #interface_vlan {
+    margin-top: 31px;
+  }
+</style>
+<script type="text/javascript">
+  $(function(){
+    function checkbox_vlan() {
+      function enable(i,e) {
+        $(e).removeAttr("disabled"); 
+        //$(e).removeClass('disabled'); 
+      }
+      function disable(i,e) {
+        $(e).attr("disabled", true);
+        //$(e).addClass('disabled'); 
+      }
+      if ($('#interface_vlan').attr('checked')) {
+        $.each(['#interface_vlan_interface_id', '#interface_vlan_id'], enable);
+        $('#interface_vlan_interface_input, #interface_vlan_id_input').show();
+        $.each(['#interface_name'], disable);
+        $('#interface_name_input').hide();
+      } else {
+        $.each(['#interface_vlan_interface_id', '#interface_vlan_id'], disable);
+        $('#interface_vlan_interface_input, #interface_vlan_id_input').hide();
+        $.each(['#interface_name'], enable);
+        $('#interface_name_input').show();
+      }
+    }
+    checkbox_vlan();
+    $('#interface_vlan').change( function() {
+      checkbox_vlan();
+    });
+    function select_kind()  {
+      console.log("kinddd" + $('#interface_kind').val());
+      switch ($('#interface_kind').val()) {
+      case "lan":
+        $('#ips').show();
+        //$('#ips input').show();
+        break;
+      case "wan":
+        $('#ips').hide();
+        break;
+      }
+    } 
+    select_kind();
+    $('#interface_kind').change( function() {
+      select_kind();
+    });
+  })
+</script>
+<% unless current_user.may_update_interface?(@interface) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })  
+</script>
+<% end %>
+<div id="main">
+  <%#= raise @interface.inspect %>  
+<% semantic_form_for @interface do |form| %>
+  <%= error_messages @interface %>
+  <% form.inputs do %>
+    <%= form.input :name, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :vlan_interface, :wrapper_html => { :class => "left" }, :collection => Interface.find(:all, :conditions => { :vlan => false }) %> 
+    <%= form.input :vlan_id, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :vlan %>
+    <div style="clear: both"></div>
+    <%= form.input :kind, :as => :select, :collection => Interface.kinds_for_select, :include_blank => false %>
+    <% form.inputs :name => t('fieldsets.interface.ips'), :id => "ips" do %>
+      <% form.semantic_fields_for :addresses do |address| %>
+        <%= render "shared/address_fields", :f => address %>
+      <% end %>
+      <li><%= link_to_add_fields t('buttons.add_ip'), form, :addresses %> </li>
+    <% end %>
+    <%= form_extensions form%>
+  <% end %>
+  <%= form.buttons if current_user.may_update_interface?(@interface) or current_user.may_create_interface? %>
+<% end %>
+</div>

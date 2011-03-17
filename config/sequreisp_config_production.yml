@@ -1,0 +1,7 @@
+base_dir: "/opt/sequreisp"
+deploy_dir: "/opt/sequreisp/deploy/current"
+ppp_dir: "/etc/ppp"
+dhcpd_dir: "/etc/dhcp3"
+pingable_servers: "198.41.0.4 192.228.79.201 192.33.4.12 128.8.10.90 192.5.5.241 192.36.148.17"
+ifb_up: "ifb0"
+ifb_down: "ifb1"

@@ -1,0 +1,29 @@
+div.errorExplanation{
+    background-color: #B6B6B6;
+    margin: 5px 5px 15px 5px;
+    padding: 7px;
+    width: 50%;
+}
+
+div.errorExplanation h2{
+    font-size: 17px;
+    color: #900;
+    margin-left: 7px;
+    font-weight: bold;
+}
+
+div.errorExplanation p{
+    margin-left: 7px;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+div.errorExplanation li{
+    list-style: disc;
+}
+
+div.errorExplanation span.attribute_name{
+    font-style: italic;
+    font-weight: bold;
+    color: #900;
+}

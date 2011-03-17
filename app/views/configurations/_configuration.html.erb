@@ -1,0 +1,60 @@
+<style type="text/css">
+  #configuration_alerted_cuts_per_hour, #configuration_alerted_cut_duration {
+    width: 20px;
+  }
+  #configuration_logged_in_timeout {
+    width: 50px;
+  }
+  #configuration_notification_timeframe{
+    width: 50px;
+}
+</style>
+<% unless current_user.may_update_configuration?(@configuration) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })  
+</script>
+<% end %>
+<div id="main">
+  <% semantic_form_for @configuration, :html => { :multipart => true } do |form| %>
+    <%= error_messages @configuration%>
+    <% form.inputs :name => t('fieldsets.configuration.system') do %>
+      <%= form.input :language %>
+      <%= form.input :time_zone, :as => :time_zone, :priority_zones => /America/%> 
+    <% end %>
+    <% form.inputs :name => t('fieldsets.configuration.notifications') do %>
+      <%= form.input :deliver_notifications %>
+      <%= form.input :notification_email %>
+      <%= form.input :notification_timeframe  %>
+    <% end %>
+    <% form.inputs :name => t('fieldsets.configuration.users') do %>
+      <%= form.input :logged_in_timeout %> 
+    <% end %>
+    <% form.inputs :name => t('fieldsets.configuration.global_prios'), :id => "prios" do %>
+      <%= form.input :default_tcp_prio_ports %> 
+      <%= form.input :default_udp_prio_ports %> 
+      <%= form.input :default_prio_protos %> 
+      <%= form.input :default_prio_helpers %> 
+    <% end %>
+    <% form.inputs :name => t('fieldsets.configuration.proxy'), :id => "proxy" do %>
+      <%= form.input :transparent_proxy %> 
+      <%= form.input :transparent_proxy_n_to_m %> 
+      <%= form.input :transparent_proxy_zph_enabled %> 
+    <% end %>
+    <% form.inputs :name => t('fieldsets.configuration.advanced'), :id => "bandwidth" do %>
+      <%= form.input :filter_by_mac_address %> 
+      <%= form.input :tc_contracts_per_provider_in_wan %> 
+      <%= form.input :tc_contracts_per_provider_in_lan %> 
+      <%= form.input :mtu %> 
+      <%= form.input :clamp_mss_to_pmtu %><br/> 
+      <%= form.input :quantum_factor %> 
+      <%= form.input :nf_conntrack_max %> 
+      <%= form.input :gc_thresh1, :wrapper_html => { :class => "left" } %> 
+      <%= form.input :gc_thresh2, :wrapper_html => { :class => "left" } %> 
+      <%= form.input :gc_thresh3, :wrapper_html => { :class => "left" } %>
+    <% end %>
+    <%= form_extensions form%>
+    <%= form.buttons if current_user.may_update_configuration?(@configuration) or current_user.may_create_configuration? %>
+  <% end %>
+</div>

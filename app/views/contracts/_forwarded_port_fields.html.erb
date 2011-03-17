@@ -1,0 +1,24 @@
+<style type="text/css">
+  input.port {
+    width: 60px;
+  }
+  select.provider {
+    width: 140px;
+  }
+  li.down {
+    padding-top: 28px;  
+  }
+</style>
+<div class="fields">  
+  <%= f.input :provider, :wrapper_html => { :class => "left" }, :input_html => { :class => "provider" } %>  
+  <%= f.input :public_port, :wrapper_html => { :class => "left" }, :input_html => { :class => "port" } %>  
+  <%= f.input :private_port, :wrapper_html => { :class => "left" }, :input_html => { :class => "port" } %>  
+  <%= f.input :tcp, :wrapper_html => { :class => "left down" } %>  
+  <%= f.input :udp, :wrapper_html => { :class => "left down" } %>  
+  <li class="left down"><%= link_to_remove_fields t('buttons.delete'), f %></li>
+  <div style="clear:both"></div>
+  <li class="inline-errors" style="display:inline">
+    <%= f.object.errors.on_base %>
+  </li>
+</div>  
+

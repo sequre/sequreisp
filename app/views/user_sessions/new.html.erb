@@ -1,0 +1,13 @@
+<% content_for :title, t('actions.login') %>
+<div class="login_div">      
+  <h1><%=t 'actions.login' %></h1>
+<% form_for @user_session, :url => user_session_path do |f| %>
+  <%= f.error_messages %>
+  <%= f.label :email %>
+  <%= f.text_field :email %>
+  <%= f.label :password %>
+  <%= f.password_field :password %><br />
+  <%= f.submit t('buttons.login'), :class => "btn_submit btn_login" %>
+<% end %>
+</div>
+<div class="img_login"></div>

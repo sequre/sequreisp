@@ -1,0 +1,36 @@
+<style type="text/css">
+  #plan_rate_down, #plan_ceil_down, #plan_rate_up, #plan_ceil_up {
+    width: 60px;
+  }
+  #plan_name {
+    width: 300px;
+  }
+</style>
+
+<% unless current_user.may_update_plan?(@plan) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })  
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @plan do |form| %>
+  <%= error_messages @plan %>
+  <% form.inputs do %>
+    <%= form.input :name, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :provider_group, :wrapper_html => { :class => "left" } %> 
+    <div style="clear: both"></div> 
+    <%= form.input :rate_down, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :ceil_down, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :rate_up, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :ceil_up, :wrapper_html => { :class => "left" } %> 
+    <div style="clear: both"></div> 
+    <% form.inputs :name => "Proxy", :id => "proxy" do %>
+      <%= form.input :transparent_proxy %>
+    <% end %>
+    <%= form_extensions form%>
+  <% end %>
+  <%= form.buttons if current_user.may_update_plan?(@plan) or current_user.may_create_plan? %>
+<% end %>
+</div>

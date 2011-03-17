@@ -1,0 +1,80 @@
+<style type="text/css">
+  #advanced {
+    width: 450px;
+  }
+  #contract_transparent_proxy_input li {
+    width: 250px;
+  }
+  #prios {
+    width: auto;
+  }
+</style>
+<script type="text/javascript">
+  $(function(){
+    function checkbox_proxy_arp() {
+      if ($('#contract_proxy_arp').attr('checked')) {
+        console.log("por aqui");
+        $('#contract_proxy_arp_interface_input').removeAttr("disabled"); 
+        $('#contract_proxy_arp_interface_input').fadeIn(); 
+      } else {
+        $('#contract_proxy_arp_interface_input').attr("disabled", true); 
+        $('#contract_proxy_arp_interface_input').hide(); 
+      }
+    }
+    checkbox_proxy_arp();
+    $('#contract_proxy_arp').change( function() {
+      checkbox_proxy_arp();
+    });
+  })
+</script>
+<% unless current_user.may_update_contract?(@contract) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })  
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @contract do |form| %>
+  <%= error_messages @contract%>
+  <% form.inputs do %>
+    <%= form.input :client, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :plan, :wrapper_html => { :class => "left" }, :hint => false %> 
+    <%= form.input :state, :collection => Contract.aasm_states_for_select, :include_blank => false ,:wrapper_html => { :class => "left" } %> 
+    <div style="clear:both"></div>
+    <%= form.input :ip, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :ceil_dfl_percent, :as => :select, :collection => (30..100).step(10).to_a, :include_blank => false, :wrapper_html => { :class => "left" } %>
+    <div style="clear:both"></div>
+    <% if not @contract.new_record? %>
+    <li class="left">
+      <label><%=t 'activerecord.attributes.contract.created_at' %></label>
+      <p><%= @contract.created_at.strftime("%d/%m/%Y") rescue "--/--/----" %></p>
+    </li>
+    <div style="clear: both"></div>
+    <% end %>
+    <%= form.input :transparent_proxy, :as => :radio, :collection => Contract.transparent_proxy_for_select %> 
+      <% form.inputs :name => t('activerecord.attributes.contract.forwarded_ports') do %>
+        <% form.semantic_fields_for :forwarded_ports do |fp| %>
+          <%= render "forwarded_port_fields", :f => fp %>
+        <% end %>
+        <li><%= link_to_add_fields t('buttons.add_forward'), form, :forwarded_ports, "" %> </li>
+      <% end %>
+    <% form.inputs :name => t('fieldsets.contract.advanced'), :id => "advanced", :class => "left inputs" do %>
+      <%= form.input :mac_address %> 
+      <%= form.input :proxy_arp, :wrapper_html => { :class => "left" } %> 
+      <%= form.input :proxy_arp_interface, :wrapper_html => { :class => "left" } %>
+      <div style="clear: both"></div> 
+      <%= form.input :public_address %> 
+    <% end %>
+    <% form.inputs :name => t('fieldsets.contract.prio_customization'), :id => "prios", :style => "width: 250px" do %>
+      <%= form.input :tcp_prio_ports %> 
+      <%= form.input :udp_prio_ports %> 
+      <%= form.input :prio_protos %> 
+      <%= form.input :prio_helpers %> 
+    <% end %>
+    <div style="clear: both"></div>
+    <%= form_extensions form %>
+  <% end %>
+  <%= form.buttons if current_user.may_update_contract?(@contract) or current_user.may_create_contract? %>
+<% end %>
+</div> 

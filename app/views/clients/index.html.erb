@@ -1,0 +1,64 @@
+<% content_for :title, t('menu.clients') %>
+<% heading t('menu.clients')  %>
+<% render_new_button_for :client %>
+
+
+<%= render :partial => "shared/empty_submenu" %>
+
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul>
+    <li>
+      <%= f.label :name_like, t('activerecord.attributes.client.name') %>
+      <%= f.text_field :name_like %>
+    </li>
+    <li>
+      <br/>
+      <%= f.submit t('buttons.search') %>
+      <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
+<div class="separador"></div>
+	
+<div class="main">
+  <%= page_entries_info @clients %>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%=t 'activerecord.attributes.client.name' %></th>
+        <th><%=t 'activerecord.attributes.client.email' %></th>
+        <th><%=t 'activerecord.attributes.client.phone' %></th>
+        <%= render :partial => "shared/plugins_table_headers" %>
+        <% if current_user.may_update_clients? or current_user.may_index_clients? %>
+        <th></th> 
+        <% end %>
+        <% if current_user.may_destroy_client?(Client.new) %>
+        <th></th> 
+        <% end %>
+      </tr>
+
+      <% @clients.each_with_index do |client,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%= client.name %></td>
+          <td><%=h client.email %></td>
+          <td><%=h client.phone %></td>
+          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => client} %>
+          <% if current_user.may_update_client?(client) %>
+            <td><%= link_to t('buttons.edit'), edit_client_path(client) %></td>
+          <% elsif current_user.may_show_client?(client) %>
+            <td><%= link_to t('buttons.show'), client_path(client) %></td>
+          <% end %> 
+          <% if current_user.may_destroy_client?(client) %>
+          <td><%= link_to t('buttons.delete'), client, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @clients %>
+</div>
+
+

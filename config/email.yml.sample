@@ -1,0 +1,8 @@
+# Outgoing email settings
+
+production:
+  delivery_method: :sendmail
+  sendmail_settings:
+    location: /usr/sbin/sendmail
+    arguments: -i -t 
+    

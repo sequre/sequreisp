@@ -1,0 +1,338 @@
+en:
+  aasm:
+    contract:
+      enabled: "Enabled"
+      alerted: "Alerted"
+      disabled: "Disabled"
+    provider_group:
+      enabled: "Enabled"
+      disabled: "Disabled"
+    provider:
+      enabled: "Enabled"
+      disabled: "Disabled"
+  selects:
+    user:
+      role_name:
+        admin: "Administrator"
+        administrative: "Administrative"
+        administrative_readonly: "Read Only Administrative"
+        technical: "Technician"
+        technical_readonly: "Read Only Technician"
+    provider:
+      kind:
+        static: "Static IP"
+        adsl: "ADSL"
+        dhcp: "DHCP"
+    contract:
+      transparent_proxy:
+        default: "By Default (according to the plan)"
+        "false": "Disabled"
+        "true": "Enabled"
+    afirmative: "Yes"
+    negative: "No"
+  activerecord:
+    models:
+      address:
+        one: "IP Address"
+        other: "IP Addresses"
+      client:
+        one: "Client"
+        other: "Clients"
+      configuration:
+        one: "Configuration"
+        other: "Configurations"
+      contract:
+        one: "Contract"
+        other: "Contracts"
+      interface:
+        one: "Interface"
+        other: "Interfaces"
+      plan:
+        one: "Plan"
+        other: "Plans"
+      provider:
+        one: "Provider"
+        other: "Providers"
+      provider_group:
+        one: "Provider Group"
+        other: "Provider Groups"
+      user:
+        one: "User"
+        other: "Users"
+    attributes:
+      name: "Name"
+      ip: "IP Address"
+      state: "State"
+      contract:
+        plan: "Plan"
+        ip: "IP"
+        client: "Client"
+        date_start: "Start Date"
+        mac_address: "MAC Address"
+        public_address: "Public IP address (NAT)"
+        ceil_dfl_percent: "p2p traffic percentage enabled to the client"
+        tcp_prio_ports: "High priority TCP ports"
+        udp_prio_ports: "High priority UDP ports"
+        prio_protos: "High priority protocols"
+        prio_helpers: "High priority netfilter helpers"
+        state: "state"
+        proxy_arp: "Enable Proxy ARP"
+        proxy_arp_interface: "LAN interface"
+        forwarded_ports: "Forwarded Ports"        
+        transparent_proxy: "Transparent Proxy"
+        created_at: "Created at"
+      client:
+        name: "First name and surname"
+        email: "Email address"
+        phone: "Phone number"
+        phone_mobile: "Celphone number"
+        address: "Address"
+        details: "Observations"
+        external_client_number: "Client Number"
+        balance: "Balance"
+        created_at: "Created at"
+      plan:
+        name: "Name"
+        provider_group: "Providers Group"
+        rate_down: "Min. Download(kbps)"
+        ceil_down: "Máx. Download(kbps)"
+        rate_up: "Mín. Upload(kbps)"
+        ceil_up: "Máx. Upload(kbps)"
+        transparent_proxy: "Transparent Proxy"
+      provider_group:
+        name: "name"
+        rate_down: "Download(kbps)"
+        rate_up: "Upload(kbps)"
+        state: "State"
+      provider:
+        provider_group: "Provider Group"
+        name: "Name"
+        ip: "IP"
+        netmask: "Netmask"
+        gateway: "Gateway"
+        interface: "Interface"
+        rate_down: "Download(kbps)"
+        rate_up: "Upload(kbps)"
+        pppoe_user: "User"
+        pppoe_pass: "Password"
+        kind: "Kind"
+        state: "State"
+        online: "Online"
+        unique_mac_address: "autogenerate a unique MAC ADRESS for this link"
+        arp_ignore: "Enable arp_ignore for this link"
+        arp_announce: "Enable arp_announce for this link"
+        arp_filter: "Enable arp_filter for this link"
+        current_status_time: "Uptime/Downtime"
+      forwarded_port:
+        provider: "Provider"
+        public_port: "Public port"
+        private_port: "Private port" 
+        tcp: "TCP"
+        udp: "UDP"
+      configuration:
+        default_tcp_prio_ports: "High priority TCP ports (global)"
+        default_udp_prio_ports: "High priority UDP ports(global)"
+        default_prio_protos: "High priority protocols(global)"
+        default_prio_helpers: "High priority netfilter helpers (global)"
+        mtu: "MTU(Maximun Transfer Unit)"
+        quantum_factor: "Band width that represents 1 quantum"
+        transparent_proxy: "Enable Transparent Proxy(global)"
+        transparent_proxy_n_to_m: "Transparent proxy upload control"
+        transparent_proxy_zph_enabled: "Deliver cached content at link velocity"
+        nf_conntrack_max: "Maximum number of connections (nf_conntrack_max)"
+        gc_thresh1: "ARP entries (gc_thresh1)"
+        gc_thresh2: "ARP entries (gc_thresh2)"
+        gc_thresh3: "ARP entries (gc_thresh3)"
+        notification_email: "Notification email"
+        notification_timeframe: "Time a link must be down to trigger a notification"
+        tc_contracts_per_provider_in_lan: "Individual contracts tree per provider (LAN)"
+        tc_contracts_per_provider_in_wan: "Individual contracts tree per provider (WAN)"
+        logged_in_timeout: "User session timeout in minutes"
+        filter_by_mac_address: "Block clients traffic if their MAC address doesnt match the one established in the contract"
+        time_zone: "Time zone"
+        deliver_notifications: "Send emails with system notifications (e.g. link state changes)"
+        clamp_mss_to_pmtu: "Assign MSS(Maximum Segement Size) according to MTU PATH(pmtu)"
+        language: "Language"
+      user:
+        name: "Name"
+        email: "User email address"
+        role_name: "Permissions"
+        password: "Password"
+        password_confirmation: "Password confirmation"
+        last_login_at: "Last login date"
+        last_login_ip: "Last IP login"
+      interface:
+        name: "name"
+        vlan: "is a vlan"
+        vlan_id: "Vlan ID"
+        vlan_interface: "Real Interface"
+        kind: "Kind"
+        physical_link: "Link"
+      audit:
+        user: "User"
+        action: "Action"
+        created_at: "Date"
+        auditable_type: "Model"
+        changes: "Changes applied"
+        version: "Version"
+      address:
+        free_ip_prefix: "Free: "
+        
+  formtastic:
+    update: "Update %{model}"
+    create: "Create %{model}"
+    "yes": "Yes"
+    "no": "No"
+    required: "Required"
+    titles:
+    labels:
+      configuration:
+        notification_email: "Email address where system notifications will be sent"
+    hints:
+      contract:
+        mac_address: "To be able to enable MAC control, the network must be bridged"
+        public_address: "Used to do full DNAT from a public IP to a private IP"
+        tcp_prio_ports: "Numbers or names like in /etc/services, e.g. 22,http,110,imap"
+        udp_prio_ports: "Numbers or names like in /etc/services, e.g. 53,isakmp"
+        prio_protos: "Numbers or names like in /etc/protocols, e.g. icmp,gre,50"
+        prio_helpers: "Netfilter helpers, e.g. ftp,pptp,irc"
+        proxy_arp: "In case a public IP from the same subnet as the provider is asigned"
+      client:
+        external_client_number: "For synchronization with external applications"
+      plan:
+        rate_down: "Insert 0(zero) for automatic calculation"
+        rate_up: "Insert 0(zero) for automatic calculation"
+        transparent_proxy: "Enable proxy acceleration. Customizable per contract."
+      interface:
+        kind: "WAN: internet connections, LAN: clients connections"
+      configuration:
+        notification_email: "One or more addresses comma separated"
+        notification_timeframe: "Time in seconds"
+        contact_url: "http://www.example.com/"
+        tc_contracts_per_provider_in_lan: "Do not enable if contracts*providers > 8000 (approx.)"
+  menu:
+    clients: "Clients"
+    contracts: "Contracts"
+    plans: "Plans"
+    providers: "Providers"
+    provider_groups: "Providers Groups"
+    interfaces: "Interfaces"
+    users: "Users"
+    configuration: "Configuration"
+    apply_changes: "Apply changes"
+    backups: "Backups"
+  buttons:
+    login: "Login"
+    edit: "Edit"
+    delete: "Delete"
+    show: "Show"
+    search: "Search"
+    reset: "Reset"
+    create_new: "Create New"
+    export_to_excel: "Export to Excel"
+    create_contract: "Create contract"
+    view_contracts: "View contracts"
+    view_notified_page: "Preview 'notified' page"
+    view_disabled_page: "Preview 'service disabled' page"
+    add_forward: "Add forwarded port"
+    add_ip: "Add IP address"
+    scan_interfaces: "Scan for new interfaces"
+    more: "More"
+  backup:
+    backup_db_legend: "Backup DB (just database)"
+    backup_full_legend: "Backup Full (application and database)"
+    create_backup_legend: "Create"
+    restore_backup_legend: "Restore"
+    create_backup_button: "Create and download backup"
+    restore_backup_db_button: "Restore DB"
+    restore_backup_full_button: "Full restore"
+    include_graphs: "Include graphics history (+%{size}MB approx.)"
+    confirm_restore_backup: "Are you sure you want to continue? All current data will be lost and replaced with the selected backup"
+    backup_file_label: "Seleccione el archivo a restaurar"
+    notice:
+      missing_file: "A backup file must be selected to restore"
+      success_full: "Restore process succesfully completed. We recommend to restart the server so changes can be fully applied"
+      error: "An error has occurred, check the backup file is correct"
+      success_db: "Restore process succesfully completed, changes are being applied"
+  graph:
+    heading: "Statistics %{name}"
+    instant: "Real Time"
+    last_24h: "Last 24 hours"
+    last_month: "Last month"
+    last_year: "Last year"
+  actions:
+    edit: "Editing %{model}"
+    new: "Creating %{model}"
+    login: "Sign In"
+  messages:
+    access_denied: "Access denied"
+    must_be_logged_in: "You must be logged in to access this page"
+    must_be_logged_out: "You must be logged out to access this page"
+    apply_changes_success: "Changes are being applied"
+    confirm: "Are you sure?"
+    provider_group:
+      could_not_be_deleted: "This group has %{count} plans assigned, there for it can't be deleted. Delete the corresponding plans or assign them to another group and try again."
+    plan:
+      could_not_be_deleted: "This plan has %{count} contracts assigned, there for it can't be deleted. Delete the corresponding contracts or assign them to another plan and try again."
+    interface:
+      scan_success: "New interfaces have been detected"
+      scan_fail: "No new interfaces have been detected"
+      could_not_be_deleted_has_vlans: "This interface has VLANs assigned, there for it can't be deleted"
+      could_not_be_deleted_has_provider: "This interface has a provider assigned, there for it can't be deleted"
+  controllers:
+    successfully_updated: "Update operation successful"
+    successfully_created: "Create operation successful"
+  mailing:
+  validations:
+    ip_already_in_use: "Already in use"
+    interface:
+      unable_to_change_kind: "Unable to change kind, this interface has a provider assigned"
+    forwarded_port:
+      provider_doesnt_belong_to_group_plan: "The seleceted provider does not belong to the group's assigned plan"
+      protocol_must_be_specified: "Protocol must be specified"
+      public_port_cant_be_on_the_prohibited_list: "Belongs to the list of prohibited forward ports"
+      cant_forward_port_if_contract_ip_is_single_host: "Can't forward any ports if contract's IP address is a network"
+    contract:
+      proxy_arp_incompatible_if_ip_is_a_network: "Option is incompatible if IP address is a network"
+      full_dnat_incompatible_if_ip_is_a_network: "Full DNAT can't be used if IP address is a network"
+      in_range_or_in_file_invalid: "The following values are invalid: %{invalid_values}"
+      public_address_already_in_use: "The assigned IP address is already in use by another contract with client %{client_name}"
+      public_address_does_not_belongs_to_plan: "The assigned IP does not belong to the selected plan"
+      proxy_arp_incompatible_with_full_dnat: "Option is incompatible with full DNAT"
+      proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP is enabled but the IP address does not belong to any of the providers of this plan"
+    configuration:
+      notification_email_invalid: "Invalid email address"
+    plan:
+      not_enough_down_bandwidth_in_this_plan: "There's not enough download bandwidth to assign this plan"
+      not_enough_up_bandwidth_in_this_plan: "There's not enough upload bandwidth to assign this plan"
+  fieldsets:
+    contract:
+      advanced: "Advanced"
+      prio_customization: "Priorities Customization"
+    configuration:
+      system: "Global Options"
+      notifications: "Notifications"
+      users: "Users"
+      global_prios: "Global high priority ports"
+      proxy: "Proxy (Web cache)"
+      advanced: "Advanced Configuration"
+    interface:
+      ips: "IPs"
+    provider:
+      configuration_static: "Static IP configuration"
+      configuration_static_ips: "Additionals IPs"
+      configuration_adsl: "ADSL Configuration"
+      advanced: "Advanced"
+  app_mailer:
+    check_links_email:
+      subject: "Providers state changes"
+    check_physical_links_email:
+      subject: "Interfaces link state changes"
+  datetime:
+    current_status_time:
+      days: "days"
+      hours: "hours"
+      minutes: "minutes"
+      seconds: "seconds"
+  notifications:
+    changes_to_be_applied_notice: "Alert: Changes have been made in the configuration that have not yet been applied."

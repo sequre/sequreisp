@@ -1,0 +1,8 @@
+<% content_for :title, t('actions.edit', :model => Interface.human_name) %>
+<% heading t('actions.edit', :model => Interface.human_name)  %>
+
+<%= render :partial => "shared/empty_submenu"%>
+
+<%= render @interface %>
+
+

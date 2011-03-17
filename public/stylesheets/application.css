@@ -1,0 +1,57 @@
+
+/*--------------------------------------------------------------------------------------------------
+ 	 PAGE DEFINITIONS
+--------------------------------------------------------------------------------------------------*/
+
+body {
+	min-width: 100%;
+	font-family: "Helvetica Neue", Helvetica, clean, sans-serif;
+	font-size: 13px;
+}
+
+#container {
+}
+
+h1 {
+	font-size: 24px;
+	font-weight: normal;
+	margin: 6px 0 24px 0;
+}
+
+#buttons {
+	height: 50px;
+}
+
+#links {
+	height: 50px;
+}
+
+#plugins_menu {
+  display:none;
+  border-top: #C4C4B5 solid 1px;
+}
+
+div#apply_changes_banner{
+    background-color: #B6B6B6;
+    height: 40px;
+    margin: 0 -20px 0 -20px;
+    
+}
+
+div#apply_changes_banner a{
+    background-color: #B6B6B6;
+}
+div#apply_changes_banner span#apply_changes_notice{
+    line-height: 40px;
+    margin:0 20px;
+    color: #900;
+    font-weight: bold;
+}
+
+div#apply_changes_button{
+    float:right;
+    padding-right: 20px;
+    margin-top: 7px;
+}
+
+

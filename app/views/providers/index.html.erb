@@ -1,0 +1,107 @@
+<style type="text/css">
+  span.status_time{
+    font-weight: normal;
+    color: #555;
+    font-size:11px;
+    font-style: italic;
+  }
+</style>
+<% content_for :title, t('menu.providers') %>
+<% heading t('menu.providers') %>
+<% render_new_button_for :provider %>
+
+<%= render :partial => "shared/empty_submenu"%>
+
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul> 
+    <li>
+      <%= f.label :name_like, t('activerecord.attributes.provider.name') %>
+      <%= f.text_field :name_like %>
+    </li>
+    <li>
+    <%= f.label :state_equals, t('activerecord.attributes.provider.state') %>
+    <%= f.select :state_equals, Provider.aasm_states_for_select, :include_blank => true %>
+    </li>
+    <li>
+    <%= f.label :online_is, t('activerecord.attributes.provider.online') %>
+    <%= f.select :online_is, [["online",true],["offline",false]], :include_blank => true %>
+    </li>
+    <li>
+    <%= f.label :provider_group_id_equals, t('activerecord.attributes.provider.provider_group') %>
+    <%= f.collection_select :provider_group_id_equals, ProviderGroup.all, :id, :name, :include_blank => true %>
+    </li>
+    <li>
+    <br/>
+    <%= f.submit t('buttons.search') %>
+    <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
+
+<div class="separador"></div>
+  
+<div class="main">
+  <%= page_entries_info @providers %>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%=t 'activerecord.attributes.provider.name' %></th>
+        <th><%=t 'activerecord.attributes.provider.interface' %></th>
+        <th><%=t 'activerecord.attributes.provider.ip' %></th>
+        <th><%=t 'activerecord.attributes.provider.rate_down' %> / <%=t 'activerecord.attributes.provider.rate_up' %></th>
+        <th><%=t 'activerecord.attributes.provider.provider_group' %></th>
+        <th><%=t 'activerecord.attributes.provider.state' %></th>
+        <th><%=t 'activerecord.attributes.provider.online' %></th>
+        <%= render :partial => "shared/plugins_table_headers" %>
+        <% if current_user.may_update_providers? or current_user.may_index_providers? %>
+        <th></th> 
+        <% end %>
+        <% if current_user.may_destroy_provider?(Provider.new) %>
+        <th></th> 
+        <% end %>
+      </tr>
+    
+      <% @providers.each_with_index do |provider,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td>
+            <%=h provider.name %><br/>
+            <%= link_to Graph.new(:element => provider).img("day", "small"), graph_path(provider ,:class => "Provider") %>
+          </td>
+          <td>
+            <% if provider.interface %>
+              <span title="link <%= provider.interface.status %>" <%= provider.interface.physical_link ? 'class="enable_color"' : 'class="disable_color"' %>><%=h provider.interface.name %></span><br/>
+              <% if provider.kind == 'adsl' %>
+                (<%= provider.link_interface %>)
+              <% end %>
+            <% end %>
+          </td>
+          <td>
+            <%=h provider.ip %><br/>
+            <%= provider.addresses.collect{ |a| a.ip}.join("<br/>") %>
+          </td>
+          <td><%=h provider.rate_down %>/<%=h provider.rate_up %></td>
+          <td><%=h provider.provider_group.name rescue 'Undefined' %></td>
+          <td><%=h t "aasm.provider.#{provider.state}" %></td>
+          <td <%= provider.online ? 'class="enable_color"' : 'class="disable_color"' %>>
+            <%=h provider.online ? "online" : "offline" %> <br/>
+            <span class="status_time"> Hace <%=h provider.pretty_current_status_time -%> </span>
+          </td>
+          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => provider} %>
+          <% if current_user.may_update_provider?(provider) %>
+            <td><%= link_to t('buttons.edit'), edit_provider_path(provider) %></td>
+          <% elsif current_user.may_show_provider?(provider) %>
+            <td><%= link_to t('buttons.show'), provider_path(provider) %></td>
+          <% end %> 
+          <% if current_user.may_destroy_provider?(provider) %>
+          <td><%= link_to t('buttons.delete'), provider, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @providers %>
+</div>
+

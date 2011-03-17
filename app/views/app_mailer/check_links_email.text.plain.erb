@@ -1,0 +1,12 @@
+Cambio de estado de los enlaces
+
+<% ProviderGroup.enabled.each do |pg| %>
+Grupo: <%= pg.name %>
+<%= sprintf "-----------------------------------------------------------" %>
+<%= sprintf "| %-20s | %10s | %19s |", "Proveedor", "Estado", "IP" %>
+<%= sprintf "-----------------------------------------------------------" %>
+<%- pg.providers.enabled.each do |p| -%>
+<%= sprintf "| %-20s | %10s | %19s |", p.name[0..19], p.online ? "online" : "offline", p.ip.blank? ? "-" : p.ip %>
+<% end -%>
+<%= sprintf "-----------------------------------------------------------" %>
+<% end -%>

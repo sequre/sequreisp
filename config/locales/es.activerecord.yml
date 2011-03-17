@@ -1,0 +1,338 @@
+es:
+  aasm:
+    contract:
+      enabled: "Habilitado"
+      alerted: "Avisado"
+      disabled: "Deshabilitado"
+    provider_group:
+      enabled: "Habilitado"
+      disabled: "Deshabilitado"
+    provider:
+      enabled: "Habilitado"
+      disabled: "Deshabilitado"
+  selects:
+    user:
+      role_name:
+        admin: "Administrador"
+        administrative: "Administrativo"
+        administrative_readonly: "Administrativo de solo lectura"
+        technical: "Técnico"
+        technical_readonly: "Técnico de solo lectura"
+    provider:
+      kind:
+        static: "IP fija"
+        adsl: "ADSL"
+        dhcp: "DHCP"
+    contract:
+      transparent_proxy:
+        default: "Por defecto (según el plan)"
+        "false": "Deshabilitado"
+        "true": "Habilitado"
+    afirmative: "Si"
+    negative: "No"
+  activerecord:
+    models:
+      address:
+        one: "Dirección IP"
+        other: "Direcciones IP"
+      client:
+        one: "Cliente"
+        other: "Clientes"
+      configuration:
+        one: "Configuración"
+        other: "Configuraciones"
+      contract:
+        one: "Contrato"
+        other: "Contratos"
+      interface:
+        one: "Interfaz"
+        other: "Interfaces"
+      plan:
+        one: "Plan"
+        other: "Planes"
+      provider:
+        one: "Proveedor"
+        other: "Proveedores"
+      provider_group:
+        one: "Grupo de Proveedores"
+        other: "Grupos de Proveedores"
+      user:
+        one: "Usuario"
+        other: "Usuarios"
+    attributes:
+      name: "Nombre"
+      ip: "Dirección IP"
+      state: "Estado"
+      contract:
+        plan: "Plan"
+        ip: "IP"
+        client: "Cliente"
+        date_start: "Fecha de inicio"
+        mac_address: "MAC Address"
+        public_address: "Dirección IP pública (NAT)"
+        ceil_dfl_percent: "Porcentaje de tráfico p2p habilitado para el cliente"
+        tcp_prio_ports: "Puertos TCP que obtendrán prioridad"
+        udp_prio_ports: "Puertos UDP que obtendrán prioridad"
+        prio_protos: "Protocolos completos que obtendrán prioridad"
+        prio_helpers: "Netfilter helpers que obtendrán prioridad"
+        state: "Estado"
+        proxy_arp: "Habilitar proxy ARP"
+        proxy_arp_interface: "Interfaz LAN"
+        forwarded_ports: "Puertos forwardeados"
+        transparent_proxy: "Proxy transparente"
+        created_at: "Fecha de alta"
+      client:
+        name: "Nombre y apellido"
+        email: "E-mail de contacto"
+        phone: "Teléfono fijo"
+        phone_mobile: "Teléfono celular"
+        address: "Dirección"
+        details: "Observaciones"
+        external_client_number: "Nro. de cliente"
+        balance: "Saldo"
+        created_at: "Fecha de alta"
+      plan:
+        name: "Nombre"
+        provider_group: "Grupo de proveedores"
+        rate_down: "Min. Download(kbps)"
+        ceil_down: "Máx. Download(kbps)"
+        rate_up: "Mín. Upload(kbps)"
+        ceil_up: "Máx. Upload(kbps)"
+        transparent_proxy: "Proxy transparente"
+      provider_group:
+        name: "Nombre"
+        rate_down: "Download(kbps)"
+        rate_up: "Upload(kbps)"
+        state: "Estado"
+      provider:
+        provider_group: "Grupo de proveedores"
+        name: "Nombre"
+        ip: "IP"
+        netmask: "Máscara de red"
+        gateway: "Gateway"
+        interface: "Interfaz"
+        rate_down: "Download(kbps)"
+        rate_up: "Upload(kbps)"
+        pppoe_user: "Usuario"
+        pppoe_pass: "Password"
+        kind: "Tipo"
+        state: "Estado"
+        online: "Online"
+        unique_mac_address: "Auto-generar una MAC ADDRESS única para este enlace"
+        arp_ignore: "Poner en 1 arp_ignore para este enlace"
+        arp_announce: "Poner en 1 arp_announce para este enlace"
+        arp_filter: "Poner en 1 arp_filter para este enlace"
+        current_status_time: "Uptime/Downtime"
+      forwarded_port:
+        provider: "Proveedor"
+        public_port: "Puerto público"
+        private_port: "Puerto privado"
+        tcp: "TCP"
+        udp: "UDP"
+      configuration:
+        default_tcp_prio_ports: "Puertos TCP prioritarios (global)"
+        default_udp_prio_ports: "Puertos UDP prioritarios (global)"
+        default_prio_protos: "Protocolos prioritarios (global)"
+        default_prio_helpers: "Netfilter helpers prioritarios (global)"
+        mtu: "MTU(Maximun Transfer Unit)"
+        quantum_factor: "Ancho de banda que representa 1 quanto"
+        transparent_proxy: "Habilitar Proxy Transparente (global)"
+        transparent_proxy_n_to_m: "Control de upload para Proxy Transparente"
+        transparent_proxy_zph_enabled: "Entregar contenido cacheado a velocidad de link"
+        nf_conntrack_max: "Máximo nro. de conexiones (nf_conntrack_max)"
+        gc_thresh1: "Entradas ARP (gc_thresh1)"
+        gc_thresh2: "Entradas ARP (gc_thresh2)"
+        gc_thresh3: "Entradas ARP (gc_thresh3)"
+        notification_email: "Email de notificaciones"
+        notification_timeframe: "Tiempo que se esperará que un enlace este caído para enviar una notificación"
+        tc_contracts_per_provider_in_lan: "Arbol total de contratos idividual por cada proveedor(LAN)"
+        tc_contracts_per_provider_in_wan: "Arbol total de contratos idividual por cada proveedor(WAN)"
+        logged_in_timeout: "Tiempo en minutos para hacer logout del usuario actual si está inactivo"
+        filter_by_mac_address: "Bloquear tráfico de clientes si su MAC address no conicide con la del contrato"
+        time_zone: "Zona horaria"
+        deliver_notifications: "Enviar notificaiones del sistema via e-mail (Ej: cambio de estado de enlaces)"
+        clamp_mss_to_pmtu: "Ajustar el MSS(Maximum Segement Size) al MTU del path(pmtu)"
+        language: "Lenguage"
+      user:
+        name: "Nombre"
+        email: "Email del usuario"
+        role_name: "Permisos"
+        password: "Contraseña"
+        password_confirmation: "Confirmación de contraseña"
+        last_login_at: "Fecha último login"
+        last_login_ip: "IP último login"
+      interface:
+        name: "Nombre"
+        vlan: "Es una vlan"
+        vlan_id: "Vlan Id"
+        vlan_interface: "Interfaz real"
+        kind: "Tipo"
+        physical_link: "Link"
+      audit:
+        user: "Usuario"
+        action: "Acción"
+        created_at: "Fecha"
+        auditable_type: "Modelo"
+        changes: "Cambios realizados"
+        version: "Versión"
+      address:
+        free_ip_prefix: "Libre: "
+  formtastic:
+    update: "Actualizar %{model}"
+    create: "Crear %{model}"
+    "yes": "Si"
+    "no": "No"
+    required: "Requerido"
+    titles:
+    labels:
+      configuration:
+        notification_email: "Email donde se enviaran las notificaiones del sistema"
+    hints:
+      contract:
+        mac_address: "Para habilitar control por MAC la red debe ser bridgeada"
+        public_address: "Usada para hacer full DNAT de una IP pública a una IP privada"
+        tcp_prio_ports: "Números o nombres como en /etc/services, ej: 22,http,110,imap"
+        udp_prio_ports: "Números o nombres como en /etc/services, ej: 53,isakmp"
+        prio_protos: "Números o nombres como en /etc/protocols, ej: icmp,gre,50"
+        prio_helpers: "Netfilter helpers, ej: ftp,pptp,irc"
+        proxy_arp: "En caso de asignar una IP pública de la misma subnet que el Proveedor" 
+      client:      
+        external_client_number: "Para sincronización con sistemas externos"
+      plan:
+        rate_down: "Dejar en 0(cero) para cálculo automático"
+        rate_up: "Dejar en 0(cero) para cálculo automático"
+        transparent_proxy: "Habilitar aceleración proxy. Personalizable por contrato"
+      interface:
+        kind: "WAN: si conecta a internet LAN: si conecta hacia los clientes"
+      configuration:
+        notification_email: "Puede ser uno o más emails separados por coma"
+        notification_timeframe: "Indicar tiempo en segundos"
+        contact_url: "http://www.ejemplo.com/"
+        tc_contracts_per_provider_in_lan: "No habilitar si contratos*providers > 8000 (aprox.)"
+  menu:
+    clients: "Clientes"
+    contracts: "Contratos"    
+    plans: "Planes"
+    providers: "Proveedores"
+    provider_groups: "Grupo de Proveedores"
+    interfaces: "Interfaces"
+    users: "Usuarios"
+    configuration: "Configuración"
+    apply_changes: "Aplicar Cambios"
+    backups: "Backups"
+  buttons:
+    login: "Entrar"
+    edit: "Editar"
+    delete: "Eliminar"
+    show: "Ver"
+    search: "Buscar"
+    reset: "Limpiar"
+    create_new: "Crear Nuevo"
+    export_to_excel: "Exportar a Excel"
+    create_contract: "Crear contrato"
+    view_contracts: "Ver contratos"
+    view_notified_page: "Ver página de aviso por mora"
+    view_disabled_page: "Ver página de interrupción del servicio"
+    add_forward: "Agregar Forward"
+    add_ip: "Agregar IP"
+    scan_interfaces: "Detectar nuevas interfaces"
+    more: "Más"
+  backup:
+    backup_db_legend: "Backup DB (Sólo Base de Datos)"
+    backup_full_legend: "Backup Full (Aplicación y Base de Datos)"
+    create_backup_legend: "Crear"
+    restore_backup_legend: "Restaurar"
+    create_backup_button: "Crear y descargar backup"
+    restore_backup_db_button: "Restaurar DB"
+    restore_backup_full_button: "Restaurar Full"
+    include_graphs: "Incluir historial de gráficos (+%{size}MB aprox.)"
+    confirm_restore_backup: "Está seguro de seguir adelante? Todos los datos actuales se perderan y serán reemplazados por los del backup seleccionado"
+    backup_file_label: "Seleccione el archivo a restaurar"
+    notice:
+      missing_file: "Debe seleccionar un archivo de backup  para restaurar"
+      success_full: "Restauracion exitosa, recomendamos reiniciar el server para hacer efectivos los cambios"
+      error: "Se produjo un error, verifique que el archivo de backup sea correcto"
+      success_db: "Restauracion exitosa, los cambios están siendo aplicados"
+  graph:
+    heading: "Estadísticas %{name}"
+    instant: "Instantaneo"
+    last_24h: "Últimas 24 horas"
+    last_month: "Último mes"
+    last_year: "Último año"
+  actions:
+    edit: "Editando %{model}"
+    new: "Creando %{model}"
+    login: "Acceso"
+  messages:
+    access_denied: "Acceso denegado"
+    must_be_logged_in: "Debe estar logueado para acceder a esta página"
+    must_be_logged_out: "No debe estar logueado para acceder a esta página"
+    apply_changes_success: "Los cambios están siendo aplicados"
+    confirm: "¿Está seguro?"
+    provider_group:
+      could_not_be_deleted: "Este grupo aún tiene %{count} planes asignados y no puede ser borrado, elimine los planes o cambielos de grupo e intente nuevamente"
+    plan:
+      could_not_be_deleted: "Este plan aún tiene %{count} contratos asignados y no puede ser borrado, elimine los contratos o cambielos de plan e intente nuevamente"
+    interface:
+      scan_success: "Se han detectado nuevas interfaces"
+      scan_fail: "No se han detectado nuevas interfaces"
+      could_not_be_deleted_has_vlans: "Esta interfaz tiene VLANs asociadas y no puede ser borrada"
+      could_not_be_deleted_has_provider: "Esta interfaz tiene un proveedor asociado y no puede ser borrada"
+  controllers:
+    successfully_updated: "Actualización de datos exitosa"
+    successfully_created: "Creación exitosa"
+  mailing:
+  validations:
+    ip_already_in_use: "Ya está en uso"
+    interface: 
+      unable_to_change_kind: "No se puede cambiar el tipo, esta interfaz tiene un proveedor asignado"
+    forwarded_port:
+      provider_doesnt_belong_to_group_plan: "El proveedor seleccionado no pertenece al grupo del plan asignado"
+      protocol_must_be_specified: "Debe especificar el protocolo"
+      public_port_cant_be_on_the_prohibited_list: "Pertence a la lista de puertos prohibidos para hacer forward"
+      cant_forward_port_if_contract_ip_is_single_host: "No se pueden forwardear puertos si la dirección IP del contrato es una red"
+    contract:
+      proxy_arp_incompatible_if_ip_is_a_network: "Opción incompatible si la dirección IP es una red"
+      full_dnat_incompatible_if_ip_is_a_network: "No se puede hacer DNAT si la dirección IP es una red"
+      in_range_or_in_file_invalid: "Los siguientes valores son incorrectos: %{invalid_values}"
+      public_address_already_in_use: "La IP asignada ya está en uso en otro contrato a nombre de %{client_name}"
+      public_address_does_not_belongs_to_plan: "La IP asignada no pertenece al plan seleccionado"
+      proxy_arp_incompatible_with_full_dnat: "Esta opcion no es compatible con full DNAT"
+      proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP está hablitado pero la IP no pertenece a ninguno de los proveedores de este plan"
+    configuration:
+      notification_email_invalid: "No es un email válido" 
+    plan:
+      not_enough_down_bandwidth_in_this_plan: "No hay suficiente ancho de banda (down) para asignar este plan"
+      not_enough_up_bandwidth_in_this_plan: "No hay suficiente ancho de banda (up) para asignar este plan"
+  fieldsets:
+    contract:
+      advanced: "Avanzado"
+      prio_customization: "Personalización de prioridades"
+    configuration:
+      system: "Sistema"
+      notifications: "Notificaciones"
+      users: "Usuarios"
+      global_prios: "Prioridades Globales"
+      proxy: "Proxy (Web cache)"
+      advanced: "Configuración Avanzada"
+    interface:
+      ips: "IPs"
+    provider:
+      configuration_static: "Configuración IP Fija"
+      configuration_static_ips: "IPs Adicionales"
+      configuration_adsl: "Configuración ADSL"
+      advanced: "Avanzado"
+  app_mailer:
+    check_links_email:
+      subject: "Cambio de estado en proveedores"
+    check_physical_links_email:
+      subject: "Cambio de estado de link en las interfaces"
+  datetime:
+    current_status_time:
+      days: "días"
+      hours: "horas"
+      minutes: "minutos"
+      seconds: "segundos"
+  notifications:
+    changes_to_be_applied_notice: "Aviso: Se han realizado cambios en la configuración que todavía no han sido aplicados."
+

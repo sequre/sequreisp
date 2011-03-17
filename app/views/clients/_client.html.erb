@@ -1,0 +1,37 @@
+<style type="text/css">
+  #client_address {
+    width: 400px;
+  }
+</style>
+<% unless current_user.may_update_client?(@client) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })  
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @client do |form| %>
+  <%= error_messages @client%>
+  <% form.inputs do %>
+    <%= form.input :name, :wrapper_html => { :class => "left" } %>
+    <%= form.input :external_client_number, :wrapper_html => { :class => "left" } %> 
+    <div style="clear: both"></div> 
+    <%= form.input :email, :wrapper_html => { :class => "left" } %>
+    <% if not @client.new_record? %>
+    <li class="left">
+      <label><%=t 'activerecord.attributes.client.created_at' %></label>
+      <p><%= @client.created_at.strftime("%d/%m/%Y") rescue "--/--/----" %></p>
+    </li>
+    <% end %>
+    <div style="clear: both"></div> 
+    <%= form.input :phone, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :phone_mobile, :wrapper_html => { :class => "left" } %> 
+    <div style="clear: both"></div> 
+    <%= form.input :address %>
+    <%= form.input :details %>
+    <%= form_extensions form %>
+  <% end %>
+  <%= form.buttons if current_user.may_update_client?(@client) or current_user.may_create_client? %>
+<% end %>
+</div>

@@ -1,0 +1,19 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  name: MyString
+  rate_down: 1
+  ceil_down: 1
+  rate_up: 1
+  ceil_up: 1
+  ceil_dfl_percent: 1
+  periodicity: 1
+
+two:
+  name: MyString
+  rate_down: 1
+  ceil_down: 1
+  rate_up: 1
+  ceil_up: 1
+  ceil_dfl_percent: 1
+  periodicity: 1

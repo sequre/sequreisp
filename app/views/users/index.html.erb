@@ -1,0 +1,50 @@
+<% content_for :title, t('menu.users') %>
+<% heading t('menu.users') %>
+<% render_new_button_for :user %>
+
+<%= render :partial => "shared/empty_submenu" %>
+
+<div class="separador"></div>
+	
+<div class="main">
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%=t 'activerecord.attributes.user.name' %></th>
+        <th><%=t 'activerecord.attributes.user.email' %></th>
+        <th><%=t 'activerecord.attributes.user.role_name' %></th>
+        <th><%=t 'activerecord.attributes.user.last_login_at' %></th>
+        <th><%=t 'activerecord.attributes.user.last_login_ip' %></th>
+        <%= render :partial => "shared/plugins_table_headers" %>
+        <% if current_user.may_update_users? or current_user.may_index_users? %>
+        <th></th> 
+        <% end %>
+        <% if current_user.may_destroy_user?(User.new) %>
+        <th></th> 
+        <% end %>
+      </tr>
+      <% @users.each_with_index do |user,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%= user.name %></td>
+          <td><%=h user.email %></td>
+          <td><%=t 'selects.user.role_name.' + user.role_name %></td>
+          <td><%=l(user.last_login_at, :format => :short) rescue 'Undefined' %></td>
+          <td><%=h user.last_login_ip rescue 'Undefined' %></td>
+          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => user} %>
+          <% if current_user.may_update_user?(user) %>
+            <td><%= link_to t('buttons.edit'), edit_user_path(user) %></td>
+          <% elsif current_user.may_show_user?(user) %>
+            <td><%= link_to t('buttons.show'), user_path(user) %></td>
+          <% end %> 
+          <% if current_user.may_destroy_user?(user) %>
+          <td><%= link_to t('buttons.delete'), user, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<%#= will_paginate @users %>
+

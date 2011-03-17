@@ -1,0 +1,16 @@
+<% content_for :title, t('actions.edit', :model => Client.human_name) %>
+<% heading t('actions.edit', :model => Client.human_name)%>
+
+<ul class="nav" style="float:right">
+  <% if current_user.may_create_contract? %>
+  <li><%= link_to t('buttons.create_contract'), new_client_contract_path(@client) %> </li> 
+  <% end %>
+  <% if current_user.may_index_contracts? %>
+  <li><%= link_to t('buttons.view_contracts'), contracts_path("search" => {"client_id_equals"=> @client.id }) %> </li> 
+  <% end %>
+  <%= render :partial => "shared/submenu_items"%>  
+</ul>
+<div style="clear: both"></div> 
+
+<%= render @client %>
+

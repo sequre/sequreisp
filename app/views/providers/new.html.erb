@@ -1,0 +1,7 @@
+<% content_for :title, t('actions.new', :model => Provider.human_name) %>
+<% heading t('actions.new', :model => Provider.human_name) %>
+
+<%= render :partial => "shared/empty_submenu" %>
+
+<%= render @provider %>
+

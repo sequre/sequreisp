@@ -1,0 +1,56 @@
+<% content_for :title, t('menu.audits') %>
+<% heading t('menu.audits')  %>
+
+<%= render :partial => "shared/empty_submenu" %>
+
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul>
+    <li>
+      <%= f.label :user_id_equals, t('activerecord.attributes.audit.user') %>
+      <%= f.collection_select :user_id_equals, User.all, :id, :name, :include_blank => true %>
+    </li>
+    <li>
+      <%= f.label :action_is, t('activerecord.attributes.audit.action') %>
+      <%= f.select :action_is, [["create","create"],["update","update"],["destroy","destroy"]], :include_blank => true %>
+    </li>
+    <li>
+      <br/>
+      <%= f.submit t('buttons.search') %>
+      <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
+<div class="separador"></div>
+	
+<div class="main">
+  <%= page_entries_info @audits %>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%=t 'activerecord.attributes.audit.created_at' %></th>
+        <th><%=t 'activerecord.attributes.audit.auditable_type' %></th>
+        <th><%=t 'activerecord.attributes.audit.user' %></th>
+        <th><%=t 'activerecord.attributes.audit.action' %></th>
+        <th><%=t 'activerecord.attributes.audit.changes' %></th>
+        <th><%=t 'activerecord.attributes.audit.version' %></th>
+      </tr>
+
+      <% @audits.each_with_index do |audit,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%=l audit.created_at, :format => :short %></td>
+          <td><%= link_to_auditable(audit) %></td>
+          <td><%=h audit.user.name rescue 'Undefined' %></td>
+          <td><%=h audit.action %></td>
+          <td><%= expand_changes(audit.changes, audit.auditable_type.downcase) %></td>
+          <td><%=h audit.version %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @audits %>
+</div>
+
+

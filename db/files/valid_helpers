@@ -1,0 +1,13 @@
+proto_gre
+ftp
+snmp_basic
+proto_dccp
+proto_sctp
+pptp
+h323
+sip
+irc
+tftp
+amanda
+proto_udplite
+

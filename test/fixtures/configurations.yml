@@ -1,0 +1,31 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  name: MyString
+  default_tcp_prio_ports: MyString
+  default_udp_prio_ports: MyString
+  default_prio_protos: MyString
+  default_prio_helpers: MyString
+  default_ceil_dfl_percent: MyString
+  rate_dfl_percent: MyString
+  mtu: 1
+  r2q: 1
+  class_start: 1
+  rate_granted: 1
+  quantum_factor: MyString
+  active: false
+
+two:
+  name: MyString
+  default_tcp_prio_ports: MyString
+  default_udp_prio_ports: MyString
+  default_prio_protos: MyString
+  default_prio_helpers: MyString
+  default_ceil_dfl_percent: MyString
+  rate_dfl_percent: MyString
+  mtu: 1
+  r2q: 1
+  class_start: 1
+  rate_granted: 1
+  quantum_factor: MyString
+  active: false
