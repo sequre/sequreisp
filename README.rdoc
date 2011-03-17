@@ -22,7 +22,10 @@
   * Role based authentication, with audit system
   * Multilingual support (currently Spanish and English, contributions are welcome)
 
-There is an online demo of the application available at http://sequreisp.sequre.com.ar/[http://sequreisp.sequre.com.ar/]
+== Demo
+
+There is an online demo[http://sequreisp.sequre.com.ar/] of the application available 
+  Url: http://sequreisp.sequre.com.ar/
   User: admin@sequre.com.ar
   Pass: 1234
 
