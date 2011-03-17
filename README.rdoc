@@ -181,8 +181,16 @@ Log in using your server's ip with default credentials
 username: admin@sequre.com.ar
 pass: 1234
 
+== Use
+
+There is currently a step by step user guide[http://www.sequre.com.ar/downloads/SequreISP%20-%20Guia%20de%20Instlacion.pdf] available in spanish. 
+
+It will introduce you in the basic concepts behind sequreisp from a fresh instalation to get your first provider and client to work.
+
+The guide is meant for the comercial version but still applies to the opensource branch. The guide mentions an easy-install-CD[http://www.sequre.com.ar/descargas/] that is only available for the comercial version, so you have to skip that part and begin at 2.3 "Puesta a punto" section.
+
 == License
 
 Sequreisp is licensed under the terms of the GNU Afero General Public license
 
-A Comercial version of sequreisp is also available which includes support, an easy install CD and modules with extra functionality, you can find more information in the sequreisp website[http://sequreisp.com].
+A Comercial version of sequreisp is also available which includes support, an easy-install-CD[http://www.sequre.com.ar/descargas/] and modules with extra functionality, you can find more information in the sequreisp website[http://www.sequre.com.ar/productos/servidor-isp/].
