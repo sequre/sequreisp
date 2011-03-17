@@ -189,6 +189,14 @@ It will introduce you in the basic concepts behind sequreisp from a fresh instal
 
 The guide is meant for the comercial version but still applies to the opensource branch. The guide mentions an easy-install-CD[http://www.sequre.com.ar/descargas/] that is only available for the comercial version, so you have to skip that part and begin at 2.3 "Puesta a punto" section.
 
+== Community 
+
+We have released a forum[http://forum.sequreisp.com/] for open discution and user support, if you have any questions you can start a thread there.
+
+If you have a bug report or any suggestion you can create a git-hub issue.
+
+If you want to contribute to this project you can send a pull-request or mail me at "lruete NO@SPAM sequre.com.ar"
+
 == License
 
 Sequreisp is licensed under the terms of the GNU Afero General Public license
