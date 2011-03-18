@@ -81,7 +81,7 @@ We need to create the mysql database, we also recommend to create a sequreisp us
 
 In order to sequreisp connects to the newly created database we need to adjust the username/password/database values in the database.yml file
   
-  cd /home/sequreips/deploy/current
+  cd /opt/sequreisp/deploy/current
   cp config/database.yml.sample config/database.yml
   vi config/database.yml
 
@@ -89,9 +89,10 @@ Now is time to install the gem dependencies, to do that we need to invoke the ra
 
   ln -s /var/lib/gems/1.8/gems/rake-0.8.7/bin/rake /usr/local/bin/rake
 
-and then  
+And then invoke gems:install, i prefer do this as root as gems will be available system wide. The command must be executed standing in the /opt/sequreisp/deploy/current directory
 
-  sudo rake gems:install RAILS_ENV=production 
+  rake gems:install RAILS_ENV=production 
+
 
 Initialize the database 
 
