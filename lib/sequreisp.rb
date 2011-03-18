@@ -291,7 +291,8 @@ def gen_iptables
         end
         # prio3
         f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
-        f.puts "-A #{chain} -j CONNMARK --save-mark"
+        # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
+        f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
         f.puts "-A #{chain} -j ACCEPT"
       end
       f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark"
