@@ -99,8 +99,10 @@ Initialize the database
   rake db:migrate RAILS_ENV=production
   rake db:seed RAILS_ENV=production 
 
-Setup de daemon and the init scripts
+Setup the daemon and the init scripts
+
 The daemon is the only part of sequreisp that run as root, and is responsible for apply changes (tc and iptables rules) and to check provider state among other functions
+
 We need to create a init.d file like /etc/init.d/sequreisp with the following content
 
   #!/bin/sh
@@ -161,7 +163,7 @@ And add the following line
 
 In order to access the web interface you need to setup the vhost definition
 
-  # in /etc/apache2/sites-enabled/sequreisp 
+  # in /etc/apache2/sites-available/sequreisp 
   <VirtualHost *:80>
     ServerName localhost
     ServerAlias *
