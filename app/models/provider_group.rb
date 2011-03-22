@@ -121,17 +121,25 @@ class ProviderGroup < ActiveRecord::Base
     "192.0.2.#{klass.number}"
   end
   def instant_rate
-    rx = tx = 0 
-    rx2 = tx2 = 0 
-    providers.enabled.each do |p| 
-      rx += p.interface.rx_bytes
-      tx += p.interface.tx_bytes
+    rate = {}
+    if SEQUREISP_CONFIG["demo"]
+      rate[:down] = rand(rate_down)*1024
+      rate[:up] = rand(rate_up)*1024/2
+    else
+      rx = tx = 0 
+      rx2 = tx2 = 0 
+      providers.enabled.each do |p| 
+        rx += p.interface.rx_bytes
+        tx += p.interface.tx_bytes
+      end
+      sleep 2
+      providers.enabled.each do |p| 
+        rx2 += p.interface.rx_bytes
+        tx2 += p.interface.tx_bytes
+      end
+      rate[:down] = (rx2-rx)*8*1000/1024/2
+      rate[:up] = (tx2-tx)*8*1000/1024/2
     end
-    sleep 2
-    providers.enabled.each do |p| 
-      rx2 += p.interface.rx_bytes
-      tx2 += p.interface.tx_bytes
-    end
-    { :down => (rx2-rx)*8*1000/1024/2, :up => (tx2-tx)*8*1000/1024/2 }
+    rate
   end
 end

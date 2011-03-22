@@ -287,9 +287,12 @@ class Contract < ActiveRecord::Base
     enabled and Configuration.transparent_proxy
   end
   def instant_rate_down
+    return rand(plan.ceil_down)*1024 if SEQUREISP_CONFIG["demo"]
     instant_rate SEQUREISP_CONFIG["ifb_down"]
+    
   end
   def instant_rate_up
+    return rand(plan.ceil_up)*1024/2 if SEQUREISP_CONFIG["demo"]
     instant_rate SEQUREISP_CONFIG["ifb_up"]
   end
 
