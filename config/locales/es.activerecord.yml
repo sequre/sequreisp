@@ -253,6 +253,7 @@ es:
       success_full: "Restauracion exitosa, recomendamos reiniciar el server para hacer efectivos los cambios"
       error: "Se produjo un error, verifique que el archivo de backup sea correcto"
       success_db: "Restauracion exitosa, los cambios están siendo aplicados"
+      no_backups_in_demo: "Lo sentimos, pero los backups no están disponibles en esta versión demo"
   graph:
     heading: "Estadísticas %{name}"
     instant: "Instantaneo"

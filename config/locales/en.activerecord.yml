@@ -254,6 +254,7 @@ en:
       success_full: "Restore process succesfully completed. We recommend to restart the server so changes can be fully applied"
       error: "An error has occurred, check the backup file is correct"
       success_db: "Restore process succesfully completed, changes are being applied"
+      no_backups_in_demo: "We are sorry, but backups functionality is not available in demo mode"
   graph:
     heading: "Statistics %{name}"
     instant: "Real Time"

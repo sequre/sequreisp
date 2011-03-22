@@ -17,6 +17,7 @@
 
 class BackupController < ApplicationController
   before_filter :require_user
+  before_filter :no_backups, :only => [:upload_db, :upload_full, :create_full, :create_db] if SEQUREISP_CONFIG["demo"]
   permissions :backup
   def index
   end
@@ -77,5 +78,9 @@ private
     backup_path = File.join(tmp_dir, backup['backup_file'].original_filename)
     File.open(backup_path, "wb") { |f| f.write(backup['backup_file'].read) }
     backup_path
+  end
+  def no_backups
+    flash[:error] = I18n.t('backup.notice.no_backups_in_demo')
+    redirect_to :back
   end
 end
