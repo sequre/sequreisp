@@ -64,7 +64,7 @@
   <%= error_messages @interface %>
   <% form.inputs do %>
     <%= form.input :name, :wrapper_html => { :class => "left" } %> 
-    <%= form.input :vlan_interface, :wrapper_html => { :class => "left" }, :collection => Interface.find(:all, :conditions => { :vlan => false }) %> 
+    <%= form.input :vlan_interface, :wrapper_html => { :class => "left" }, :collection => @interface.vlan_interface_collection %>
     <%= form.input :vlan_id, :wrapper_html => { :class => "left" } %> 
     <%= form.input :vlan %>
     <div style="clear: both"></div>

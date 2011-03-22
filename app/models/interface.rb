@@ -127,4 +127,7 @@ class Interface < ActiveRecord::Base
   def self.scan
     File.open("/etc/udev/rules.d/70-persistent-net.rules").readlines.join.scan(/NAME="([^"]+)"/).flatten
   end
+  def vlan_interface_collection
+    new_record? ? Interface.find(:all, :conditions => ["vlan = 0"]) : Interface.find(:all, :conditions => ["vlan = 0 and id != ?", id])
+  end
 end
