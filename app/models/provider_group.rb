@@ -20,7 +20,7 @@ class ProviderGroup < ActiveRecord::Base
   has_many :plans, :dependent => :nullify
   has_many :providers, :dependent => :nullify, :include => :interface
   has_one :klass, :as => :klassable, :class_name => "ProviderKlass", :dependent => :nullify
-  default_scope :include => [:klass], :order => "name ASC"
+  named_scope :with_klass, :include => [:klass]
   has_many :contracts, :through => :plans
   validates_presence_of :name 
   validates_length_of :name, :in => 3..128

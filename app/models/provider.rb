@@ -30,8 +30,7 @@ class Provider < ActiveRecord::Base
   named_scope :online, :conditions => "online = 1"
   named_scope :offline, :conditions => "online = 0"
   named_scope :descend_by_online_changed_at, :order => "online_changed_at DESC"
-  default_scope :include => [:klass, :interface], :order => "name ASC"
-  
+  named_scope :with_klass_and_interface, :include => [:klass, :interface]
   validates_presence_of :name, :interface, :provider_group, :rate_down, :rate_up
   validates_presence_of :ip, :netmask, :gateway, :if => Proc.new { |p| p.kind == "static" }
   validates_presence_of :pppoe_user, :pppoe_pass, :if => Proc.new { |p| p.kind == "adsl" }

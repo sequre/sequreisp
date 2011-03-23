@@ -21,7 +21,8 @@ class ClientsController < ApplicationController
   # GET /clients
   # GET /clients.xml
   def index
-    #@clients = Client.all
+    params[:search] ||= {}
+    params[:search][:order] ||= 'ascend_by_name'
     @search = Client.search(params[:search])
     @clients = @search.paginate(:page => params[:page],:per_page => 10)
     

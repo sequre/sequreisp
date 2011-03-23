@@ -29,7 +29,6 @@ class Contract < ActiveRecord::Base
   has_one :provider_group, :through => :plan
   belongs_to :public_address, :class_name => 'Address', :conditions => "addressable_id is not null and addressable_type = 'provider'"
   belongs_to :proxy_arp_interface, :class_name => 'Interface', :conditions => "kind = 'lan'"
-  #default_scope :include => [:klass, :plan], :order => "CAST(INET_ATON(netmask) AS UNSIGNED) DESC, CAST(INET_ATON(SUBSTRING_INDEX(ip, '/', 1)) AS UNSIGNED) ASC"
 
   named_scope :enabled, :conditions => { :state => "enabled" }
   

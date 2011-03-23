@@ -21,6 +21,8 @@ class ProvidersController < ApplicationController
   # GET /providers
   # GET /providers.xml
   def index
+    params[:search] ||= {}
+    params[:search][:order] ||= 'ascend_by_name'
     @search = Provider.search(params[:search])
     @providers = @search.paginate(:page => params[:page],:per_page => 30)
 

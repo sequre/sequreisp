@@ -38,8 +38,6 @@ class User < ActiveRecord::Base
   has_role
   validates_role
 
-  default_scope :order => "name ASC"
-
   validates_presence_of :name, :email, :role_name
   
   def self.roles_for_select

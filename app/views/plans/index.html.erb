@@ -5,18 +5,37 @@
 
 <%= render :partial => "shared/empty_submenu" %>
 
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul>
+    <li>
+      <%= f.label :name_like, t('activerecord.attributes.plan.name') %>
+      <%= f.text_field :name_like %>
+    </li>
+    <li>
+    <%= f.label :provider_group_id_equals, t('activerecord.attributes.plan.provider_group') %>
+    <%= f.collection_select :provider_group_id_equals, ProviderGroup.all, :id, :name, :include_blank => true %>
+    </li>
+    <li>
+      <br/>
+      <%= f.submit t('buttons.search') %>
+      <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
 <div class="separador"></div>
 	
 <div class="main">
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
-        <th><%=t 'activerecord.attributes.plan.name' %></th>
-        <th><%=t 'activerecord.attributes.plan.rate_down' %></th>
-        <th><%=t 'activerecord.attributes.plan.ceil_down' %></th>
-        <th><%=t 'activerecord.attributes.plan.rate_up' %></th>
-        <th><%=t 'activerecord.attributes.plan.ceil_up' %></th>
-        <th><%=t 'activerecord.attributes.plan.provider_group' %></th>
+        <th><%= order @search, :by => :name , :as => t('activerecord.attributes.plan.name') %></th>
+        <th><%= order @search, :by => :rate_down , :as => t('activerecord.attributes.plan.rate_down') %></th>
+        <th><%= order @search, :by => :ceil_down , :as => t('activerecord.attributes.plan.ceil_down') %></th>
+        <th><%= order @search, :by => :rate_up , :as => t('activerecord.attributes.plan.rate_up') %></th>
+        <th><%= order @search, :by => :ceil_up , :as => t('activerecord.attributes.plan.ceil_up') %></th>
+        <th><%= order @search, :by => :provider_group_name, :as => t('activerecord.attributes.plan.provider_group') %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
         <% if current_user.may_update_plans? or current_user.may_index_plans? %>
         <th></th> 
@@ -50,5 +69,5 @@
   </table>
 </div>
 
-<%#= will_paginate @plans %>
+<%= will_paginate @plans %>
 

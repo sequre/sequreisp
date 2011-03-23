@@ -21,7 +21,10 @@ class PlansController < ApplicationController
   # GET /plans
   # GET /plans.xml
   def index
-    @plans = Plan.all
+    params[:search] ||= {}
+    params[:search][:order] ||= 'ascend_by_name'
+    @search = Plan.search(params[:search])
+    @plans = @search.paginate(:page => params[:page],:per_page => 30)
 
     respond_to do |format|
       format.html # index.html.erb

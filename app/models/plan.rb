@@ -19,7 +19,6 @@ class Plan < ActiveRecord::Base
   acts_as_audited
   belongs_to :provider_group
   has_many :contracts, :dependent => :destroy, :include => :klass
-  default_scope :order => "name ASC"
   validates_uniqueness_of :name 
   validates_presence_of :name, :provider_group, :rate_down, :ceil_down, :rate_up, :ceil_up
   validates_length_of :name, :in => 3..128

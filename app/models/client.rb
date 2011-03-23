@@ -18,7 +18,6 @@
 class Client < ActiveRecord::Base
   acts_as_audited
   has_many :contracts, :dependent => :destroy
-  default_scope :order => "name ASC"
 
   validates_presence_of :name
   validates_length_of :name, :in => 3..128

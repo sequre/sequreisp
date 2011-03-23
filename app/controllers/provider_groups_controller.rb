@@ -22,7 +22,7 @@ class ProviderGroupsController < ApplicationController
   # GET /provider_groups
   # GET /provider_groups.xml
   def index
-    @provider_groups = ProviderGroup.all
+    @provider_groups = ProviderGroup.all(:order => "name ASC")
 
     respond_to do |format|
       format.html # index.html.erb

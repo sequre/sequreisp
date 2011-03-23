@@ -108,7 +108,7 @@ def gen_tc(f)
   tc_ifb_down.close
 
   # htb tree up (en las ifaces de Provider) 
-  Provider.enabled.each do |p| 
+  Provider.enabled.with_klass_and_interface.each do |p|
     #max quantum posible para este provider, necesito saberlo con anticipación
     quantum = Configuration.mtu * p.quantum_factor * 3
     iface = p.link_interface
@@ -141,7 +141,7 @@ def gen_tc(f)
       tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
       tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
       tc.puts "qdisc add dev #{iface} parent 1:1 handle 2: htb default 0"
-      Provider.enabled.each do |p|
+      Provider.enabled.with_klass_and_interface.each do |p|
         #max quantum posible para este provider, necesito saberlo con anticipación
         quantum = Configuration.mtu * p.quantum_factor * 3
         tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
@@ -175,7 +175,7 @@ def gen_iptables
       # acepto si ya se de que enlace es
       f.puts "-A PREROUTING -m mark ! --mark 0 -j ACCEPT"
       # si viene desde internet marko segun el enlace por el que entró
-      Provider.enabled.each do |p| 
+      Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
         f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark"
         f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT" 
@@ -211,7 +211,7 @@ def gen_iptables
             f.puts "-A OUTPUT -s #{c.proxy_bind_ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
           end
         else
-          ProviderGroup.enabled.each do |pg|
+          ProviderGroup.enabled.with_klass.each do |pg|
             # marko provider_group según tcp_outgoing_address de squid
             f.puts "-A OUTPUT -s #{pg.proxy_bind_ip} -j MARK --set-mark 0x#{pg.mark_hex}/0x00ff0000"
           end
@@ -219,11 +219,11 @@ def gen_iptables
       end 
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
-      Provider.enabled.each do |p| 
+      Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A sequreisp_connmark  -o #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
       end
       # si tiene marka de ProviderGroup voy a sequreisp_connmark
-      ProviderGroup.enabled.each do |pg|
+      ProviderGroup.enabled.with_klass.each do |pg|
         f.puts "-A POSTROUTING -m mark --mark 0x#{pg.mark_hex}/0x00ff0000 -j sequreisp_connmark"
       end
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
@@ -241,7 +241,7 @@ def gen_iptables
       Interface.all(:conditions => { :kind => "lan" }).each do |interface|
         f.puts "-A POSTROUTING #{mark_if} -o #{interface.name} -j sequreisp.down"
       end
-      Provider.enabled.each do |p| 
+      Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
       end 
       Contract.descend_by_netmask.each do |c|
@@ -333,7 +333,7 @@ def gen_iptables
       ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
         do_port_forwardings f, fp
       end
-      Provider.enabled.each do |p| 
+      Provider.enabled.with_klass_and_interface.each do |p|
         p.networks.each do |network|
           f.puts "-A POSTROUTING -o #{p.link_interface} -s #{network} -j ACCEPT"
         end
@@ -351,7 +351,7 @@ def gen_iptables
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
-      Provider.enabled.each do |p| 
+      Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
         f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       end
@@ -399,10 +399,10 @@ def gen_ip_ru
     File.open(IP_RU_FILE, "w") do |f| 
       f.puts "rule flush"
       f.puts "rule add prio 1 lookup main"
-      ProviderGroup.enabled.each do |pg|
+      ProviderGroup.enabled.with_klass.each do |pg|
         f.puts "rule add fwmark 0x#{pg.mark_hex}/0x00ff0000 table #{pg.table} prio 200"
       end
-      Provider.enabled.each do |p|
+      Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "rule add fwmark 0x#{p.mark_hex}/0x00ff0000 table #{p.table} prio 300"
         p.networks.each do |network|
           f.puts "rule add from #{network} table #{p.table}  prio 100"
@@ -459,7 +459,7 @@ end
 def gen_ip_ro
   begin
     File.open(IP_RO_FILE, "w") do |f| 
-      Provider.enabled.ready.each do |p|
+      Provider.enabled.ready.with_klass_and_interface.each do |p|
         update_provider_route f, p, true, true
       end
       ProviderGroup.enabled.each do |pg| 
@@ -598,7 +598,7 @@ def setup_proxy(f)
         Contract.descend_by_netmask.each do |c|
           fsquid.puts "acl pg_#{c.plan.provider_group.klass.number} src #{c.ip}"
         end
-        ProviderGroup.enabled.each do |pg|
+        ProviderGroup.enabled.with_klass.each do |pg|
           fsquid.puts "#Dummy address para salir via #{pg.name}"
           fsquid.puts "#empty acl por si no hay contratos"
           fsquid.puts "acl pg_#{pg.klass.number} src"
@@ -700,7 +700,7 @@ def check_links
   writeme = []
   pid = []
   providers = Provider.ready
-  providers.each do |p| 
+  providers.each do |p|
     readme[p.id], writeme[p.id] = IO.pipe
     pid[p.id] = fork {
         # child
@@ -711,7 +711,7 @@ def check_links
     writeme[p.id].close
   end
   Process.waitall()
-  providers.each do |p| 
+  providers.each do |p|
     #puts "#{p.id} #{readme[p.id].first}"
     online = readme[p.id].read.chomp.to_i > 0
     p.online = online 
@@ -733,7 +733,7 @@ def check_links
     File.open(CHECK_LINKS_FILE, "w") do |f| 
       f.puts("#!/bin/bash")
       f.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
-      Provider.all.each do |p|
+      Provider.with_klass_and_interface.each do |p|
         setup_provider_interface(f,p) if not p.online?
         update_provider_route f, p, false
       end
@@ -818,7 +818,7 @@ def boot(run=true)
       # borro el default gw de main
       f.puts "ip route del default table main"
       setup_dynamic_providers_hooks
-      Provider.enabled.each do |p|
+      Provider.enabled.with_klass_and_interface.each do |p|
         setup_provider_interface f,p
       end
       File.open(ARP_FILE, "w") do |arp| 
@@ -844,7 +844,7 @@ def boot(run=true)
       Interface.all(:conditions => { :kind => "lan" }).each do |interface|
         f.puts "tc -b #{TC_FILE_PREFIX + interface.name}"
       end
-      Provider.enabled.each do |p| 
+      Provider.enabled.with_klass_and_interface.each do |p|
         #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada 
         f.puts "tc -b #{TC_FILE_PREFIX + p.link_interface}" 
       end

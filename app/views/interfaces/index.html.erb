@@ -7,14 +7,38 @@
   <%= render :partial => "shared/submenu_items"%>  
 </ul>
 <div style="clear: both"></div>
+
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul>
+    <li>
+      <%= f.label :name_like, t('activerecord.attributes.interface.name') %>
+      <%= f.text_field :name_like %>
+    </li>
+    <li>
+    <%= f.label :kind_equals, t('activerecord.attributes.interface.kind') %>
+    <%= f.select :kind_equals, Interface.kinds_for_select, :include_blank => true %>
+    </li>
+    <li>
+    <%= f.label :vlan_is, t('activerecord.attributes.interface.vlan') %>
+    <%= f.select :vlan_is, [[t('formtastic.yes'),true],[t('formtastic.no'),false]], :include_blank => true %>
+    </li>
+    <li>
+      <br/>
+      <%= f.submit t('buttons.search') %>
+      <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
 <div class="separador"></div>
 
 <div class="main">
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
-        <th><%=t 'activerecord.attributes.interface.name' %></th>
-        <th><%=t 'activerecord.attributes.interface.kind' %></th>
+        <th><%= order @search, :by => :name , :as => t('activerecord.attributes.interface.name') %></th>
+        <th><%= order @search, :by => :kind , :as => t('activerecord.attributes.interface.kind') %></th>
         <th><%=t 'activerecord.attributes.interface.vlan_id' %></th>
         <th><%=t 'activerecord.attributes.ip' %></th>
         <th><%=t 'activerecord.attributes.interface.physical_link' %></th>
@@ -51,6 +75,6 @@
       <% end %>
     </tbody>
   </table>
-  <%#= will_paginate @interfaces %>
+  <%= will_paginate @interfaces %>
 </div>
 

@@ -22,7 +22,10 @@ class InterfacesController < ApplicationController
   # GET /interfaces
   # GET /interfaces.xml
   def index
-    @interfaces = Interface.all
+    params[:search] ||= {}
+    params[:search][:order] ||= 'ascend_by_name'
+    @search = Interface.search(params[:search])
+    @interfaces = @search.paginate(:page => params[:page],:per_page => 30)
 
     respond_to do |format|
       format.html # index.html.erb
