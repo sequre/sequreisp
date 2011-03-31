@@ -44,7 +44,7 @@ class Backup
     case @kind
     when "full"
       system("/usr/bin/mysqldump -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]} > #{base_dir}/sequreisp.sql")
-      IO.popen("tar #{exclude} -zpcf - #{base_dir}")
+      IO.popen("#{SEQUREISP_CONFIG["tar_command"]} #{exclude} --files-from #{base_dir}/.sequreisp_backup.include -zpcf - #{base_dir}")
     when "db"
       IO.popen("/usr/bin/mysqldump -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]} | gzip -")
     end
@@ -55,7 +55,7 @@ class Backup
   def restore
     case @kind
     when "full"
-      system("tar -zxpf #{@path} -C /")
+      system("#{SEQUREISP_CONFIG["tar_command"]} -zxpf #{@path} -C /")
       system("cat #{base_dir}/sequreisp.sql  | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
     when "db"  
       system("zcat #{@path} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
