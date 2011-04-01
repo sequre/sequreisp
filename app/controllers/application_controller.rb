@@ -54,7 +54,7 @@ class ApplicationController < ActionController::Base
   
   def set_language
     Configuration.do_reload
-    I18n.locale = Configuration.language.short_name
+    I18n.locale = Configuration.language
   end
 
   def set_time_zone

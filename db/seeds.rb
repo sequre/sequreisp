@@ -1,7 +1,3 @@
-Language.create! [{:name => "Español", :short_name => "es"},
-                  {:name => "English", :short_name => "en"}
-]
-
 Configuration.create!(
  :default_tcp_prio_ports => "20,21,22,25,80,110,143,443,587,993,995,1755,1863,1864,3128,5222,5223",
  :default_udp_prio_ports => "",
@@ -13,7 +9,7 @@ Configuration.create!(
  :gc_thresh1 => 2048,
  :gc_thresh2 => 4096,
  :gc_thresh3 => 8192,
- :language => Language.first,
+ :language => "en",
  :last_changes_applied_at => DateTime.now
 )
 

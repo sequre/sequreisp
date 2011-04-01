@@ -17,6 +17,6 @@
 
 class SequreMailer < ActionMailer::Base
   def set_language
-    I18n.locale = Configuration.language.short_name
+    I18n.locale = Configuration.language
   end
 end

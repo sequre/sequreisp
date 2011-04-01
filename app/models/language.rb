@@ -15,10 +15,8 @@
 # You should have received a copy of the GNU Afero General Public License
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
-class Language < ActiveRecord::Base
-  has_one :configuration
-  
-
-  validates_presence_of :name, :short_name
-  validates_uniqueness_of :name, :short_name
+class Language
+  def self.languages_for_select
+    [["English", "en"], ["Español", "es"], ["Português", "pt"]]
+  end
 end

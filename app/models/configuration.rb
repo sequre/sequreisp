@@ -16,7 +16,6 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Configuration < ActiveRecord::Base
-  belongs_to :language
 
   def self.acts_as_audited_except
     [:daemon_reload]

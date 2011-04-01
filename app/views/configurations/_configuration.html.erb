@@ -20,7 +20,7 @@
   <% semantic_form_for @configuration, :html => { :multipart => true } do |form| %>
     <%= error_messages @configuration%>
     <% form.inputs :name => t('fieldsets.configuration.system') do %>
-      <%= form.input :language %>
+      <%= form.input :language, :as => :select, :collection => Language.languages_for_select, :include_blank => false %>
       <%= form.input :time_zone, :as => :time_zone, :priority_zones => /America/%> 
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.notifications') do %>
