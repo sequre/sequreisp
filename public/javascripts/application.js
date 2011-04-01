@@ -31,15 +31,16 @@ function add_fields(link, association, content) {
 
 /* Plugins Menu Callback */
 $(function() {
-    $("#plugins_button").click(function(){
-      $("#plugins_menu").toggle("fast");
-    });
+    initMoreToggle("#plugins_button","#plugins_menu", "plugins_menu");
 });
 /* More toggle button implementation */
 function initMoreToggle(clickElement, toogleElement, cookieName) {
   //console.log("initial: "+ $.cookie(cookieName));
   $(clickElement).attr('href', 'javascript:void(null);'); 
-  if ($.cookie(cookieName) != "show") $(toogleElement).hide();
+  if ($.cookie(cookieName) != "show")
+    $(toogleElement).hide();
+  else
+    $(toogleElement).show();
   $(clickElement).click(function(){
     $(toogleElement).toggle();
     //console.log("before: "+ $.cookie(cookieName));
