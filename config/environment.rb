@@ -7,6 +7,9 @@ RAILS_GEM_VERSION = '2.3.11' unless defined? RAILS_GEM_VERSION
 require File.join(File.dirname(__FILE__), 'boot')
 require File.join(File.dirname(__FILE__), '../vendor/plugins/engines/boot')
 
+# load de files de configuración
+require 'sequreisp_config'
+
 Rails::Initializer.run do |config|
   # Settings in config/environments/* take precedence over those specified here.
   # Application configuration should go into files in config/initializers
@@ -56,5 +59,3 @@ Rails::Initializer.run do |config|
   config.i18n.default_locale = :es
 end
 
-# load de files de configuración
-SEQUREISP_CONFIG = YAML::load(File.open("#{RAILS_ROOT}/config/sequreisp_config_#{Rails.env}.yml"))

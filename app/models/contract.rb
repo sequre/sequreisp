@@ -286,13 +286,13 @@ class Contract < ActiveRecord::Base
     enabled and Configuration.transparent_proxy
   end
   def instant_rate_down
-    return rand(plan.ceil_down)*1024 if SEQUREISP_CONFIG["demo"]
-    instant_rate SEQUREISP_CONFIG["ifb_down"]
+    return rand(plan.ceil_down)*1024 if SequreispConfig::CONFIG["demo"]
+    instant_rate SequreispConfig::CONFIG["ifb_down"]
     
   end
   def instant_rate_up
-    return rand(plan.ceil_up)*1024/2 if SEQUREISP_CONFIG["demo"]
-    instant_rate SEQUREISP_CONFIG["ifb_up"]
+    return rand(plan.ceil_up)*1024/2 if SequreispConfig::CONFIG["demo"]
+    instant_rate SequreispConfig::CONFIG["ifb_up"]
   end
 
   def instant_rate(iface)
@@ -300,7 +300,7 @@ class Contract < ActiveRecord::Base
     match = false
     rate = 0
     unit = ""
-    IO.popen("/sbin/tc -s class show dev #{SEQUREISP_CONFIG["ifb_down"]}", "r") do |io|
+    IO.popen("/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}", "r") do |io|
       io.each do |line|
         match = true if (line =~ /class htb \w+:#{class_hex}/) != nil
         if match and (line =~ /^ rate (\d+)(\w+) /) != nil

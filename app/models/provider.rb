@@ -76,7 +76,7 @@ class Provider < ActiveRecord::Base
         case kind_was 
         when "adsl"
           cq.command += "poff #{_interface.name};"
-          cq.command += "rm #{SEQUREISP_CONFIG["ppp_dir"]}/peers/#{_interface.name};"
+          cq.command += "rm #{SequreispConfig::CONFIG["ppp_dir"]}/peers/#{_interface.name};"
         when "dhcp"
           #kill del dhclient
           cq.command += "kill $(cat /var/run/dhclient.#{_interface.name}.pid);"
@@ -97,7 +97,7 @@ class Provider < ActiveRecord::Base
     case kind 
     when "adsl"
       cq.command += "poff #{interface.name};"
-      cq.command += "rm #{SEQUREISP_CONFIG["ppp_dir"]}/peers/#{interface.name};"
+      cq.command += "rm #{SequreispConfig::CONFIG["ppp_dir"]}/peers/#{interface.name};"
     when "dhcp"
       #kill del dhclient
       cq.command += "kill $(cat /var/run/dhclient.#{interface.name}.pid);"

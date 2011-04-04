@@ -33,7 +33,7 @@ class Backup
     "sequreisp_backup_#{Time.now.strftime("%Y-%m-%d_%H%M")}.#{suffix}"
   end
   def base_dir
-    SEQUREISP_CONFIG["base_dir"]
+    SequreispConfig::CONFIG["base_dir"]
   end
   def exclude
     paths = ["/deploy/old/*", "/deploy/shared/log/*", "/deploy/shared/public/images/rrd/*"]
@@ -44,7 +44,7 @@ class Backup
     case @kind
     when "full"
       system("/usr/bin/mysqldump -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]} > #{base_dir}/sequreisp.sql")
-      IO.popen("#{SEQUREISP_CONFIG["tar_command"]} #{exclude} --files-from #{base_dir}/.sequreisp_backup.include -zpcf - #{base_dir}")
+      IO.popen("#{SequreispConfig::CONFIG["tar_command"]} #{exclude} --files-from #{base_dir}/.sequreisp_backup.include -zpcf - #{base_dir}")
     when "db"
       IO.popen("/usr/bin/mysqldump -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]} | gzip -")
     end
@@ -55,7 +55,7 @@ class Backup
   def restore
     case @kind
     when "full"
-      system("#{SEQUREISP_CONFIG["tar_command"]} -zxpf #{@path} -C /")
+      system("#{SequreispConfig::CONFIG["tar_command"]} -zxpf #{@path} -C /")
       system("cat #{base_dir}/sequreisp.sql  | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
     when "db"  
       system("zcat #{@path} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")

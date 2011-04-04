@@ -96,7 +96,7 @@ class Interface < ActiveRecord::Base
   end
   def instant_rate
     rate = {}
-    if SEQUREISP_CONFIG["demo"]
+    if SequreispConfig::CONFIG["demo"]
       if kind == "lan"
         # en lan el down de los providers es el up
         rate[:down] = rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2

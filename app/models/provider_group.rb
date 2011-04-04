@@ -122,7 +122,7 @@ class ProviderGroup < ActiveRecord::Base
   end
   def instant_rate
     rate = {}
-    if SEQUREISP_CONFIG["demo"]
+    if SequreispConfig::CONFIG["demo"]
       rate[:down] = rand(rate_down)*1024
       rate[:up] = rand(rate_up)*1024/2
     else

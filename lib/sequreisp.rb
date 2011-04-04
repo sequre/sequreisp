@@ -16,13 +16,13 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 #PPP_PEER_DIR="/etc/ppp/peer"
-BASE=SEQUREISP_CONFIG["base_dir"]
-PPP_DIR=SEQUREISP_CONFIG["ppp_dir"]
-DHCPD_DIR=SEQUREISP_CONFIG["dhcpd_dir"]
-PINGABLE_SERVERS=SEQUREISP_CONFIG["pingable_servers"]
-IFB_UP=SEQUREISP_CONFIG["ifb_up"]
-IFB_DOWN=SEQUREISP_CONFIG["ifb_down"]
-DEPLOY_DIR=SEQUREISP_CONFIG["deploy_dir"]
+BASE=SequreispConfig::CONFIG["base_dir"]
+PPP_DIR=SequreispConfig::CONFIG["ppp_dir"]
+DHCPD_DIR=SequreispConfig::CONFIG["dhcpd_dir"]
+PINGABLE_SERVERS=SequreispConfig::CONFIG["pingable_servers"]
+IFB_UP=SequreispConfig::CONFIG["ifb_up"]
+IFB_DOWN=SequreispConfig::CONFIG["ifb_down"]
+DEPLOY_DIR=SequreispConfig::CONFIG["deploy_dir"]
 BASE_SCRIPTS="#{BASE}/scripts"
 SEQUREISP_SQUID_CONF=Rails.env.production? ? "/etc/squid/sequreisp.squid.conf" : "/tmp/sequreisp/squid.conf"
 TC_FILE_PREFIX="#{BASE_SCRIPTS}/tc_"

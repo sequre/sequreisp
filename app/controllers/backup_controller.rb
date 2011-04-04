@@ -17,7 +17,7 @@
 
 class BackupController < ApplicationController
   before_filter :require_user
-  before_filter :no_backups, :only => [:upload_db, :upload_full, :create_full, :create_db] if SEQUREISP_CONFIG["demo"]
+  before_filter :no_backups, :only => [:upload_db, :upload_full, :create_full, :create_db] if SequreispConfig::CONFIG["demo"]
   permissions :backup
   def index
   end
