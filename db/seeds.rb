@@ -10,6 +10,8 @@ Configuration.create!(
  :gc_thresh2 => 4096,
  :gc_thresh3 => 8192,
  :language => "en",
+ :transparent_proxy => false,
+ :transparent_proxy_zph_enabled => false,
  :last_changes_applied_at => DateTime.now
 )
 
