@@ -55,7 +55,9 @@ while($running) do
     #Rails.logger.debug "sequreispd: reloading..."
     boot
     Configuration.daemon_reload = false
+    Configuration.record_timestamps = false
     Configuration.save
+    Configuration.record_timestamps = true
   end
 
   system "#{ARP_FILE}"
