@@ -860,7 +860,7 @@ def boot(run=true)
   rescue Exception => e
     puts "Exception #{e.message}"
   end
-  system "#{BOOT_FILE} 2>&1 >#{BOOT_LOG}" if run
+  system "#{BOOT_FILE} 2>#{BOOT_LOG} 1>#{BOOT_LOG}" if run
 end
 
 
