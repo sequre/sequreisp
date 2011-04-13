@@ -177,6 +177,8 @@ pt:
         version: "Versão"
       address:
         free_ip_prefix: "Livre: "
+        ip: "Endereço IP"
+        netmask: "Máscara de rede"
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"
