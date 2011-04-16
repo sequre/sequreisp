@@ -95,7 +95,7 @@ class ClientsController < ApplicationController
     @client.destroy
 
     respond_to do |format|
-      format.html { redirect_back_or_to(clients_path) }
+      format.html { redirect_back_from_edit_or_to(clients_path) }
       format.xml  { head :ok }
     end
   end
