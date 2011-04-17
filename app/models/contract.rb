@@ -300,7 +300,7 @@ class Contract < ActiveRecord::Base
     match = false
     rate = 0
     unit = ""
-    IO.popen("/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}", "r") do |io|
+    IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
       io.each do |line|
         match = true if (line =~ /class htb \w+:#{class_hex}/) != nil
         if match and (line =~ /^ rate (\d+)(\w+) /) != nil
