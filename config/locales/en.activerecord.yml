@@ -222,6 +222,7 @@ en:
     configuration: "Configuration"
     apply_changes: "Apply changes"
     backups: "Backups"
+    modules: "Plugins"
   buttons:
     login: "Login"
     edit: "Edit"

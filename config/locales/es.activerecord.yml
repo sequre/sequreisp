@@ -222,6 +222,7 @@ es:
     configuration: "Configuración"
     apply_changes: "Aplicar cambios"
     backups: "Copias de resguardo"
+    modules: "Módulos"
   buttons:
     login: "Entrar"
     edit: "Editar"
