@@ -1,3 +1,21 @@
+<%= render :partial => 'backup/confirm_restore' %>
+<script type="text/javascript">
+$(function() {
+  $(":submit.restore").click(function (e) {
+    e.preventDefault();
+    form = $(this).closest('form')
+    $('#submit_restore').click(function (e) {
+      form.attr('action', form.attr('id') == "upload_full" ? '/backup/upload_full' : '/backup/upload_db');
+      form.submit();
+    });
+    $('#submit_restore_and_reboot').click(function (e) {
+      form.attr('action', form.attr('id') == 'upload_full' ? '/backup/upload_full_and_reboot' : '/backup/upload_db_and_reboot');
+      form.submit();
+    });
+    OSX.show();
+  });
+});
+</script>
 <% content_for :title, t('menu.backups') %>
 <% heading t('menu.backups')  %>
 
@@ -23,7 +41,7 @@
     <% end %>
     </fieldset>
     <fieldset class="inputs">
-    <% form_tag({:action => 'upload_full'}, :multipart => true) do %>
+      <% form_tag({:action => 'upload_full'}, :multipart => true, :id => 'upload_full') do %>
       <legend><span><%=t 'backup.restore_backup_legend' %></span></legend>
         <li>
           <label for="backup"><%=t 'backup.backup_file_label' %></label>
@@ -31,7 +49,7 @@
         </li>
         <li class="left">
           <br/>
-          <%= submit_tag t('backup.restore_backup_full_button'), :confirm => t('backup.confirm_restore_backup') %>
+          <%= submit_tag t('backup.restore_backup_full_button'), :class => "restore" %>
         </li>
     <% end %>
     </fieldset>
@@ -49,7 +67,7 @@
     <% end %>
     </fieldset>
     <fieldset class="inputs">
-    <% form_tag({:action => 'upload_db'}, :multipart => true) do %>
+    <% form_tag({:action => 'upload_db'}, :multipart => true, :id => 'upload_db') do %>
       <legend><span><%=t 'backup.restore_backup_legend' %></span></legend>
       <li>
         <label for="backup_db"><%=t 'backup.backup_file_label' %></label>
@@ -57,7 +75,7 @@
       </li>
       <li class="left">
         <br/>
-        <%= submit_tag t('backup.restore_backup_db_button'), :confirm => t('backup.confirm_restore_backup') %>
+        <%= submit_tag t('backup.restore_backup_db_button'), :class => "restore" %>
       </li>
     <% end %>
     </fieldset>

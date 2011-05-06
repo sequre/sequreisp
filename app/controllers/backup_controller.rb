@@ -28,18 +28,18 @@ class BackupController < ApplicationController
       redirect_to :back
     else
       backup_path = save_uploaded_file(backup)
-      b = Backup.new("db", backup_path)
-      if b.restore
-        c = Configuration.first
-        c.daemon_reload = true
-        c.save
+      if Backup.new.restore_db(backup_path, @reboot)
         flash[:notice] = t 'backup.notice.success_db'
       else
-        flash[:error] = t 'backup.notice.error'
+        flash[:error] = t 'backup.notice.restore_error'
       end
       File.delete(backup_path)
       redirect_to :root
     end
+  end
+  def upload_db_and_reboot
+    @reboot = true
+    upload_db
   end
   def upload_full
     backup = params[:backup_full]
@@ -48,29 +48,37 @@ class BackupController < ApplicationController
       redirect_to :back
     else
       backup_path = save_uploaded_file(backup)
-      b = Backup.new("full", backup_path)
-      if b.restore
+      if Backup.new.restore_full(backup_path, @reboot)
         flash[:notice] = t 'backup.notice.success_full'
       else
-        flash[:error] = t 'backup.notice.error'
+        flash[:error] = t 'backup.notice.restore_error'
       end
       File.delete(backup_path)
       redirect_to :root
     end
   end
+  def upload_full_and_reboot
+    @reboot = true
+    upload_full
+  end
   def create_full
-    b = Backup.new("full", nil, params[:include_graphs])
-    send_data b.to_popen.readlines.to_s,
-            :type => 'application/x-gzip',
-            :disposition => "attachment; filename=#{b.name}"
+    if file = Backup.new.full(params[:include_graphs])
+      send_file file, :type => 'application/x-gzip'
+    else
+      flash[:error] = t 'backup.notice.create_error'
+      redirect_to backup_path
+    end
   end
   def create_db
-    b = Backup.new("db")
-    send_data b.to_popen.readlines.to_s,
-            :type => 'application/x-gzip',
-            :disposition => "attachment; filename=#{b.name}"
+    if file = Backup.new.db
+      send_file file, :type => 'application/x-gzip'
+    else
+      flash[:error] = t 'backup.notice.create_error'
+      redirect_to backup_path
+    end
+
   end
-  
+
 private
   def save_uploaded_file(backup)
     tmp_dir = RAILS_ROOT + "/tmp"

@@ -73,13 +73,16 @@ class Configuration < ActiveRecord::Base
   def self.errors
     @@c.errors
   end
-
-  def apply_changes
+  def save_without_timestamps
     Configuration.record_timestamps = false
+    ret = save
+    Configuration.record_timestamps = true
+    ret
+  end
+  def apply_changes
     self.last_changes_applied_at = Time.now
     self.daemon_reload = true
-    save
-    Configuration.record_timestamps = true
+    save_without_timestamps
   end
 
-end 
+end

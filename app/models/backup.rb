@@ -17,48 +17,82 @@
 
 class Backup
   CONFIG = ActiveRecord::Base.configurations[Rails.env]
+  attr_reader :name
 
-  def initialize(kind, path=nil, include_graphs=false)
-    @kind = kind
-    @path = path
-    @include_graphs = include_graphs
+  def initialize
+    @name = "sequreisp_backup_#{Time.now.strftime("%Y-%m-%d_%H%M")}"
   end
-  def name
-    suffix = case @kind 
-    when "full"
-      "full.tar.gz"
-    when "db"
-      "db.gz"
-    end
-    "sequreisp_backup_#{Time.now.strftime("%Y-%m-%d_%H%M")}.#{suffix}"
-  end
+
   def base_dir
     SequreispConfig::CONFIG["base_dir"]
   end
-  def exclude
+  def backup_include
+    "#{base_dir}/.sequreisp_backup.include"
+  end
+  def exclude(include_graphs)
     paths = ["/deploy/old/*", "/deploy/shared/log/*", "/deploy/shared/public/images/rrd/*"]
-    paths << "/deploy/shared/db/rrd/*" unless @include_graphs
+    paths << "/deploy/shared/db/rrd/*" unless include_graphs
     paths.each_with_object("") { |str, res| res << "--exclude=\"#{base_dir}#{str}\" " }
   end
-  def to_popen 
-    case @kind
-    when "full"
-      system("/usr/bin/mysqldump -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]} > #{base_dir}/sequreisp.sql")
-      IO.popen("#{SequreispConfig::CONFIG["tar_command"]} #{exclude} --files-from #{base_dir}/.sequreisp_backup.include -zpcf - #{base_dir}")
-    when "db"
-      IO.popen("/usr/bin/mysqldump -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]} | gzip -")
+  def mysqldump(file)
+    begin
+      File.open file, "w" do |f|
+        IO.popen("/usr/bin/mysqldump -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}") do |p|
+          f.write p.read
+        end
+      end
+      $?.exitstatus == 0
+    rescue => e
+      Rails.logger.error e.inspect
     end
   end
-  def to_file(path=".")
-    File.open(File.join(path, name), "w") { |f| f.write(to_popen.read) }
+  def db
+    "#{full_path}.db.gz" if mysqldump "#{full_path}.db" and system "gzip #{full_path}.db"
   end
-  def restore
-    case @kind
-    when "full"
-      system("#{SequreispConfig::CONFIG["tar_command"]} -zxpf #{@path} -C /")
-      system("cat #{base_dir}/sequreisp.sql  | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
-    when "db"  
-      system("zcat #{@path} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+  def full(include_graphs=false)
+    if mysqldump "#{base_dir}/sequreisp.sql"
+      FileUtils.touch backup_include if not File.exists? backup_include
+      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{exclude(include_graphs)} --files-from #{backup_include} -zpcf #{full_path}.tar.gz #{base_dir}"
+    end
+    "#{full_path}.tar.gz" if success
+  end
+  def full_path
+    File.join(Dir::tmpdir, name)
+  end
+  def restore_db(file, reboot=false)
+    success = system("zcat #{file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+    respawn(reboot) if success
+    success
+  end
+  def restore_full(file, reboot=false)
+    success = false
+    # tar exit_status == 1 is not fatal
+    if system("#{SequreispConfig::CONFIG["tar_command"]} -zxpf #{file} -C /") or $?.exitstatus == 1
+      success = system("cat #{base_dir}/sequreisp.sql  | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+    end
+    respawn(reboot) if success
+    success
+  end
+  def respawn(reboot)
+    begin
+      c = Configuration.first
+      c.backup_restore = "respawn_and_boot"
+      c.backup_reboot = true if reboot
+      c.save_without_timestamps
+
+      # restart passenger on restore
+      # TODO handle other deploy setups
+      if Rails.env.production?
+        tmp_dir = RAILS_ROOT + "/tmp"
+        Dir.mkdir(tmp_dir) if not File.exist? tmp_dir
+        FileUtils.touch(tmp_dir + "/restart.txt")
+      end
+
+    rescue ActiveRecord::StatementInvalid, NoMethodError
+      # if it is downgrading to an older version maybe backup_restore
+      # and backup_reboot are not present
+      #raise e.inspect
+      Rails.logger.warn "Downgrading to a version without backup_restore or backup_reboot, need to respawn or reboot by hand"
     end
   end
 end
