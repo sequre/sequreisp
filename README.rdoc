@@ -42,11 +42,13 @@ Currently we are using Ubuntu Server for all of our setups, so this instructions
 * git-core (to clone our repo)
 * mysql-server, libmysqlclient-dev
 * rails 2.3.11
+* bundler
 
 In the command line that will be as root
 
   apt-get install apache2 libapache2-mod-passenger ruby1.8 ruby1.8-dev libopenssl-ruby1.8 imagemagick librrd-dev librrd4 git-core mysql-server libmysqlclient-dev
   gem install rails -v=2.3.11
+  gem install bundler
 
 == Installation
 
@@ -86,24 +88,32 @@ We need to create the mysql database, we also recommend to create a sequreisp us
   flush privileges;
 
 In order to sequreisp connects to the newly created database we need to adjust the username/password/database values in the database.yml file
-  
+
   cd /opt/sequreisp/deploy/current
   cp config/database.yml.sample config/database.yml
   vi config/database.yml
 
 === 4) Install the gem dependencies
-Now is time to install the gem dependencies, to do that we need to invoke the rake command, I recommend to do a symlink for convenience
 
-  ln -s /var/lib/gems/1.8/gems/rake-0.8.7/bin/rake /usr/local/bin/rake
+Sequreisp uses bundle to handle gem dependencies, bundle is a gem itself so the default instalation leaves the executables in a ruby directory oustide from default PATH.
+I recommend to do a symlink for convenience (or you can simply add /var/lib/gems/1.8/bin to your PATH if you know how to do that)
 
-And then invoke gems:install, i prefer do this as root as gems will be available system wide. The command must be executed standing in the /opt/sequreisp/deploy/current directory
+  ln -s /var/lib/gems/1.8/bin/bundle /usr/local/bin/bundle
 
-  rake gems:install RAILS_ENV=production 
+Then you can run (as root if you prefer system wide gems)
+
+  cd /opt/sequreisp/deploy/current
+  bundle install
 
 === 5) Initialize the database
 
-Initialize the database 
+To initialize the database, we need to invoke the rake command, which comes in the rake gem. Maybe you already have this command in your path, just check it simply typing 'rake', if not, I recommend to do a symlink for convenience (or you can simply add /var/lib/gems/1.8/bin to your PATH if you know how to do that)
 
+  ln -s /var/lib/gems/1.8/bin /usr/local/bin/rake
+
+Then run migration and seeds
+
+  cd /opt/sequreisp/deploy/current
   rake db:migrate RAILS_ENV=production
   rake db:seed RAILS_ENV=production 
 
@@ -116,20 +126,20 @@ We need to create a init.d file like /etc/init.d/sequreisp with the following co
   #!/bin/sh
   #
   # sequreisp     Startup script for the sequreisp server solution.
-  
+
   NAME=sequreisp
   PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   SEQUREISP_DEPLOY="/opt/sequreisp/deploy/current"
   SEQUREISP_SCRIPTS="/opt/sequreisp/scripts"
-  
+
   start_daemon () {
           $SEQUREISP_DEPLOY/lib/daemons/sequreispd_ctl start
   }
-  
+
   stop_daemon () {
           $SEQUREISP_DEPLOY/lib/daemons/sequreispd_ctl stop
   }
-  
+
   case "$1" in
       start)
           echo -n "Starting $NAME: "
@@ -152,7 +162,7 @@ We need to create a init.d file like /etc/init.d/sequreisp with the following co
           exit 3
           ;;
   esac
-  
+
   exit 0
 
 Then be sure that sequreisp loads on system boot and start the daemon
@@ -162,7 +172,7 @@ Then be sure that sequreisp loads on system boot and start the daemon
   service sequreisp start
 
 Make shure the daemon is running, you can use ps command for that
-  
+
   ps x | grep sequreisp
 
 You should see an output like this
@@ -176,17 +186,18 @@ If the daemon is not running you can check /opt/sequreisp/deploy/current/log/seq
 
 We need to create a crontab entry to feed the user interface graphics.
 Sequreisp now uses the whenever[https://github.com/javan/whenever] gem to automate the deploy of cron jobs
-It is extremley simple to use, you just need to use the whenever command. This command is in gem's path by default and you may make a symblink for convenience
+It is extremley simple to use, you just need to use the whenever command. This command is in it's own gem path by default and, once again, you may make a symblink for convenience (or you can simply add /var/lib/gems/1.8/bin to your PATH if you know how to do that)
 
-  ln -s /var/lib/gems/1.8/gems/whenever-0.6.7/bin/whenever /usr/local/bin/whenever
+  ln -s /var/lib/gems/1.8/bin/whenever /usr/local/bin/whenever
 
-Adjust the whenever-0.6.7 part or the gem path as you need
 After this you just need to do, as sequreisp user
 
   cd /opt/sequreisp/deploy/current
   whenever --update-crontab
 
-And it will update your crontab to run the needed jobs.
+And it will update your crontab to run the needed jobs. You can check how it looks doing
+
+  crontabl -l
 
 === 8) Setup web interface
 
@@ -198,14 +209,14 @@ In order to access the web interface you need to setup the vhost definition
     ServerAlias *
     DocumentRoot /opt/sequreisp/deploy/current/public
     RailsEnv production
-  
+
     <Directory /opt/sequreisp/deploy/current/public>
       Options Indexes FollowSymLinks MultiViews
       AllowOverride None
       Order allow,deny
       allow from all
     </Directory>
-  
+
     ErrorLog /var/log/apache2/error.sequreisp.log
     LogLevel warn
     CustomLog /var/log/apache2/access.sequreisp.log combined

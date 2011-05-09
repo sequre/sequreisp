@@ -23,21 +23,6 @@ Rails::Initializer.run do |config|
   # config.gem "hpricot", :version => '0.6', :source => "http://code.whytheluckystiff.net"
   # config.gem "sqlite3-ruby", :lib => "sqlite3"
   # config.gem "aws-s3", :lib => "aws/s3"
-  config.gem "mysql"
-  config.gem "formtastic", :source => 'http://gemcutter.org/', :version => '~>1.2'
-  config.gem "authlogic", :version => '=2.1.6'
-  config.gem "rubyist-aasm", :lib => 'aasm', :source => 'http://gems.github.com', :version => '=2.1.1'
-  config.gem "searchlogic", :version => '~>2.4'
-  config.gem 'will_paginate', :source => 'http://gemcutter.org', :version => '~>2.3'
-  config.gem 'rrd-ffi', :lib => 'rrd', :version => '~>0.2'
-  config.gem 'ruby-ip', :lib => 'ip', :version => '~>0.9'
-  config.gem 'ar-extensions', :version => '~>0.9'
-  config.gem 'thoughtbot-paperclip', :lib => 'paperclip', :source => 'http://gems.github.com', :version => '~>2.3'
-  config.gem 'daemons', :version => '=1.1.0'
-  config.gem 'fastercsv', :version => '~>1.5'
-  config.gem 'aegis', :version => '~>2.5'
-  config.gem 'acts_as_audited', :version => '~>1.1'
-  config.gem 'whenever', :version => '~>0.6'
 
   # Only load the plugins named here, in the order given (default is alphabetical).
   # :all can be used as a placeholder for all plugins not explicitly named
