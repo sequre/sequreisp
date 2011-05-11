@@ -98,6 +98,8 @@ en:
         ceil_down: "Máx. Download(kbps)"
         rate_up: "Mín. Upload(kbps)"
         ceil_up: "Máx. Upload(kbps)"
+        burst_down: "Download Burst [kbit]"
+        burst_up: "Upload Burst [kbit]"
         transparent_proxy: "Transparent Proxy"
       provider_group:
         name: "name"
@@ -203,6 +205,8 @@ en:
       plan:
         rate_down: "Insert 0(zero) for automatic calculation"
         rate_up: "Insert 0(zero) for automatic calculation"
+        burst_down: "Amount of data to which download traffic limit will not be effective"
+        burst_up: "Amount of data to which upload traffic limit will not be effective"
         transparent_proxy: "Enable proxy acceleration. Customizable per contract."
       interface:
         kind: "WAN: internet connections, LAN: clients connections"

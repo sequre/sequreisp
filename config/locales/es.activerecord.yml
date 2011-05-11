@@ -98,6 +98,8 @@ es:
         ceil_down: "Máx. descendente [kbps]"
         rate_up: "Mín. ascendente [kbps]"
         ceil_up: "Máx. ascendente [kbps]"
+        burst_down: "Ráfaga descendente [kbit] (Burst)"
+        burst_up: "Ráfaga ascendente [kbit] (Burst)"
         transparent_proxy: "Proxy transparente"
       provider_group:
         name: "Nombre"
@@ -203,6 +205,8 @@ es:
       plan:
         rate_down: "Dejar en 0 (cero) para cálculo automático"
         rate_up: "Dejar en 0 (cero) para cálculo automático"
+        burst_down: "Cantidad de tráfico descendente que será entregado sin límite de ancho de banda"
+        burst_up: "Cantidad de tráfico ascendente que será entregado sin límite de ancho de banda"
         transparent_proxy: "Habilitar aceleración proxy. Personalizable por contrato"
       interface:
         kind: "WAN si conecta a Internet; LAN si conecta hacia los clientes"
@@ -330,6 +334,8 @@ es:
       configuration_static: "Configuración IP fija"
       configuration_static_ips: "Direcciones IP adicionales"
       configuration_adsl: "Configuración ADSL"
+      advanced: "Avanzado"
+    plan:
       advanced: "Avanzado"
   app_mailer:
     check_links_email:

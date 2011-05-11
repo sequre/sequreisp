@@ -26,7 +26,10 @@
     <%= form.input :rate_up, :wrapper_html => { :class => "left" } %> 
     <%= form.input :ceil_up, :wrapper_html => { :class => "left" } %> 
     <div style="clear: both"></div> 
-    <% form.inputs :name => "Proxy", :id => "proxy" do %>
+    <% form.inputs :name => I18n.t('fieldsets.plan.advanced') do %>
+      <%= form.input :burst_down, :wrapper_html => { :class => "left" } %>
+      <%= form.input :burst_up, :wrapper_html => { :class => "left" } %>
+      <div style="clear: both"></div> 
       <%= form.input :transparent_proxy %>
     <% end %>
     <%= form_extensions form%>

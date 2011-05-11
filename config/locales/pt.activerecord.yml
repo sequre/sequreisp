@@ -98,6 +98,8 @@ pt:
         ceil_down: "Máx. descendente [kbps]"
         rate_up: "Mín. ascendente [kbps]"
         ceil_up: "Máx. ascendente [kbps]"
+        burst_down: "Rajada descendente [kbit] (Burst)"
+        burst_up: "Rajada ascendente [kbit] (Burst)"
         transparent_proxy: "Proxy transparente"
       provider_group:
         name: "Nome"
@@ -203,6 +205,8 @@ pt:
       plan:
         rate_down: "Deixar em 0 (cero) para cálculo automático"
         rate_up: "Deixar em 0 (cero) para cálculo automático"
+        burst_down: "Amount of data to which download traffic limit will not be effective"
+        burst_up: "Amount of data to which upload traffic limit will not be effective"
         transparent_proxy: "Habilitar aceleração proxy. Personalizável por contrato"
       interface:
         kind: "WAN se liga para a Internet ou LAN se liga para os clientes"
