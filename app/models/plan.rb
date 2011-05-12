@@ -26,7 +26,7 @@ class Plan < ActiveRecord::Base
   validates_numericality_of :burst_down, :burst_up, :only_integer => true, :greater_than_or_equal_to => 0
 
   def burst_to_bytes(burst)
-    burst * 1024 / 8
+    burst * 1024
   end
   def burst_down_to_bytes
     burst_to_bytes burst_down
