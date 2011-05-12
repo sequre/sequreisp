@@ -100,6 +100,8 @@ es:
         ceil_up: "Máx. ascendente [kbps]"
         burst_down: "Ráfaga descendente [kbytes] (Burst)"
         burst_up: "Ráfaga ascendente [kbytes] (Burst)"
+        long_download_max: "Límite para descargas de gran tamaño [kbytes]"
+        long_upload_max: "Límite para cargas de gran tamaño [kbytes]"
         transparent_proxy: "Proxy transparente"
       provider_group:
         name: "Nombre"
@@ -207,6 +209,8 @@ es:
         rate_up: "Dejar en 0 (cero) para cálculo automático"
         burst_down: "Cantidad de datos que serán transferidos al inicio de una conexión http/https sin tener en cuenta el límite de ancho de banda descendente"
         burst_up: "Cantidad de datos que serán transferidos al inicio de una conexión http/https sin tener en cuenta el límite de ancho de banda ascendente"
+        long_download_max: "Tamaño a partir del cual una descarga http/https pasa a ser clasificada como tráfico p2p"
+        long_upload_max: "Tamaño a partir del cual una carga http/https pasa a ser clasificada como tráfico p2p"
         transparent_proxy: "Habilitar aceleración proxy. Personalizable por contrato"
       interface:
         kind: "WAN si conecta a Internet; LAN si conecta hacia los clientes"

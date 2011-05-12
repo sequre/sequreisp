@@ -100,6 +100,8 @@ en:
         ceil_up: "Máx. Upload(kbps)"
         burst_down: "Download Burst [kbytes]"
         burst_up: "Upload Burst [kbytes]"
+        long_download_max: "Bandwidth limit for big size downloads [kbytes]"
+        long_upload_max: "Bandwidth limit for big size uploads [kbytes]"
         transparent_proxy: "Transparent Proxy"
       provider_group:
         name: "name"
@@ -207,6 +209,8 @@ en:
         rate_up: "Insert 0(zero) for automatic calculation"
         burst_down: "Amount of data volume to which download limit will not be effective afterwards http/https connection is initiated"
         burst_up: "Amount of data volume to which upload limit will not be effective afterwards http/https connection is initiated"
+        long_download_max: "Amount of data volume at which an http/https download is clasified as p2p"
+        long_upload_max: "Amount of data volume at which an http/https upload is clasified as p2p"
         transparent_proxy: "Enable proxy acceleration. Customizable per contract."
       interface:
         kind: "WAN: internet connections, LAN: clients connections"
@@ -334,6 +338,8 @@ en:
       configuration_static: "Static IP configuration"
       configuration_static_ips: "Additionals IPs"
       configuration_adsl: "ADSL Configuration"
+      advanced: "Advanced"
+    plan:
       advanced: "Advanced"
   app_mailer:
     check_links_email:

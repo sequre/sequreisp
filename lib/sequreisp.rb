@@ -292,15 +292,23 @@ def gen_iptables
         end
         # prio3 (catch_all)
         f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
-        # burst
-        if c.plan.burst_up != 0
-          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+
+        # long downloads/uploads limit
+        if c.plan.long_download_max != 0
+          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
         end
+        if c.plan.long_upload_max != 0
+          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+        end
+        # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
         if c.plan.burst_down != 0
           f.puts "-A #{chain} -p tcp -m multiport --sports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
         end
+        if c.plan.burst_up != 0
+          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+        end
         # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
-        f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
+        # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
         f.puts "-A #{chain} -j ACCEPT"
       end
       f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark"

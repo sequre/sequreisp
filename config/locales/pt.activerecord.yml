@@ -205,8 +205,6 @@ pt:
       plan:
         rate_down: "Deixar em 0 (cero) para cálculo automático"
         rate_up: "Deixar em 0 (cero) para cálculo automático"
-        burst_down: "Amount of data volume to which download limit will not be effective afterwards http/https connection is initiated"
-        burst_down: "Amount of data volume to which upload limit will not be effective afterwards http/https connection is initiated"
         transparent_proxy: "Habilitar aceleração proxy. Personalizável por contrato"
       interface:
         kind: "WAN se liga para a Internet ou LAN se liga para os clientes"
@@ -334,6 +332,8 @@ pt:
       configuration_static: "Configuração IP fixa"
       configuration_static_ips: "Endereços IP adicionais"
       configuration_adsl: "Configuração ADSL"
+      advanced: "Avanzado"
+    plan:
       advanced: "Avanzado"
   app_mailer:
     check_links_email:
