@@ -5,7 +5,7 @@ namespace :db do
     task :all => :environment do
       require 'faker'
       
-      [Interface,Address,ProviderGroup,Provider,Plan,Client,Contract].each(&:destroy_all)
+      [Interface,Address,ProviderGroup,Provider,Plan,Client,Contract].each(&:delete_all)
       
       Interface.create! :name => 'eth0', :vlan => false, :kind => 'wan'
       i = Interface.create! :name => 'eth1', :vlan => false, :kind => 'lan'
