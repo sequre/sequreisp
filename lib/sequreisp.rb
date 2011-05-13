@@ -357,11 +357,34 @@ def gen_iptables
         if p.ip.blank?
           f.puts "-A POSTROUTING -o #{p.link_interface}  -j MASQUERADE"
         else
-          addresses = p.nat_pool_addresses
-          total = addresses.size
-          addresses.each_with_index do |ip,i|
-            f.puts "-A POSTROUTING -o #{p.link_interface} -m statistic --mode nth --every #{total-i} -j SNAT --to-source #{ip}"
+          provider_ips = p.nat_pool_addresses
+          if provider_ips.size > 1
+            # find all contract ips for this provider
+            contracts_ips = Contract.descend_by_ip_custom.all(:joins => :plan ,:conditions => ["provider_group_id = ?", p.provider_group_id]  , :select => :ip).collect(&:ip)
+            # need to know if we have more ip than contracts
+            start_at = 0
+            if contracts_ips.size > provider_ips.size
+              slice =  contracts_ips.size / provider_ips.size
+              loops = provider_ips.size
+              start_at = 1
+            else
+              #more contracts, one ip per contract then
+              slice = 1
+              loops = contracts_ips.size
+              start_at = 0
+            end
+            Rails.logger.debug contracts_ips.inspect
+            puts contracts_ips.inspect, start_at
+            (loops-1).times do |i|
+              f.puts "-A POSTROUTING -o #{p.link_interface} -m iprange --src-range #{contracts_ips[slice*(i+start_at)]} -j SNAT --to-source #{provider_ips[i]}"
+            end
+            f.puts "# last ip #{contracts_ips[-1]}"
           end
+          f.puts "-A POSTROUTING -o #{p.link_interface} -j SNAT --to-source #{provider_ips[-1]}"
+          #addresses.each_with_index do |ip,i|
+          #  f.puts "-A POSTROUTING -o #{p.link_interface} -m statistic --mode nth --every #{total-i} -j SNAT --to-source #{ip}"
+          #end
+
         end
       end
       f.puts "-A POSTROUTING -m mark --mark 0x01000000/0x01000000 -j MASQUERADE"
