@@ -1,5 +1,8 @@
 <div class="fields">  
-  <%= f.input :ip %>  
-  <%= f.input :netmask %>  
-  <%= link_to_remove_fields t('buttons.delete'), f %>  
+  <%= f.input :ip, :input_html => { :class => "input_address_ip" }, :wrapper_html => { :class => "left" } %>
+  <%= f.input :netmask, :input_html => { :class => "input_address_ip" }, :wrapper_html => { :class => "left" } %>
+  <%#FIXME should not be printed and hidden, the if f.object.addressable_type == 'Provider' approuch return nil on new :( %>
+  <%= f.input :use_in_nat_pool, :input_html => { :class => "checkbox_address" }, :wrapper_html => { :class => "left use_in_nat_pool" } %>
+  <%# end %>
+  <li class="delete_address"><%= link_to_remove_fields t('buttons.delete'), f %></li>
 </div>  

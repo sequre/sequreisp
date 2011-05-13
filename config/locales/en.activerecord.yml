@@ -183,6 +183,7 @@ en:
         free_ip_prefix: "Free: "
         ip: "IP address"
         netmask: "Netmask"
+        use_in_nat_pool: "Use in NAT pool"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"

@@ -183,6 +183,7 @@ es:
         free_ip_prefix: "Libre: "
         ip: "Dirección IP"
         netmask: "Máscara de red"
+        use_in_nat_pool: "Usar en balanceo de NAT"
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"

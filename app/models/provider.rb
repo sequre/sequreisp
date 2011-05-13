@@ -287,4 +287,8 @@ class Provider < ActiveRecord::Base
   def offline_time
     self.online ? 0 : current_status_time
   end
+
+  def nat_pool_addresses
+    [ip] + addresses.all(:conditions => "use_in_nat_pool = 1").collect(&:ip)
+  end
 end

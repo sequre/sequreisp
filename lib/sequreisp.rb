@@ -353,7 +353,16 @@ def gen_iptables
         p.networks.each do |network|
           f.puts "-A POSTROUTING -o #{p.link_interface} -s #{network} -j ACCEPT"
         end
-      	f.puts "-A POSTROUTING -o #{p.link_interface}  -j MASQUERADE"
+        # do we have an ip yet?
+        if p.ip.blank?
+          f.puts "-A POSTROUTING -o #{p.link_interface}  -j MASQUERADE"
+        else
+          addresses = p.nat_pool_addresses
+          total = addresses.size
+          addresses.each_with_index do |ip,i|
+            f.puts "-A POSTROUTING -o #{p.link_interface} -m statistic --mode nth --every #{total-i} -j SNAT --to-source #{ip}"
+          end
+        end
       end
       f.puts "-A POSTROUTING -m mark --mark 0x01000000/0x01000000 -j MASQUERADE"
       f.puts "COMMIT"
