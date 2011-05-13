@@ -143,11 +143,13 @@ class Contract < ActiveRecord::Base
         errors.add(:proxy_arp, I18n.t('validations.contract.proxy_arp_incompatible_with_full_dnat'))
       end
     end
-    if proxy_arp
-      if proxy_arp_provider.nil?
-        errors.add(:ip, I18n.t('validations.contract.proxy_arp_ip_does_not_belongs_to_plan'))
-      end
-    end
+    # Often occurs that we have a second pool of ip address that is not configured in the provider itself
+    # Also is possible that we can not use a wider mask than /32, and still have the pool
+    #if proxy_arp
+    #  if proxy_arp_provider.nil?
+    #    errors.add(:ip, I18n.t('validations.contract.proxy_arp_ip_does_not_belongs_to_plan'))
+    #  end
+    #end
   end
 
   include OverflowCheck
