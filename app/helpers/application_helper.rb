@@ -78,7 +78,7 @@ module ApplicationHelper
   end
 
   def changes_not_applied?
-    [Contract, Configuration, Provider, ProviderGroup, Interface, Plan].each do |model|
+    [Contract, Configuration, Provider, ProviderGroup, Interface, Plan, Address].each do |model|
       return true if model.exists? ["updated_at > ?", Configuration.first.last_changes_applied_at]
     end
 
