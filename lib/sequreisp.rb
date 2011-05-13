@@ -375,11 +375,11 @@ def gen_iptables
             end
             Rails.logger.debug contracts_ips.inspect
             puts contracts_ips.inspect, start_at
-            from="255.255.255.255"
+            to="255.255.255.255"
             (loops-1).times do |i|
-              to=contracts_ips[slice*(i+start_at)]
+              from=contracts_ips[slice*(i+start_at)]
               f.puts "-A POSTROUTING -o #{p.link_interface} -m iprange --src-range #{from}-#{to} -j SNAT --to-source #{provider_ips[i]}"
-              from=to
+              to=from
             end
             f.puts "# last ip #{contracts_ips[-1]}"
           end
