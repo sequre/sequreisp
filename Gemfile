@@ -23,4 +23,9 @@ group :development do
   gem 'faker'
   gem 'ruby-debug'
 end
+# Hack to install gems from each plugin, c&p from 
+# http://madebynathan.com/2010/10/19/how-to-use-bundler-with-plugins-extensions/
+Dir.glob(File.join(File.dirname(__FILE__), 'vendor', 'plugins', '**', "Gemfile")) do |gemfile|
+    self.send(:eval, File.open(gemfile, 'r').read)
+end
 
