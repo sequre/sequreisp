@@ -373,8 +373,6 @@ def gen_iptables
               loops = contracts_ips.size
               start_at = 0
             end
-            Rails.logger.debug contracts_ips.inspect
-            puts contracts_ips.inspect, start_at
             to="255.255.255.255"
             (loops-1).times do |i|
               from=contracts_ips[slice*(i+start_at)]
