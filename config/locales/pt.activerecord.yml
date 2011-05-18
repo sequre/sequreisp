@@ -81,6 +81,9 @@ pt:
         forwarded_ports: "Portas redirecionadas"
         transparent_proxy: "Proxy transparente"
         created_at: "Data de cadastro"
+        detail: "Detalhe"
+        cpe: "Equipamento"
+        node: "Nó"
       client:
         name: "Nome e sobrenome"
         email: "E-mail de contato"
@@ -317,6 +320,7 @@ pt:
       not_enough_up_bandwidth_in_this_plan: "Não há suficiente largo de banda ascendente para atribuir este plano"
   fieldsets:
     contract:
+      details: "Detalhes"
       advanced: "Avanzado"
       prio_customization: "Personalização de prioridades"
     configuration:

@@ -81,6 +81,9 @@ en:
         forwarded_ports: "Forwarded Ports"        
         transparent_proxy: "Transparent Proxy"
         created_at: "Created at"
+        detail: "Detail"
+        cpe: "CPE"
+        node: "Node"
       client:
         name: "First name and surname"
         email: "Email address"
@@ -324,6 +327,7 @@ en:
       not_enough_up_bandwidth_in_this_plan: "There's not enough upload bandwidth to assign this plan"
   fieldsets:
     contract:
+      details: "Details"
       advanced: "Advanced"
       prio_customization: "Priorities Customization"
     configuration:
