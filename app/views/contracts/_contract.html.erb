@@ -53,12 +53,12 @@
     <div style="clear: both"></div>
     <% end %>
     <%= form.input :transparent_proxy, :as => :radio, :collection => Contract.transparent_proxy_for_select %> 
-      <% form.inputs :name => t('activerecord.attributes.contract.forwarded_ports') do %>
-        <% form.semantic_fields_for :forwarded_ports do |fp| %>
-          <%= render "forwarded_port_fields", :f => fp %>
-        <% end %>
-        <li><%= link_to_add_fields t('buttons.add_forward'), form, :forwarded_ports, "" %> </li>
+    <% form.inputs :name => t('activerecord.attributes.contract.forwarded_ports') do %>
+      <% form.semantic_fields_for :forwarded_ports do |fp| %>
+        <%= render "forwarded_port_fields", :f => fp %>
       <% end %>
+      <li><%= link_to_add_fields t('buttons.add_forward'), form, :forwarded_ports, "" %> </li>
+    <% end %>
     <% form.inputs :name => t('fieldsets.contract.advanced'), :id => "advanced", :class => "left inputs" do %>
       <%= form.input :mac_address %> 
       <%= form.input :proxy_arp, :wrapper_html => { :class => "left" } %> 
