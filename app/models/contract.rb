@@ -342,4 +342,24 @@ class Contract < ActiveRecord::Base
     [I18n.t("selects.contract.transparent_proxy.false"),"false"]
     ]
   end
+  def self.free_ips(term)
+    used = free = []
+    octets = term.split(".")
+    prefix = octets[0..2].join "."
+
+    used += Address.all(:conditions => ["ip like ?", "#{prefix}%"], :select => :ip).collect(&:ip)
+    used += Provider.all(:conditions => ["ip like ?", "#{prefix}%"], :select => :ip).collect(&:ip)
+    used += all(:conditions => ["ip like ?", "#{prefix}%"], :select => :ip).collect(&:ip)
+
+    (1..254).each do |n|
+      free << "#{prefix}.#{n.to_s}"
+    end
+    total = free - used
+    total = total.select do |ip|
+      this = ip.split(".")[3]
+      this =~ /^#{octets[3]}/
+    end if octets[3]
+    total
+  end
+
 end

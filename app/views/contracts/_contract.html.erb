@@ -25,6 +25,14 @@
     $('#contract_proxy_arp').change( function() {
       checkbox_proxy_arp();
     });
+    $('#contract_ip').autocomplete({
+      delay: 30,
+      source: '<%= free_ips_contracts_path %>',
+      search: function(event, ui) {
+        //trigger only if 3 octets and a dot are typed
+        return (this.value.split(".").length == 4)
+      }
+    })
   })
 </script>
 <% unless current_user.may_update_contract?(@contract) %>

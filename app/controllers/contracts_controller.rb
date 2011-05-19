@@ -146,6 +146,12 @@ class ContractsController < ApplicationController
       format.json { render :json => { :down => @contract.instant_rate_down, :up => @contract.instant_rate_up } }
     end 
   end
+
+  def free_ips
+    respond_to do |format|
+      format.json { render :json => Contract.free_ips(params[:term])[0..4] }
+    end
+  end
   private
   def object
     @object ||= Contract.find(params[:id])
