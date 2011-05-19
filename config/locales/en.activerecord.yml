@@ -184,7 +184,8 @@ en:
         changes: "Changes applied"
         version: "Version"
       address:
-        free_ip_prefix: "Free: "
+        free_ip_prefix: "[Free]"
+        nat_pool_ip_prefix: "[NAT pool]"
         ip: "IP address"
         netmask: "Netmask"
         use_in_nat_pool: "Use in NAT pool"

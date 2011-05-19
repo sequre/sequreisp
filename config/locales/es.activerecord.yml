@@ -184,7 +184,8 @@ es:
         changes: "Cambios realizados"
         version: "Versión"
       address:
-        free_ip_prefix: "Libre: "
+        free_ip_prefix: "[Libre]"
+        nat_pool_ip_prefix: "[Balanceo NAT]"
         ip: "Dirección IP"
         netmask: "Máscara de red"
         use_in_nat_pool: "Usar en balanceo de NAT"

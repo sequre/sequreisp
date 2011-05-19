@@ -182,9 +182,11 @@ pt:
         changes: "Câmbios realizados"
         version: "Versão"
       address:
-        free_ip_prefix: "Livre: "
+        free_ip_prefix: "[Livre]"
+        nat_pool_ip_prefix: "[Balanceamento NAT]"
         ip: "Endereço IP"
         netmask: "Máscara de rede"
+        use_in_nat_pool: "Uso en balanceamento de NAT"
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"

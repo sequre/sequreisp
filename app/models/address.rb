@@ -62,7 +62,10 @@ class Address < ActiveRecord::Base
   def name
     case self.addressable_type 
     when "Provider"
-      "#{I18n.t('activerecord.attributes.address.free_ip_prefix') if !self.contract}#{self.ip} - #{addressable.provider_group.name}"
+      prefix = ""
+      prefix += "#{I18n.t('activerecord.attributes.address.free_ip_prefix') if !self.contract}"
+      prefix += "#{I18n.t('activerecord.attributes.address.nat_pool_ip_prefix') if !self.use_in_nat_pool}"
+      "#{prefix + " " if not prefix.blank?}#{self.ip} - #{addressable.provider_group.name}"
     else
         ""
     end
