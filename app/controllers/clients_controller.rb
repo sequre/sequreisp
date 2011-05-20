@@ -99,6 +99,11 @@ class ClientsController < ApplicationController
       format.xml  { head :ok }
     end
   end
+  def names
+    respond_to do |format|
+      format.json { render :json => Client.all(:conditions => ["name like ?", "%#{params[:term]}%"], :limit => 5, :select => :name).collect(&:name) }
+    end
+  end
   private
   def object
     @object ||= Client.find(params[:id])

@@ -152,6 +152,11 @@ class ContractsController < ApplicationController
       format.json { render :json => Contract.free_ips(params[:term])[0..4] }
     end
   end
+  def ips
+    respond_to do |format|
+      format.json { render :json => Contract.all(:conditions => ["ip like ?", "%#{params[:term]}%"], :limit => 5, :select => :ip).collect(&:ip) }
+    end
+  end
   private
   def object
     @object ||= Contract.find(params[:id])

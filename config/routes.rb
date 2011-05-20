@@ -11,11 +11,11 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :providers
 
-  map.resources :contracts, :member => { :instant_rate => :get }, :collection => { :free_ips => :get }
+  map.resources :contracts, :member => { :instant_rate => :get }, :collection => { :free_ips => :get, :ips => :get }
 
   map.contracts_csv '/contracts.csv', :controller => 'contracts', :action => 'index'
 
-  map.resources :clients, :has_many => :contracts
+  map.resources :clients, :has_many => :contracts, :collection => { :names => :get }
 
   map.resources :plans
   

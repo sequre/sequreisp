@@ -1,3 +1,17 @@
+<script type="text/javascript">
+  $(function(){
+    $('#search_name_like').autocomplete({
+      delay: 200,
+      source: '<%= names_clients_path %>',
+      //FIXME change callback is not working in 1.8.12 hakcing select instead
+      select: function(event, ui) {
+        $(this).val(ui.item.value);
+        $(this).closest('form').submit();
+      },
+      minLength: 2
+    })
+  })
+</script>
 <% content_for :title, t('menu.clients') %>
 <% heading t('menu.clients')  %>
 <% render_new_button_for :client %>
