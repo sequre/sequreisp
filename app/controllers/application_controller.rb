@@ -44,7 +44,8 @@ class ApplicationController < ActionController::Base
   private
 
   def store_request_uri
-    session[:last_visited_uri] = request.request_uri
+    # skip if it is not html (ie ajax)
+    session[:last_visited_uri] = request.request_uri if request.format == :html
   end
 
   def redirect_back_from_edit_or_to default
