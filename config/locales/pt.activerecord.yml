@@ -84,6 +84,7 @@ pt:
         detail: "Detalhe"
         cpe: "Equipamento"
         node: "Nó"
+        autocomplete_client_name: "Procurar cliente"
       client:
         name: "Nome e sobrenome"
         email: "E-mail de contato"

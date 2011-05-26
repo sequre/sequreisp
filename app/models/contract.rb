@@ -47,7 +47,7 @@ class Contract < ActiveRecord::Base
 
   validates_numericality_of :ceil_dfl_percent, :only_integer => true, :greater_than => 0, :less_than_or_equal_to => 100
   
-  validates_uniqueness_of :ip
+  validates_uniqueness_of :ip, :allow_nil => true, :allow_blank => true
   
   validate :check_invalid_options, :if => Proc.new {|c| not c.netmask.nil? and not c.ip_is_single_host? }
     #:unless => :ip_is_single_host?
@@ -362,4 +362,5 @@ class Contract < ActiveRecord::Base
     total
   end
 
+  attr_accessor :autocomplete_client_name
 end

@@ -15,7 +15,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.contracts_csv '/contracts.csv', :controller => 'contracts', :action => 'index'
 
-  map.resources :clients, :has_many => :contracts, :collection => { :names => :get }
+  map.resources :clients, :has_many => :contracts, :collection => { :names => :get, :autocomplete_names => :get }
 
   map.resources :plans
   

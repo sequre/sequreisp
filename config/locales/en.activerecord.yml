@@ -84,6 +84,7 @@ en:
         detail: "Detail"
         cpe: "CPE"
         node: "Node"
+        autocomplete_client_name: "Search client"
       client:
         name: "First name and surname"
         email: "Email address"
