@@ -124,7 +124,12 @@ class Interface < ActiveRecord::Base
     self.physical_link ? "online" : "offline"
   end
   def self.scan
-    File.open("/etc/udev/rules.d/70-persistent-net.rules").readlines.join.scan(/NAME="([^"]+)"/).flatten
+    #TODO Support other distros
+    begin
+      File.open("/etc/udev/rules.d/70-persistent-net.rules").readlines.join.scan(/NAME="([^"]+)"/).flatten
+    rescue => e
+      Rails.logger.error e.inspect
+    end
   end
   def vlan_interface_collection
     new_record? ? Interface.find(:all, :conditions => ["vlan = 0"]) : Interface.find(:all, :conditions => ["vlan = 0 and id != ?", id])
