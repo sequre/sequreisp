@@ -902,10 +902,10 @@ def boot(run=true)
       f.puts "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}"
       f.chmod 0755
     end
+    system "#{BOOT_FILE} 2>#{BOOT_LOG} 1>#{BOOT_LOG}" if run
   rescue Exception => e
     puts "Exception #{e.message}"
   end
-  system "#{BOOT_FILE} 2>#{BOOT_LOG} 1>#{BOOT_LOG}" if run
 end
 
 
