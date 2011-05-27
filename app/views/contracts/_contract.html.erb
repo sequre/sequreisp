@@ -32,7 +32,7 @@
       checkbox_proxy_arp();
     });
     $('#contract_ip').autocomplete({
-      delay: 30,
+      delay: 150,
       source: '<%= free_ips_contracts_path %>',
       search: function(event, ui) {
         //trigger only if 3 octets and a dot are typed
@@ -40,7 +40,7 @@
       }
     })
     $('#contract_autocomplete_client_name').autocomplete({
-      delay: 30,
+      delay: 150,
       focus: function(event, ui) {
         return false;
       },
