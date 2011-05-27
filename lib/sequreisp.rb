@@ -35,6 +35,7 @@ IP_RO_FILE="#{BASE_SCRIPTS}/ip_ro"
 IPTABLES_FILE="#{BASE_SCRIPTS}/iptables"
 IPTABLES_PRE_FILE="#{BASE}/etc/iptables_pre.sh"
 IPTABLES_POST_FILE="#{BASE}/etc/iptables_post.sh"
+SEQUREISP_PRE_FILE="#{BASE}/etc/sequreisp_pre.sh"
 SEQUREISP_POST_FILE="#{BASE}/etc/sequreisp_post.sh"
 BOOT_FILE="#{BASE_SCRIPTS}/boot.sh"
 QUEUED_COMMANDS_FILE="#{BASE_SCRIPTS}/queued_commands.sh"
@@ -839,6 +840,7 @@ def boot(run=true)
       f.puts "#!/bin/bash"
       f.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
       f.puts "#set -x"
+      f.puts "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}"
       f.puts "[ -x #{QUEUED_COMMANDS_FILE} ] && #{QUEUED_COMMANDS_FILE}"
       f.puts "#modulos"
       %w{nf_nat_ftp nf_nat_amanda nf_nat_pptp nf_nat_proto_gre nf_nat_sip nf_nat_irc 8021q}.each do |m|
