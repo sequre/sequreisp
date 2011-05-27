@@ -56,6 +56,12 @@
         .append( "<a>" + item.value + "</a>" )
         .appendTo( ul );
     };
+    $('#contract_autocomplete_client_name').bind( "keydown", function( event ) {
+        console.log("KEY: " + event.keyCode);
+        if ( event.keyCode === $.ui.keyCode.ENTER) {
+          event.preventDefault();
+        }
+      })
   })
 </script>
 <% unless current_user.may_update_contract?(@contract) %>
