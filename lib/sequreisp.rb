@@ -91,21 +91,25 @@ def gen_tc(f)
     tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{klass_prio3} sfq perturb 10" #saco el handle
     tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3}/0x#{mask} fw classid #{parent_mayor}:#{klass_prio3}"
   end
-  tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w") 
-  tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w") 
-  # htb tree de clientes en gral en IFB
-  f.puts "tc qdisc del dev #{IFB_UP} root"
-  tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 htb default 0"
-  tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 htb rate 1000mbit"
-  f.puts "tc qdisc del dev #{IFB_DOWN} root"
-  tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 htb default 0"
-  tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
-  Contract.not_disabled.descend_by_netmask.each do |c|
-    do_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
-    do_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
+  begin
+    tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
+    tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
+    # htb tree de clientes en gral en IFB
+    f.puts "tc qdisc del dev #{IFB_UP} root"
+    tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 htb default 0"
+    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 htb rate 1000mbit"
+    f.puts "tc qdisc del dev #{IFB_DOWN} root"
+    tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 htb default 0"
+    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
+    Contract.not_disabled.descend_by_netmask.each do |c|
+      do_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
+      do_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
+    end
+    tc_ifb_up.close
+    tc_ifb_down.close
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(IFB_UP/IFB_DOWN) e=>#{e.inspect}"
   end
-  tc_ifb_up.close
-  tc_ifb_down.close
 
   # htb tree up (en las ifaces de Provider) 
   Provider.enabled.with_klass_and_interface.each do |p|
@@ -128,32 +132,36 @@ def gen_tc(f)
           tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
         end
       end 
-    rescue Exception => e
-      puts "Exception #{e.message}"
+    rescue => e
+      Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree up) e=>#{e.inspect}"
     end
   end
- 
+
   # htb tree down (en las ifaces lan) 
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
     f.puts "tc qdisc del dev #{iface} root"
-    File.open(TC_FILE_PREFIX + iface, "w") do |tc| 
-      tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
-      tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
-      tc.puts "qdisc add dev #{iface} parent 1:1 handle 2: htb default 0"
-      Provider.enabled.with_klass_and_interface.each do |p|
-        #max quantum posible para este provider, necesito saberlo con anticipación
-        quantum = Configuration.mtu * p.quantum_factor * 3
-        tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
-        tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
-        if Configuration.tc_contracts_per_provider_in_lan
-          tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-          tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
-          Contract.not_disabled.descend_by_netmask.each do |c|
-            do_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
+    begin
+      File.open(TC_FILE_PREFIX + iface, "w") do |tc|
+        tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+        tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
+        tc.puts "qdisc add dev #{iface} parent 1:1 handle 2: htb default 0"
+        Provider.enabled.with_klass_and_interface.each do |p|
+          #max quantum posible para este provider, necesito saberlo con anticipación
+          quantum = Configuration.mtu * p.quantum_factor * 3
+          tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
+          tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+          if Configuration.tc_contracts_per_provider_in_lan
+            tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
+            tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
+            Contract.not_disabled.descend_by_netmask.each do |c|
+              do_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
+            end
           end
         end
       end
+    rescue => e
+      Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree down) e=>#{e.inspect}"
     end
   end
 end
@@ -419,8 +427,8 @@ def gen_iptables
       #---------#
     # close iptables file
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::gen_iptables e=>#{e.inspect}"
   end
 end
 
@@ -456,8 +464,8 @@ def gen_ip_ru
       end
       f.puts "rule add prio 32767 from all lookup default"
     end 
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
   end
 end
 
@@ -512,8 +520,8 @@ def gen_ip_ro
       end
       update_fallback_route f, true, true
     end 
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
   end
 end
 
@@ -524,8 +532,8 @@ def setup_dynamic_providers_hooks
       f.puts "#{DEPLOY_DIR}/script/runner -e production #{DEPLOY_DIR}/bin/sequreisp_up_down_provider.rb up $PPP_IPPARAM $PPP_LOCAL 255.255.255.255 $PPP_REMOTE"
       f.chmod(0755)
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::setup_dynamic_providers_hooks(PPP_DIR/ip-up) e=>#{e.inspect}"
   end
 
   begin
@@ -534,8 +542,8 @@ def setup_dynamic_providers_hooks
       f.puts "#{DEPLOY_DIR}/script/runner -e production #{DEPLOY_DIR}/bin/sequreisp_up_down_provider.rb down $PPP_IPPARAM"
       f.chmod(0755)
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::setup_dynamic_providers_hooks(PPP_DIR/ip-down) e=>#{e.inspect}"
   end
 
   begin
@@ -548,8 +556,8 @@ def setup_dynamic_providers_hooks
       f.puts "unset new_domain_name_servers"
       f.puts "unset new_host_name"
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::setup_dynamic_providers_hooks(DHCPD_DIR/enter-hooks) e=>#{e.inspect}"
   end
 
   begin
@@ -559,8 +567,8 @@ def setup_dynamic_providers_hooks
       f.puts "fi"
       f.puts "#{DEPLOY_DIR}/script/runner -e production #{DEPLOY_DIR}/bin/sequreisp_up_down_provider.rb up $interface $new_ip_address $new_subnet_mask $gateway"
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::setup_dynamic_providers_hooks(DHCPD_DIR/exit-hooks) e=>#{e.inspect}"
   end
 end
 
@@ -583,10 +591,10 @@ def setup_provider_interface(f, p)
   when "adsl"
     begin
       File.open("#{PPP_DIR}/peers/#{p.interface.name}", 'w') {|peer| peer.write(p.to_ppp_peer) }
-    rescue Exception => e
-      puts "Exception #{e.message}"
+    rescue => e
+      Rails.logger.error "ERROR in lib/sequreisp.rb::setup_provider_interface(PPP_DIR) e=>#{e.inspect}"
     end
-    
+
     #pgrep se ejecuta via 'sh -c' entonces siempre se ve a si mismo y la cuenta si o si arranca en 1
     pppd_running = `/usr/bin/pgrep -c -f 'pppd call #{p.interface.name}' 2>/dev/null`.chomp.to_i || 0
     #si NO esta corriendo pppd y NO existe la iface ppp"
@@ -652,8 +660,8 @@ def setup_proxy(f)
         end
       end
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::setup_proxy e=>#{e.inspect}"
   end
 
 end
@@ -687,8 +695,8 @@ def do_provider_up(p)
       end
       f.chmod 0755
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::do_provider_up e=>#{e.inspect}"
   end
 
   system "#{PROVIDER_UP_FILE_PREFIX + p.interface.name}"
@@ -709,8 +717,8 @@ def do_provider_down(p)
       update_fallback_route f, false
       f.chmod 0755
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::do_provider_down e=>#{e.inspect}"
   end
 
   system "#{PROVIDER_DOWN_FILE_PREFIX + p.interface.name}"
@@ -733,8 +741,8 @@ def check_physical_links
     if Configuration.deliver_notifications
       AppMailer.deliver_check_physical_links_email if changes
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::check_physical_links e=>#{e.inspect}"
   end
 end
 def check_links
@@ -788,8 +796,8 @@ def check_links
       update_fallback_route f, false
       f.chmod 0755
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::check_links(CHECK_LINKS_FILE) e=>#{e.inspect}"
   end
   f = File.open("#{CHECK_LINKS_FILE}", "r")
   system "#{CHECK_LINKS_FILE} 2>&1 >#{CHECK_LINKS_LOG}" if f.readlines.length > 2
@@ -799,8 +807,8 @@ def check_links
     if send_notification_mail and Configuration.deliver_notifications
       AppMailer.deliver_check_links_email
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::check_links(AppMailer) e=>#{e.inspect}"
   end
 end
 
@@ -817,8 +825,8 @@ def setup_queued_commands
       f.puts "mv $0 $0.executed"
       f.chmod 0755
     end
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::setup_queued_commands e=>#{e.inspect}"
   end
 end
 
@@ -903,8 +911,8 @@ def boot(run=true)
       f.chmod 0755
     end
     system "#{BOOT_FILE} 2>#{BOOT_LOG} 1>#{BOOT_LOG}" if run
-  rescue Exception => e
-    puts "Exception #{e.message}"
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::boot e=>#{e.inspect}"
   end
 end
 
