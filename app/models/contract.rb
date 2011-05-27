@@ -31,7 +31,8 @@ class Contract < ActiveRecord::Base
   belongs_to :proxy_arp_interface, :class_name => 'Interface', :conditions => "kind = 'lan'"
 
   named_scope :enabled, :conditions => { :state => "enabled" }
-  
+  named_scope :not_disabled, :conditions => "state != 'disabled'"
+
   #este se usa para generar las reglas, ordena por netmask para asegurarse que las redes más grandes queden al final
   named_scope :descend_by_netmask, :order => "CAST(INET_ATON(netmask) AS UNSIGNED) DESC, CAST(INET_ATON(SUBSTRING_INDEX(ip, '/', 1)) AS UNSIGNED) ASC"
 

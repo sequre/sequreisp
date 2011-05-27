@@ -100,7 +100,7 @@ def gen_tc(f)
   f.puts "tc qdisc del dev #{IFB_DOWN} root"
   tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 htb default 0"
   tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
-  Contract.descend_by_netmask.each do |c|
+  Contract.not_disabled.descend_by_netmask.each do |c|
     do_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
     do_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
   end
@@ -121,7 +121,7 @@ def gen_tc(f)
         tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
         tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
         if Configuration.tc_contracts_per_provider_in_wan
-          Contract.descend_by_netmask.each do |c|
+          Contract.not_disabled.descend_by_netmask.each do |c|
             do_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
           end
         else
@@ -149,7 +149,7 @@ def gen_tc(f)
         if Configuration.tc_contracts_per_provider_in_lan
           tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
           tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
-          Contract.descend_by_netmask.each do |c|
+          Contract.not_disabled.descend_by_netmask.each do |c|
             do_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
           end
         end
@@ -190,7 +190,7 @@ def gen_iptables
       end
 
       # sino marko por cliente segun el ProviderGroup al que pertenezca
-      Contract.descend_by_netmask(:include => [{ :plan => :provider_group }]).each do |c|
+      Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group }]).each do |c|
         if !c.public_address.nil?
           #evito triangulo de NAT si tiene full DNAT
           f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
@@ -206,7 +206,7 @@ def gen_iptables
       f.puts "-A OUTPUT -m mark ! --mark 0 -j ACCEPT"
       if Configuration.transparent_proxy
         if Configuration.transparent_proxy_n_to_m
-          Contract.descend_by_netmask.each do |c|
+          Contract.not_disabled.descend_by_netmask.each do |c|
             mark = c.public_address.nil? ? c.plan.provider_group.mark_hex : c.public_address.addressable.mark_hex
             f.puts "-A OUTPUT -s #{c.proxy_bind_ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
           end
@@ -244,7 +244,7 @@ def gen_iptables
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
       end 
-      Contract.descend_by_netmask.each do |c|
+      Contract.not_disabled.descend_by_netmask.each do |c|
         mark_burst = "0x0000/0x0000ffff"
         mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
         mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
@@ -327,7 +327,7 @@ def gen_iptables
           f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
         end
       end
-      Contract.descend_by_netmask.each do |c|
+      Contract.not_disabled.descend_by_netmask.each do |c|
         # attribute: transparent_proxy
         if c.transparent_proxy? 
           f.puts "-A PREROUTING -s #{c.ip} -p tcp --dport 80 -j REDIRECT --to-port 3128"
@@ -360,7 +360,7 @@ def gen_iptables
           provider_ips = p.nat_pool_addresses
           if provider_ips.size > 1
             # find all contract ips for this provider
-            contracts_ips = Contract.descend_by_ip_custom.all(:joins => :plan ,:conditions => ["provider_group_id = ?", p.provider_group_id]  , :select => :ip).collect(&:ip)
+            contracts_ips = Contract.not_disabled.descend_by_ip_custom.all(:joins => :plan ,:conditions => ["provider_group_id = ?", p.provider_group_id]  , :select => :ip).collect(&:ip)
             # need to know if we have more ip than contracts
             start_at = 0
             if contracts_ips.size > provider_ips.size
@@ -406,15 +406,11 @@ def gen_iptables
       end
 
       #
-      Contract.descend_by_netmask.each do |c|
+      Contract.not_disabled.descend_by_netmask.each do |c|
         # attribute: state
         #   estado del cliente enabled/alerted/disabled
         macrule = (Configuration.filter_by_mac_address and !c.mac_address.blank?) ? "-m mac --mac-source #{c.mac_address}" : ""
-      
-        unless c.disabled?
-          f.puts "-A sequreisp-enabled #{macrule} -s #{c.ip} -j ACCEPT"
-        end
-      
+        f.puts "-A sequreisp-enabled #{macrule} -s #{c.ip} -j ACCEPT"
       end
       f.puts "-A sequreisp-enabled -j DROP"
       f.puts "COMMIT"
@@ -638,13 +634,13 @@ def setup_proxy(f)
   begin
     File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid| 
       if Configuration.transparent_proxy_n_to_m
-        Contract.descend_by_netmask.each do |c|
+        Contract.not_disabled.descend_by_netmask.each do |c|
           fsquid.puts "acl contract_#{c.klass.number} src #{c.ip}"
           fsquid.puts "tcp_outgoing_address #{c.proxy_bind_ip} contract_#{c.klass.number}"
           f.puts "ip address add #{c.proxy_bind_ip} dev dummy0"
         end
       else
-        Contract.descend_by_netmask.each do |c|
+        Contract.not_disabled.descend_by_netmask.each do |c|
           fsquid.puts "acl pg_#{c.plan.provider_group.klass.number} src #{c.ip}"
         end
         ProviderGroup.enabled.with_klass.each do |pg|
