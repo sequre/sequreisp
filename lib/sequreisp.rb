@@ -426,7 +426,7 @@ end
 
 def do_port_forwardings(f, fp, batch=true)
   prefix = batch ? "" : "iptables -t nat "
-  unless fp.provider.ip.blank?
+  unless fp.provider.ip.blank? or fp.contract.nil?
     f.puts prefix + "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.tcp
     f.puts prefix + "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.udp
   end
