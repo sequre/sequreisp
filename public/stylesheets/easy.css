@@ -471,8 +471,11 @@ padding:0 10px;
 text-shadow:0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-#search_submit, #user_session_submit, .create, .btn_submit {
-padding:3px 15px;
+#search_submit, .create {
+  padding:3px 15px;
+}
+
+#user_session_submit, .btn_submit {
 }
 
 .inline-errors{
@@ -649,8 +652,7 @@ margin-top:11px;
   background-color:#550000;
 }
 .btn_login{
-margin-left:-20px !important;
-margin-top:20px !important;
+
 }
 
 label.remember{
