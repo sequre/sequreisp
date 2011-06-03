@@ -26,10 +26,13 @@ h1 {
 	height: 50px;
 }
 
+/*
+Deprecated in favor of foldeable menues
 #plugins_menu {
   display:none;
   border-top: #C4C4B5 solid 1px;
 }
+*/
 
 div#apply_changes_banner{
     background-color: #B6B6B6;

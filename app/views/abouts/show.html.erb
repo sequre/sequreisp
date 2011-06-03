@@ -1,0 +1,15 @@
+<% content_for :title, t('menu.about') %>
+<% heading t('menu.about') %>
+
+<%= render :partial => "shared/empty_submenu" %>
+<ul>
+  <li>
+  <b><%=t 'about.version' %></b><br/>
+  <%= SequreISP::Version.to_s %><br/>
+  </li>
+  <li>
+  <b><%=t 'about.url' %></b><br/>
+  <%= link_to SequreISP::URL, SequreISP::URL %><br/>
+  </li>
+</ul>
+

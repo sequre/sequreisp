@@ -237,6 +237,7 @@ en:
     apply_changes: "Apply changes"
     backups: "Backups"
     modules: "Plugins"
+    about: "About"
   buttons:
     login: "Login"
     edit: "Edit"
@@ -282,6 +283,9 @@ en:
     last_24h: "Last 24 hours"
     last_month: "Last month"
     last_year: "Last year"
+  about:
+    version: "SequreISP version"
+    url: "Upgrades, plugins and support available at"
   actions:
     edit: "Editing %{model}"
     new: "Creating %{model}"

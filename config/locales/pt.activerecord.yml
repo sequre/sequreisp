@@ -231,6 +231,7 @@ pt:
     apply_changes: "Aplicar câmbios"
     backups: "Cópias de resguardo"
     modules: "Módulos"
+    about: "Acerca de"
   buttons:
     login: "Ingressar"
     edit: "Editar"
@@ -276,6 +277,9 @@ pt:
     last_24h: "Últimas 24 horas"
     last_month: "Último mês"
     last_year: "Último ano"
+  about:
+    version: "Versão SequreISP"
+    url: "Atualizações, módulos e suporte em"
   actions:
     edit: "Editando %{model}"
     new: "Criando %{model}"
