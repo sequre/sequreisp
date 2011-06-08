@@ -363,7 +363,7 @@ def gen_iptables
           f.puts "-A POSTROUTING -o #{p.link_interface} -s #{network} -j ACCEPT"
         end
         # do we have an ip yet?
-        if p.ip.blank?
+        if p.ip.blank? or p.kind != 'static'
           f.puts "-A POSTROUTING -o #{p.link_interface}  -j MASQUERADE"
         else
           provider_ips = p.nat_pool_addresses
