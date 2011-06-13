@@ -75,7 +75,7 @@ def gen_tc(f)
     tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "c",
                           :rate => rate * 0.1 , :ceil => rate * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
   end
-  def do_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0)
+  def do_per_contract_prios_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0)
     contract_min_rate = 0.024
     klass = c.class_hex
     # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
@@ -129,8 +129,8 @@ def gen_tc(f)
     tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 htb default 0"
     tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
     Contract.not_disabled.descend_by_netmask.each do |c|
-      do_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
-      do_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
+      do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
+      do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
     end
     tc_ifb_up.close
     tc_ifb_down.close
@@ -156,7 +156,7 @@ def gen_tc(f)
         else
           if Configuration.tc_contracts_per_provider_in_wan
             Contract.not_disabled.descend_by_netmask.each do |c|
-              do_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
+              do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
             end
           else
             tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
@@ -190,7 +190,7 @@ def gen_tc(f)
             tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
             tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
             Contract.not_disabled.descend_by_netmask.each do |c|
-              do_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
+              do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
             end
           end
         end
