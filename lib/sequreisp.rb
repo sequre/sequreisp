@@ -54,6 +54,27 @@ def create_dirs_if_not_present
 end
 
 def gen_tc(f)
+  def tc_class_qdisc_filter(o = {})
+    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
+    tc = o[:file]
+    tc.puts "class add dev #{o[:iface]} parent #{o[:parent_mayor]}:#{o[:parent_minor]} classid #{classid} " +
+            "htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
+    tc.puts "qdisc add dev #{o[:iface]} parent #{classid} sfq perturb 10" #saco el handle
+    tc.puts "filter add dev #{o[:iface]} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}"
+  end
+  def do_global_prios_tc(file, iface, parent_mayor, parent_minor, rate, quantum)
+    mask = "f0000000"
+    #TODO tc_global ceil_prio3 quantum mark, etc
+    #prio1
+    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "a",
+                          :rate => rate_up * 0.2 , :ceil => rate_up , :prio => 1, :quantum => quantum, :mark => "a0000000", :mask => mask
+    #prio2
+    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "b",
+                          :rate => rate_up * 0.7 , :ceil => rate_up , :prio => 2, :quantum => quantum, :mark => "b0000000", :mask => mask
+    #prio3
+    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "c",
+                          :rate => rate_up * 0.1 , :ceil => rate_up * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
+  end
   def do_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0)
     klass= c.class_hex
     klass_prio1 = c.class_prio1_hex
@@ -79,6 +100,10 @@ def gen_tc(f)
     #padre
     tc.puts "##{c.client.name}: #{c.id} #{c.klass.number}"
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{quantum_total}"
+    if true #TODO tc_global Configuration.tc_global_prio
+      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{klass}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
+      return
+    end
     #hijo prio1
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{klass_prio1} htb rate #{rate_prio1}kbit ceil #{ceil}kbit prio 1 quantum #{quantum_prio1}"
     tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{klass_prio1} sfq perturb 10" #saco el handle
@@ -125,14 +150,18 @@ def gen_tc(f)
         tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
         tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
         tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
-        if Configuration.tc_contracts_per_provider_in_wan
-          Contract.not_disabled.descend_by_netmask.each do |c|
-            do_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
-          end
+        if true # TODO tc_global Configuration.tc_global_prio
+          do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_up, quantum
         else
-          tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
+          if Configuration.tc_contracts_per_provider_in_wan
+            Contract.not_disabled.descend_by_netmask.each do |c|
+              do_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
+            end
+          else
+            tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
+          end
         end
-      end 
+      end
     rescue => e
       Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree up) e=>#{e.inspect}"
     end
@@ -152,7 +181,11 @@ def gen_tc(f)
           quantum = Configuration.mtu * p.quantum_factor * 3
           tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
           tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
-          if Configuration.tc_contracts_per_provider_in_lan
+          if true #TODO tc_global Configuration.tc_global_prio
+            tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
+            tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
+            do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_down, quantum
+          elsif Configuration.tc_contracts_per_provider_in_lan
             tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
             tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
             Contract.not_disabled.descend_by_netmask.each do |c|
@@ -252,73 +285,145 @@ def gen_iptables
       end
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
-      end 
-      Contract.not_disabled.descend_by_netmask.each do |c|
-        mark_burst = "0x0000/0x0000ffff"
-        mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
-        mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
-        mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
-        prio_protos = c.prio_protos.blank? ? Configuration.default_prio_protos : c.prio_protos
-        prio_helpers = c.prio_helpers.blank? ? Configuration.default_prio_helpers : c.prio_helpers
-        tcp_prio_ports = c.tcp_prio_ports.blank? ? Configuration.default_tcp_prio_ports : c.tcp_prio_ports
-        udp_prio_ports = c.udp_prio_ports.blank? ? Configuration.default_udp_prio_ports : c.udp_prio_ports
-        # una chain por cada cliente
-        chain="sequreisp.#{c.ip}"
-        f.puts ":#{chain} - [0:0]"
-        # redirección del trafico de este cliente hacia su propia chain
-        f.puts "-A sequreisp.down -d #{c.ip} -j #{chain}"
-        f.puts "-A sequreisp.up -s #{c.ip} -j #{chain}"
-        if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-          f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j #{chain}"
+      end
+      if true # TODO global_tc Configuration.tc_global_prio
+        #mark_burst = "0x0000/0x0000ffff"
+        mark_prio1 = "0xa0000000/0xf0000000"
+        mark_prio2 = "0xb0000000/0xf0000000"
+        mark_prio3 = "0xc0000000/0xf0000000"
+        prio_protos = Configuration.default_prio_protos
+        prio_helpers = Configuration.default_prio_helpers
+        tcp_prio_ports = Configuration.default_tcp_prio_ports
+        udp_prio_ports = Configuration.default_udp_prio_ports
+        mark_if="-m mark --mark 0x0/0xf0000000"
+        Contract.not_disabled.descend_by_netmask.each do |c|
+          mark = "0x#{c.mark_hex}/0x0000ffff"
+          f.puts "-A sequreisp.up -s #{c.ip} -j MARK --set-mark #{mark}"
+          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
+            f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j MARK --set-mark #{mark}"
+          end
+          f.puts "-A sequreisp.down -d #{c.ip} -j MARK --set-mark #{mark}"
         end
-        # separo el tráfico en las 3 class: prio1 prio2 prio3
-        # prio1
-        f.puts "-A #{chain} #{mark_if} -p tcp -m length --length 0:100 -j MARK --set-mark #{mark_prio1}"
-        f.puts "-A #{chain} #{mark_if} -p tcp --dport 22 -j MARK --set-mark #{mark_prio1}"
-        f.puts "-A #{chain} #{mark_if} -p tcp --sport 22 -j MARK --set-mark #{mark_prio1}"
-        f.puts "-A #{chain} #{mark_if} -p udp --dport 53 -j MARK --set-mark #{mark_prio1}"
-        f.puts "-A #{chain} #{mark_if} -p udp --sport 53 -j MARK --set-mark #{mark_prio1}"
-        f.puts "-A #{chain} #{mark_if} -p icmp -j MARK --set-mark #{mark_prio1}"
-        # prio2
-        prio_protos.split(",").each do |proto|
-          f.puts "-A #{chain} #{mark_if} -p #{proto} -j MARK --set-mark #{mark_prio2}"
-        end
-        prio_helpers.split(",").each do |helper|
-          f.puts "-A #{chain} #{mark_if} -m helper --helper #{helper} -j MARK --set-mark #{mark_prio2}"
-        end
-        # solo 15 puertos por vez en multiport
-        tcp_array = tcp_prio_ports.split(",")
-        while !tcp_array.empty? do 
-          ports = tcp_array.slice!(0..14).join(",")
-          f.puts "-A #{chain} #{mark_if} -p tcp -m multiport --dports #{ports} -j MARK --set-mark #{mark_prio2}"
-          f.puts "-A #{chain} #{mark_if} -p tcp -m multiport --sports #{ports} -j MARK --set-mark #{mark_prio2}"
-        end
-        udp_array = udp_prio_ports.split(",")
-        while !udp_array.empty? do 
-          ports = udp_array.slice!(0..14).join(",")
-          f.puts "-A #{chain} #{mark_if} -p udp -m multiport --dports #{ports} -j MARK --set-mark #{mark_prio2}"
-          f.puts "-A #{chain} #{mark_if} -p udp -m multiport --sports #{ports} -j MARK --set-mark #{mark_prio2}"
-        end
-        # prio3 (catch_all)
-        f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
+        # una chain global
+        ["sequreisp.up", "sequreisp.down"].each do |chain|
+          # separo el tráfico en las 3 class: prio1 prio2 prio3
+          # prio1
+          f.puts "-A #{chain} #{mark_if} -p tcp -m length --length 0:100 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p tcp --dport 22 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p tcp --sport 22 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p udp --dport 53 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p udp --sport 53 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p icmp -j MARK --set-mark #{mark_prio1}"
+          # prio2
+          prio_protos.split(",").each do |proto|
+            f.puts "-A #{chain} #{mark_if} -p #{proto} -j MARK --set-mark #{mark_prio2}"
+          end
+          prio_helpers.split(",").each do |helper|
+            f.puts "-A #{chain} #{mark_if} -m helper --helper #{helper} -j MARK --set-mark #{mark_prio2}"
+          end
+          # solo 15 puertos por vez en multiport
+          tcp_array = tcp_prio_ports.split(",")
+          while !tcp_array.empty? do
+            ports = tcp_array.slice!(0..14).join(",")
+            f.puts "-A #{chain} #{mark_if} -p tcp -m multiport --dports #{ports} -j MARK --set-mark #{mark_prio2}"
+            f.puts "-A #{chain} #{mark_if} -p tcp -m multiport --sports #{ports} -j MARK --set-mark #{mark_prio2}"
+          end
+          udp_array = udp_prio_ports.split(",")
+          while !udp_array.empty? do
+            ports = udp_array.slice!(0..14).join(",")
+            f.puts "-A #{chain} #{mark_if} -p udp -m multiport --dports #{ports} -j MARK --set-mark #{mark_prio2}"
+            f.puts "-A #{chain} #{mark_if} -p udp -m multiport --sports #{ports} -j MARK --set-mark #{mark_prio2}"
+          end
+          # prio3 (catch_all)
+          f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
 
-        # long downloads/uploads limit
-        if c.plan.long_download_max != 0
-          f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+          # long downloads/uploads limit
+          # TODO global_tc plan.long_download
+          #if c.plan.long_download_max != 0
+          #  f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+          #end
+          #if c.plan.long_upload_max != 0
+          #  f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+          #end
+          ## if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
+          #if c.plan.burst_down != 0
+          #  f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+          #end
+          #if c.plan.burst_up != 0
+          #  f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+          #end
+          # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
+          # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
+          f.puts "-A #{chain} -j ACCEPT"
         end
-        if c.plan.long_upload_max != 0
-          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+      else
+        Contract.not_disabled.descend_by_netmask.each do |c|
+          mark_burst = "0x0000/0x0000ffff"
+          mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
+          mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
+          mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
+          prio_protos = c.prio_protos.blank? ? Configuration.default_prio_protos : c.prio_protos
+          prio_helpers = c.prio_helpers.blank? ? Configuration.default_prio_helpers : c.prio_helpers
+          tcp_prio_ports = c.tcp_prio_ports.blank? ? Configuration.default_tcp_prio_ports : c.tcp_prio_ports
+          udp_prio_ports = c.udp_prio_ports.blank? ? Configuration.default_udp_prio_ports : c.udp_prio_ports
+          # una chain por cada cliente
+          chain="sequreisp.#{c.ip}"
+          f.puts ":#{chain} - [0:0]"
+          # redirección del trafico de este cliente hacia su propia chain
+          f.puts "-A sequreisp.down -d #{c.ip} -j #{chain}"
+          f.puts "-A sequreisp.up -s #{c.ip} -j #{chain}"
+          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
+            f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j #{chain}"
+          end
+          # separo el tráfico en las 3 class: prio1 prio2 prio3
+          # prio1
+          f.puts "-A #{chain} #{mark_if} -p tcp -m length --length 0:100 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p tcp --dport 22 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p tcp --sport 22 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p udp --dport 53 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p udp --sport 53 -j MARK --set-mark #{mark_prio1}"
+          f.puts "-A #{chain} #{mark_if} -p icmp -j MARK --set-mark #{mark_prio1}"
+          # prio2
+          prio_protos.split(",").each do |proto|
+            f.puts "-A #{chain} #{mark_if} -p #{proto} -j MARK --set-mark #{mark_prio2}"
+          end
+          prio_helpers.split(",").each do |helper|
+            f.puts "-A #{chain} #{mark_if} -m helper --helper #{helper} -j MARK --set-mark #{mark_prio2}"
+          end
+          # solo 15 puertos por vez en multiport
+          tcp_array = tcp_prio_ports.split(",")
+          while !tcp_array.empty? do
+            ports = tcp_array.slice!(0..14).join(",")
+            f.puts "-A #{chain} #{mark_if} -p tcp -m multiport --dports #{ports} -j MARK --set-mark #{mark_prio2}"
+            f.puts "-A #{chain} #{mark_if} -p tcp -m multiport --sports #{ports} -j MARK --set-mark #{mark_prio2}"
+          end
+          udp_array = udp_prio_ports.split(",")
+          while !udp_array.empty? do
+            ports = udp_array.slice!(0..14).join(",")
+            f.puts "-A #{chain} #{mark_if} -p udp -m multiport --dports #{ports} -j MARK --set-mark #{mark_prio2}"
+            f.puts "-A #{chain} #{mark_if} -p udp -m multiport --sports #{ports} -j MARK --set-mark #{mark_prio2}"
+          end
+          # prio3 (catch_all)
+          f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
+
+          # long downloads/uploads limit
+          if c.plan.long_download_max != 0
+            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+          end
+          if c.plan.long_upload_max != 0
+            f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+          end
+          # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
+          if c.plan.burst_down != 0
+            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+          end
+          if c.plan.burst_up != 0
+            f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+          end
+          # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
+          # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
+          f.puts "-A #{chain} -j ACCEPT"
         end
-        # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
-        if c.plan.burst_down != 0
-          f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
-        end
-        if c.plan.burst_up != 0
-          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
-        end
-        # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
-        # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
-        f.puts "-A #{chain} -j ACCEPT"
       end
       f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark"
       f.puts "COMMIT"
