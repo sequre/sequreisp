@@ -69,7 +69,11 @@ time = Time.now
 client_up = tc_class(IFB_UP)
 client_down = tc_class(IFB_DOWN)
 Contract.all.each do |c|
-  rrd_update c, time, client_down[c.class_prio2_hex], client_down[c.class_prio3_hex], client_up[c.class_prio2_hex], client_up[c.class_prio3_hex]
+  if true #TODO tc_global Configuration.tc_global_pri
+    rrd_update c, time, client_down[c.class_hex], 0, client_up[c.class_hex], 0
+  else
+    rrd_update c, time, client_down[c.class_prio2_hex], client_down[c.class_prio3_hex], client_up[c.class_prio2_hex], client_up[c.class_prio3_hex]
+  end
 end
 
 ProviderGroup.enabled.each do |pg|
