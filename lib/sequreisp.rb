@@ -67,55 +67,56 @@ def gen_tc(f)
     #TODO tc_global ceil_prio3 quantum mark, etc
     #prio1
     tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "a",
-                          :rate => rate_up * 0.2 , :ceil => rate_up , :prio => 1, :quantum => quantum, :mark => "a0000000", :mask => mask
+                          :rate => rate * 0.2 , :ceil => rate , :prio => 1, :quantum => quantum, :mark => "a0000000", :mask => mask
     #prio2
     tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "b",
-                          :rate => rate_up * 0.7 , :ceil => rate_up , :prio => 2, :quantum => quantum, :mark => "b0000000", :mask => mask
+                          :rate => rate * 0.7 , :ceil => rate , :prio => 2, :quantum => quantum, :mark => "b0000000", :mask => mask
     #prio3
     tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "c",
-                          :rate => rate_up * 0.1 , :ceil => rate_up * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
+                          :rate => rate * 0.1 , :ceil => rate * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
   end
   def do_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0)
-    klass= c.class_hex
-    klass_prio1 = c.class_prio1_hex
-    klass_prio2 = c.class_prio2_hex
-    klass_prio3 = c.class_prio3_hex
-    mark_prio1 = c.mark_prio1_hex(prefix)
-    mark_prio2 = c.mark_prio2_hex(prefix)
-    mark_prio3 = c.mark_prio3_hex(prefix)
+    contract_min_rate = 0.024
+    klass = c.class_hex
     # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
     # prefix != 0 significa que matcheo en las ifaces reales donde tengo un arbol x cada enlace
     mask = prefix == 0 ? "0000ffff" : "00ffffff"
-    mtu = Configuration.mtu
-    rate = plan["rate_" + direction] == 0 ?  0.024 : plan["rate_" + direction]
-    rate_prio1 = rate == 0.024 ? rate/3 : rate*0.05
-    rate_prio2 = rate == 0.024 ? rate/3 : rate*0.9
-    rate_prio3 = rate == 0.024 ? rate/3 : rate*0.05
+    rate = plan["rate_" + direction] == 0 ?  contract_min_rate : plan["rate_" + direction]
+    rate_prio1 = rate == contract_min_rate ? rate/3 : rate*0.05
+    rate_prio2 = rate == contract_min_rate ? rate/3 : rate*0.9
+    rate_prio3 = rate == contract_min_rate ? rate/3 : rate*0.05
     ceil = plan["ceil_" + direction]
-    quantum_factor = (plan["ceil_" + direction] + plan["rate_" + direction])/Configuration.quantum_factor.to_i 
+    mtu = Configuration.mtu
+    quantum_factor = (plan["ceil_" + direction] + plan["rate_" + direction])/Configuration.quantum_factor.to_i
     quantum_total = mtu * quantum_factor * 3
-    quantum_prio1 = mtu * quantum_factor * 3
-    quantum_prio2 = mtu * quantum_factor * 2
-    quantum_prio3 = mtu
+
     #padre
     tc.puts "##{c.client.name}: #{c.id} #{c.klass.number}"
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{quantum_total}"
     if true #TODO tc_global Configuration.tc_global_prio
+      #huérfano, solo el filter
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{klass}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
-      return
+    else
+      #hijos
+      #prio1
+      tc_class_qdisc_filter :prio => 1, :file => tc, :iface => iface,
+                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio1_hex,
+                            :rate => rate_prio1, :ceil => ceil,
+                            :quantum => mtu * quantum_factor * 3,
+                            :mark => c.mark_prio1_hex(prefix), :mask => mask
+      #prio2
+      tc_class_qdisc_filter :prio => 2, :file => tc, :iface => iface,
+                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio2_hex,
+                            :rate => rate_prio2, :ceil => ceil,
+                            :quantum => mtu * quantum_factor * 2,
+                            :mark => c.mark_prio2_hex(prefix), :mask => mask
+      #prio3
+      tc_class_qdisc_filter :prio => 3, :file => tc, :iface => iface,
+                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio3_hex,
+                            :rate => rate_prio3, :ceil => ceil * c.ceil_dfl_percent / 100,
+                            :quantum => mtu,
+                            :mark => c.mark_prio3_hex(prefix), :mask => mask
     end
-    #hijo prio1
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{klass_prio1} htb rate #{rate_prio1}kbit ceil #{ceil}kbit prio 1 quantum #{quantum_prio1}"
-    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{klass_prio1} sfq perturb 10" #saco el handle
-    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio1}/0x#{mask} fw classid #{parent_mayor}:#{klass_prio1}"
-    #hijo prio2
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{klass_prio2} htb rate #{rate_prio2}kbit ceil #{ceil}kbit prio 2 quantum #{quantum_prio2}"
-    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{klass_prio2} sfq perturb 10" #saco el handle
-    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio2}/0x#{mask} fw classid #{parent_mayor}:#{klass_prio2}"
-    #hijo prio3
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{klass_prio3} htb rate #{rate_prio3}kbit ceil #{ceil*c.ceil_dfl_percent/100}kbit prio 3 quantum #{quantum_prio3}"
-    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{klass_prio3} sfq perturb 10" #saco el handle
-    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3}/0x#{mask} fw classid #{parent_mayor}:#{klass_prio3}"
   end
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
