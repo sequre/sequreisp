@@ -210,7 +210,7 @@ def gen_iptables
     o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p udp --sport 53 -j MARK --set-mark #{o[:mark]}"
     o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p icmp -j MARK --set-mark #{o[:mark]}"
   end
-  def do_prio_protos(o={})
+  def do_prio_protos_iptables(o={})
     o[:protos].each do |proto|
       o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p #{proto} -j MARK --set-mark #{o[:mark]}"
     end
