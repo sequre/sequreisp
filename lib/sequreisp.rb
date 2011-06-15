@@ -217,7 +217,7 @@ def gen_iptables
   end
   def do_prio_helpers_iptables(o={})
     o[:helpers].each do |helper|
-      o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -m helper --helper #{o[:helper]} -j MARK --set-mark #{o[:mark]}"
+      o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -m helper --helper #{helper} -j MARK --set-mark #{o[:mark]}"
     end
   end
   def do_prio_ports_iptables(o={})
