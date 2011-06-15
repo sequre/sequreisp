@@ -67,10 +67,10 @@ def gen_tc(f)
     #TODO tc_global ceil_prio3 quantum mark, etc
     #prio1
     tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "a",
-                          :rate => rate * 0.2 , :ceil => rate , :prio => 1, :quantum => quantum, :mark => "a0000000", :mask => mask
+                          :rate => rate * 0.4 , :ceil => rate , :prio => 1, :quantum => quantum, :mark => "a0000000", :mask => mask
     #prio2
     tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "b",
-                          :rate => rate * 0.7 , :ceil => rate , :prio => 2, :quantum => quantum, :mark => "b0000000", :mask => mask
+                          :rate => rate * 0.5 , :ceil => rate , :prio => 2, :quantum => quantum, :mark => "b0000000", :mask => mask
     #prio3
     tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "c",
                           :rate => rate * 0.1 , :ceil => rate * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
