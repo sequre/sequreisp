@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 source "http://gemcutter.org"
 source "http://gems.github.com"
-gem 'rails', '~> 2.3.5'
+gem 'rails', '=2.3.11'
 
 gem 'mysql'
 gem 'formtastic', '~>1.2'
