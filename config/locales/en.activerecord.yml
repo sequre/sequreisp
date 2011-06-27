@@ -161,6 +161,7 @@ en:
         deliver_notifications: "Send emails with system notifications (e.g. link state changes)"
         clamp_mss_to_pmtu: "Assign MSS(Maximum Segement Size) according to MTU PATH(pmtu)"
         language: "Language"
+        use_global_prios: "Disable per contract prioritiess and use global priorities instead (experimental)"
       user:
         name: "Name"
         email: "User email address"
@@ -225,6 +226,7 @@ en:
         notification_timeframe: "Time in seconds"
         contact_url: "http://www.example.com/"
         tc_contracts_per_provider_in_lan: "Do not enable if contracts*providers > 8000 (approx.)"
+        use_global_prios: "Enable only if contract's number is above 2500"
   menu:
     clients: "Clients"
     contracts: "Contracts"

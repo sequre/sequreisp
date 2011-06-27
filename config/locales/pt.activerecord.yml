@@ -159,6 +159,7 @@ pt:
         deliver_notifications: "Enviar notificações do sistema por e-mail (Ex: câmbio de estado de ligações)"
         clamp_mss_to_pmtu: "Ajustar o MSS (Tamanhio máximo de segmento) ao MTU da rota (PMTU)"
         language: "Língua"
+        use_global_prios: "Desabilitar por prioridades contrato e usar prioridades globais em vez (experimental)"
       user:
         name: "Nome"
         email: "E-mail do usuário"
@@ -219,6 +220,7 @@ pt:
         notification_timeframe: "Indicar tempo em segundos"
         contact_url: "http://www.ejemplo.com/"
         tc_contracts_per_provider_in_lan: "Não habilitar se contratos×fornecedores > 8000 (aprox.)"
+        use_global_prios: "Habilitar somente se o número do contratos é superior a 2500"
   menu:
     clients: "Clientes"
     contracts: "Contratos"

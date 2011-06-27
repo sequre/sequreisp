@@ -79,152 +79,81 @@ class Graph
   def path_img(gname)
     RRD_IMG_DIR + "/#{gname}.png"
   end
-  def graph(time, xgrid, width, height)
-    gname = "#{element.class.to_s}.#{element.id}.#{time}.#{width}.#{height}"
+  def rrd_graph(args=[])
+    begin
+      eval "RRD::Wrapper.graph!(" + args.collect{ |n| "'" + n +  "'" }.join(",") + ")"
+    rescue => e
+      Rails.logger.error "ERROR: Graph::grpah #{e.inspect}"
+      nil
+    end
+  end
+  def rrd_args_for_element
     case element.class.to_s
-    when "Provider", "ProviderGroup", "Interface"
-      RRD::Wrapper.graph!(
-        path_img(gname),
-        "-s", time,
-        "DEF:down_prio=#{path_rrd}:down_prio:AVERAGE",
-        "DEF:down_dfl=#{path_rrd}:down_dfl:AVERAGE",
-        "DEF:up_prio=#{path_rrd}:up_prio:AVERAGE",
-        "DEF:up_dfl=#{path_rrd}:up_dfl:AVERAGE",
-        "CDEF:down_prio_=down_prio,8,*",
-        "CDEF:down_dfl_=down_dfl,8,*",
-        "CDEF:down_=down_prio_,down_dfl_,+",
-        "CDEF:up_prio_=up_prio,8,*",
-        "CDEF:up_dfl_=up_dfl,8,*",
-        "CDEF:up_=up_prio_,up_dfl_,+",
+    when "Interface"
+      [
         "AREA:down_prio_#00AA00:down",
-        #"STACK:down_dfl_#00EE00:down p2p",
-        #"GPRINT:down_:AVERAGE:\nPromedio %.2lf%sbps",
-        #"GPRINT:down_prio_:AVERAGE:(prio=%.2lf%sbps",
-        #"GPRINT:down_dfl_:AVERAGE:p2p=%.2lf%sbps)",
-        #"COMMENT:\\n",
         "LINE1:up_prio_#FF0000:up",
-        #"STACK:up_dfl_#FF6600:up p2p",
-        #"GPRINT:up_:AVERAGE:Promedio %.2lf%sbps",
-        #"GPRINT:up_prio_:AVERAGE:(prio=%.2lf%sbps",
-        #"GPRINT:up_dfl_:AVERAGE:p2p=%.2lf%sbps)",
-        #"COMMENT:\\n",
         "HRULE:#{element.rate_down*1024}#00AA0066",
         "HRULE:#{element.rate_up*1024}#FF000066",
         "--upper-limit=#{element.rate_down*1000}",
-        "--vertical-label=bps(bits/second)",
-        "--interlaced",
-        "--watermark=SequreISP",
-        "--lower-limit=0",
-        "--x-grid", xgrid,
-        "--alt-y-grid",
-        "--width", "#{width}",
-        "--height", "#{height}",
-        "--imgformat", "PNG"
-      ) rescue alt = "Gráfico no disponible"
+      ] 
+    when "Provider", "ProviderGroup"
+      args = [ "AREA:down_prio_#00AA00:down" ] 
+      args += [ "STACK:down_dfl_#00EE00:down p2p" ] if Configuration.first.use_global_prios
+      args += [ "LINE1:up_prio_#FF0000:up" ]
+      args += [ "STACK:up_dfl_#FF6600:up p2p" ] if Configuration.first.use_global_prios
+      args += 
+      [  
+        "HRULE:#{element.rate_down*1024}#00AA0066",
+        "HRULE:#{element.rate_up*1024}#FF000066",
+        "--upper-limit=#{element.rate_down*1000}",
+      ] 
     when "Contract"
-      RRD::Wrapper.graph!(
-        path_img(gname),
-        "-s", time,
-        "DEF:down_prio=#{path_rrd}:down_prio:AVERAGE",
-        "DEF:down_dfl=#{path_rrd}:down_dfl:AVERAGE",
-        "DEF:up_prio=#{path_rrd}:up_prio:AVERAGE",
-        "DEF:up_dfl=#{path_rrd}:up_dfl:AVERAGE",
-        "CDEF:down_prio_=down_prio,8,*",
-        "CDEF:down_dfl_=down_dfl,8,*",
-        "CDEF:down_=down_prio_,down_dfl_,+",
-        "CDEF:up_prio_=up_prio,8,*",
-        "CDEF:up_dfl_=up_dfl,8,*",
-        "CDEF:up_=up_prio_,up_dfl_,+",
+      [
         "AREA:down_prio_#00AA00:down",
         "STACK:down_dfl_#00EE00:down p2p",
-        #"GPRINT:down_:AVERAGE:\nPromedio %.2lf%sbps",
-        #"GPRINT:down_prio_:AVERAGE:(prio=%.2lf%sbps",
-        #"GPRINT:down_dfl_:AVERAGE:p2p=%.2lf%sbps)",
-        #"COMMENT:\\n",
         "LINE1:up_prio_#FF0000:up",
         "STACK:up_dfl_#FF6600:up p2p",
-        #"GPRINT:up_:AVERAGE:Promedio %.2lf%sbps",
-        #"GPRINT:up_prio_:AVERAGE:(prio=%.2lf%sbps",
-        #"GPRINT:up_dfl_:AVERAGE:p2p=%.2lf%sbps)",
-        #"COMMENT:\\n",
         "HRULE:#{element.plan.ceil_down*1024}#00AA0066",
         "HRULE:#{element.plan.ceil_up*1024}#FF000066",
         "--upper-limit=#{element.plan.ceil_down*1000}",
-        "--vertical-label=bps(bits/second)",
-        "--interlaced",
-        "--watermark=SequreISP",
-        "--lower-limit=0",
-        "--x-grid", xgrid,
-        "--alt-y-grid",
-        "--width", "#{width}",
-        "--height", "#{height}",
-        "--imgformat", "PNG"
-      ) rescue alt = "Gráfico no disponible"
+      ] 
     end
-    #"<a href=\"/graphs/#{element.id}/?class=#{element.class.to_s}\"><img src=\"/images/rrd/#{gname}.png\"></a>"
+  end
+  def rrd_default_args(gname, time, xgrid, width, height)
+    [
+      path_img(gname),
+      "-s", time,
+      "DEF:down_prio=#{path_rrd}:down_prio:AVERAGE",
+      "DEF:down_dfl=#{path_rrd}:down_dfl:AVERAGE",
+      "DEF:up_prio=#{path_rrd}:up_prio:AVERAGE",
+      "DEF:up_dfl=#{path_rrd}:up_dfl:AVERAGE",
+      "CDEF:down_prio_=down_prio,8,*",
+      "CDEF:down_dfl_=down_dfl,8,*",
+      "CDEF:down_=down_prio_,down_dfl_,+",
+      "CDEF:up_prio_=up_prio,8,*",
+      "CDEF:up_dfl_=up_dfl,8,*",
+      "--interlaced",
+      "--watermark=SequreISP",
+      "--lower-limit=0",
+      "--x-grid", xgrid,
+      "--alt-y-grid",
+      "--width", "#{width}",
+      "--height", "#{height}",
+      "--imgformat", "PNG"
+    ]
+  end
+  def graph(time, xgrid, width, height)
+    gname = "#{element.class.to_s}.#{element.id}.#{time}.#{width}.#{height}"
+    rrd_args = rrd_default_args(gname, time, xgrid, width, height) + rrd_args_for_element
+    alt = "No disponible" unless rrd_graph(rrd_args)
     "<img alt=\"#{alt}\" src=\"/images/rrd/#{gname}.png\">"
+    #"<a href=\"/graphs/#{element.id}/?class=#{element.class.to_s}\"><img src=\"/images/rrd/#{gname}.png\"></a>"
   end
   def graph_small(time, xgrid, width, height)
     gname = "#{element.class.to_s}.#{element.id}.#{time}.#{width}.#{height}"
-    case element.class.to_s
-    when "Provider", "ProviderGroup", "Interface"
-      RRD::Wrapper.graph!(
-        path_img(gname),
-        "-s", time,
-        "DEF:down_prio=#{path_rrd}:down_prio:AVERAGE",
-        "DEF:down_dfl=#{path_rrd}:down_dfl:AVERAGE",
-        "DEF:up_prio=#{path_rrd}:up_prio:AVERAGE",
-        "DEF:up_dfl=#{path_rrd}:up_dfl:AVERAGE",
-        "CDEF:down_prio_=down_prio,8,*",
-        "CDEF:down_dfl_=down_dfl,8,*",
-        "CDEF:up_prio_=up_prio,8,*",
-        "CDEF:up_dfl_=up_dfl,8,*",
-        "AREA:down_prio_#00AA00:down",
-        #"STACK:down_dfl_#00EE00:down p2p",
-        "LINE1:up_prio_#FF0000:up",
-        #"STACK:up_dfl_#FF6600:up p2p",
-        "HRULE:#{element.rate_down*1024}#00AA0066",
-        "HRULE:#{element.rate_up*1024}#FF000066",
-        "--upper-limit=#{element.rate_down*1000}",
-        "--interlaced",
-        "--lower-limit=0",
-        "--x-grid", xgrid,
-        "--alt-y-grid",
-        "--no-legend",
-        "--width", "#{width}",
-        "--height", "#{height}",
-        "--imgformat", "PNG"
-      ) rescue alt = "Gráfico no disponible"
-    when "Contract"
-      RRD::Wrapper.graph!(
-        path_img(gname),
-        "-s", time,
-        "DEF:down_prio=#{path_rrd}:down_prio:AVERAGE",
-        "DEF:down_dfl=#{path_rrd}:down_dfl:AVERAGE",
-        "DEF:up_prio=#{path_rrd}:up_prio:AVERAGE",
-        "DEF:up_dfl=#{path_rrd}:up_dfl:AVERAGE",
-        "CDEF:down_prio_=down_prio,8,*",
-        "CDEF:down_dfl_=down_dfl,8,*",
-        "CDEF:up_prio_=up_prio,8,*",
-        "CDEF:up_dfl_=up_dfl,8,*",
-        "AREA:down_prio_#00AA00:down",
-        "STACK:down_dfl_#00EE00:down p2p",
-        "LINE1:up_prio_#FF0000:up",
-        "STACK:up_dfl_#FF6600:up p2p",
-        "HRULE:#{element.plan.ceil_down*1024}#00AA0066",
-        "HRULE:#{element.plan.ceil_up*1024}#FF000066",
-        "--upper-limit=#{element.plan.ceil_down*1000}",
-        "--interlaced",
-        "--lower-limit=0",
-        "--x-grid", xgrid,
-        "--alt-y-grid",
-        "--no-legend",
-        "--width", "#{width}",
-        "--height", "#{height}",
-        "--imgformat", "PNG"
-      ) rescue alt = "Gráfico no disponible"
-    end
-    #"<a href=\"/graphs/#{element.id}/?class=#{element.class.to_s}\"><img src=\"/images/rrd/#{gname}.png\"></a>"
+    rrd_args = rrd_default_args(gname, time, xgrid, width, height) + [ "--no-legend" ] + rrd_args_for_element
+    alt = "No disponible" unless rrd_graph(rrd_args)
     "<img alt=\"#{alt}\" src=\"/images/rrd/#{gname}.png\">"
   end
 end
