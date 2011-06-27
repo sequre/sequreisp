@@ -93,7 +93,7 @@ def gen_tc(f)
     #padre
     tc.puts "##{c.client.name}: #{c.id} #{c.klass.number}"
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{quantum_total}"
-    if true #TODO tc_global Configuration.tc_global_prio
+    if Configuration.use_global_prios
       #huérfano, solo el filter
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{klass}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
     else
@@ -151,7 +151,7 @@ def gen_tc(f)
         tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
         tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
         tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
-        if true # TODO tc_global Configuration.tc_global_prio
+        if Configuration.use_global_prios
           do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_up, quantum
         else
           if Configuration.tc_contracts_per_provider_in_wan
@@ -182,7 +182,7 @@ def gen_tc(f)
           quantum = Configuration.mtu * p.quantum_factor * 3
           tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
           tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
-          if true #TODO tc_global Configuration.tc_global_prio
+          if Configuration.use_global_prios
             tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
             tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
             do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_down, quantum
@@ -313,7 +313,7 @@ def gen_iptables
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
       end
-      if true # TODO global_tc Configuration.tc_global_prio
+      if Configuration.use_global_prios
         #mark_burst = "0x0000/0x0000ffff"
         mark_prio1 = "0xa0000000/0xf0000000"
         mark_prio2 = "0xb0000000/0xf0000000"
