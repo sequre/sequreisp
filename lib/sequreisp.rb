@@ -243,13 +243,6 @@ def gen_iptables
       # restauro marka en PREROUTING
       f.puts "-A PREROUTING -j CONNMARK --restore-mark"
 
-      # marko los contratos que salen por un único provider
-      # solo si ya no están markados
-      mark_if="-m mark --mark 0x0/0xff0000"
-      Contract.all(:conditions => "unique_provider_id is not null").each do |c|
-        f.puts "-A PREROUTING -s #{c.ip} #{mark_if} -j MARK --set-mark 0x#{c.unique_provider.mark_hex}/0x00ff0000"
-        f.puts "-A PREROUTING -s #{c.ip} #{mark_if} -j CONNMARK --save-mark"
-      end
       # acepto si ya se de que enlace es
       f.puts "-A PREROUTING -m mark ! --mark 0 -j ACCEPT"
       # si viene desde internet marko segun el enlace por el que entró
@@ -268,13 +261,20 @@ def gen_iptables
       end
 
       # sino marko por cliente segun el ProviderGroup al que pertenezca
-      Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group }]).each do |c|
+      Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ]).each do |c|
         if !c.public_address.nil?
           #evito triangulo de NAT si tiene full DNAT
           f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
         end
 
-        mark = c.public_address.nil? ? c.plan.provider_group.mark_hex : c.public_address.addressable.mark_hex
+        mark = if not c.public_address.nil?
+                 c.public_address.addressable.mark_hex
+               elsif not c.unique_provider.nil?
+                 # marko los contratos que salen por un único provider
+                 c.unique_provider.mark_hex
+               else
+                 c.plan.provider_group.mark_hex
+              end
         f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
         f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT" 
       end
