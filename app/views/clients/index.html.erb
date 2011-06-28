@@ -27,12 +27,16 @@
       <%= f.text_field :name_like %>
     </li>
     <li>
+      <%= f.label :external_client_number_like, t('activerecord.attributes.client.external_client_number') %>
+      <%= f.text_field :external_client_number %>
+    </li>
+    <li>
       <%= f.label :email_like, t('activerecord.attributes.client.email') %>
       <%= f.text_field :email_like %>
     </li>
     <li>
-      <%= f.label :phone_like, t('activerecord.attributes.client.phone') %>
-      <%= f.text_field :phone_like %>
+      <%= f.label :phone_like_or_phone_mobile_like, t('activerecord.attributes.client.phone') + '/' + t('activerecord.attributes.client.phone_mobile')%>
+      <%= f.text_field :phone_like_or_phone_mobile_like %>
     </li>
     <li>
       <br/>
@@ -50,8 +54,9 @@
     <tbody>
       <tr class="odd">
         <th><%= order @search, :by => :name , :as => t('activerecord.attributes.client.name') %></th>
+        <th><%= order @search, :by => :external_client_number , :as => t('activerecord.attributes.client.external_client_number') %></th>
         <th><%= order @search, :by => :email , :as => t('activerecord.attributes.client.email') %></th>
-        <th><%=t 'activerecord.attributes.client.phone' %></th>
+        <th><%=t('activerecord.attributes.client.phone') + '/' + t ('activerecord.attributes.client.phone_mobile') %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
         <% if current_user.may_update_clients? or current_user.may_index_clients? %>
         <th></th> 
@@ -65,8 +70,9 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td><%= client.name %></td>
+          <td><%=h client.external_client_number %></td>
           <td><%=h client.email %></td>
-          <td><%=h client.phone %></td>
+          <td><%=h "#{client.phone} #{client.phone_mobile}" %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => client} %>
           <% if current_user.may_update_client?(client) %>
             <td><%= link_to t('buttons.edit'), edit_client_path(client) %></td>
