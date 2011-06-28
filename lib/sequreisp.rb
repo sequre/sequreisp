@@ -88,6 +88,7 @@ def gen_tc(f)
     ceil = plan["ceil_" + direction]
     mtu = Configuration.mtu
     quantum_factor = (plan["ceil_" + direction] + plan["rate_" + direction])/Configuration.quantum_factor.to_i
+    quantum_factor = 1 if quantum_factor <= 0
     quantum_total = mtu * quantum_factor * 3
 
     #padre
