@@ -85,6 +85,7 @@ pt:
         cpe: "Equipamento"
         node: "Nó"
         autocomplete_client_name: "Procurar cliente"
+        unique_provider: "Use um provedor específico para este contrato (evita balanceamento)"
       client:
         name: "Nome e sobrenome"
         email: "E-mail de contato"
@@ -322,6 +323,7 @@ pt:
       public_address_does_not_belongs_to_plan: "O endereço IP atribuído não pertence ao plano escolhido"
       proxy_arp_incompatible_with_full_dnat: "Esta opção não é compatível com DNAT completo"
       proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP está hablitado mas o endereço IP não pertence a nenhúm dos fornecedores dste plano"
+      unique_provider_does_not_belongs_to_plan: "O fornecedor atribuído não pertence ao plano escolhido"
     configuration:
       notification_email_invalid: "Não é um e-mail válido"
     plan:

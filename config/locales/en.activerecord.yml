@@ -85,6 +85,7 @@ en:
         cpe: "CPE"
         node: "Node"
         autocomplete_client_name: "Search client"
+        unique_provider: "Use a specific provider for this contract (avoids balancing)"
       client:
         name: "First name and surname"
         email: "Email address"
@@ -328,6 +329,7 @@ en:
       public_address_does_not_belongs_to_plan: "The assigned IP does not belong to the selected plan"
       proxy_arp_incompatible_with_full_dnat: "Option is incompatible with full DNAT"
       proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP is enabled but the IP address does not belong to any of the providers of this plan"
+      unique_provider_does_not_belongs_to_plan: "The assigned provider does not belong to the selected plan"
     configuration:
       notification_email_invalid: "Invalid email address"
     plan:

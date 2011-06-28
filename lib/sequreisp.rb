@@ -242,6 +242,14 @@ def gen_iptables
       # CONNMARK PREROUTING
       # restauro marka en PREROUTING
       f.puts "-A PREROUTING -j CONNMARK --restore-mark"
+
+      # marko los contratos que salen por un único provider
+      # solo si ya no están markados
+      mark_if="-m mark --mark 0x0/0xff0000"
+      Contract.all(:conditions => "unique_provider_id is not null").each do |c|
+        f.puts "-A PREROUTING -s #{c.ip} #{mark_if} -j MARK --set-mark 0x#{c.unique_provider.mark_hex}/0x00ff0000"
+        f.puts "-A PREROUTING -s #{c.ip} #{mark_if} -j CONNMARK --save-mark"
+      end
       # acepto si ya se de que enlace es
       f.puts "-A PREROUTING -m mark ! --mark 0 -j ACCEPT"
       # si viene desde internet marko segun el enlace por el que entró

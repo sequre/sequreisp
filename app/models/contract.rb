@@ -29,6 +29,7 @@ class Contract < ActiveRecord::Base
   has_one :provider_group, :through => :plan
   belongs_to :public_address, :class_name => 'Address', :conditions => "addressable_id is not null and addressable_type = 'provider'"
   belongs_to :proxy_arp_interface, :class_name => 'Interface', :conditions => "kind = 'lan'"
+  belongs_to :unique_provider, :class_name => 'Provider'
 
   named_scope :enabled, :conditions => { :state => "enabled" }
   named_scope :not_disabled, :conditions => "state != 'disabled'"
@@ -142,6 +143,13 @@ class Contract < ActiveRecord::Base
       end
       if proxy_arp
         errors.add(:proxy_arp, I18n.t('validations.contract.proxy_arp_incompatible_with_full_dnat'))
+      end
+    end
+    if not unique_provider_id.nil? and not plan_id.nil?
+      _provider = Provider.find unique_provider_id
+      _plan = Plan.find plan_id
+      if _provider.provider_group_id != _plan.provider_group_id
+        errors.add(:unique_provider, I18n.t('validations.contract.unique_provider_does_not_belongs_to_plan'))
       end
     end
     # Often occurs that we have a second pool of ip address that is not configured in the provider itself
