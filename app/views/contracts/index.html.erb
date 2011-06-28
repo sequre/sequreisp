@@ -95,6 +95,19 @@
       <%= f.label :public_address_ip_like, t('activerecord.attributes.contract.public_address') %>
       <%= f.text_field :public_address_ip_like %>
       </li>
+      <div style="clear: both"></div>
+      <li>
+      <%= f.label :detail_like, t('activerecord.attributes.contract.detail') %>
+      <%= f.text_field :detail_like %>
+      </li>
+      <li>
+      <%= f.label :cpe_like, t('activerecord.attributes.contract.cpe') %>
+      <%= f.text_field :cpe_like %>
+      </li>
+      <li>
+      <%= f.label :node_like, t('activerecord.attributes.contract.node') %>
+      <%= f.text_field :node_like %>
+      </li>
     </div>
     <div style="clear: both"></div>
     <li>
@@ -116,7 +129,7 @@
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
-        <th><%= order @search, :by => :client_name , :as => t('activerecord.attributes.client.name') %></th>
+        <th><%= order @search, :by => :client_name , :as => client_name_plus_detail_cpe_node_label %></th>
         <th><%= order @search, :by => :plan_id, :as => t('activerecord.attributes.contract.plan')  %></th>
         <th><%= order @search, :by => :ip, :ascend_scope => "ascend_by_ip_custom", :descend_scope => "descend_by_ip_custom", :as => t('activerecord.attributes.contract.ip') %></th>
         <th><%=t 'activerecord.attributes.contract.forwarded_ports' %></th>
@@ -134,7 +147,7 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td>
-            <%= link_to h(contract.client.name), client_path(contract.client) %><br/>
+            <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h detail_cpe_node(contract) %><br/>
             <%= link_to Graph.new(:element => contract).img("day", "small"), graph_path(contract ,:class => "Contract") %>
           </td>
           <td><%=link_to h(contract.plan.name), plan_path(contract.plan) %></td>

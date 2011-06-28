@@ -16,4 +16,17 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 module ContractsHelper
+  def client_name_plus_detail_cpe_node_label
+    "#{t('activerecord.attributes.client.name')} " +
+    "(#{t('activerecord.attributes.contract.detail')}/" +
+    "#{t('activerecord.attributes.contract.cpe')}/" +
+    "#{t('activerecord.attributes.contract.node')})"
+  end
+  def detail_cpe_node(contract)
+    if not contract.detail.blank? or not contract.cpe.blank? or not contract.node.blank?
+      "(#{contract.detail}/#{contract.cpe}/#{contract.node})"
+    else
+      ""
+    end
+  end
 end
