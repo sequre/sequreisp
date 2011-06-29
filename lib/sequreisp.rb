@@ -513,6 +513,7 @@ def gen_iptables
 
       #
       Contract.not_disabled.descend_by_netmask.each do |c|
+        BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
         # attribute: state
         #   estado del cliente enabled/alerted/disabled
         macrule = (Configuration.filter_by_mac_address and !c.mac_address.blank?) ? "-m mac --mac-source #{c.mac_address}" : ""
@@ -737,6 +738,7 @@ def setup_proxy(f)
   # setup de squid para proxy q cada cliente salga por su grupo
   f.puts "modprobe dummy"
   f.puts "ip link set dummy0 up"
+
   begin
     File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid| 
       if Configuration.transparent_proxy_n_to_m
@@ -757,6 +759,7 @@ def setup_proxy(f)
           f.puts "ip address add #{pg.proxy_bind_ip} dev dummy0"
         end
       end
+      BootHook.run :hook => :setup_proxy, :boot_script => f, :proxy_script => fsquid
     end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::setup_proxy e=>#{e.inspect}"
