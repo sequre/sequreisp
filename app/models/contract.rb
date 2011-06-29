@@ -196,7 +196,7 @@ class Contract < ActiveRecord::Base
   end
   
   def squid_unique_name
-    "contract_#{klass.number}"
+    "contract_#{id}"
   end
 
   #AASM conf http://github.com/rubyist/aasm
