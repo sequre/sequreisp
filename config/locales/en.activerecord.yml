@@ -172,7 +172,8 @@ en:
         last_login_at: "Last login date"
         last_login_ip: "Last IP login"
       interface:
-        name: "name"
+        name: "Name"
+        description: "Description"
         vlan: "is a vlan"
         vlan_id: "Vlan ID"
         vlan_interface: "Real Interface"

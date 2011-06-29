@@ -171,6 +171,7 @@ pt:
         last_login_ip: "Endereço IP do último início de sessão"
       interface:
         name: "Nome"
+        description: "Descrição"
         vlan: "É uma VLAN"
         vlan_id: "ID de VLAN"
         vlan_interface: "Interface real"

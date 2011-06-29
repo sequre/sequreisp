@@ -12,8 +12,8 @@
 <% form_for @search do |f| %>
   <ul>
     <li>
-      <%= f.label :name_like, t('activerecord.attributes.interface.name') %>
-      <%= f.text_field :name_like %>
+      <%= f.label :name_or_description_like, t('activerecord.attributes.interface.name') %>
+      <%= f.text_field :name_or_description_like %>
     </li>
     <li>
     <%= f.label :kind_equals, t('activerecord.attributes.interface.kind') %>
@@ -37,7 +37,7 @@
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
-        <th><%= order @search, :by => :name , :as => t('activerecord.attributes.interface.name') %></th>
+        <th><%= order @search, :by => :name , :as => t('activerecord.attributes.interface.name') + " (#{t('activerecord.attributes.interface.description')})" %></th>
         <th><%= order @search, :by => :kind , :as => t('activerecord.attributes.interface.kind') %></th>
         <th><%=t 'activerecord.attributes.interface.vlan_id' %></th>
         <th><%=t 'activerecord.attributes.ip' %></th>
@@ -55,7 +55,7 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td>
-            <%= interface.name %><br/>
+            <%=h interface.name + (interface.description.blank? ? "" : " (#{interface.description})") %><br/>
             <%= link_to Graph.new(:element => interface).img("day", "small"), graph_path(interface ,:class => "Interface") %>
           </td>
           <td><%= interface.kind %></td>

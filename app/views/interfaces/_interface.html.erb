@@ -77,6 +77,8 @@
     <%= form.input :vlan_id, :wrapper_html => { :class => "left" } %> 
     <%= form.input :vlan %>
     <div style="clear: both"></div>
+    <%= form.input :description %>
+    <div style="clear: both"></div>
     <%= form.input :kind, :as => :select, :collection => Interface.kinds_for_select, :include_blank => false %>
     <% form.inputs :name => t('fieldsets.interface.ips'), :id => "ips" do %>
       <% form.semantic_fields_for :addresses do |address| %>
