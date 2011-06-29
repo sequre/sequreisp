@@ -76,7 +76,7 @@ es:
         prio_protos: "Protocolos completos que obtendrán prioridad"
         prio_helpers: "Netfilter helpers que obtendrán prioridad"
         state: "Estado"
-        proxy_arp: "Habilitar proxy ARP"
+        proxy_arp: "Proxy ARP habilitado"
         proxy_arp_interface: "Interfaz LAN"
         forwarded_ports: "Puertos redireccionados"
         transparent_proxy: "Proxy transparente"

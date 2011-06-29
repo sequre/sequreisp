@@ -5,7 +5,7 @@
     font-size: 85%;
     color: gray;
   }
-  .public_address {
+  .public_address, .proxy_arp {
     font-size: 85%;
     font-weight: bold;
     color: #555;
@@ -95,6 +95,10 @@
       <%= f.label :public_address_ip_like, t('activerecord.attributes.contract.public_address') %>
       <%= f.text_field :public_address_ip_like %>
       </li>
+      <li>
+      <%= f.label :proxy_arp_is, t('activerecord.attributes.contract.proxy_arp') %>
+      <%= f.check_box :proxy_arp_is %>
+      </li>
       <div style="clear: both"></div>
       <li>
       <%= f.label :detail_like, t('activerecord.attributes.contract.detail') %>
@@ -164,6 +168,9 @@
             <% end %>
             <% if !contract.mac_address.blank? %>
               <br/><span class="mac_address">(<%= contract.mac_address %>)</span>
+            <% end %>
+            <% if contract.proxy_arp %>
+              <br/><span class="proxy_arp"><%=t 'activerecord.attributes.contract.proxy_arp' %></span>
             <% end %>
           </td>
           <td><%= contract.forwarded_ports.collect{|fp| "<span class=\"forwarded_port\">#{fp.to_s}</span><br/>"} %></td>
