@@ -19,5 +19,5 @@ module BootHook
 
   def self.run options
   end
-  
+
 end

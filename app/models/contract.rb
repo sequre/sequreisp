@@ -194,10 +194,6 @@ class Contract < ActiveRecord::Base
     end
     cq.save if not cq.command.empty?
   end
-  
-  def squid_unique_name
-    "contract_#{id}"
-  end
 
   #AASM conf http://github.com/rubyist/aasm
   include AASM

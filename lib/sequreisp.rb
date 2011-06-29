@@ -729,13 +729,13 @@ def setup_proxy(f)
   # setup de squid para proxy q cada cliente salga por su grupo
   f.puts "modprobe dummy"
   f.puts "ip link set dummy0 up"
-  
+
   begin
     File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid| 
       if Configuration.transparent_proxy_n_to_m
         Contract.not_disabled.descend_by_netmask.each do |c|
-          fsquid.puts "acl #{c.klass.number} src #{c.ip}"
-          fsquid.puts "tcp_outgoing_address #{c.proxy_bind_ip} #{c.klass.number}"
+          fsquid.puts "acl contract_#{c.klass.number} src #{c.ip}"
+          fsquid.puts "tcp_outgoing_address #{c.proxy_bind_ip} contract_#{c.klass.number}"
           f.puts "ip address add #{c.proxy_bind_ip} dev dummy0"
         end
       else
@@ -753,7 +753,6 @@ def setup_proxy(f)
       BootHook.run :hook => :setup_proxy, :boot_script => f, :proxy_script => fsquid
     end
   rescue => e
-    raise e.inspect
     Rails.logger.error "ERROR in lib/sequreisp.rb::setup_proxy e=>#{e.inspect}"
   end
 
