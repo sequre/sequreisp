@@ -22,6 +22,9 @@ class ContractsController < ApplicationController
   # GET /contracts.xml
   def index
     params[:search] ||= {}
+    # delete proxy_arp boolean condition unless it is true
+    # that results in a more intuitive behavior
+    params[:search].delete("proxy_arp_is") if params[:search]["proxy_arp_is"] == "0"
     params[:search][:order] ||= 'ascend_by_ip_custom'
     @search = Contract.search(params[:search])
     @contracts = @search.paginate(:page => params[:page],:per_page => 10)
