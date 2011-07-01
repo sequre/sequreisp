@@ -428,9 +428,17 @@ def gen_iptables
       #-----#
       f.puts "*nat"
 
+      # Avoids tproxy to server ip's
       Interface.all(:conditions => "kind = 'lan'").each do |i| 
         i.addresses.each do |a|
           f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+        end
+        #TODO ver que pasa con provider dinamicos que cambian la ip
+        Provider.enabled.ready.each do |p|
+          f.puts "-A PREROUTING -i #{i.name} -d #{p.ip} -p tcp --dport 80 -j ACCEPT"
+          p.addresses.each do |a|
+            f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+          end
         end
       end
       Contract.not_disabled.descend_by_netmask.each do |c|
