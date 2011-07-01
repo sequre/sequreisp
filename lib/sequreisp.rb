@@ -428,6 +428,26 @@ def gen_iptables
       #-----#
       f.puts "*nat"
 
+      Contract.not_disabled.descend_by_netmask.each do |c|
+        # attribute: public_address
+        #   a cada ip publica asignada le hago un DNAT completo
+        #   a cada ip publica asignada le hago un SNAT a su respectiva ip
+        if !c.public_address.nil?
+          f.puts "-A PREROUTING -d #{c.public_address.ip} -j DNAT --to-destination #{c.ip}"
+
+          f.puts "-A POSTROUTING -s #{c.ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
+          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
+            f.puts "-A POSTROUTING -s #{c.proxy_bind_ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
+          end
+        end
+      end
+      # attribute: forwarded_ports
+      #   forward de ports por Provider
+      ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
+        do_port_forwardings f, fp
+      end
+
+      # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
       # Avoids tproxy to server ip's
       Interface.all(:conditions => "kind = 'lan'").each do |i| 
         i.addresses.each do |a|
@@ -443,25 +463,9 @@ def gen_iptables
       end
       Contract.not_disabled.descend_by_netmask.each do |c|
         # attribute: transparent_proxy
-        if c.transparent_proxy? 
+        if c.transparent_proxy?
           f.puts "-A PREROUTING -s #{c.ip} -p tcp --dport 80 -j REDIRECT --to-port 3128"
         end
-        # attribute: public_address
-        #   a cada ip publica asignada le hago un DNAT completo
-        #   a cada ip publica asignada le hago un SNAT a su respectiva ip
-        if !c.public_address.nil? 
-          f.puts "-A PREROUTING -d #{c.public_address.ip} -j DNAT --to-destination #{c.ip}"
-
-          f.puts "-A POSTROUTING -s #{c.ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
-          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-            f.puts "-A POSTROUTING -s #{c.proxy_bind_ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
-          end
-        end
-      end
-      # attribute: forwarded_ports
-      #   forward de ports por Provider
-      ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
-        do_port_forwardings f, fp
       end
       Provider.enabled.with_klass_and_interface.each do |p|
         p.networks.each do |network|
