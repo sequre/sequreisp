@@ -143,15 +143,15 @@ def gen_tc(f)
     target = Contract.count
     divisor *= 2 while target > divisor
     f.puts "tc qdisc del dev #{IFB_INGRESS} root"
-    tc_ifb_ingres.puts "tc qdisc add dev #{IFB_INGRESS} root handle 1: htb default 0"
+    tc_ifb_ingres.puts "qdisc add dev #{IFB_INGRESS} root handle 1: htb default 0"
     Provider.enabled.all(:conditions => { :shape_rate_down_on_ingress => true }).each do |p|
-      tc_ifb_ingres.puts "tc class add dev #{IFB_INGRESS} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit"
-      tc_ifb_ingres.puts "tc filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{p.ip}/#{p.netmask_suffix} classid 1:#{p.class_hex}"
+      tc_ifb_ingres.puts "class add dev #{IFB_INGRESS} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit"
+      tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{p.ip}/#{p.netmask_suffix} classid 1:#{p.class_hex}"
       p.addresses.each do |a|
-        tc_ifb_ingres.puts "tc filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{a.ip}/#{a.netmask_suffix} classid 1:#{p.class_hex}"
+        tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{a.ip}/#{a.netmask_suffix} classid 1:#{p.class_hex}"
       end
-      tc_ifb_ingres.puts "tc qdisc add dev #{IFB_INGRESS} parent 1:#{p.class_hex} handle #{p.class_hex} sfq"
-      tc_ifb_ingres.puts "tc filter add dev #{IFB_INGRESS} parent #{p.class_hex}: protocol ip pref 1 handle 0x#{p.class_hex} flow hash keys nfct-dst divisor #{divisor}"
+      tc_ifb_ingres.puts "qdisc add dev #{IFB_INGRESS} parent 1:#{p.class_hex} handle #{p.class_hex} sfq"
+      tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent #{p.class_hex}: protocol ip pref 1 handle 0x#{p.class_hex} flow hash keys nfct-dst divisor #{divisor}"
     end
     tc_ifb_ingres.close
   rescue => e
@@ -186,9 +186,9 @@ def gen_tc(f)
           # real iface setup
           tc.puts "qdisc add dev #{iface} ingress"
           # this is supposed to match ack packets with size < 64bytes (from http://lartc.org/howto/lartc.adv-filter.html)
-          tc.puts "tc filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
+          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
           # redirect traffic to the ifb
-          tc.puts "tc filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
+          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
         end
       end
     rescue => e
