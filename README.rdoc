@@ -75,7 +75,7 @@ It is safer if the web interface runs as a simple non-privileged user, so we are
 Download and install the code into the deploy directory
 
   cd /opt/sequreisp/deploy
-  git clone http://github.com/luchano/sequreisp.git
+  git clone http://github.com/sequre/sequreisp.git
   ln -s sequreisp current
 
 === 3) Create and config the database
