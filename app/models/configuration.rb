@@ -81,6 +81,7 @@ class Configuration < ActiveRecord::Base
   end
   def apply_changes
     self.last_changes_applied_at = Time.now
+    self.changes_to_apply = false
     self.daemon_reload = true
     save_without_timestamps
   end
