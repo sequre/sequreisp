@@ -80,7 +80,7 @@ client_down = tc_class(IFB_DOWN)
 time_c = Time.now
 
 if Configuration.use_global_prios
-  p_down = p_up = {}
+  p_up, p_down = {}, {}
   Interface.all(:conditions => { :kind => "lan" }).each do |i|
     p_down = tc_class i.name, p_down
   end
@@ -88,7 +88,7 @@ if Configuration.use_global_prios
     p_up = tc_class p.link_interface, p_up
   end
 else
-  p_down = p_up = []
+  p_up, p_down = [], []
   Provider.enabled.all.each do |p|
     p_up[p.id] = File.open("/sys/class/net/#{p.interface.name}/statistics/tx_bytes").read.chomp.to_i rescue 0
     p_down[p.id] = File.open("/sys/class/net/#{p.interface.name}/statistics/rx_bytes").read.chomp.to_i rescue 0
@@ -96,7 +96,7 @@ else
 end
 time_p = Time.now
 
-i_up = i_down = []
+i_up, i_down = [], []
 Interface.all.each do |i|
   i_up[i.id] = File.open("/sys/class/net/#{i.name}/statistics/tx_bytes").read.chomp rescue 0
   i_down[i.id] = File.open("/sys/class/net/#{i.name}/statistics/rx_bytes").read.chomp rescue 0
@@ -119,8 +119,11 @@ ProviderGroup.enabled.each do |pg|
     if Configuration.use_global_prios
       p_down_prio2 = p_down[p.class_hex]["a"] + p_down[p.class_hex]["b"]
       p_down_prio3 = p_down[p.class_hex]["c"]
-      p_up_prio2 = p_up[p.class_hex]["a"] + p_up[p.class_hex]["b"]
-      p_up_prio3 = p_up[p.class_hex]["c"]
+      # dynamic ifaces like ppp could not exists, so we need to rescue an integer
+      # if we scope providers by ready and online, we may skip traffic to be logged 
+      # and the ppp iface could go down betwen check and the read
+      p_up_prio2 = (p_up[p.class_hex]["a"] + p_up[p.class_hex]["b"]) rescue 0
+      p_up_prio3 = p_up[p.class_hex]["c"] rescue 0
     else
       p_up_prio2 = p_up[p.id]
       p_down_prio2 = p_down[p.id]
