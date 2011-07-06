@@ -1038,6 +1038,7 @@ def boot(run=true)
     
       f.puts "tc -b #{TC_FILE_PREFIX + IFB_UP}"
       f.puts "tc -b #{TC_FILE_PREFIX + IFB_DOWN}"
+      f.puts "tc -b #{TC_FILE_PREFIX + IFB_INGRESS}"
       Interface.all(:conditions => { :kind => "lan" }).each do |interface|
         f.puts "tc -b #{TC_FILE_PREFIX + interface.name}"
       end
