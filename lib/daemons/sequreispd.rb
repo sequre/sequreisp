@@ -50,15 +50,15 @@ def backup_restore
   when "respawn_and_boot"
     $running = false
     Configuration.backup_restore = "boot"
-    Configuration.save_without_timestamps
+    Configuration.save
   when "boot"
     boot
     Configuration.last_changes_applied_at = Time.now
     Configuration.backup_restore = nil
-    Configuration.save_without_timestamps
+    Configuration.save
     if Configuration.backup_reboot
       Configuration.backup_reboot = false
-      Configuration.save_without_timestamps
+      Configuration.save
       system "/sbin/reboot"
     end
   end
@@ -87,7 +87,7 @@ while($running) do
     #Rails.logger.debug "sequreispd: reloading..."
     boot
     Configuration.daemon_reload = false
-    Configuration.save_without_timestamps
+    Configuration.save
   end
 
   backup_restore if Configuration.backup_restore
