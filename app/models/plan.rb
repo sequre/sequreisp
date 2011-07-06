@@ -19,6 +19,11 @@ class Plan < ActiveRecord::Base
   has_many :contracts, :dependent => :destroy, :include => :klass
   acts_as_audited
   belongs_to :provider_group
+
+  include ModelsWatcher
+  watch_fields :provider_group_id, :rate_down, :ceil_down, :rate_up, :ceil_up,
+               :transparent_proxy, :burst_down, :burst_up, :long_download_max, :long_upload_max
+
   validates_uniqueness_of :name 
   validates_presence_of :name, :provider_group, :rate_down, :ceil_down, :rate_up, :ceil_up
   validates_length_of :name, :in => 3..128

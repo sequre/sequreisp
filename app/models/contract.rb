@@ -39,7 +39,14 @@ class Contract < ActiveRecord::Base
 
   named_scope :ascend_by_ip_custom, :order => "CAST(INET_ATON(SUBSTRING_INDEX(contracts.ip, '/', 1)) AS UNSIGNED) ASC, CAST(INET_ATON(contracts.netmask) AS UNSIGNED) ASC"
   named_scope :descend_by_ip_custom, :order => "CAST(INET_ATON(SUBSTRING_INDEX(contracts.ip, '/', 1)) AS UNSIGNED) DESC, CAST(INET_ATON(contracts.netmask) AS UNSIGNED) DESC"
- 
+
+  include ModelsWatcher
+  watch_fields :ip, :plan_id, :mac_address, :ceil_dfl_percent, :state,
+               :tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers,
+               :transparent_proxy, :proxy_arp, :proxy_arp_interface_id, :public_address_id,
+               :unique_provider_id
+  watch_on_destroy
+
   validates_presence_of :ip, :ceil_dfl_percent, :client, :plan
   validates_presence_of :proxy_arp_interface, :if => Proc.new { |c| c.proxy_arp } 
   

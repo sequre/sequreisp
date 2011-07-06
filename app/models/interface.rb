@@ -26,6 +26,10 @@ class Interface < ActiveRecord::Base
   #accepts_nested_attributes_for :addresses, :reject_if => lambda { |a| a[:content].blank? }, :allow_destroy => true
   accepts_nested_attributes_for :addresses, :reject_if => lambda { |a| a[:ip].blank? }, :allow_destroy => true
 
+  include ModelsWatcher
+  watch_fields :name, :vlan, :vlan_id, :vlan_interface_id, :kind
+  watch_on_destroy
+
   validates_presence_of :vlan_interface, :vlan_id, :if => Proc.new { |p| p.vlan? }
   validates_presence_of :name, :if => Proc.new { |p| not p.vlan? }
   validates_uniqueness_of :vlan_id, :scope => :vlan_interface_id, :if => Proc.new { |p| p.vlan? }

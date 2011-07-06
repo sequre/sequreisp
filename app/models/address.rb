@@ -18,6 +18,11 @@
 class Address < ActiveRecord::Base
   belongs_to :addressable, :polymorphic => true
   has_one :contract, :dependent => :nullify, :foreign_key => "public_address_id" 
+
+  include ModelsWatcher
+  watch_fields :ip, :netmask, :use_in_nat_pool, :addressable_id, :addressable_type
+  watch_on_destroy
+
   validates_presence_of :ip, :netmask
   validates_format_of :ip, :with => /^([12]{0,1}[0-9]{0,1}[0-9]{1}\.){3}[12]{0,1}[0-9]{0,1}[0-9]{1}(\/[123]{0,1}[0-9]{1}){0,1}$/, :allow_blank => true
   validates_format_of :netmask, :with => /^([12]{0,1}[0-9]{0,1}[0-9]{1}\.){3}[12]{0,1}[0-9]{0,1}[0-9]{1}$/, :allow_blank => true
