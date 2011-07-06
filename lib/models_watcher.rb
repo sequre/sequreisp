@@ -28,8 +28,7 @@ module ModelsWatcher
 
   module InstanceMethods
     def update_changes_to_apply
-      Configuration.changes_to_apply = true
-      Configuration.save!
+      Configuration.first.update_attribute(:changes_to_apply, true)
     end
   end
 
