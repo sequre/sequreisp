@@ -22,6 +22,7 @@ DHCPD_DIR=SequreispConfig::CONFIG["dhcpd_dir"]
 PINGABLE_SERVERS=SequreispConfig::CONFIG["pingable_servers"]
 IFB_UP=SequreispConfig::CONFIG["ifb_up"]
 IFB_DOWN=SequreispConfig::CONFIG["ifb_down"]
+IFB_INGRESS=SequreispConfig::CONFIG["ifb_ingress"]
 DEPLOY_DIR=SequreispConfig::CONFIG["deploy_dir"]
 BASE_SCRIPTS="#{BASE}/scripts"
 SEQUREISP_SQUID_CONF=Rails.env.production? ? "/etc/squid/sequreisp.squid.conf" : "/tmp/sequreisp/squid.conf"
@@ -122,6 +123,7 @@ def gen_tc(f)
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
+    tc_ifb_ingres = File.open(TC_FILE_PREFIX + IFB_INGRESS, "w")
     # htb tree de clientes en gral en IFB
     f.puts "tc qdisc del dev #{IFB_UP} root"
     tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 htb default 0"
@@ -135,11 +137,28 @@ def gen_tc(f)
     end
     tc_ifb_up.close
     tc_ifb_down.close
+
+    # htb tree ingress IFB (htb providers + sfq)
+    divisor = 2
+    target = Contract.count
+    divisor *= 2 while target > divisor
+    f.puts "tc qdisc del dev #{IFB_INGRESS} root"
+    tc_ifb_ingres.puts "tc qdisc add dev #{IFB_INGRESS} root handle 1: htb default 0"
+    Provider.enabled.all(:conditions => { :shape_rate_down_on_ingress => true }).each do |p|
+      tc_ifb_ingres.puts "tc class add dev #{IFB_INGRESS} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit"
+      tc_ifb_ingres.puts "tc filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{p.ip}/#{p.netmask_suffix} classid 1:#{p.class_hex}"
+      p.addresses.each do |a|
+        tc_ifb_ingres.puts "tc filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{a.ip}/#{a.netmask_suffix} classid 1:#{p.class_hex}"
+      end
+      tc_ifb_ingres.puts "tc qdisc add dev #{IFB_INGRESS} parent 1:#{p.class_hex} handle #{p.class_hex} sfq"
+      tc_ifb_ingres.puts "tc filter add dev #{IFB_INGRESS} parent #{p.class_hex}: protocol ip pref 1 handle 0x#{p.class_hex} flow hash keys nfct-dst divisor #{divisor}"
+    end
+    tc_ifb_ingres.close
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(IFB_UP/IFB_DOWN) e=>#{e.inspect}"
   end
 
-  # htb tree up (en las ifaces de Provider) 
+  # htb tree up + ingress redirect filter (en las ifaces de Provider)
   Provider.enabled.with_klass_and_interface.each do |p|
     #max quantum posible para este provider, necesito saberlo con anticipación
     quantum = Configuration.mtu * p.quantum_factor * 3
@@ -162,6 +181,14 @@ def gen_tc(f)
           else
             tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
           end
+        end
+        if p.shape_rate_down_on_ingress
+          # real iface setup
+          tc.puts "qdisc add dev #{iface} ingress"
+          # this is supposed to match ack packets with size < 64bytes (from http://lartc.org/howto/lartc.adv-filter.html)
+          tc.puts "tc filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
+          # redirect traffic to the ifb
+          tc.puts "tc filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
         end
       end
     rescue => e
@@ -798,12 +825,14 @@ def do_provider_up(p)
       f.puts "ip rule add from #{p.network} table #{p.table} prio 100"
       f.puts "ip rule add from #{p.ip}/32 table #{p.check_link_table} prio 90"
       f.puts "ip ro re table #{p.check_link_table} #{p.default_route}"
+
       ForwardedPort.all(:conditions => { :provider_id => p.id }, :include => [ :contract, :provider ]).each do |fp|
         do_port_forwardings f, fp, false
         do_port_forwardings_avoid_nat_triangle f, fp, false
       end
       if p.kind == "adsl"
         f.puts "tc qdisc del dev #{p.link_interface} root"
+        f.puts "tc qdisc del dev #{p.link_interface} ingress"
         f.puts "tc -b #{TC_FILE_PREFIX + p.link_interface}"
       end
       f.chmod 0755
@@ -999,6 +1028,7 @@ def boot(run=true)
       f.puts "modprobe ifb numifbs=3"
       f.puts "ip link set #{IFB_UP} up"
       f.puts "ip link set #{IFB_DOWN} up"
+      f.puts "ip link set #{IFB_INGRESS} up"
       gen_tc f
       gen_iptables
       gen_ip_ru

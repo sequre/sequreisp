@@ -132,6 +132,7 @@ es:
         arp_announce: "Hacer consultas ARP desde direcciones IP locales en la red de destino"
         arp_filter: "Responder consultas ARP sólo por la interfaz por la cual se enruta el tráfico a la dirección consultada"
         current_status_time: "Tiempo en servicio/fuera de servicio"
+        shape_rate_down_on_ingress: "Controlar que no se exceda el tráfico descendente de este proveedor"
       forwarded_port:
         provider: "Proveedor"
         public_port: "Puerto público"
@@ -229,6 +230,8 @@ es:
         contact_url: "http://www.ejemplo.com/"
         tc_contracts_per_provider_in_lan: "No habilitar si contratos×providers > 8000 (aprox.)"
         use_global_prios: "Habilitar unicamente en casos de más de 2500 contratos"
+      provider:
+        shape_rate_down_on_ingress: "El control de tráfico descendente se hace en la interfáz LAN, si habilita esta opción se hablitara un control en el ingreso que asegurará que el tráfico de los clientes más el del servidor no exedan el limite configurado"
   menu:
     clients: "Clientes"
     contracts: "Contratos"

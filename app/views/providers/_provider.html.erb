@@ -65,6 +65,7 @@
       <div style="clear: both"></div> 
     <% end %>
     <% form.inputs :name => t('fieldsets.provider.advanced'), :id => "advanced" do %>
+      <%= form.input :shape_rate_down_on_ingress %>
       <%= form.input :unique_mac_address %>
       <%= form.input :arp_filter %>
       <%= form.input :arp_ignore %>

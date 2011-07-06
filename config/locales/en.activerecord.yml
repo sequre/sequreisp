@@ -132,6 +132,7 @@ en:
         arp_announce: "Enable arp_announce for this link"
         arp_filter: "Enable arp_filter for this link"
         current_status_time: "Uptime/Downtime"
+        shape_rate_down_on_ingress: "Check that download traffic is not exceeded for this provider"
       forwarded_port:
         provider: "Provider"
         public_port: "Public port"
@@ -229,6 +230,8 @@ en:
         contact_url: "http://www.example.com/"
         tc_contracts_per_provider_in_lan: "Do not enable if contracts*providers > 8000 (approx.)"
         use_global_prios: "Enable only if contract's number is above 2500"
+      provider:
+        shape_rate_down_on_ingress: "Download shaping is done in the LAN interface, if you enable this option an extra control will be enabled on ingress that will shape client's and server's own traffic to the configured down rate"
   menu:
     clients: "Clients"
     contracts: "Contracts"
