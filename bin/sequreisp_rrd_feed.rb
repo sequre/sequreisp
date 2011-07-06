@@ -80,8 +80,7 @@ client_down = tc_class(IFB_DOWN)
 time_c = Time.now
 
 if Configuration.use_global_prios
-  p_down = {}
-  p_up = {}
+  p_down = p_up = {}
   Interface.all(:conditions => { :kind => "lan" }).each do |i|
     p_down = tc_class i.name, p_down
   end
@@ -89,6 +88,7 @@ if Configuration.use_global_prios
     p_up = tc_class p.link_interface, p_up
   end
 else
+  p_down = p_up = []
   Provider.enabled.all.each do |p|
     p_up[p.id] = File.open("/sys/class/net/#{p.interface.name}/statistics/tx_bytes").read.chomp.to_i rescue 0
     p_down[p.id] = File.open("/sys/class/net/#{p.interface.name}/statistics/rx_bytes").read.chomp.to_i rescue 0
@@ -96,6 +96,7 @@ else
 end
 time_p = Time.now
 
+i_up = i_down = []
 Interface.all.each do |i|
   i_up[i.id] = File.open("/sys/class/net/#{i.name}/statistics/tx_bytes").read.chomp rescue 0
   i_down[i.id] = File.open("/sys/class/net/#{i.name}/statistics/rx_bytes").read.chomp rescue 0
