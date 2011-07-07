@@ -109,6 +109,7 @@
       <%= form.input :proxy_arp_interface, :wrapper_html => { :class => "left" } %>
       <div style="clear: both"></div> 
       <%= form.input :public_address %> 
+      <%= form.input :unique_provider %>
     <% end %>
     <% form.inputs :name => t('fieldsets.contract.prio_customization'), :id => "prios", :style => "width: 250px" do %>
       <%= form.input :tcp_prio_ports %> 

@@ -22,6 +22,7 @@ DHCPD_DIR=SequreispConfig::CONFIG["dhcpd_dir"]
 PINGABLE_SERVERS=SequreispConfig::CONFIG["pingable_servers"]
 IFB_UP=SequreispConfig::CONFIG["ifb_up"]
 IFB_DOWN=SequreispConfig::CONFIG["ifb_down"]
+IFB_INGRESS=SequreispConfig::CONFIG["ifb_ingress"]
 DEPLOY_DIR=SequreispConfig::CONFIG["deploy_dir"]
 BASE_SCRIPTS="#{BASE}/scripts"
 SEQUREISP_SQUID_CONF=Rails.env.production? ? "/etc/squid/sequreisp.squid.conf" : "/tmp/sequreisp/squid.conf"
@@ -88,6 +89,7 @@ def gen_tc(f)
     ceil = plan["ceil_" + direction]
     mtu = Configuration.mtu
     quantum_factor = (plan["ceil_" + direction] + plan["rate_" + direction])/Configuration.quantum_factor.to_i
+    quantum_factor = 1 if quantum_factor <= 0
     quantum_total = mtu * quantum_factor * 3
 
     #padre
@@ -121,6 +123,7 @@ def gen_tc(f)
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
+    tc_ifb_ingres = File.open(TC_FILE_PREFIX + IFB_INGRESS, "w")
     # htb tree de clientes en gral en IFB
     f.puts "tc qdisc del dev #{IFB_UP} root"
     tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 htb default 0"
@@ -134,11 +137,28 @@ def gen_tc(f)
     end
     tc_ifb_up.close
     tc_ifb_down.close
+
+    # htb tree ingress IFB (htb providers + sfq)
+    divisor = 2
+    target = Contract.count
+    divisor *= 2 while target > divisor
+    f.puts "tc qdisc del dev #{IFB_INGRESS} root"
+    tc_ifb_ingres.puts "qdisc add dev #{IFB_INGRESS} root handle 1: htb default 0"
+    Provider.enabled.all(:conditions => { :shape_rate_down_on_ingress => true }).each do |p|
+      tc_ifb_ingres.puts "class add dev #{IFB_INGRESS} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit"
+      tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{p.ip}/#{p.netmask_suffix} classid 1:#{p.class_hex}"
+      p.addresses.each do |a|
+        tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{a.ip}/#{a.netmask_suffix} classid 1:#{p.class_hex}"
+      end
+      tc_ifb_ingres.puts "qdisc add dev #{IFB_INGRESS} parent 1:#{p.class_hex} handle #{p.class_hex} sfq"
+      tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent #{p.class_hex}: protocol ip pref 1 handle 0x#{p.class_hex} flow hash keys nfct-dst divisor #{divisor}"
+    end
+    tc_ifb_ingres.close
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(IFB_UP/IFB_DOWN) e=>#{e.inspect}"
   end
 
-  # htb tree up (en las ifaces de Provider) 
+  # htb tree up + ingress redirect filter (en las ifaces de Provider)
   Provider.enabled.with_klass_and_interface.each do |p|
     #max quantum posible para este provider, necesito saberlo con anticipación
     quantum = Configuration.mtu * p.quantum_factor * 3
@@ -161,6 +181,14 @@ def gen_tc(f)
           else
             tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
           end
+        end
+        if p.shape_rate_down_on_ingress
+          # real iface setup
+          tc.puts "qdisc add dev #{iface} ingress"
+          # this is supposed to match ack packets with size < 64bytes (from http://lartc.org/howto/lartc.adv-filter.html)
+          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
+          # redirect traffic to the ifb
+          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
         end
       end
     rescue => e
@@ -241,6 +269,7 @@ def gen_iptables
       # CONNMARK PREROUTING
       # restauro marka en PREROUTING
       f.puts "-A PREROUTING -j CONNMARK --restore-mark"
+
       # acepto si ya se de que enlace es
       f.puts "-A PREROUTING -m mark ! --mark 0 -j ACCEPT"
       # si viene desde internet marko segun el enlace por el que entró
@@ -259,13 +288,20 @@ def gen_iptables
       end
 
       # sino marko por cliente segun el ProviderGroup al que pertenezca
-      Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group }]).each do |c|
+      Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ]).each do |c|
         if !c.public_address.nil?
           #evito triangulo de NAT si tiene full DNAT
           f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
         end
 
-        mark = c.public_address.nil? ? c.plan.provider_group.mark_hex : c.public_address.addressable.mark_hex
+        mark = if not c.public_address.nil?
+                 c.public_address.addressable.mark_hex
+               elsif not c.unique_provider.nil?
+                 # marko los contratos que salen por un único provider
+                 c.unique_provider.mark_hex
+               else
+                 c.plan.provider_group.mark_hex
+              end
         f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
         f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT" 
       end
@@ -419,20 +455,11 @@ def gen_iptables
       #-----#
       f.puts "*nat"
 
-      Interface.all(:conditions => "kind = 'lan'").each do |i| 
-        i.addresses.each do |a|
-          f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
-        end
-      end
       Contract.not_disabled.descend_by_netmask.each do |c|
-        # attribute: transparent_proxy
-        if c.transparent_proxy? 
-          f.puts "-A PREROUTING -s #{c.ip} -p tcp --dport 80 -j REDIRECT --to-port 3128"
-        end
         # attribute: public_address
         #   a cada ip publica asignada le hago un DNAT completo
         #   a cada ip publica asignada le hago un SNAT a su respectiva ip
-        if !c.public_address.nil? 
+        if !c.public_address.nil?
           f.puts "-A PREROUTING -d #{c.public_address.ip} -j DNAT --to-destination #{c.ip}"
 
           f.puts "-A POSTROUTING -s #{c.ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
@@ -445,6 +472,27 @@ def gen_iptables
       #   forward de ports por Provider
       ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
         do_port_forwardings f, fp
+      end
+
+      # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
+      # Avoids tproxy to server ip's
+      Interface.all(:conditions => "kind = 'lan'").each do |i| 
+        i.addresses.each do |a|
+          f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+        end
+        #TODO ver que pasa con provider dinamicos que cambian la ip
+        Provider.enabled.ready.each do |p|
+          f.puts "-A PREROUTING -i #{i.name} -d #{p.ip} -p tcp --dport 80 -j ACCEPT"
+          p.addresses.each do |a|
+            f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+          end
+        end
+      end
+      Contract.not_disabled.descend_by_netmask.each do |c|
+        # attribute: transparent_proxy
+        if c.transparent_proxy?
+          f.puts "-A PREROUTING -s #{c.ip} -p tcp --dport 80 -j REDIRECT --to-port 3128"
+        end
       end
       Provider.enabled.with_klass_and_interface.each do |p|
         p.networks.each do |network|
@@ -777,12 +825,14 @@ def do_provider_up(p)
       f.puts "ip rule add from #{p.network} table #{p.table} prio 100"
       f.puts "ip rule add from #{p.ip}/32 table #{p.check_link_table} prio 90"
       f.puts "ip ro re table #{p.check_link_table} #{p.default_route}"
+
       ForwardedPort.all(:conditions => { :provider_id => p.id }, :include => [ :contract, :provider ]).each do |fp|
         do_port_forwardings f, fp, false
         do_port_forwardings_avoid_nat_triangle f, fp, false
       end
       if p.kind == "adsl"
         f.puts "tc qdisc del dev #{p.link_interface} root"
+        f.puts "tc qdisc del dev #{p.link_interface} ingress"
         f.puts "tc -b #{TC_FILE_PREFIX + p.link_interface}"
       end
       f.chmod 0755
@@ -978,6 +1028,7 @@ def boot(run=true)
       f.puts "modprobe ifb numifbs=3"
       f.puts "ip link set #{IFB_UP} up"
       f.puts "ip link set #{IFB_DOWN} up"
+      f.puts "ip link set #{IFB_INGRESS} up"
       gen_tc f
       gen_iptables
       gen_ip_ru
@@ -987,6 +1038,7 @@ def boot(run=true)
     
       f.puts "tc -b #{TC_FILE_PREFIX + IFB_UP}"
       f.puts "tc -b #{TC_FILE_PREFIX + IFB_DOWN}"
+      f.puts "tc -b #{TC_FILE_PREFIX + IFB_INGRESS}"
       Interface.all(:conditions => { :kind => "lan" }).each do |interface|
         f.puts "tc -b #{TC_FILE_PREFIX + interface.name}"
       end

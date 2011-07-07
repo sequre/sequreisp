@@ -21,6 +21,10 @@ class ForwardedPort < ActiveRecord::Base
   belongs_to :contract
   belongs_to :provider
 
+  include ModelsWatcher
+  watch_fields :contract_id, :provider_id, :public_port, :private_port, :tcp, :udp
+  watch_on_destroy
+
   validates_presence_of :provider, :public_port, :private_port
   validates_numericality_of :public_port, :private_port, :greater_than => 0, :less_than_or_equal_to => 65535, :only_integer => true, :allow_blank => true
   validates_uniqueness_of :public_port, :scope => :provider_id

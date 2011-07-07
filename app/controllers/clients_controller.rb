@@ -63,7 +63,7 @@ class ClientsController < ApplicationController
     respond_to do |format|
       if @client.save
         flash[:notice] = t 'controllers.successfully_created'
-        format.html { redirect_back_from_edit_or_to(clients_path) }
+        format.html { redirect_to edit_client_path(@client) }
         format.xml  { render :xml => @client, :status => :created, :location => @client }
       else
         format.html { render :action => "new" }

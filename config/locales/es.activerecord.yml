@@ -76,7 +76,7 @@ es:
         prio_protos: "Protocolos completos que obtendrán prioridad"
         prio_helpers: "Netfilter helpers que obtendrán prioridad"
         state: "Estado"
-        proxy_arp: "Habilitar proxy ARP"
+        proxy_arp: "Proxy ARP habilitado"
         proxy_arp_interface: "Interfaz LAN"
         forwarded_ports: "Puertos redireccionados"
         transparent_proxy: "Proxy transparente"
@@ -85,6 +85,7 @@ es:
         cpe: "Equipo"
         node: "Nodo"
         autocomplete_client_name: "Buscar cliente"
+        unique_provider: "Usar proveedor específico para este crontrato (anula el balanceo)"
       client:
         name: "Nombre y apellido"
         email: "E-mail de contacto"
@@ -131,6 +132,7 @@ es:
         arp_announce: "Hacer consultas ARP desde direcciones IP locales en la red de destino"
         arp_filter: "Responder consultas ARP sólo por la interfaz por la cual se enruta el tráfico a la dirección consultada"
         current_status_time: "Tiempo en servicio/fuera de servicio"
+        shape_rate_down_on_ingress: "Controlar que no se exceda el tráfico descendente de este proveedor"
       forwarded_port:
         provider: "Proveedor"
         public_port: "Puerto público"
@@ -172,6 +174,7 @@ es:
         last_login_ip: "Dirección IP del último inicio de sesión"
       interface:
         name: "Nombre"
+        description: "Descripción"
         vlan: "Es una VLAN"
         vlan_id: "ID de VLAN"
         vlan_interface: "Interfaz real"
@@ -227,6 +230,8 @@ es:
         contact_url: "http://www.ejemplo.com/"
         tc_contracts_per_provider_in_lan: "No habilitar si contratos×providers > 8000 (aprox.)"
         use_global_prios: "Habilitar unicamente en casos de más de 2500 contratos"
+      provider:
+        shape_rate_down_on_ingress: "El control de tráfico descendente se hace en la interfáz LAN, si habilita esta opción se hablitara un control en el ingreso que asegurará que el tráfico de los clientes más el del servidor no exedan el limite configurado"
   menu:
     clients: "Clientes"
     contracts: "Contratos"
@@ -328,6 +333,7 @@ es:
       public_address_does_not_belongs_to_plan: "La dirección IP asignada no pertenece al plan seleccionado"
       proxy_arp_incompatible_with_full_dnat: "Esta opción no es compatible con DNAT completo"
       proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP está hablitado pero la dirección IP no pertenece a ninguno de los proveedores de este plan"
+      unique_provider_does_not_belongs_to_plan: "El proveedor asignado no pertenece al plan seleccionado"
     configuration:
       notification_email_invalid: "No es un e-mail válido"
     plan:

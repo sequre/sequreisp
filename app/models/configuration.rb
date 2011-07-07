@@ -22,7 +22,14 @@ class Configuration < ActiveRecord::Base
   end
 
   acts_as_audited :except => self.acts_as_audited_except
-  
+
+  include ModelsWatcher
+  watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
+               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,
+               :transparent_proxy, :transparent_proxy_n_to_m, :transparent_proxy_zph_enabled,
+               :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
+               :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios
+
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
   validates_presence_of :notification_timeframe
@@ -73,16 +80,11 @@ class Configuration < ActiveRecord::Base
   def self.errors
     @@c.errors
   end
-  def save_without_timestamps
-    Configuration.record_timestamps = false
-    ret = save
-    Configuration.record_timestamps = true
-    ret
-  end
   def apply_changes
     self.last_changes_applied_at = Time.now
+    self.changes_to_apply = false
     self.daemon_reload = true
-    save_without_timestamps
+    save
   end
 
   include CommaSeparatedArray

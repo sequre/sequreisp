@@ -74,24 +74,41 @@ end
 #puts tc_class("ifb0").inspect
 #exit 0
 
-time = Time.now
+# FIRST we collect the data as fast as we can
 client_up = tc_class(IFB_UP)
 client_down = tc_class(IFB_DOWN)
-#puts client_up.inspect
-#puts client_down.inspect
-#exit 0
-Contract.all.each do |c|
-  if Configuration.use_global_prios
-    rrd_update c, time, client_down["1"][c.class_hex], 0, client_up["1"][c.class_hex], 0
-  else
-    rrd_update c, time, client_down["1"][c.class_prio2_hex], client_down["1"][c.class_prio3_hex], client_up["1"][c.class_prio2_hex], client_up["1"][c.class_prio3_hex]
-  end
-end
+time_c = Time.now
 
 if Configuration.use_global_prios
-  p_down = {}
+  p_up, p_down = {}, {}
   Interface.all(:conditions => { :kind => "lan" }).each do |i|
     p_down = tc_class i.name, p_down
+  end
+  Provider.enabled.all.each do |p|
+    p_up = tc_class p.link_interface, p_up
+  end
+else
+  p_up, p_down = [], []
+  Provider.enabled.all.each do |p|
+    p_up[p.id] = File.open("/sys/class/net/#{p.interface.name}/statistics/tx_bytes").read.chomp.to_i rescue 0
+    p_down[p.id] = File.open("/sys/class/net/#{p.interface.name}/statistics/rx_bytes").read.chomp.to_i rescue 0
+  end
+end
+time_p = Time.now
+
+i_up, i_down = [], []
+Interface.all.each do |i|
+  i_up[i.id] = File.open("/sys/class/net/#{i.name}/statistics/tx_bytes").read.chomp rescue 0
+  i_down[i.id] = File.open("/sys/class/net/#{i.name}/statistics/rx_bytes").read.chomp rescue 0
+end
+time_i = Time.now
+
+# SECOND we made the updates
+Contract.all.each do |c|
+  if Configuration.use_global_prios
+    rrd_update c, time_c, client_down["1"][c.class_hex], 0, client_up["1"][c.class_hex], 0
+  else
+    rrd_update c, time_c, client_down["1"][c.class_prio2_hex], client_down["1"][c.class_prio3_hex], client_up["1"][c.class_prio2_hex], client_up["1"][c.class_prio3_hex]
   end
 end
 
@@ -100,26 +117,26 @@ ProviderGroup.enabled.each do |pg|
   pg.providers.enabled.each do |p|
     p_down_prio2 = p_down_prio3 = p_up_prio2 = p_up_prio3 = 0
     if Configuration.use_global_prios
-      p_up = tc_class(p.link_interface)
       p_down_prio2 = p_down[p.class_hex]["a"] + p_down[p.class_hex]["b"]
       p_down_prio3 = p_down[p.class_hex]["c"]
-      p_up_prio2 = p_up[p.class_hex]["a"] + p_up[p.class_hex]["b"]
-      p_up_prio3 = p_up[p.class_hex]["c"]
+      # dynamic ifaces like ppp could not exists, so we need to rescue an integer
+      # if we scope providers by ready and online, we may skip traffic to be logged 
+      # and the ppp iface could go down betwen check and the read
+      p_up_prio2 = (p_up[p.class_hex]["a"] + p_up[p.class_hex]["b"]) rescue 0
+      p_up_prio3 = p_up[p.class_hex]["c"] rescue 0
     else
-      p_up_prio2 = File.open("/sys/class/net/#{p.interface.name}/statistics/tx_bytes").read.chomp.to_i rescue 0
-      p_down_prio2 = File.open("/sys/class/net/#{p.interface.name}/statistics/rx_bytes").read.chomp.to_i rescue 0
+      p_up_prio2 = p_up[p.id]
+      p_down_prio2 = p_down[p.id]
     end
-    rrd_update p, time, p_down_prio2, p_down_prio3, p_up_prio2, p_up_prio3
+    rrd_update p, time_p, p_down_prio2, p_down_prio3, p_up_prio2, p_up_prio3
     pg_down_prio2 += p_down_prio2
     pg_down_prio3 += p_down_prio3
     pg_up_prio2 += p_up_prio2
     pg_up_prio3 += p_up_prio3
   end
-  rrd_update pg, time, pg_down_prio2, pg_down_prio3, pg_up_prio2, pg_up_prio3
+  rrd_update pg, time_p, pg_down_prio2, pg_down_prio3, pg_up_prio2, pg_up_prio3
 end
 
 Interface.all.each do |i|
-  up = File.open("/sys/class/net/#{i.name}/statistics/tx_bytes").read.chomp rescue 0
-  down = File.open("/sys/class/net/#{i.name}/statistics/rx_bytes").read.chomp rescue 0
-  rrd_update i, time, down, 0, up, 0
+  rrd_update i, time_i, i_down[i.id], 0, i_up[i.id], 0
 end

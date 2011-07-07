@@ -78,7 +78,7 @@ class Backup
       c = Configuration.first
       c.backup_restore = "respawn_and_boot"
       c.backup_reboot = true if reboot
-      c.save_without_timestamps
+      c.save
 
       # restart passenger on restore
       # TODO handle other deploy setups

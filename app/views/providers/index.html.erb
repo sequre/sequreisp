@@ -20,6 +20,10 @@
       <%= f.text_field :name_like %>
     </li>
     <li>
+    <%= f.label :kind_equals, t('activerecord.attributes.provider.kind') %>
+    <%= f.select :kind_equals, Provider.kinds_for_select, :include_blank => true %>
+    </li>
+    <li>
     <%= f.label :state_equals, t('activerecord.attributes.provider.state') %>
     <%= f.select :state_equals, Provider.aasm_states_for_select, :include_blank => true %>
     </li>
@@ -47,7 +51,7 @@
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
-        <th><%=t 'activerecord.attributes.provider.name' %></th>
+        <th><%= t('activerecord.attributes.provider.name') + " (#{t('activerecord.attributes.provider.kind')})" %></th>
         <th><%=t 'activerecord.attributes.provider.interface' %></th>
         <th><%=t 'activerecord.attributes.provider.ip' %></th>
         <th><%=t 'activerecord.attributes.provider.rate_down' %> / <%=t 'activerecord.attributes.provider.rate_up' %></th>
@@ -67,7 +71,7 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td>
-            <%=h provider.name %><br/>
+            <%=h "#{provider.name} (#{t('selects.provider.kind.' + provider.kind)})" %><br/>
             <%= link_to Graph.new(:element => provider).img("day", "small"), graph_path(provider ,:class => "Provider") %>
           </td>
           <td>

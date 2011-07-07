@@ -25,12 +25,21 @@ class Provider < ActiveRecord::Base
   has_many :addresses, :as => :addressable, :class_name => "Address", :dependent => :destroy
   accepts_nested_attributes_for :addresses, :reject_if => lambda { |a| a[:ip].blank? }, :allow_destroy => true
   has_many :forwarded_ports, :dependent => :destroy
+  has_many :unique_provider_contracts, :class_name => "Contract", :foreign_key => 'unique_provider_id', :dependent => :nullify
   #named_scope :working, :conditions => "state = 'enabled' and online = 1 and ip not null and netmask not null and gateway not null"
   named_scope :ready, :conditions => "ip is not null and ip != '' and netmask is not null and netmask != '' and gateway is not null and gateway != ''"
   named_scope :online, :conditions => "online = 1"
   named_scope :offline, :conditions => "online = 0"
   named_scope :descend_by_online_changed_at, :order => "online_changed_at DESC"
   named_scope :with_klass_and_interface, :include => [:klass, :interface]
+
+  include ModelsWatcher
+  watch_fields :provider_group_id, :interface_id, :kind, :ip, :netmask, :gateway,
+               :rate_down, :rate_up, :pppoe_user, :pppoe_pass, :state,
+               :unique_mac_address, :arp_ignore, :arp_announce, :arp_filter,
+               :shape_rate_down_on_ingress
+  watch_on_destroy
+
   validates_presence_of :name, :interface, :provider_group, :rate_down, :rate_up
   validates_presence_of :ip, :netmask, :gateway, :if => Proc.new { |p| p.kind == "static" }
   validates_presence_of :pppoe_user, :pppoe_pass, :if => Proc.new { |p| p.kind == "adsl" }

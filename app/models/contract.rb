@@ -29,6 +29,7 @@ class Contract < ActiveRecord::Base
   has_one :provider_group, :through => :plan
   belongs_to :public_address, :class_name => 'Address', :conditions => "addressable_id is not null and addressable_type = 'provider'"
   belongs_to :proxy_arp_interface, :class_name => 'Interface', :conditions => "kind = 'lan'"
+  belongs_to :unique_provider, :class_name => 'Provider'
 
   named_scope :enabled, :conditions => { :state => "enabled" }
   named_scope :not_disabled, :conditions => "state != 'disabled'"
@@ -38,7 +39,14 @@ class Contract < ActiveRecord::Base
 
   named_scope :ascend_by_ip_custom, :order => "CAST(INET_ATON(SUBSTRING_INDEX(contracts.ip, '/', 1)) AS UNSIGNED) ASC, CAST(INET_ATON(contracts.netmask) AS UNSIGNED) ASC"
   named_scope :descend_by_ip_custom, :order => "CAST(INET_ATON(SUBSTRING_INDEX(contracts.ip, '/', 1)) AS UNSIGNED) DESC, CAST(INET_ATON(contracts.netmask) AS UNSIGNED) DESC"
- 
+
+  include ModelsWatcher
+  watch_fields :ip, :plan_id, :mac_address, :ceil_dfl_percent, :state,
+               :tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers,
+               :transparent_proxy, :proxy_arp, :proxy_arp_interface_id, :public_address_id,
+               :unique_provider_id
+  watch_on_destroy
+
   validates_presence_of :ip, :ceil_dfl_percent, :client, :plan
   validates_presence_of :proxy_arp_interface, :if => Proc.new { |c| c.proxy_arp } 
   
@@ -142,6 +150,13 @@ class Contract < ActiveRecord::Base
       end
       if proxy_arp
         errors.add(:proxy_arp, I18n.t('validations.contract.proxy_arp_incompatible_with_full_dnat'))
+      end
+    end
+    if not unique_provider_id.nil? and not plan_id.nil?
+      _provider = Provider.find unique_provider_id
+      _plan = Plan.find plan_id
+      if _provider.provider_group_id != _plan.provider_group_id
+        errors.add(:unique_provider, I18n.t('validations.contract.unique_provider_does_not_belongs_to_plan'))
       end
     end
     # Often occurs that we have a second pool of ip address that is not configured in the provider itself

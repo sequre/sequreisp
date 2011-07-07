@@ -76,7 +76,7 @@ en:
         prio_protos: "High priority protocols"
         prio_helpers: "High priority netfilter helpers"
         state: "state"
-        proxy_arp: "Enable Proxy ARP"
+        proxy_arp: "Proxy ARP enabled"
         proxy_arp_interface: "LAN interface"
         forwarded_ports: "Forwarded Ports"        
         transparent_proxy: "Transparent Proxy"
@@ -85,6 +85,7 @@ en:
         cpe: "CPE"
         node: "Node"
         autocomplete_client_name: "Search client"
+        unique_provider: "Use a specific provider for this contract (avoids balancing)"
       client:
         name: "First name and surname"
         email: "Email address"
@@ -131,6 +132,7 @@ en:
         arp_announce: "Enable arp_announce for this link"
         arp_filter: "Enable arp_filter for this link"
         current_status_time: "Uptime/Downtime"
+        shape_rate_down_on_ingress: "Check that download traffic is not exceeded for this provider"
       forwarded_port:
         provider: "Provider"
         public_port: "Public port"
@@ -171,7 +173,8 @@ en:
         last_login_at: "Last login date"
         last_login_ip: "Last IP login"
       interface:
-        name: "name"
+        name: "Name"
+        description: "Description"
         vlan: "is a vlan"
         vlan_id: "Vlan ID"
         vlan_interface: "Real Interface"
@@ -227,6 +230,8 @@ en:
         contact_url: "http://www.example.com/"
         tc_contracts_per_provider_in_lan: "Do not enable if contracts*providers > 8000 (approx.)"
         use_global_prios: "Enable only if contract's number is above 2500"
+      provider:
+        shape_rate_down_on_ingress: "Download shaping is done in the LAN interface, if you enable this option an extra control will be enabled on ingress that will shape client's and server's own traffic to the configured down rate"
   menu:
     clients: "Clients"
     contracts: "Contracts"
@@ -328,6 +333,7 @@ en:
       public_address_does_not_belongs_to_plan: "The assigned IP does not belong to the selected plan"
       proxy_arp_incompatible_with_full_dnat: "Option is incompatible with full DNAT"
       proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP is enabled but the IP address does not belong to any of the providers of this plan"
+      unique_provider_does_not_belongs_to_plan: "The assigned provider does not belong to the selected plan"
     configuration:
       notification_email_invalid: "Invalid email address"
     plan:

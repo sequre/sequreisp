@@ -22,6 +22,10 @@ class ProviderGroup < ActiveRecord::Base
   has_one :klass, :as => :klassable, :class_name => "ProviderKlass", :dependent => :nullify
   named_scope :with_klass, :include => [:klass]
   has_many :contracts, :through => :plans
+
+  include ModelsWatcher
+  watch_fields :state
+
   validates_presence_of :name 
   validates_length_of :name, :in => 3..128
   validates_uniqueness_of :name

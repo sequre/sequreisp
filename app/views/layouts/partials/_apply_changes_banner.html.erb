@@ -1,4 +1,4 @@
-<% if current_user.may_doreload_configuration? and changes_not_applied?%>    
+<% if current_user.may_doreload_configuration? and Configuration.changes_to_apply? %>
   <div id="apply_changes_banner">
     <span id="apply_changes_notice">
       <%= t('notifications.changes_to_be_applied_notice') %>
