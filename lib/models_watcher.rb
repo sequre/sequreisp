@@ -1,8 +1,11 @@
 module ModelsWatcher
 
   def self.included(base)
-    base.send(:extend, ClassMethods)
+    return if base.include? InstanceMethods
+
     base.send(:include, InstanceMethods)
+    base.send(:extend, ClassMethods)
+
     base.class_eval do
       @__watched_fields ||= []
       before_save :check_watched_fields
