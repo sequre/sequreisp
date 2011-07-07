@@ -24,6 +24,11 @@ module ModelsWatcher
   module InstanceMethods
 
     def check_watched_fields
+      if @__skip_check_watched_fields_callback
+        @__skip_check_watched_fields_callback = false
+        return
+      end
+
       fields = self.class.instance_eval do @__watched_fields end
       fields.each do |field|
         if self.send "#{field}_changed?"
@@ -35,6 +40,11 @@ module ModelsWatcher
 
     def update_changes_to_apply
       Configuration.first.update_attribute(:changes_to_apply, true)
+    end
+
+    def save_without_applying_changes
+      @__skip_check_watched_fields_callback = true
+      save
     end
   end
 
