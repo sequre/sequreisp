@@ -994,12 +994,20 @@ def boot(run=true)
         #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada 
         f.puts "tc -b #{TC_FILE_PREFIX + p.link_interface}" 
       end
+
+      #General configuration hook
+      BootHook.run :hook => :general, :run => run, :boot_script => f
+
       f.puts "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}"
       f.puts "iptables-restore -n < #{IPTABLES_FILE}"
       f.puts "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
       f.puts "#service squid reload"
       f.puts "squid -k reconfigure"
       f.puts "service bind9 reload"
+
+      #Service restart hook
+      BootHook.run :hook => :service_restart, :run => run, :boot_script => f
+
       f.puts "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}"
       f.chmod 0755
     end
