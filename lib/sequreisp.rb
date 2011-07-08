@@ -349,6 +349,26 @@ def gen_iptables
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
       end
+
+      def build_iptables_tree(f, parent_net, parent_chain, prefix, cuartet, mask)
+        return if cuartet == 0
+        base_net = IP.new parent_net.gsub(/\/.*/, "") + "/#{mask}"
+        (0..15).each do |n|
+          child_net = (base_net + n * 16**cuartet).to_s
+          chain="sq.#{prefix}.#{child_net}"
+          f.puts ":#{chain} - [0:0]"
+          f.puts "-A #{parent_chain} -s #{child_net} -j #{chain}"
+          build_iptables_tree f, child_net, chain, prefix, cuartet - 1, mask + 4
+        end
+      end
+      Contract.slash_16_networks.each do |n16|
+        ['up','down'].each do |prefix|
+          chain="sq.#{prefix}.#{n16}"
+          f.puts ":#{chain} - [0:0]"
+          f.puts "-A sequreisp.#{prefix} -s #{n16} -j #{chain}"
+          build_iptables_tree f, n16, chain, prefix, 3, 20
+        end
+      end
       if Configuration.use_global_prios
         #mark_burst = "0x0000/0x0000ffff"
         mark_prio1 = "0xa0000000/0xf0000000"
@@ -357,11 +377,11 @@ def gen_iptables
         mark_if="-m mark --mark 0x0/0xf0000000"
         Contract.not_disabled.descend_by_netmask.each do |c|
           mark = "0x#{c.mark_hex}/0x0000ffff"
-          f.puts "-A sequreisp.up -s #{c.ip} -j MARK --set-mark #{mark}"
+          f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j MARK --set-mark #{mark}"
           if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-            f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j MARK --set-mark #{mark}"
+            f.puts "-A #{c.mangle_chain("up")} -s #{c.proxy_bind_ip} -j MARK --set-mark #{mark}"
           end
-          f.puts "-A sequreisp.down -d #{c.ip} -j MARK --set-mark #{mark}"
+          f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j MARK --set-mark #{mark}"
         end
         # una chain global
         ["sequreisp.up", "sequreisp.down"].each do |chain|
@@ -402,11 +422,11 @@ def gen_iptables
           mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
           mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
           # una chain por cada cliente
-          chain="sequreisp.#{c.ip}"
+          chain="sq.#{c.ip}"
           f.puts ":#{chain} - [0:0]"
           # redirección del trafico de este cliente hacia su propia chain
-          f.puts "-A sequreisp.down -d #{c.ip} -j #{chain}"
-          f.puts "-A sequreisp.up -s #{c.ip} -j #{chain}"
+          f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
+          f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
           if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
             f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j #{chain}"
           end
