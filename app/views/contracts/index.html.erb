@@ -66,8 +66,8 @@
     <%= f.label :state_equals, t('activerecord.attributes.contract.state') %>
     <%= f.select :state_equals, Contract.aasm_states_for_select, :include_blank => true %>
     </li>
-    <div sytle="clear: both">
-      <li><a id="search_more"><%= I18n.t('buttons.more') %></a><li>
+    <div style="clear: both">
+      <li><a id="search_more"><%= I18n.t('buttons.more') %></a></li>
     </div>
     <div id="search_advanced">
       <li>
