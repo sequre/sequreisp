@@ -350,23 +350,23 @@ def gen_iptables
         f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
       end
 
-      def build_iptables_tree(f, parent_net, parent_chain, prefix, cuartet, mask)
+      def build_iptables_tree(f, parent_net, parent_chain, way, cuartet, mask)
         return if cuartet == 0
         base_net = IP.new parent_net.gsub(/\/.*/, "") + "/#{mask}"
         (0..15).each do |n|
           child_net = (base_net + n * 16**cuartet).to_s
-          chain="sq.#{prefix}.#{child_net}"
+          chain="sq.#{way[:prefix]}.#{child_net}"
           f.puts ":#{chain} - [0:0]"
-          f.puts "-A #{parent_chain} -s #{child_net} -j #{chain}"
-          build_iptables_tree f, child_net, chain, prefix, cuartet - 1, mask + 4
+          f.puts "-A #{parent_chain} -#{way[:dir]} #{child_net} -j #{chain}"
+          build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
         end
       end
       Contract.slash_16_networks.each do |n16|
-        ['up','down'].each do |prefix|
-          chain="sq.#{prefix}.#{n16}"
+        [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
+          chain="sq.#{way[:prefix]}.#{n16}"
           f.puts ":#{chain} - [0:0]"
-          f.puts "-A sequreisp.#{prefix} -s #{n16} -j #{chain}"
-          build_iptables_tree f, n16, chain, prefix, 3, 20
+          f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
+          build_iptables_tree f, n16, chain, way, 3, 20
         end
       end
       if Configuration.use_global_prios
