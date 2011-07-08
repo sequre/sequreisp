@@ -218,29 +218,18 @@ class Contract < ActiveRecord::Base
   aasm_state :disabled
 
 
-#Array of states to use in :from on event enable
-#Using a method so plugins can add their own states using alias_method_chain
-  def self.event_enable_from_states
-    [:disabled]
-  end
-
   aasm_event :enable do
-    transitions :from => Contract.event_enable_from_states, :to => :enabled
+    transitions :from => :disabled, :to => :enabled
   end
 
-#Array of states to use in :from on event :disable
-#Using a method so plugins can add their own states using alias_method_chain
-  def self.event_disable_from_states
-    [:enabled]
-  end
   aasm_event :disable do
-    transitions :from => Contract.event_disable_from_states, :to => :disabled
+    transitions :from => :enabled, :to => :disabled
   end
 
   def self.aasm_states_for_select
     AASM::StateMachine[self].states.map { |state| [I18n.t("aasm.contract.#{state.name.to_s}"),state.name.to_s] }
   end
-  
+
   def name
     plan.name
   end
