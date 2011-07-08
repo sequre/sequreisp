@@ -370,4 +370,30 @@ class Contract < ActiveRecord::Base
   attr_accessor :autocomplete_client_name
   include CommaSeparatedArray
   comma_separated_array_field :prio_protos, :prio_helpers, :tcp_prio_ports, :udp_prio_ports
+
+  def netmask_suffix
+    begin
+      mask = IP.new(self.netmask).to_i
+      count = 0
+      while mask > 0 do
+        mask-=(2**(31-count))
+        count+=1;
+      end
+      count
+    rescue
+      nil
+    end
+  end
+
+  def mangle_chain(prefix)
+    suffix = netmask_suffix
+    value = 28
+    value -= 4 while suffix < value and value > 16
+    _ip = IP.new("#{ip.gsub(/\/.*/, "")}/#{value}").network.to_s
+    "sq.#{prefix}.#{_ip}"
+  end
+
+  def self.slash_16_networks
+    Contract.all(:select => :ip).collect { |c| c.ip.split(".")[0,2].join(".") + ".0.0/16" }.uniq
+  end
 end

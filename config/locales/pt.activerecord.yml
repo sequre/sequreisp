@@ -64,6 +64,7 @@ pt:
       ip: "Endereço IP"
       state: "Estado"
       contract:
+        id: "ID"
         plan: "Plano"
         ip: "IP"
         client: "Cliente"
@@ -87,6 +88,7 @@ pt:
         autocomplete_client_name: "Procurar cliente"
         unique_provider: "Use um provedor específico para este contrato (evita balanceamento)"
       client:
+        id: "ID"
         name: "Nome e sobrenome"
         email: "E-mail de contato"
         phone: "Telefone fixo"

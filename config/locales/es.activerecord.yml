@@ -64,6 +64,7 @@ es:
       ip: "Dirección IP"
       state: "Estado"
       contract:
+        id: "ID"
         plan: "Plan"
         ip: "IP"
         client: "Cliente"
@@ -87,6 +88,7 @@ es:
         autocomplete_client_name: "Buscar cliente"
         unique_provider: "Usar proveedor específico para este crontrato (anula el balanceo)"
       client:
+        id: "ID"
         name: "Nombre y apellido"
         email: "E-mail de contacto"
         phone: "Teléfono fijo"
