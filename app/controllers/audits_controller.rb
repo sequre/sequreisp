@@ -19,10 +19,10 @@ class AuditsController < ApplicationController
   before_filter :require_user
   permissions :audits
   def index
-    params[:search][:order] ||= 'descend_by_created_at'
+    params[:search] ||= {}
     @search = Audit.search(params[:search])
 
-    if params[:search] &&  !params[:search][:auditable_id_equals].blank?
+    if !params[:search][:auditable_id_equals].blank?
       #search by id
       @audits = Audit.paginate :page => params[:page], :per_page => 10,
                    :conditions => {
@@ -30,7 +30,7 @@ class AuditsController < ApplicationController
                       :auditable_id => params[:search][:auditable_id_equals]
                     }
     else
-      @audits = @search.paginate(:page => params[:page], :per_page => 10)
+      @audits = @search.paginate(:page => params[:page], :per_page => 10, :order => 'created_at DESC')
     end
 
     @models = Audit.all(:select => "DISTINCT auditable_type", :order => "auditable_type ASC").map(&:auditable_type)
