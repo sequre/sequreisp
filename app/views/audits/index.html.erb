@@ -74,7 +74,7 @@
           <td><%= link_to_auditable(audit) %></td>
           <td><%=h audit.user.name rescue 'Undefined' %></td>
           <td><%=h audit.action %></td>
-          <td><%= expand_changes(audit.changes, audit.auditable_type.downcase) %></td>
+          <td><%= expand_changes(audit.changes, audit.auditable_type) %></td>
           <td><%=h audit.version %></td>
         </tr>
       <% end %>
