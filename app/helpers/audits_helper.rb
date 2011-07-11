@@ -40,6 +40,6 @@ module AuditsHelper
     else 
       a = audit.auditable
     end
-    link_to (h audit.auditable_type), a
+    link_to (h audit.auditable_type.constantize.human_name), a
   end
 end
