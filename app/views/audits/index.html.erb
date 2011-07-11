@@ -1,6 +1,22 @@
 <% content_for :title, t('menu.audits') %>
 <% heading t('menu.audits')  %>
-
+<% content_for :page_header do %>
+  <%= javascript_include_tag 'jquery' %>
+  <script type="text/javascript">
+    $(function(){
+        $('#search_auditable_type_is').change(function(){
+          val = $(this).val();
+          if(val == ""){
+            $('li#search_id input').val('');
+            $('li#search_id input').attr('disabled', 'disable');
+          }
+          else{
+            $('li#search_id input').attr('disabled', '');
+          }
+        });
+    });
+  </script>
+<% end %>
 <%= render :partial => "shared/empty_submenu" %>
 
 <div id="busqueda">
@@ -13,6 +29,20 @@
     <li>
       <%= f.label :action_is, t('activerecord.attributes.audit.action') %>
       <%= f.select :action_is, [["create","create"],["update","update"],["destroy","destroy"]], :include_blank => true %>
+    </li>
+    <li>
+      <%= f.label :auditable_type_is, t('activerecord.attributes.audit.auditable_type') %>
+      <%= f.select :auditable_type_is, @models, :include_blank => true %>
+    </li>
+    <li id='search_id'>
+      <%= f.label :auditable_id_equals, t('activerecord.attributes.audit.auditable_id') %>
+      <%= text_field_tag "[search][auditable_id_equals]", params[:auditable_id_equals],
+           :value => params[:search][:auditable_id_equals],
+           :disabled => (params[:search][:auditable_type_is].blank? ? true : false) %>
+    </li>
+    <li>
+      <%= f.label :changes_like, t('activerecord.attributes.audit.changes') %>
+      <%= f.text_field :changes_like %>
     </li>
     <li>
       <br/>

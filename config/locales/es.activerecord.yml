@@ -187,6 +187,7 @@ es:
         action: "Acción"
         created_at: "Fecha"
         auditable_type: "Modelo"
+        auditable_id: "ID del Modelo"
         changes: "Cambios realizados"
         version: "Versión"
       address:
@@ -247,6 +248,7 @@ es:
     backups: "Copias de resguardo"
     modules: "Módulos"
     about: "Acerca de"
+    audits: "Auditorías"
   buttons:
     login: "Entrar"
     edit: "Editar"
