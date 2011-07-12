@@ -921,7 +921,9 @@ def check_links
         # child
         $stdout.reopen writeme[p.id]
         readme[p.id].close
-        exec("fping -a -S#{p.ip} #{PINGABLE_SERVERS} 2>/dev/null | wc -l")
+        # (r)etry=1 (t)iemout=1000 (B)ackoff=4
+        # 1st ping timeouts at 1s, then there is only a second try that timeouts at 4s(1000*4)
+        exec("fping -r1 -t1000 -B4.0 -a -S#{p.ip} #{PINGABLE_SERVERS} 2>/dev/null | wc -l")
     }
     writeme[p.id].close
   end
