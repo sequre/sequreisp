@@ -19,7 +19,9 @@ class Contract < ActiveRecord::Base
   FILE_SERVICES = RAILS_ROOT + "/db/files/valid_services"
   FILE_PROTOCOLS = RAILS_ROOT + "/db/files/valid_protocols"
   FILE_HELPERS = RAILS_ROOT + "/db/files/valid_helpers"
-  acts_as_audited :except => [:netmask]
+  acts_as_audited :except => [:netmask,
+                              :queue_down_prio, :queue_up_prio, :queue_down_dfl, :queue_up_dfl,
+                              :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl]
   belongs_to :client
   belongs_to :plan
   
