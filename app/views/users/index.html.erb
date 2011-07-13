@@ -29,8 +29,8 @@
           <td><%= user.name %></td>
           <td><%=h user.email %></td>
           <td><%=t 'selects.user.role_name.' + user.role_name %></td>
-          <td><%=l(user.last_login_at, :format => :short) rescue t(:never) %></td>
-          <td><%=h user.last_login_ip rescue t(:unknown) %></td>
+          <td><%=l(user.last_login_at, :format => :short) rescue t('activerecord.attributes.user.last_login_at_never') %></td>
+          <td><%=h user.last_login_ip || t('activerecord.attributes.user.last_login_ip_unknown') %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => user} %>
           <% if current_user.may_update_user?(user) %>
             <td><%= link_to t('buttons.edit'), edit_user_path(user) %></td>
