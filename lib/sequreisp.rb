@@ -911,7 +911,7 @@ def check_links
   Configuration.do_reload
   changes = false
   send_notification_mail = false
-  providers = Provider.ready
+  providers = Provider.ready.all(:include => :interface)
   threads = {}
 
   providers.each do |p|
