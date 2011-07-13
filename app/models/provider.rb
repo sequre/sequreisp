@@ -300,4 +300,18 @@ class Provider < ActiveRecord::Base
   def nat_pool_addresses
     [ip] + addresses.all(:conditions => "use_in_nat_pool = 1").collect(&:ip)
   end
+
+  def is_online_by_rate?
+    rx = interface.rx_bytes
+    tx = interface.tx_bytes
+    sleep 0.5
+    #to kbps is: 0.5 * 2 is 1 second and 1024 bits are one kbit
+    instant_rate_down = (interface.rx_bytes-rx)*8*2/1024
+    instant_rate_up = (interface.tx_bytes-tx)*8*2/1024
+    # si estoy usando al menos un x% de down y 50avo de ese up para los ack
+    online_rate_percent = 0.2
+    result = instant_rate_down > rate_down * online_rate_percent and instant_rate_up > rate_up * online_rate_percent/50
+    Rails.logger.debug "Provider::is_online_by_rate? provider_id: #{id} result:#{result} down: #{instant_rate_down} up #{instant_rate_up}"
+    result
+  end
 end
