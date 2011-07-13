@@ -172,6 +172,8 @@ es:
         password_confirmation: "Confirmación de contraseña"
         last_login_at: "Fecha del último inicio de sesión"
         last_login_ip: "Dirección IP del último inicio de sesión"
+        never: "Nunca"
+        unknown: "Desconocido"
       interface:
         name: "Nombre"
         description: "Descripción"
