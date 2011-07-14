@@ -260,7 +260,7 @@ es:
     export_to_excel: "Exportar a excel"
     create_contract: "Crear contrato"
     view_contracts: "Ver contratos"
-    view_notified_page: "Ver página de aviso por mora"
+    view_alerted_page: "Ver página de aviso por mora"
     view_disabled_page: "Ver página de interrupción del servicio"
     add_forward: "Agregar redireccionamiento"
     add_ip: "Agregar dirección IP"

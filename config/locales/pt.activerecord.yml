@@ -249,7 +249,7 @@ pt:
     export_to_excel: "Exportar para Excel"
     create_contract: "Criar contrato"
     view_contracts: "Ver contratos"
-    view_notified_page: "Ver página de aviso por mora"
+    view_alerted_page: "Ver página de aviso por mora"
     view_disabled_page: "Ver página de interrupção do serviço"
     add_forward: "Agregar redirecionamento"
     add_ip: "Agregar endereço IP"
