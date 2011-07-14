@@ -42,7 +42,9 @@ module ModelsWatcher
     end
 
     def update_changes_to_apply
-      Configuration.first.update_attribute(:changes_to_apply, true)
+      if Configuration.first
+        Configuration.first.update_attribute(:changes_to_apply, true)
+      end
     end
 
     def save_without_applying_changes
