@@ -631,7 +631,7 @@ margin-right:6px;
 margin-top:2px;
 }
 
-.notification{
+p.notification{
 background-color:#005500;
 color:#FFFFFF !important;
 padding:3px;
@@ -644,11 +644,11 @@ margin-top:11px;
 	-moz-border-radius: 5px;
 	 border-radius: 5px;
 }
-.notification_warning {
+p.notification_warning {
   background-color:#FFDF00;
   color:#444 !important;
 }
-.notification_error {
+p.notification_error {
   background-color:#550000;
 }
 .btn_login{

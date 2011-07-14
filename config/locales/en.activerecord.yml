@@ -256,7 +256,7 @@ en:
     export_to_excel: "Export to Excel"
     create_contract: "Create contract"
     view_contracts: "View contracts"
-    view_notified_page: "Preview 'notified' page"
+    view_alerted_page: "Preview 'notified' page"
     view_disabled_page: "Preview 'service disabled' page"
     add_forward: "Add forwarded port"
     add_ip: "Add IP address"
