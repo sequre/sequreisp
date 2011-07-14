@@ -781,21 +781,3 @@ padding-bottom:3px;
 .fecha_left ol li{
 	float:left;
 }
-
-.login_div #errorExplanation h2{
-  display:none;
-}
-
-.login_div #errorExplanation p{
-  display:none;
-}
-
-.login_div #errorExplanation ul{
-  margin-left:-30px;
-  position:absolute;
-  top:424px;
-}
-
-.login_div #errorExplanation li{
-  color:#9D0B16;
-}

@@ -1,13 +1,34 @@
+<style type="text/css">
+  div.fieldWithErrors {
+    margin: 0px;
+  }
+  div.errorExplanation {
+    margin: 0px;
+    padding: 0px;
+  }
+  div.errorExplanation h2, div.errorExplanation p {
+    display:none;
+  }                   
+  div.errorExplanation ul{
+    margin-left:-25px;
+    position:absolute;
+    top:375px;
+  }
+  div.errorExplanation ul li{
+    color:#9D0B16;
+    list-style: none;
+  }
+</style>
 <% content_for :title, t('actions.login') %>
 <div class="login_div">      
   <h1><%=t 'actions.login' %></h1>
-<% form_for @user_session, :url => user_session_path do |f| %>
-  <%= f.error_messages %>
-  <%= f.label :email %>
-  <%= f.text_field :email %>
-  <%= f.label :password %>
-  <%= f.password_field :password %><br />
-  <%= f.submit t('buttons.login'), :class => "btn_submit btn_login" %>
-<% end %>
+  <% form_for @user_session, :url => user_session_path do |f| %>
+    <%= f.error_messages %>
+    <%= f.label :email %>
+    <%= f.text_field :email %>
+    <%= f.label :password %>
+    <%= f.password_field :password %>
+    <%= f.submit t('buttons.login'), :class => "btn_submit btn_login" %>
+  <% end %>
 </div>
 <div class="img_login"></div>
