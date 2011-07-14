@@ -60,6 +60,8 @@ class Contract < ActiveRecord::Base
   
   validates_uniqueness_of :ip, :allow_nil => true, :allow_blank => true
   
+  validates_inclusion_of :state, :in => ['enabled', 'alerted', 'disabled']
+            
   validate :check_invalid_options, :if => Proc.new {|c| not c.netmask.nil? and not c.ip_is_single_host? }
     #:unless => :ip_is_single_host?
   def check_invalid_options
