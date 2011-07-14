@@ -46,7 +46,7 @@ if !p.nil?
       p.ip=ip
       p.netmask=netmask
       p.gateway=gateway
-      if p.save
+      if p.save_without_applying_changes
         do_provider_up p
       else
         show_usage 

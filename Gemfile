@@ -18,6 +18,7 @@ gem 'fastercsv', '~>1.5'
 gem 'aegis', '~>2.5'
 gem 'acts_as_audited', '~>1.1'
 gem 'whenever', '~>0.6'
+gem 'rest-client', '~>1.6'
 
 group :development do
   gem 'faker'

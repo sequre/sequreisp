@@ -36,38 +36,44 @@ ul li a:hover {
   <div id="menu">
     <ul class="nav">
       <% if current_user.may_index_clients? %>
-      <li><%= link_to t('menu.clients'), clients_path %></li>
+        <li><%= link_to t('menu.clients'), clients_path %></li>
       <% end %>
+
       <% if current_user.may_index_contracts? %>
-      <li><%= link_to t('menu.contracts'), contracts_path %></li>
+        <li><%= link_to t('menu.contracts'), contracts_path %></li>
       <% end %>
+
       <% if current_user.may_index_plans? %>
-      <li><%= link_to t('menu.plans'), plans_path %></li>
+        <li><%= link_to t('menu.plans'), plans_path %></li>
       <% end %>
+
       <% if current_user.may_index_providers? %>
-      <li><%= link_to t('menu.providers'), providers_path %>
-        <ul class="submenu">
-          <% if current_user.may_index_provider_groups? %>
-          <li><%= link_to t('menu.provider_groups'), provider_groups_path %></li>
-          <% end %>
-          <% if current_user.may_index_interfaces? %>
-          <li><%= link_to t('menu.interfaces'), interfaces_path %></li>
-          <% end %>
-        </ul>
-      </li>
+        <li><%= link_to t('menu.providers'), providers_path %>
+          <ul class="submenu">
+            <% if current_user.may_index_provider_groups? %>
+            <li><%= link_to t('menu.provider_groups'), provider_groups_path %></li>
+            <% end %>
+            <% if current_user.may_index_interfaces? %>
+            <li><%= link_to t('menu.interfaces'), interfaces_path %></li>
+            <% end %>
+          </ul>
+        </li>
       <% end %>
+
       <% if current_user.may_index_configuration? %>
-      <li><%= link_to t('menu.configuration'), configurations_path %>
-        <ul class="submenu">
-          <% if current_user.may_index_users? %>
-          <li><%= link_to t('menu.users'), users_path %></li>
-          <% end %>
-        </ul>
-      </li>
+        <li><%= link_to t('menu.configuration'), configurations_path %>
+          <ul class="submenu">
+            <% if current_user.may_index_users? %>
+            <li><%= link_to t('menu.users'), users_path %></li>
+            <% end %>
+          </ul>
+        </li>
       <% end %>
+
       <% if current_user.may_index_backup? %>
-      <li><%= link_to t('menu.backups'), backup_path %></li>
+        <li><%= link_to t('menu.backups'), backup_path %></li>
       <% end %>
+
       <% if plugins_menu_links.any? %>
         <li> <a id="plugins_button" href="#"> <%=t 'menu.modules' %></a>
           <ul class="submenu">
@@ -77,8 +83,13 @@ ul li a:hover {
           </ul>
         </li>
       <% end %>
+
+      <% if current_user.may_index_audit? %>
+        <li><%= link_to t('menu.audits'), audits_path %></li>
+      <% end %>
+
       <% if current_user.may_show_about? %>
-      <li><%= link_to t('menu.about'), about_path, :class => 'last' %></li>
+        <li><%= link_to t('menu.about'), about_path, :class => 'last' %></li>
       <% end %>
     </ul>
   </div>

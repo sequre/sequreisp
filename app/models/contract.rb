@@ -19,7 +19,9 @@ class Contract < ActiveRecord::Base
   FILE_SERVICES = RAILS_ROOT + "/db/files/valid_services"
   FILE_PROTOCOLS = RAILS_ROOT + "/db/files/valid_protocols"
   FILE_HELPERS = RAILS_ROOT + "/db/files/valid_helpers"
-  acts_as_audited :except => [:netmask]
+  acts_as_audited :except => [:netmask,
+                              :queue_down_prio, :queue_up_prio, :queue_down_dfl, :queue_up_dfl,
+                              :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl]
   belongs_to :client
   belongs_to :plan
   
@@ -220,29 +222,18 @@ class Contract < ActiveRecord::Base
   aasm_state :disabled
 
 
-#Array of states to use in :from on event enable
-#Using a method so plugins can add their own states using alias_method_chain
-  def self.event_enable_from_states
-    [:disabled]
-  end
-
   aasm_event :enable do
-    transitions :from => Contract.event_enable_from_states, :to => :enabled
+    transitions :from => :disabled, :to => :enabled
   end
 
-#Array of states to use in :from on event :disable
-#Using a method so plugins can add their own states using alias_method_chain
-  def self.event_disable_from_states
-    [:enabled]
-  end
   aasm_event :disable do
-    transitions :from => Contract.event_disable_from_states, :to => :disabled
+    transitions :from => :enabled, :to => :disabled
   end
 
   def self.aasm_states_for_select
     AASM::StateMachine[self].states.map { |state| [I18n.t("aasm.contract.#{state.name.to_s}"),state.name.to_s] }
   end
-  
+
   def name
     plan.name
   end
@@ -383,4 +374,30 @@ class Contract < ActiveRecord::Base
   attr_accessor :autocomplete_client_name
   include CommaSeparatedArray
   comma_separated_array_field :prio_protos, :prio_helpers, :tcp_prio_ports, :udp_prio_ports
+
+  def netmask_suffix
+    begin
+      mask = IP.new(self.netmask).to_i
+      count = 0
+      while mask > 0 do
+        mask-=(2**(31-count))
+        count+=1;
+      end
+      count
+    rescue
+      nil
+    end
+  end
+
+  def mangle_chain(prefix)
+    suffix = netmask_suffix
+    value = 28
+    value -= 4 while suffix < value and value > 16
+    _ip = IP.new("#{ip.gsub(/\/.*/, "")}/#{value}").network.to_s
+    "sq.#{prefix}.#{_ip}"
+  end
+
+  def self.slash_16_networks
+    Contract.all(:select => :ip).collect { |c| c.ip.split(".")[0,2].join(".") + ".0.0/16" }.uniq
+  end
 end
