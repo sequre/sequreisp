@@ -911,24 +911,25 @@ def check_links
   Configuration.do_reload
   changes = false
   send_notification_mail = false
-  readme = []
-  writeme = []
-  pid = []
-  providers = Provider.ready
+  providers = Provider.ready.all(:include => :interface)
+  threads = {}
+
   providers.each do |p|
-    readme[p.id], writeme[p.id] = IO.pipe
-    pid[p.id] = fork {
-        # child
-        $stdout.reopen writeme[p.id]
-        readme[p.id].close
-        exec("fping -a -S#{p.ip} #{PINGABLE_SERVERS} 2>/dev/null | wc -l")
-    }
-    writeme[p.id].close
+    threads[p.id] = Thread.new do
+      Thread.current['online'] = begin
+        # 1st by rate, if offline, then by ping
+        # (r)etry=3 (t)iemout=500 (B)ackoff=1.5 (defualts)_
+        p.is_online_by_rate? || `fping -a -S#{p.ip} #{PINGABLE_SERVERS} 2>/dev/null | wc -l`.chomp.to_i > 0
+      end
+    end
   end
-  Process.waitall()
+
+  # waith for threads
+  threads.each do |k,t| t.join end
+
   providers.each do |p|
     #puts "#{p.id} #{readme[p.id].first}"
-    online = readme[p.id].read.chomp.to_i > 0
+    online = threads[p.id]['online']
     p.online = online 
     #TODO loguear el cambio de estado en una bitactora
     

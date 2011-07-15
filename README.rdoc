@@ -24,8 +24,8 @@
 
 == Demo
 
-There is an online demo[http://sequreisp.sequre.com.ar/] of the application available 
-  Url: http://sequreisp.sequre.com.ar/
+There is an online demo[http://demo.sequreisp.com/] of the application available 
+  Url: http://demo.sequreisp.com/
   User: admin@sequre.com.ar
   Pass: 1234
 
@@ -233,11 +233,11 @@ pass: 1234
 
 == Use
 
-There is currently a step by step user guide[http://www.sequre.com.ar/downloads/SequreISP%20-%20Guia%20de%20Instlacion.pdf] available in spanish. 
+There is currently a step by step user guide[http://www.sequreisp.com/Installation/Guide] available in spanish. 
 
 It will introduce you in the basic concepts behind sequreisp from a fresh instalation to get your first provider and client to work.
 
-The guide is meant for the comercial version but still applies to the opensource branch. The guide mentions an easy-install-CD[http://www.sequre.com.ar/descargas/] that is only available for the comercial version, so you have to skip that part and begin at 2.3 "Puesta a punto" section.
+The guide is meant for the comercial version but still applies to the opensource branch. The guide mentions an easy-install-CD[http://www.sequreisp.com/Installation/Steps] that is only available for the comercial version, so you have to skip that part and begin at 2.3 "Puesta a punto" section.
 
 == Community 
 
@@ -251,4 +251,4 @@ If you want to contribute to this project you can send a pull-request or mail me
 
 Sequreisp is licensed under the terms of the GNU Afero General Public license
 
-A Comercial version of sequreisp is also available which includes support, an easy-install-CD[http://www.sequre.com.ar/descargas/] and modules with extra functionality, you can find more information in the sequreisp website[http://www.sequre.com.ar/productos/servidor-isp/].
+A Comercial version of sequreisp is also available which includes support, an easy-install-CD[http://www.sequreisp.com/Installation/Steps] and modules with extra functionality, you can find more information in the sequreisp website[http://www.sequreisp.com/].

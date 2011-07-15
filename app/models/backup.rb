@@ -52,7 +52,7 @@ class Backup
   def full(include_graphs=false)
     if mysqldump "#{base_dir}/sequreisp.sql"
       FileUtils.touch backup_include if not File.exists? backup_include
-      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{exclude(include_graphs)} --files-from #{backup_include} -zpcf #{full_path}.tar.gz #{base_dir}"
+      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{exclude(include_graphs)} --files-from #{backup_include} -zSpcf #{full_path}.tar.gz #{base_dir}"
     end
     "#{full_path}.tar.gz" if success
   end
