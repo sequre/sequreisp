@@ -266,6 +266,7 @@ es:
     add_ip: "Agregar dirección IP"
     scan_interfaces: "Detectar nuevas interfaces"
     more: "Más"
+    view_audit: "Auditoría"
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"
@@ -322,7 +323,7 @@ es:
   mailing:
   validations:
     ip_already_in_use: "Ya está en uso"
-    interface: 
+    interface:
       unable_to_change_kind: "No se puede cambiar el tipo, esta interfaz tiene un proveedor asignado"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "El proveedor seleccionado no pertenece al grupo del plan asignado"
@@ -377,3 +378,11 @@ es:
       seconds: "segundos"
   notifications:
     changes_to_be_applied_notice: "Aviso: Se han realizado cambios en la configuración que todavía no han sido aplicados."
+  audits:
+    create: 'Crear'
+    update: 'Actualizar'
+    destroy: 'Eliminar'
+    undefined: 'No disponible'
+    go_back: 'Volver a %{version}'
+    successfully_reverted: 'Se aplicaron los cambios correctamente'
+    error_on_reversion: 'No se pudo volver a la versión indicada'

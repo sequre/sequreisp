@@ -397,6 +397,10 @@ class Contract < ActiveRecord::Base
     "sq.#{prefix}.#{_ip}"
   end
 
+  def auditable_name
+    "#{self.class.human_name}: #{client.name} (#{ip})"
+  end
+
   def self.slash_16_networks
     Contract.all(:select => :ip).collect { |c| c.ip.split(".")[0,2].join(".") + ".0.0/16" }.uniq
   end

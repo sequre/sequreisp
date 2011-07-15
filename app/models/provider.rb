@@ -300,4 +300,8 @@ class Provider < ActiveRecord::Base
   def nat_pool_addresses
     [ip] + addresses.all(:conditions => "use_in_nat_pool = 1").collect(&:ip)
   end
+
+  def auditable_name
+    "#{self.class.human_name}: #{name}"
+  end
 end

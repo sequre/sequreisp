@@ -3,14 +3,15 @@
 
 <ul class="nav" style="float:right">
   <% if current_user.may_create_contract? %>
-  <li><%= link_to t('buttons.create_contract'), new_client_contract_path(@client) %> </li> 
+  <li><%= link_to t('buttons.create_contract'), new_client_contract_path(@client) %> </li>
   <% end %>
   <% if current_user.may_index_contracts? %>
-  <li><%= link_to t('buttons.view_contracts'), contracts_path("search" => {"client_id_equals"=> @client.id }) %> </li> 
+  <li><%= link_to t('buttons.view_contracts'), contracts_path("search" => {"client_id_equals"=> @client.id }) %> </li>
   <% end %>
-  <%= render :partial => "shared/submenu_items"%>  
+  <li><%= link_to t('buttons.view_audit'), audits_path('search[auditable_type_is]' => 'Client', 'search[auditable_id_equals]' => @client.id) %> </li>
+  <%= render :partial => "shared/submenu_items"%>
 </ul>
-<div style="clear: both"></div> 
+<div style="clear: both"></div>
 
 <%= render @client %>
 

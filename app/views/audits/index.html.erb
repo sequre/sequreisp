@@ -28,7 +28,7 @@
     </li>
     <li>
       <%= f.label :action_is, t('activerecord.attributes.audit.action') %>
-      <%= f.select :action_is, [["create","create"],["update","update"],["destroy","destroy"]], :include_blank => true %>
+      <%= f.select :action_is, AuditsController.action_select_options, :include_blank => true %>
     </li>
     <li>
       <%= f.label :auditable_type_is, t('activerecord.attributes.audit.auditable_type') %>
@@ -72,10 +72,10 @@
         <tr class="<%= css_class %>" >
           <td><%=l audit.created_at, :format => :short %></td>
           <td><%= link_to_auditable(audit) %></td>
-          <td><%=h audit.user.name rescue 'Undefined' %></td>
-          <td><%=h audit.action %></td>
+          <td><%=h audit.user.name rescue t 'audits.undefined' %></td>
+          <td><%=h t('audits.'+audit.action) %></td>
           <td><%= expand_changes(audit.changes, audit.auditable_type) %></td>
-          <td><%=h audit.version %></td>
+          <td><%= link_to h(t 'audits.go_back', :version => audit.version), go_back_audit_path(audit) %></td>
         </tr>
       <% end %>
     </tbody>

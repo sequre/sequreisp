@@ -79,7 +79,7 @@ en:
         state: "state"
         proxy_arp: "Proxy ARP enabled"
         proxy_arp_interface: "LAN interface"
-        forwarded_ports: "Forwarded Ports"        
+        forwarded_ports: "Forwarded Ports"
         transparent_proxy: "Transparent Proxy"
         created_at: "Created at"
         detail: "Detail"
@@ -138,7 +138,7 @@ en:
       forwarded_port:
         provider: "Provider"
         public_port: "Public port"
-        private_port: "Private port" 
+        private_port: "Private port"
         tcp: "TCP"
         udp: "UDP"
       configuration:
@@ -266,6 +266,7 @@ en:
     add_ip: "Add IP address"
     scan_interfaces: "Scan for new interfaces"
     more: "More"
+    view_audit: 'Audit'
   backup:
     backup_db_legend: "Backup DB (just database)"
     backup_full_legend: "Backup Full (application and database)"
@@ -377,3 +378,11 @@ en:
       seconds: "seconds"
   notifications:
     changes_to_be_applied_notice: "Alert: Changes have been made in the configuration that have not yet been applied."
+  audits:
+    create: 'Create'
+    update: 'Update'
+    destroy: 'Delete'
+    undefined: 'Not available'
+    go_back: 'Back to %{version}'
+    successfully_reverted: 'Changes where applied successfully'
+    error_on_reversion: 'There was an error when trying to go back to previus version'

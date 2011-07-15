@@ -5,7 +5,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :users
   
-  map.resources :audits
+  map.resources :audits, :member => { :go_back => :get }
 
   map.resources :provider_groups, :member => { :instant_rate => :get }
 

@@ -1,6 +1,10 @@
 <% content_for :title, t('actions.edit', :model => Contract.human_name) %>
 <% heading t('actions.edit', :model => Contract.human_name) %>
 
-<%= render :partial => "shared/empty_submenu" %>
+<ul class="nav" style="float:right">
+  <li><%= link_to t('buttons.view_audit'), audits_path('search[auditable_type_is]' => 'Contract', 'search[auditable_id_equals]' => @contract.id) %> </li>
+  <%= render :partial => "shared/submenu_items"%>
+</ul>
+<div style="clear: both"></div>
 
 <%= render @contract %>
