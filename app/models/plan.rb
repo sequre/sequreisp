@@ -42,5 +42,7 @@ class Plan < ActiveRecord::Base
   def long_upload_max_to_bytes
     long_upload_max * 1024
   end
-
+  def auditable_name
+    "#{self.class.human_name}: #{name}"
+  end
 end

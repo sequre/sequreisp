@@ -35,11 +35,17 @@ module AuditsHelper
   def link_to_auditable(audit)
     a = nil
     case audit.auditable_type
-    when "ForwardedPort"
-      a = audit.auditable.contract
-    else 
-      a = audit.auditable
+      when "ForwardedPort"
+        a = audit.auditable.contract
+      when "Address"
+        a = audit.auditable.addressable
+      else
+        a = audit.auditable
     end
-    link_to (h audit.auditable_type.constantize.human_name), a
+    if a.nil?
+      'N/A'
+    else
+      link_to(h(a.auditable_name), a)
+    end
   end
 end

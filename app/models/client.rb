@@ -25,4 +25,7 @@ class Client < ActiveRecord::Base
   validates_uniqueness_of :name 
   validates_uniqueness_of :email, :allow_blank => true
 
+  def auditable_name
+    self.class.human_name+': '+name
+  end
 end

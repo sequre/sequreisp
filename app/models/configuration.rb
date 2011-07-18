@@ -87,6 +87,10 @@ class Configuration < ActiveRecord::Base
     save
   end
 
+  def auditable_name
+    self.class.human_name
+  end
+
   include CommaSeparatedArray
   comma_separated_array_field :default_prio_protos, :default_prio_helpers, :default_tcp_prio_ports, :default_udp_prio_ports
 

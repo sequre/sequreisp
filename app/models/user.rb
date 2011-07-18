@@ -39,7 +39,11 @@ class User < ActiveRecord::Base
   validates_role
 
   validates_presence_of :name, :email, :role_name
-  
+
+  def auditable_name
+    "#{self.class.human_name}: #{email}"
+  end
+
   def self.roles_for_select
     [
     [I18n.t("selects.user.role_name.admin"), "admin"],

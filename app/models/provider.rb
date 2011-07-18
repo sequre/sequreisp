@@ -300,4 +300,24 @@ class Provider < ActiveRecord::Base
   def nat_pool_addresses
     [ip] + addresses.all(:conditions => "use_in_nat_pool = 1").collect(&:ip)
   end
+
+  def auditable_name
+    "#{self.class.human_name}: #{name}"
+  end
+
+  def is_online_by_rate?
+    Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} start"
+    rx = interface.rx_bytes
+    tx = interface.tx_bytes
+    sleep 2
+    # from bytes to bits(*8) to bps(/2) to kbps(/1024)
+    instant_rate_down = (interface.rx_bytes-rx)*8/2/1024
+    instant_rate_up = (interface.tx_bytes-tx)*8/2/1024
+    # min rates in kbps
+    min_online_rate_down = 56
+    min_online_rate_up = 5
+    result = instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up
+    Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} result:#{result} down: #{instant_rate_down} up #{instant_rate_up}"
+    result
+  end
 end

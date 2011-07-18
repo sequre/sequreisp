@@ -16,7 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Interface < ActiveRecord::Base
-  acts_as_audited 
+  acts_as_audited
   belongs_to :vlan_interface, :class_name => "Interface", :foreign_key => "vlan_interface_id"
   has_many :vlan_interfaces, :class_name => "Interface", :foreign_key => "vlan_interface_id", :dependent => :destroy
   has_one :provider, :dependent => :nullify
@@ -35,36 +35,36 @@ class Interface < ActiveRecord::Base
   validates_uniqueness_of :vlan_id, :scope => :vlan_interface_id, :if => Proc.new { |p| p.vlan? }
   validates_numericality_of :vlan_id, :allow_nil => true, :only_integer => true, :greater_than => 1, :less_than => 4095
   validates_uniqueness_of :name
-  
+
   def validate
     if kind_changed? and kind_was == "wan" and provider
       errors.add(:kind, I18n.t('validations.interface.unable_to_change_kind'))
     end
   end
-  
+
   before_save :if_vlan
   before_save :if_wan
- 
+
   after_update :queue_update_commands
   after_destroy :queue_destroy_commands
 
   def queue_update_commands
-    cq = QueuedCommand.new 
+    cq = QueuedCommand.new
     # el vlan_id y el vlan_interface_id si cambian se reflejan en el nombre
     # x eso me basta con chequear el nombre
     if name_changed? or kind_changed?
       cq.command += "ip address flush dev #{name_was};"
     end
-    if vlan_changed? and vlan_was 
+    if vlan_changed? and vlan_was
       cq.command += "vconfig rem #{name_was};"
     end
     cq.save if not cq.command.empty?
   end
 
   def queue_destroy_commands
-    cq = QueuedCommand.new 
+    cq = QueuedCommand.new
     cq.command += "ip address flush dev #{name};"
-    if vlan? 
+    if vlan?
       cq.command += "vconfig rem #{name};"
     end
     cq.save if not cq.command.empty?
@@ -76,7 +76,7 @@ class Interface < ActiveRecord::Base
 
   def if_vlan
     if vlan?
-      self.name = "#{self.vlan_interface.name}.#{vlan_id}" 
+      self.name = "#{self.vlan_interface.name}.#{vlan_id}"
     else
       self.vlan_id = self.vlan_interface = nil
     end
@@ -93,10 +93,10 @@ class Interface < ActiveRecord::Base
     0
   end
   def rx_bytes
-    File.open("/sys/class/net/#{name}/statistics/rx_bytes").read.chomp.to_i rescue 0   
+    File.open("/sys/class/net/#{name}/statistics/rx_bytes").read.chomp.to_i rescue 0
   end
   def tx_bytes
-    File.open("/sys/class/net/#{name}/statistics/tx_bytes").read.chomp.to_i rescue 0   
+    File.open("/sys/class/net/#{name}/statistics/tx_bytes").read.chomp.to_i rescue 0
   end
   def instant_rate
     rate = {}
@@ -119,13 +119,16 @@ class Interface < ActiveRecord::Base
     rate
   end
   def physical_link
-    self.vlan? ? vlan_interface.physical_link : read_attribute(:physical_link) 
+    self.vlan? ? vlan_interface.physical_link : read_attribute(:physical_link)
   end
   def status
     self.physical_link ? "up" : "down"
   end
   def status_class
     self.physical_link ? "online" : "offline"
+  end
+  def auditable_name
+    "#{self.class.human_name}: #{name}"
   end
   def self.scan
     #TODO Support other distros

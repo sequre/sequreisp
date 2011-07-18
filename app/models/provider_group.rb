@@ -146,4 +146,7 @@ class ProviderGroup < ActiveRecord::Base
     end
     rate
   end
+  def auditable_name
+    "#{self.class.human_name}: #{name}"
+  end
 end

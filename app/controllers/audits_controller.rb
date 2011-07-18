@@ -35,6 +35,38 @@ class AuditsController < ApplicationController
       @audits = @search.paginate(:page => params[:page], :per_page => 10, :order => order )
     end
 
-    @models = Audit.all(:select => "DISTINCT auditable_type", :order => "auditable_type ASC").map(&:auditable_type)
+    @models = Audit.all(:select => "DISTINCT auditable_type", :order => "auditable_type ASC")\
+                        .map(&:auditable_type)\
+                        .map{|m| [m.constantize.human_name, m]}
+  end
+
+  def go_back
+    audit = Audit.find(params[:id])
+    object = audit.revision
+    if audit.auditable
+      begin
+        if object.save
+          flash[:notice] = t 'audits.successfully_reverted'
+          redirect_to object
+        else
+          flash[:error] = t 'audits.error_on_reversion'
+          redirect_to audits_path
+        end
+      rescue
+        flash[:error] = t 'audits.error_on_reversion'
+        redirect_to audits_path
+      end
+    else
+      flash[:error] = t 'audits.error_on_reversion'
+      redirect_to audits_path
+    end
+  end
+
+  def self.action_select_options
+    [
+      [I18n.t('audits.create'),"create"],
+      [I18n.t('audits.update'),"update"],
+      [I18n.t('audits.destroy'),"destroy"]
+    ]
   end
 end

@@ -68,30 +68,35 @@ end
 tsleep = 1
 tsleep_count = 0
 while($running) do
+  Rails.logger.debug "sequreispd: #{Time.now.to_s} lap tsleep_count: #{tsleep_count}"
   Configuration.do_reload
   tsleep_count += 1
 
   # check links
   if tsleep_count%10 == 0
-    #Rails.logger.debug "sequreispd: check links"
     tsleep_count = 0
+    Rails.logger.debug "sequreispd: #{Time.now.to_s} check_physical_links"
     check_physical_links
+    Rails.logger.debug "sequreispd: #{Time.now.to_s} check_links"
     check_links
   end
 
+  Rails.logger.debug "sequreispd: #{Time.now.to_s} DaemonHook"
   # run plugins hooks
   DaemonHook.run({:tsleep => tsleep})
 
   # checking if we need to apply changes 
   if Configuration.daemon_reload
-    #Rails.logger.debug "sequreispd: reloading..."
+    Rails.logger.debug "sequreispd: #{Time.now.to_s} boot (apply_changes)"
     boot
     Configuration.daemon_reload = false
     Configuration.save
   end
 
-  backup_restore if Configuration.backup_restore
-
+  if Configuration.backup_restore
+    Rails.logger.debug "sequreispd: #{Time.now.to_s} backup_restore"
+    backup_restore
+  end
   # I'm not shure if this is no longer needed
   # at first it arp fixed entries seems to expire after a while
   system "#{ARP_FILE}"
