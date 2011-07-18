@@ -88,6 +88,10 @@
     <% end %>
     <%= form_extensions form%>
   <% end %>
-  <%= form.buttons if current_user.may_update_interface?(@interface) or current_user.may_create_interface? %>
+  <% if current_user.may_update_interface?(@interface) or current_user.may_create_interface? %>
+    <% form.buttons do %>
+      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+    <% end %>
+  <% end %>
 <% end %>
 </div>

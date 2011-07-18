@@ -56,6 +56,10 @@
       <%= form.input :gc_thresh3, :wrapper_html => { :class => "left" } %>
     <% end %>
     <%= form_extensions form%>
-    <%= form.buttons if current_user.may_update_configuration?(@configuration) or current_user.may_create_configuration? %>
+    <% if current_user.may_update_configuration?(@configuration) or current_user.may_create_configuration? %>
+      <% form.buttons do %>
+        <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+      <% end %>
+    <% end %>
   <% end %>
 </div>

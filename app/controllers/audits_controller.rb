@@ -43,19 +43,10 @@ class AuditsController < ApplicationController
   def go_back
     audit = Audit.find(params[:id])
     object = audit.revision
-    if audit.auditable
-      begin
-        if object.save
-          flash[:notice] = t 'audits.successfully_reverted'
-          redirect_to object
-        else
-          flash[:error] = t 'audits.error_on_reversion'
-          redirect_to audits_path
-        end
-      rescue
-        flash[:error] = t 'audits.error_on_reversion'
-        redirect_to audits_path
-      end
+    if audit.auditable and audit.action == 'update'
+      eval "@#{audit.auditable.class.table_name.singularize} = object"
+      @commit_text = t 'audits.go_back'
+      render "#{audit.auditable.class.table_name}/edit"
     else
       flash[:error] = t 'audits.error_on_reversion'
       redirect_to audits_path

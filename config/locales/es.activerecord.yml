@@ -383,6 +383,6 @@ es:
     update: 'Actualizar'
     destroy: 'Eliminar'
     undefined: 'No disponible'
-    go_back: 'Volver a %{version}'
+    go_back: 'Volver a esta versión'
     successfully_reverted: 'Se aplicaron los cambios correctamente'
     error_on_reversion: 'No se pudo volver a la versión indicada'

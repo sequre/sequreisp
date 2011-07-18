@@ -13,6 +13,10 @@
     <%= form.input :state, :as => :select, :collection => Provider.aasm_states_for_select, :include_blank => false %>
     <%= form_extensions form%>
   <% end %>
-  <%= form.buttons if current_user.may_update_provider_group?(@provider_group) or current_user.may_create_provider_group? %>
+  <% if current_user.may_update_provider_group?(@provider_group) or current_user.may_create_provider_group? %>
+    <% form.buttons do %>
+      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+    <% end %>
+  <% end %>
 <% end %>
 </div>
