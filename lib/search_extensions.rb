@@ -19,6 +19,7 @@ module SearchExtensions
   def render_search_extensions(locals={})
     ret = ""
     controller = self.controller.controller_name.to_sym
+    return ret unless SearchExtensions.extensions[controller]
     SearchExtensions.extensions[controller].each do |partial|
       partial = "#{controller}/#{SEARCH_FORM_PARTIALS_PATH}/#{partial}"
       ret += render :partial => partial, :locals => locals
