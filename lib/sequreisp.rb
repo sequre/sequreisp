@@ -508,6 +508,9 @@ def gen_iptables
           end
         end
       end
+
+      BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
+
       Contract.not_disabled.descend_by_netmask.each do |c|
         # attribute: transparent_proxy
         if c.transparent_proxy?
