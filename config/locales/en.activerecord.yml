@@ -383,6 +383,6 @@ en:
     update: 'Update'
     destroy: 'Delete'
     undefined: 'Not available'
-    go_back: 'Back to %{version}'
+    go_back: 'Go Back to this version'
     successfully_reverted: 'Changes where applied successfully'
     error_on_reversion: 'There was an error when trying to go back to previus version'

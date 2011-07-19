@@ -120,6 +120,10 @@
     <div style="clear: both"></div>
     <%= form_extensions form %>
   <% end %>
-  <%= form.buttons if current_user.may_update_contract?(@contract) or current_user.may_create_contract? %>
+  <% if current_user.may_update_contract?(@contract) or current_user.may_create_contract? %>
+    <% form.buttons do %>
+      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+    <% end %>
+  <% end %>
 <% end %>
 </div> 

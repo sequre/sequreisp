@@ -25,11 +25,15 @@ module HooksHelper
     []
   end
 
-  def form_extensions form
+  def form_extensions(form)
     ""
   end
 
-  def plugins_table_columns 
+  def search_extensions(form)
+    @__search_extensions = {}
+  end
+
+  def plugins_table_columns
     []
   end
 

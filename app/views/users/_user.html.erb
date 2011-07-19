@@ -16,6 +16,10 @@
     <%= form.input :password_confirmation %>
     <%= form_extensions form%>
   <% end %>
-  <%= form.buttons if current_user.may_update_user?(@user) or current_user.may_create_user? %>
+  <% if current_user.may_update_user?(@user) or current_user.may_create_user? %>
+    <% form.buttons do %>
+      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+    <% end %>
+  <% end %>
 <% end %>
 </div>

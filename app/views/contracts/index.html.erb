@@ -46,86 +46,9 @@
 
 
 <%= render :partial => "shared/empty_submenu" %>
+<%= render :partial => "search" %>
 
-<div id="busqueda">
-<% form_for @search do |f| %>
-  <ul>
-    <li>
-      <%= f.label :client_name_like, t('activerecord.attributes.client.name') %>
-      <%= f.text_field :client_name_like %>
-    </li>
-    <li>
-    <%= f.label :ip_like, t('activerecord.attributes.contract.ip') %>
-    <%= f.text_field :ip_like %>
-    </li>
-    <li>
-    <%= f.label :plan_id_equals, t('activerecord.attributes.contract.plan') %>
-    <%= f.collection_select :plan_id_equals, Plan.all, :id, :name, :include_blank => true %>
-    </li>
-    <li>
-    <%= f.label :state_equals, t('activerecord.attributes.contract.state') %>
-    <%= f.select :state_equals, Contract.aasm_states_for_select, :include_blank => true %>
-    </li>
-    <div sytle="clear: both">
-      <li><a id="search_more"><%= I18n.t('buttons.more') %></a><li>
-    </div>
-    <div id="search_advanced">
-      <li>
-        <label><%=t 'activerecord.attributes.contract.forwarded_ports' %></label>
-      </li>
-      <div style="clear: both"></div>
-      <li>
-      <%= f.label :forwarded_ports_provider_id_equals, t('activerecord.attributes.forwarded_port.provider') %>
-      <%= f.collection_select :forwarded_ports_provider_id_equals, Provider.all, :id, :name, :include_blank => true %>
-      </li>
-      <li>
-      <%= f.label :forwarded_ports_public_port_equals, t('activerecord.attributes.forwarded_port.public_port') %>
-      <%= f.text_field :forwarded_ports_public_port_equals %>
-      </li>
-      <li>
-      <%= f.label :forwarded_ports_private_port_equals, t('activerecord.attributes.forwarded_port.private_port') %>
-      <%= f.text_field :forwarded_ports_private_port_equals %>
-      </li>
-      <div style="clear: both"></div>
-      <li>
-      <%= f.label :mac_address_like, t('activerecord.attributes.contract.mac_address') %>
-      <%= f.text_field :mac_address_like %>
-      </li>
-      <li>
-      <%= f.label :public_address_ip_like, t('activerecord.attributes.contract.public_address') %>
-      <%= f.text_field :public_address_ip_like %>
-      </li>
-      <li>
-      <%= f.label :proxy_arp_is, t('activerecord.attributes.contract.proxy_arp') %>
-      <%= f.check_box :proxy_arp_is %>
-      </li>
-      <div style="clear: both"></div>
-      <li>
-      <%= f.label :detail_like, t('activerecord.attributes.contract.detail') %>
-      <%= f.text_field :detail_like %>
-      </li>
-      <li>
-      <%= f.label :cpe_like, t('activerecord.attributes.contract.cpe') %>
-      <%= f.text_field :cpe_like %>
-      </li>
-      <li>
-      <%= f.label :node_like, t('activerecord.attributes.contract.node') %>
-      <%= f.text_field :node_like %>
-      </li>
-      <div style="clear: both"></div>
-      <li>
-      <%= f.label :client_external_client_number_like, t('activerecord.attributes.client.external_client_number') %>
-      <%= f.text_field :client_external_client_number_like %>
-      </li>
-    </div>
-    <div style="clear: both"></div>
-    <li>
-    <%= f.submit t('buttons.search') %>
-    <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
-    </li>
-  </ul>
-<% end %>
-</div>
+
 <div style="clear: both"></div>
 <ul id="nav" style="float:right">
   <li><%= link_to t('buttons.export_to_excel'), contracts_csv_path(params) %> </li>

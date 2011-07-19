@@ -75,7 +75,10 @@
           <td><%=h audit.user.name rescue t 'audits.undefined' %></td>
           <td><%=h t('audits.'+audit.action) %></td>
           <td><%= expand_changes(audit.changes, audit.auditable_type) %></td>
-          <td><%= link_to h(t 'audits.go_back', :version => audit.version), go_back_audit_path(audit) %></td>
+          <td>
+            <%= audit.version %><br/>
+            <%= link_to (h(t 'audits.go_back'), go_back_audit_path(audit)) if audit.action=='update' %>
+          </td>
         </tr>
       <% end %>
     </tbody>

@@ -60,12 +60,14 @@ class Configuration < ActiveRecord::Base
   def self.method_missing(method, *args)
     opcion = method.to_s
     if opcion.include? '='
-        # Asignar un valor a la opción
-        valor = args.first
-        @@c.send opcion, valor
-      else
-        # Retornar el valor de la opción
-        @@c.send opcion
+      # Asignar un valor a la opción
+      valor = args.first
+      @@c.send opcion, valor
+    elsif @@c.respond_to? opcion
+      # Retornar el valor de la opción
+      @@c.send opcion
+    else
+      super method, args
     end
   end
 
