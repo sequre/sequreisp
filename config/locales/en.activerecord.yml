@@ -166,6 +166,7 @@ en:
         clamp_mss_to_pmtu: "Assign MSS(Maximum Segement Size) according to MTU PATH(pmtu)"
         language: "Language"
         use_global_prios: "Disable per contract prioritiess and use global priorities instead (experimental)"
+        iptables_tree_optimization_enabled: "Optimize iptables rules (use only on 64 bits version)"
       user:
         name: "Name"
         email: "User email address"
