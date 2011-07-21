@@ -2,7 +2,7 @@ class AddIptablesTreeOptimizationEnabledToConfiguration < ActiveRecord::Migratio
   def self.up
     #optimze only on known 64bits machines
     optimize = begin
-       `uname -m` == 'x86_64' ? true : false
+       `uname -m`.chomp == 'x86_64' ? true : false
     rescue
       false
     end
