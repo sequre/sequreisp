@@ -166,6 +166,7 @@ es:
         clamp_mss_to_pmtu: "Ajustar el MSS (tamaño máximo de segmento) al MTU de la ruta (PMTU)"
         language: "Idioma"
         use_global_prios: "Deshabilitar prioridades por contrato y usar prioridades globales (experimental)"
+        iptables_tree_optimization_enabled: "Optimizar reglas de iptables (usar sólo en versión de 64 bits)"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -174,6 +175,8 @@ es:
         password_confirmation: "Confirmación de contraseña"
         last_login_at: "Fecha del último inicio de sesión"
         last_login_ip: "Dirección IP del último inicio de sesión"
+        last_login_at_never: "Nunca"
+        last_login_ip_unknown: "Desconocida"
       interface:
         name: "Nombre"
         description: "Descripción"

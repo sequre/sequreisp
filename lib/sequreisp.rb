@@ -361,12 +361,14 @@ def gen_iptables
           build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
         end
       end
-      Contract.slash_16_networks.each do |n16|
-        [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
-          chain="sq.#{way[:prefix]}.#{n16}"
-          f.puts ":#{chain} - [0:0]"
-          f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
-          build_iptables_tree f, n16, chain, way, 3, 20
+      if Configuration.iptables_tree_optimization_enabled?
+        Contract.slash_16_networks.each do |n16|
+          [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
+            chain="sq.#{way[:prefix]}.#{n16}"
+            f.puts ":#{chain} - [0:0]"
+            f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
+            build_iptables_tree f, n16, chain, way, 3, 20
+          end
         end
       end
       if Configuration.use_global_prios
