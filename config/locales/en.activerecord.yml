@@ -175,6 +175,8 @@ en:
         password_confirmation: "Password confirmation"
         last_login_at: "Last login date"
         last_login_ip: "Last IP login"
+        last_login_at_never: "Never"
+        last_login_ip_unknown: "Unknown"
       interface:
         name: "Name"
         description: "Description"
