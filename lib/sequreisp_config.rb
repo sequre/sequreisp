@@ -1,4 +1,5 @@
 module SequreispConfig
   # load de files de configuración
-  CONFIG = YAML::load(File.open("#{RAILS_ROOT}/config/sequreisp_config_#{Rails.env}.yml"))
+  suffix = Rails.env.production? ? 'production' : 'development'
+  CONFIG = YAML::load(File.open("#{RAILS_ROOT}/config/sequreisp_config_#{suffix}.yml"))
 end
