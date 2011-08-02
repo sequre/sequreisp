@@ -1,25 +1,19 @@
-FactoryGirl.define do
-
-  factory :client do
-    name  Faker::Name.name
-    email Faker::Internet.email
-    phone Faker::PhoneNumber.phone_number
-  end
-
-  factory :plan do
-    name 'Test Plan'
-    provider_group
-    rate_down 0
-    ceil_down 256
-    rate_up 0
-    ceil_up 128
-    transparent_proxy true
-  end
-
-  factory :provider_group do
-    name 'default'
-  end
-
+Factory.define :client do |f|
+  f.name Faker::Name.name
+  f.email Faker::Internet.email
+  f.phone Faker::PhoneNumber.phone_number
 end
 
+Factory.define :plan do |f|
+  f.name 'Test Plan'
+  f.association :provider_group
+  f.rate_down 0
+  f.ceil_down 256
+  f.rate_up 0
+  f.ceil_up 128
+  f.transparent_proxy true
+end
 
+Factory.define :provider_group do |f|
+  f.name 'Default'
+end
