@@ -1,6 +1,6 @@
 Factory.define :client do |f|
-  f.name Faker::Name.name
-  f.email Faker::Internet.email
+  f.sequence(:name) { |n| Faker::Name.name + n.to_s }
+  f.sequence(:email) { |n| n.to_s + Faker::Internet.email }
   f.phone Faker::PhoneNumber.phone_number
 end
 
