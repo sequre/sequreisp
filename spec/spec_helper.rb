@@ -24,8 +24,13 @@ Spec::Runner.configure do |config|
 
   config.before(:each) do
     providerklass = []
-    (10..250).each { |i| providerklass << ProviderKlass.new( :number =>  i) }
+    (10..100).each { |i| providerklass << ProviderKlass.new( :number =>  i) }
     ProviderKlass.import providerklass, :optimize=>true
+
+    klass = []
+#    (4..(2**16-4)).step(4).each {|i| klass << Klass.new( :number =>  i) }
+    (4..100).step(4).each {|i| klass << Klass.new( :number =>  i) }
+    Klass.import klass, :optimize=>true
   end
 
   # == Fixtures

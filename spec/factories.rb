@@ -5,7 +5,7 @@ Factory.define :client do |f|
 end
 
 Factory.define :plan do |f|
-  f.name 'Test Plan'
+  f.sequence(:name) {|n| "Test Plan #{n}" }
   f.association :provider_group
   f.rate_down 0
   f.ceil_down 256
@@ -15,5 +15,12 @@ Factory.define :plan do |f|
 end
 
 Factory.define :provider_group do |f|
-  f.name 'Default'
+  f.sequence(:name) {|n| "Test Provider Group #{n}" }
+end
+
+Factory.define :contract do |f|
+  f.association :plan
+  f.association :client
+  f.sequence(:ip) { |n| "192.168.1.#{n}" }
+  f.ceil_dfl_percent 70
 end
