@@ -19,9 +19,18 @@ gem 'aegis', '~>2.5'
 gem 'acts_as_audited', '~>1.1'
 gem 'whenever', '~>0.6'
 
-group :development do
+group :development, :test do
   gem 'faker'
+  gem 'rspec-rails', '1.3.3'
+end
+
+group :development do
   gem 'ruby-debug'
+end
+
+group :test do
+  gem 'factory_girl'
+  gem 'shoulda-context'
 end
 # Hack to install gems from each plugin, c&p from 
 # http://madebynathan.com/2010/10/19/how-to-use-bundler-with-plugins-extensions/

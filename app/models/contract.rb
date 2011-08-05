@@ -51,17 +51,23 @@ class Contract < ActiveRecord::Base
 
   validates_presence_of :ip, :ceil_dfl_percent, :client, :plan
   validates_presence_of :proxy_arp_interface, :if => Proc.new { |c| c.proxy_arp } 
-  
+
   validates_format_of :ip, :with => /^([12]{0,1}[0-9]{0,1}[0-9]{1}\.){3}[12]{0,1}[0-9]{0,1}[0-9]{1}(\/[123]{0,1}[0-9]{1}){0,1}$/, :allow_blank => true
   validates_format_of :tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers, :with => /^([0-9a-z-]+(:[0-9]+)*,)*[0-9a-z-]+(:[0-9]+)*$/, :allow_blank => true
   validates_format_of :mac_address, :with => /^([0-9A-Fa-f]{2}\:){5}[0-9A-Fa-f]{2}$/, :allow_blank => true
 
   validates_numericality_of :ceil_dfl_percent, :only_integer => true, :greater_than => 0, :less_than_or_equal_to => 100
-  
+
   validates_uniqueness_of :ip, :allow_nil => true, :allow_blank => true
-  
-  validates_inclusion_of :state, :in => ['enabled', 'alerted', 'disabled']
-            
+
+  validate :state_should_be_included_in_the_list
+
+  def state_should_be_included_in_the_list 
+    unless AASM::StateMachine[Contract].states.map(&:name).include?(state.to_sym)
+      errors.add(:state, I18n.t('activerecord.errors.messages.inclusion'))
+    end
+  end
+
   validate :check_invalid_options, :if => Proc.new {|c| not c.netmask.nil? and not c.ip_is_single_host? }
     #:unless => :ip_is_single_host?
   def check_invalid_options
