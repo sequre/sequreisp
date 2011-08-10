@@ -93,7 +93,7 @@
     <% form.inputs :name => t('fieldsets.contract.details') do %>
       <%= form.input :detail, :wrapper_html => { :class => "left" } %>
       <%= form.input :cpe, :wrapper_html => { :class => "left" } %>
-      <%= form.input :node, :wrapper_html => { :class => "left" } %>
+      <%= form.input :node, :context_help => {:skip => true}, :wrapper_html => { :class => "left" } %>
     <% end %>
     <%= form.input :transparent_proxy, :as => :radio, :collection => Contract.transparent_proxy_for_select %> 
     <% form.inputs :name => t('activerecord.attributes.contract.forwarded_ports') do %>
@@ -102,7 +102,8 @@
       <% end %>
       <li><%= link_to_add_fields t('buttons.add_forward'), form, :forwarded_ports, "" %> </li>
     <% end %>
-    <% form.inputs :name => t('fieldsets.contract.advanced'), :id => "advanced", :class => "left inputs" do %>
+    <% form.inputs :name => t('fieldsets.contract.advanced'), :id => "advanced", :class => "left inputs", 
+            :context_help => {:level_class => 'help_level_1'} do %>
       <%= form.input :mac_address %> 
       <%= form.input :proxy_arp, :wrapper_html => { :class => "left" } %> 
       <%= form.input :proxy_arp_interface, :wrapper_html => { :class => "left" } %>
@@ -110,7 +111,8 @@
       <%= form.input :public_address %> 
       <%= form.input :unique_provider %>
     <% end %>
-    <% form.inputs :name => t('fieldsets.contract.prio_customization'), :id => "prios", :style => "width: 250px" do %>
+    <% form.inputs :name => t('fieldsets.contract.prio_customization'), :id => "prios", 
+            :style => "width: 250px", :context_help => {:level_class => 'help_level_1'} do %>
       <%= form.input :tcp_prio_ports %> 
       <%= form.input :udp_prio_ports %> 
       <%= form.input :prio_protos %> 

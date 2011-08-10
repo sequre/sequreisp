@@ -1,0 +1,69 @@
+es:
+  context_help:
+    models:
+      contract:
+        title: 'Contratos'
+        text: 'A través de un contrato usted puede definir los parámetros de una única conexión con un cliente'
+        attributes:
+          autocomplete_client_name:
+            title: 'Nombre del Cliente'
+            text: 'Puede ingresar el nombre del cliente. Una lista desplegable se activará a medida que ingrese los primeros caracteres.'
+            link_to_object: false
+          client_id:
+            title: 'client'
+            text: 'client text'
+          plan_id:
+            title: 'plan'
+            text: 'plan text'
+          state:
+            title: 'state'
+            text: 'state text dsfsd'
+          ceil_dfl_percent:
+            title: 'ceil-dfl'
+            text: 'ceild fds fsdfsf'
+          detail:
+            title: 'detail'
+            text: 'detail text sdf'
+          ip:
+            title: 'IP'
+            text: 'IP..'
+          cpe:
+            title: 'cpe'
+            text: 'cpe fsdfsdfs'
+          node:
+            title: 'node'
+            text: 'description of attribute'
+          transparent_proxy:
+            title: 'Transparent Ptroxy'
+            text: 'Transparent proxy ...sdfsd'
+
+      forwarded_port:
+        title: 'Forwarded Ports'
+        text: 'FP descriptionsdasasdas'
+        attributes:
+          provider_id:
+            title: 'Proveedor'
+            text: 'Texto de sdsdsf'
+          public_port:
+            title: 'Public Port'
+            text: 'Texto de public ports'
+          private_port:
+            title: 'Private Port'
+            text: 'Texto de private ports'
+          tcp:
+            title: 'TCP'
+            text: 'Texto de TCP'
+          udp:
+            title: 'UDP'
+            text: 'Texto de UDP'        
+    custom:
+      contract:
+        advanced:
+#          title: 'Avanzado'
+          text: 'Opciones avanzadas'
+          level_class: 'help_level_1'
+        prios:
+#          title: 'Prios'
+          text: 'Opciones avanzadas'
+          level_class: 'help_level_1'
+                    

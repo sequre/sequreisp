@@ -7,7 +7,7 @@
   <%= render :partial => "layouts/partials/head" %>
 </head>
 <body <%= yield :body_attributes %>>
-  <div id="container">
+  <div id="container" class="centered">
     <%= render :partial => "layouts/partials/header" %>
     <div class="content">
       <%= render :partial => "layouts/partials/menu" %>
@@ -20,5 +20,6 @@
     </div>
     <%= render :partial => "layouts/partials/footer" %>
   </div>
+  <%= render :partial => "layouts/partials/context_help" %>
 </body>
 </html>
