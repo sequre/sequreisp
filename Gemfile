@@ -18,7 +18,9 @@ gem 'fastercsv', '~>1.5'
 gem 'aegis', '~>2.5'
 gem 'acts_as_audited', '~>1.1'
 gem 'whenever', '~>0.6'
-gem "context_help", "~> 0.0.1"
+#gem "context_help", :path => '/Users/yonpols/Trabajo/Sequre/context_help'
+gem "context_help", :git => 'https://github.com/yonpols/context_help.git'
+#gem "context_help", "~> 0.0.1"
 
 group :development, :test do
   gem 'faker'
