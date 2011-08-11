@@ -1,29 +1,80 @@
 ContextHelp::Base.config[:show_missing] = true
-ContextHelp::Base.config[:text_tag] = 'p'
+ContextHelp::Base.config[:text_tag] = 'div'
 ContextHelp::Base.config[:link_to_object] = true
 ContextHelp::Base.config[:link_to_help] = true
 ContextHelp::Base.config[:link_to_help_builder] = lambda do |options|
-  if options[:link_to_help]
+  return '' if not ContextHelp::Helpers.is_visible(options)
+  title = ContextHelp::Helpers.get_title(options)
+  if options[:link_to_help] and !options[:link_to_help_shown]
+    options[:link_to_help_shown] = true
     "<a href=\"#\" onclick=\"context_help_link_to_help(this, '##{options[:item_id]}'); return false;\" id=\"#{options[:item_id]}_object\" class=\"context_help_link_to_help\"><span class=\"ui-icon ui-icon-help\" style=\"display: inline-block\"></a>"
   else
     ''
   end
 end
 ContextHelp::Base.config[:link_to_object_builder] = lambda do |options|
-  title = options[:title] || I18n.t(options[:calculated_path]+'.title')
+  return '' if not ContextHelp::Helpers.is_visible(options)
+  title = ContextHelp::Helpers.get_title(options)
   if options[:link_to_object]
     "<a href=\"#\" onclick=\"context_help_link_to_object(this, '##{options[:item_id]}_object'); return false;\">#{title}</a>"
   else
     title
   end
 end
-ContextHelp::Base.config[:help_builder] = lambda do |options|
-  if options[:calculated_path]
-    text = options[:text] || I18n.t(options[:calculated_path]+'.text')
-    "<#{options[:title_tag]} id=\"#{options[:item_id]}\" class=\"#{options[:title_class]} #{options[:level_class]}\">#{ContextHelp::Base.link_to_object(options)}</#{options[:title_tag]}>
-    <#{options[:text_tag]} class=\"#{options[:text_class]} #{options[:level_class]}\">#{text}</#{options[:text_tag]}>"
+ContextHelp::Base.config[:inline_help_builder] = lambda do |options|
+  if options[:show_inline]
+    ContextHelp::Base.html_help(options)
+  elsif options[:link_to_help] and options[:path][:tag] == :label
+    ContextHelp::Base.link_to_help(options)
   else
     ''
+  end
+end
+ContextHelp::Base.config[:help_builder] = lambda do |options|
+  return '' if not ContextHelp::Helpers.is_visible(options)
+  text = ContextHelp::Helpers.get_text(options)
+  "<#{options[:title_tag]} id=\"#{options[:item_id]}\" class=\"#{options[:title_class]} #{options[:level_class]}\">#{ContextHelp::Base.link_to_object(options)}</#{options[:title_tag]}>
+  <#{options[:text_tag]} class=\"#{options[:text_class]} #{options[:level_class]}\">#{text}</#{options[:text_tag]}>"
+end
+
+module ContextHelp
+  module Helpers
+    def self.is_visible(options)
+      return false if options[:calculated_path].nil?
+      text = options[:text] || I18n.t(options[:calculated_path]+'.text', :default => {})
+      return false if (text.nil? or text.is_a?(Hash)) and !(Rails.env.development? and ContextHelp::Base.config[:show_missing])
+      true
+    end
+    def self.get_title(options)
+      title = options[:title] || I18n.t(options[:calculated_path]+'.title', :default => {})
+      if (title.nil? or title.is_a?(Hash)) 
+        if options[:path][:model]
+          model_class = ContextHelp::Base.model_name(options[:path][:model]).classify.constantize
+          if options[:path][:attribute] then
+            title = model_class.human_attribute_name(options[:path][:attribute].to_s)
+          else
+            title = model_class.human_name
+          end
+        else
+          title = I18n.t(options[:calculated_path]+'.title')
+        end
+      else
+        if title.start_with?('t.')
+          title = I18n.t title[2, title.length]
+        elsif title.start_with?('I18n.')
+          title = I18n.t title[5, title.length]
+        end
+      end
+      title
+    end
+    def self.get_text(options)
+      text = options[:text] || I18n.t(options[:calculated_path]+'.text')
+      if text.nil?
+        ''
+      else
+        text
+      end
+    end
   end
 end
 

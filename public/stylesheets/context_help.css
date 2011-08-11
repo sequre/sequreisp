@@ -112,7 +112,7 @@ div#context_help_bar div.chb_content h1.help_title.help_level_3 a {
   color: #333;
 }
 
-div#context_help_bar div.chb_content p.help_text {
+div#context_help_bar div.chb_content div.help_text {
   display: inline-block;
   font-size: 11px;
   line-height: 16px;
@@ -120,7 +120,7 @@ div#context_help_bar div.chb_content p.help_text {
   word-wrap: break-word;
 }
 
-div#context_help_bar div.chb_content p.help_text.help_level_2,
-div#context_help_bar div.chb_content p.help_text.help_level_2 {
+div#context_help_bar div.chb_content div.help_text.help_level_2,
+div#context_help_bar div.chb_content div.help_text.help_level_3 {
   margin-left: 10px;
 }
