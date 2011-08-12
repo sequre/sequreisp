@@ -49,11 +49,16 @@ module ContextHelp
       title = options[:title] || I18n.t(options[:calculated_path]+'.title', :default => {})
       if (title.nil? or title.is_a?(Hash)) 
         if options[:path][:model]
-          model_class = ContextHelp::Base.model_name(options[:path][:model]).classify.constantize
-          if options[:path][:attribute] then
-            title = model_class.human_attribute_name(options[:path][:attribute].to_s)
+          model_class = ContextHelp::Base.model_name(options[:path][:model]).classify
+          if const_defined?(model_class)
+            model_class = model_class.constantize
+            if options[:path][:attribute] then
+              title = model_class.human_attribute_name(options[:path][:attribute].to_s) rescue I18n.t(options[:calculated_path]+'.title')
+            else
+              title = model_class.human_name
+            end
           else
-            title = model_class.human_name
+            title = I18n.t(options[:calculated_path]+'.title')
           end
         else
           title = I18n.t(options[:calculated_path]+'.title')
