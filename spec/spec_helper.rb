@@ -23,9 +23,12 @@ Spec::Runner.configure do |config|
   config.fixture_path = RAILS_ROOT + '/spec/fixtures/'
 
   config.before(:each) do
-    providerklass = []
-    (10..250).each { |i| providerklass << ProviderKlass.new( :number =>  i) }
-    ProviderKlass.import providerklass, :optimize=>true
+    provider_klasses = (10..100).map { |i| ProviderKlass.new( :number =>  i) }
+    ProviderKlass.import provider_klasses, :optimize=>true
+
+    klasses = (4..100).step(4).map {|i| Klass.new( :number =>  i) }
+    Klass.import klasses, :optimize=>true
+
   end
 
   # == Fixtures
