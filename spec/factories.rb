@@ -14,13 +14,13 @@ Factory.define :plan do |f|
   f.transparent_proxy true
 end
 
-Factory.define :provider_group do |f|
-  f.sequence(:name) {|n| "Test Provider Group #{n}" }
-end
-
 Factory.define :contract do |f|
-  f.association :plan
-  f.association :client
   f.sequence(:ip) { |n| "192.168.1.#{n}" }
   f.ceil_dfl_percent 70
+  f.association :client
+  f.association :plan
+end
+
+Factory.define :provider_group do |f|
+  f.sequence(:name) {|n| "Test Provider Group #{n}" }
 end
