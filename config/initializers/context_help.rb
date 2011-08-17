@@ -1,4 +1,4 @@
-ContextHelp::Base.config[:show_missing] = true
+ContextHelp::Base.config[:show_missing] = false
 ContextHelp::Base.config[:text_tag] = 'div'
 ContextHelp::Base.config[:link_to_object] = true
 ContextHelp::Base.config[:link_to_help] = true

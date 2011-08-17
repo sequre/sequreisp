@@ -2,25 +2,21 @@ es:
   context_help:
     models:
       contract:
-        title: 'Contratos'
         text: 'A través de un contrato usted puede definir los parámetros de una única conexión con un cliente'
         attributes:
           autocomplete_client_name:
-            title: 'Nombre del Cliente'
             text: 'Puede ingresar el nombre del cliente. Una lista desplegable se activará a medida que ingrese los primeros caracteres.'
             link_to_object: false
-          client_id:
-            title: t.activerecord.models.client.one
-            text: 'client text'
-          plan_id:
-            title: I18n.activerecord.models.plan.one
-            text: 'plan text'
+          #client_id:
+          #  title: t.activerecord.models.client.one
+          #  text: 'client text'
+          #plan_id:
+          #  title: I18n.activerecord.models.plan.one
+          #  text: 'plan text'
           state:
-            title: 'state'
-            text: 'state text dsfsd'
+            text: 'El estado determina si el cliente está o no habilitado para navegar en internet.'
           ceil_dfl_percent:
-            title: 'ceil-dfl'
-            text: 'ceild fds fsdfsf'
+            text: 'Este es el techo de consumo que puede alcanzar el tráfico p2p del cliente sobre el total del plan asignado'
           detail:
             title: 'detail'
             text: 'detail text sdf'
