@@ -319,7 +319,7 @@ class Contract < ActiveRecord::Base
     unit = ""
     IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
       io.each do |line|
-        match = true if (line =~ /class htb \w+:#{class_hex}/) != nil
+        match = true if (line =~ /class htb \w+:#{class_hex} /) != nil
         if match and (line =~ /^ rate (\d+)(\w+) /) != nil
           rate = $~[1].to_i
           unit = $~[2]
