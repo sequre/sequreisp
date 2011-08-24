@@ -2,11 +2,8 @@ es:
   context_help:
     models:
       contract:
-        text: 'A través de un contrato usted puede definir los parámetros de una única conexión con un cliente'
+        text: ''
         attributes:
-          autocomplete_client_name:
-            text: 'Puede ingresar el nombre del cliente. Una lista desplegable se activará a medida que ingrese los primeros caracteres.'
-            link_to_object: false
           #client_id:
           #  title: t.activerecord.models.client.one
           #  text: 'client text'
@@ -14,52 +11,51 @@ es:
           #  title: I18n.activerecord.models.plan.one
           #  text: 'plan text'
           state:
-            text: 'El estado determina si el cliente está o no habilitado para navegar en internet.'
-          ceil_dfl_percent:
-            text: 'Este es el techo de consumo que puede alcanzar el tráfico p2p del cliente sobre el total del plan asignado'
-          detail:
-            title: 'detail'
-            text: 'detail text sdf'
+            text: 'Si el contrato está deshabilitado no podrá navegar en internet.'
           ip:
-            title: 'IP'
-            text: 'IP..'
+            text: 'La ip que será asignada a este contrato, puede ser una ip individual o una subnet con notación CDIR (ej: 192.168.0.0/24).'
+          ceil_dfl_percent:
+            text: 'Define el tope de ancho de banda que podrá ser usado para el tráfico no prioritario(p2p), el porcentaje es calculado en base a los anchos de banda máximos del plan seleccionado.'
+          detail:
+            text: 'Campo libre que permite agregar información sobre este contrato en particular'
           cpe:
-            title: 'cpe'
-            text: 'cpe fsdfsdfs'
+            text: 'Campo libre que permite agregar información sobre este contrato en particular'
           node:
-            title: 'node'
-            text: 'description of attribute'
+            text: 'Campo libre que permite agregar información sobre este contrato en particular'
           transparent_proxy:
-            title: 'Transparent Ptroxy'
-            text: 'Transparent proxy ...sdfsd'
-
+            text: 'Permite definir por contrato si el proxy transparente(web cache) estará habilitado o no para este contrato, se puede deshabilitar explicitamente, dejarlo por defecto según si está o no habilitado en el plan asignado, o habilitarlo explicitamente. Para que el proxy transparente funcione debe estar activado globalmente en la sección correspondiente de Configuración.'
+          mac_address:
+            text: 'Permite hacer un amarre entre la MAC y la dirección IP del contrato para luego bloquear la navegación si ambas no coinciden.'
+          proxy_arp:
+            text: 'Esta opción permite pasar una IP pública pura a un cliente. Se usa en los casos en los que el Proveedor del plan del contrato tiene un pull de direcciones públicas asignado y las mismas pertenecen a una única subnet no pudiendo ser ruteadas. Habilitando esta opción el cliente podrá tener asignada una de esas IPs públicas puras aún estando dentro de la red LAN.'
+          public_address_id:
+            title: I18n.activerecord.attributes.contract.public_address
+            text: 'Permite asignar una IP pública previamente cargada como IP adicional de un Proveedor a un contrato. El contrato seguirá teniendo su ip privada, pero se realizara un Destination NAT (DNAT) completo de la IP pública sobre la IP privada del contrato. Así mismo toda navegación realizada por este contrato no participará del balanceo y utilizará siempre la IP pública asignada.'
+          unique_provider_id:
+            title: I18n.activerecord.attributes.contract.unique_provider
+            text: 'Permite excluir este contrato en particular del balanceo, esto es necesario en algunos servicios de telefonía IP u otros servicios especiales que no son compatibles con el balanceo.'
       forwarded_port:
-        title: 'Forwarded Ports'
-        text: 'FP descriptionsdasasdas'
+        title: I18n.activerecord.models.forwarded_port.other
+        text: 'Permiten redireccionar puertos públicos a la ip privada del cliente, se usan para permitir acceso remoto a pcs, aplicaciones y cámaras IP entre otros.'
         attributes:
           provider_id:
-            title: 'Proveedor'
-            text: 'Texto de sdsdsf'
+            title: I18n.activerecord.models.provider.one
+            text: 'El proveedor sobre el cual se va a hacer el redireccionamiento, esto va a determinar la ip pública a utilizar para acceder desde internet.'
           public_port:
-            title: 'Public Port'
-            text: 'Texto de public ports'
+            text: 'El puerto público es el puerto externo que será visiblde desde internet y al cual se conectarán cuando quieran acceder desde afuera.'
           private_port:
-            title: 'Private Port'
-            text: 'Texto de private ports'
-          tcp:
-            title: 'TCP'
-            text: 'Texto de TCP'
-          udp:
-            title: 'UDP'
-            text: 'Texto de UDP'        
+            text: 'El puerto privado es el puerto de la pc o equipo del cliente que recibirá el redireccionamiento, este puede ser el mismo que el puerto público o variar según el caso.'
     custom:
       contract:
         advanced:
-#          title: 'Avanzado'
+          title: 'Avanzado'
           text: 'Opciones avanzadas'
           level_class: 'help_level_1'
         prios:
-#          title: 'Prios'
-          text: 'Opciones avanzadas'
+          title: I18n.fieldsets.prio_customization
+          text: 'Estos campos permiten sobreescribir las prioridades globales definidas en Configuración individualmente por cada contrato. Esto permite definir especificamente que tráfico será tomado como prioritario para este cliente y qué tráfico sera tratado como p2p. Por cada campo que queda en blanco se toman los valores globales definidos en Configuración.'
           level_class: 'help_level_1'
-                    
+  context_help:
+    models:
+      contract:
+        text: ''
