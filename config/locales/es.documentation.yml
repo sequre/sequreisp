@@ -45,17 +45,10 @@ es:
             text: 'El puerto público es el puerto externo que será visiblde desde internet y al cual se conectarán cuando quieran acceder desde afuera.'
           private_port:
             text: 'El puerto privado es el puerto de la pc o equipo del cliente que recibirá el redireccionamiento, este puede ser el mismo que el puerto público o variar según el caso.'
-    custom:
-      contract:
+    html:
+      fieldset:
         advanced:
-          title: 'Avanzado'
-          text: 'Opciones avanzadas'
-          level_class: 'help_level_1'
+          text: ''
         prios:
-          title: I18n.fieldsets.prio_customization
-          text: 'Estos campos permiten sobreescribir las prioridades globales definidas en Configuración individualmente por cada contrato. Esto permite definir especificamente que tráfico será tomado como prioritario para este cliente y qué tráfico sera tratado como p2p. Por cada campo que queda en blanco se toman los valores globales definidos en Configuración.'
+          text: 'Estos campos _permiten_ *sobreescribir las prioridades globales* definidas en Configuración individualmente por cada contrato. Esto permite definir especificamente que tráfico será tomado como prioritario para este cliente y qué tráfico sera tratado como p2p. Por cada campo que queda en blanco se toman los valores globales definidos en Configuración.'
           level_class: 'help_level_1'
-  context_help:
-    models:
-      contract:
-        text: ''

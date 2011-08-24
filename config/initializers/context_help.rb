@@ -3,7 +3,7 @@ ContextHelp::Base.config[:text_tag] = 'div'
 ContextHelp::Base.config[:link_to_object] = true
 ContextHelp::Base.config[:link_to_help] = true
 ContextHelp::Base.config[:link_to_help_builder] = lambda do |options|
-  return '' if not (ContextHelp::Helpers.is_visible(options) or ContextHelp::Base.config[:show_missing])
+  return '' if not ContextHelp::Helpers.is_visible(options) and not ContextHelp::Base.config[:show_missing]
   title = ContextHelp::Helpers.get_title(options)
   if title and options[:link_to_help] and !options[:link_to_help_shown]
     options[:link_to_help_shown] = true
@@ -13,7 +13,7 @@ ContextHelp::Base.config[:link_to_help_builder] = lambda do |options|
   end
 end
 ContextHelp::Base.config[:link_to_object_builder] = lambda do |options|
-  return '' if not (ContextHelp::Helpers.is_visible(options) or ContextHelp::Base.config[:show_missing])
+  return '' if not ContextHelp::Helpers.is_visible(options) and not ContextHelp::Base.config[:show_missing]
   title = ContextHelp::Helpers.get_title(options)
   if options[:link_to_object]
     "<a href=\"#\" onclick=\"context_help_link_to_object(this, '##{options[:item_id]}_object'); return false;\">#{title}</a>"
@@ -31,8 +31,8 @@ ContextHelp::Base.config[:inline_help_builder] = lambda do |options|
   end
 end
 ContextHelp::Base.config[:help_builder] = lambda do |options|
-  return '' if not (ContextHelp::Helpers.is_visible(options) or ContextHelp::Base.config[:show_missing])
-  text = ContextHelp::Helpers.get_text(options)
+  return '' if not ContextHelp::Helpers.is_visible(options) and not ContextHelp::Base.config[:show_missing]
+  text = RedCloth.new(ContextHelp::Helpers.get_text(options)).to_html
   "<#{options[:title_tag]} id=\"#{options[:item_id]}\" class=\"#{options[:title_class]} #{options[:level_class]}\">#{ContextHelp::Base.link_to_object(options)}</#{options[:title_tag]}>
   <#{options[:text_tag]} class=\"#{options[:text_class]} #{options[:level_class]}\">#{text}</#{options[:text_tag]}>"
 end
