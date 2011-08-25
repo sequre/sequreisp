@@ -4,51 +4,537 @@ es:
       contract:
         text: ''
         attributes:
-          #client_id:
-          #  title: t.activerecord.models.client.one
-          #  text: 'client text'
-          #plan_id:
-          #  title: I18n.activerecord.models.plan.one
-          #  text: 'plan text'
           state:
-            text: 'Si el contrato está deshabilitado no podrá navegar en internet.'
+            text: 'Si el contrato está deshabilitado *no podrá navegar en Internet*.'
           ip:
-            text: 'La ip que será asignada a este contrato, puede ser una ip individual o una subnet con notación CDIR (ej: 192.168.0.0/24).'
+            text: >
+              La IP que será asignada a este contrato, puede ser una IP individual o
+              una subnet con notación "CIDR":https://secure.wikimedia.org/wikipedia/es/wiki/Classless_Inter-Domain_Routing
+              (ej: 192.168.0.0/24).
           ceil_dfl_percent:
-            text: 'Define el tope de ancho de banda que podrá ser usado para el tráfico no prioritario(p2p), el porcentaje es calculado en base a los anchos de banda máximos del plan seleccionado.'
+            text: >
+              Define el tope de ancho de banda que podrá ser usado para el tráfico no
+              prioritario(p2p), el porcentaje es calculado en base a los anchos de
+              banda máximos del plan seleccionado.
           detail:
-            text: 'Campo libre que permite agregar información sobre este contrato en particular'
+            text: >
+              Campo libre que permite agregar información sobre este contrato en particular
           cpe:
-            text: 'Campo libre que permite agregar información sobre este contrato en particular'
+            text: >
+              Campo libre que permite agregar información sobre este contrato en particular
           node:
-            text: 'Campo libre que permite agregar información sobre este contrato en particular'
+            text: >
+              Campo libre que permite agregar información sobre este contrato en particular
           transparent_proxy:
-            text: 'Permite definir por contrato si el proxy transparente(web cache) estará habilitado o no para este contrato, se puede deshabilitar explicitamente, dejarlo por defecto según si está o no habilitado en el plan asignado, o habilitarlo explicitamente. Para que el proxy transparente funcione debe estar activado globalmente en la sección correspondiente de Configuración.'
+            text: >
+              Permite definir por contrato si el proxy transparente(web cache) estará
+              habilitado o no para este contrato, se puede deshabilitar explícitamente,
+              dejarlo por defecto según si está o no habilitado en el plan asignado, o
+              habilitarlo explícitamente.
+
+              Para que el proxy transparente funcione debe estar activado globalmente en la
+              sección correspondiente de Configuración.
           mac_address:
-            text: 'Permite hacer un amarre entre la MAC y la dirección IP del contrato para luego bloquear la navegación si ambas no coinciden.'
+            text: >
+              Permite hacer un amarre entre la MAC y la dirección IP del contrato para luego
+              bloquear la navegación si ambas no coinciden.
           proxy_arp:
-            text: 'Esta opción permite pasar una IP pública pura a un cliente. Se usa en los casos en los que el Proveedor del plan del contrato tiene un pull de direcciones públicas asignado y las mismas pertenecen a una única subnet no pudiendo ser ruteadas. Habilitando esta opción el cliente podrá tener asignada una de esas IPs públicas puras aún estando dentro de la red LAN.'
+            text: >
+              Esta opción permite pasar una IP pública pura a un cliente. Se usa en los casos
+              en los que el Proveedor del plan del contrato tiene un pull de direcciones
+              públicas asignado y las mismas pertenecen a una única subnet no pudiendo ser
+              enrutadas.
+
+              Habilitando esta opción el cliente podrá tener asignada una de esas IPs
+              públicas puras aún estando dentro de la red LAN.
           public_address_id:
             title: I18n.activerecord.attributes.contract.public_address
-            text: 'Permite asignar una IP pública previamente cargada como IP adicional de un Proveedor a un contrato. El contrato seguirá teniendo su ip privada, pero se realizara un Destination NAT (DNAT) completo de la IP pública sobre la IP privada del contrato. Así mismo toda navegación realizada por este contrato no participará del balanceo y utilizará siempre la IP pública asignada.'
+            text: >
+              Permite asignar una IP pública previamente cargada como IP adicional de un
+              Proveedor a un contrato. El contrato seguirá teniendo su IP privada, pero se
+              realizara un Destination NAT (DNAT) completo de la IP pública sobre la IP
+              privada del contrato.
+
+              Así mismo toda navegación realizada por este contrato
+              *no participará del balanceo y utilizará siempre la IP pública asignada*.
           unique_provider_id:
             title: I18n.activerecord.attributes.contract.unique_provider
-            text: 'Permite excluir este contrato en particular del balanceo, esto es necesario en algunos servicios de telefonía IP u otros servicios especiales que no son compatibles con el balanceo.'
+            text: >
+              Permite excluir este contrato en particular del balanceo, esto es necesario
+              en algunos servicios de telefonía IP u otros servicios especiales que no son
+              compatibles con el balanceo.
       forwarded_port:
         title: I18n.activerecord.models.forwarded_port.other
-        text: 'Permiten redireccionar puertos públicos a la ip privada del cliente, se usan para permitir acceso remoto a pcs, aplicaciones y cámaras IP entre otros.'
+        text: >
+          Permiten redireccionar puertos públicos a la IP privada del cliente, se usan para
+          permitir acceso remoto a PCs, aplicaciones y cámaras IP entre otros.
         attributes:
           provider_id:
             title: I18n.activerecord.models.provider.one
-            text: 'El proveedor sobre el cual se va a hacer el redireccionamiento, esto va a determinar la ip pública a utilizar para acceder desde internet.'
+            text: >
+              El proveedor sobre el cual se va a hacer el redireccionamiento, esto va a
+              determinar la IP pública a utilizar para acceder desde Internet.
           public_port:
-            text: 'El puerto público es el puerto externo que será visiblde desde internet y al cual se conectarán cuando quieran acceder desde afuera.'
+            text: >
+              El puerto público es el puerto externo que será visible desde Internet y al
+              cual se conectarán cuando quieran acceder desde afuera.
           private_port:
-            text: 'El puerto privado es el puerto de la pc o equipo del cliente que recibirá el redireccionamiento, este puede ser el mismo que el puerto público o variar según el caso.'
-    html:
-      fieldset:
-        advanced:
-          text: ''
-        prios:
-          text: 'Estos campos _permiten_ *sobreescribir las prioridades globales* definidas en Configuración individualmente por cada contrato. Esto permite definir especificamente que tráfico será tomado como prioritario para este cliente y qué tráfico sera tratado como p2p. Por cada campo que queda en blanco se toman los valores globales definidos en Configuración.'
-          level_class: 'help_level_1'
+            text:  >
+              El puerto privado es el puerto de la PC o equipo del cliente que recibirá el
+              redireccionamiento, este puede ser el mismo que el puerto público o variar
+              según el caso.
+      plan:
+        text: >
+          Los planes reflejan el servicio que se les vende a los clientes.
+
+          Determinan principalmente a que velocidad navegará el cliente y que grupo de
+          proveedores utilizará. También permite manipular opciones más avanzadas como las
+          ráfagas o web cache, para diferenciar los planes con distintas calidades de
+          servicio.
+        attributes:
+          provider_group_id:
+            title: I18n.activerecord.models.provider_group.one
+            text: >
+              Define el grupo de proveedores que utilizarán para navegar los clientes que
+              tengan configurado este plan.
+          rate_down:
+            text: >
+              Define el ancho de banda de bajada que garantiza este plan, este valor solo
+              debe ser distinto de cero cuando se quiere crear un plan con ancho de banda
+              garantizado o dedicado.
+          ceil_down:
+            text: >
+              Define el ancho de banda de bajada máximo para este plan, esto marcará el
+              techo de velocidad a la cual pueden navegar los clientes que tengan configurado
+              este plan.
+          rate_up:
+            text: >
+              Define el ancho de banda de subida que garantiza este plan, este valor solo
+              debe ser distinto de cero cuando se quiere crear un plan con ancho de banda
+              garantizado o dedicado.
+          ceil_up:
+            text: >
+              Define el ancho de banda de subida máximo para este plan, esto marcará el
+              techo de velocidad a la cual pueden navegar los clientes que tengan configurado
+              este plan.
+          burst_down:
+            text: >
+              La ráfaga descendente es una aceleración de la navegación web, afecta solo los
+              puertos 80 y 443 (http y https).
+
+              Esta opción hace que se entreguen los primeros N datos de cada conexión a la
+              máxima velocidad disponible antes de establecer el límite de velocidad impuesto
+              por el plan. Esto hace que las páginas web carguen velozmente.
+
+              Conviene empezar con valores bajos ya que esta opción puede consumir mucho ancho
+              de banda en el caso de tener una gran cantidad clientes.
+          burst_up:
+            text: >
+              Es equivalente a la ráfaga descendente pero para el tráfico ascendente o upload,
+              puede ser útil para el envío de adjuntos o para los casos en donde se suben
+              imágenes u otros archivos a las redes sociales, hace falta poseer buen ancho de
+              banda de subida para aprovechar esta opción.
+          long_download_max:
+            text: >
+              Está opción permite aplicar un trato especial a las descargas de gran tamaño,
+              como descargas de rapidshare o megaupload entre otras.
+
+              Activando esta opción,
+              cuando la descarga de un archivo supere los N kbytes de datos, será penalizada y
+              a partir de ese momento ese tráfico será calificado como p2p y se aplicaran las
+              restricciones de p2p configuradas en el contrato, así como también bajará su
+              prioridad de descarga.
+          long_upload_max:
+            text: >
+              Es equivalente al limite para descargas de gran tamaño pero para las
+              cargas(uploads) de archivos de gran tamaño.
+          transparent_proxy:
+            text: >
+              Esta opción determina si el uso de proxy transparente (web cache) estará habilitado
+              por defecto para este plan en particular.
+      provider:
+        text: ''
+        attributes:
+          state:
+            text: >
+              El estado determina si este proveedor debe ser utilizado o no. Un proveedor marcado
+              como deshabilitado *no será utilizado para la navegación*.
+          interface_id:
+            title: I18n.activerecord.models.interface.one
+            text: 'La interfaz de red a la cual está conectado fisicamente el proveedor.'
+          provider_group_id:
+            title: I18n.activerecord.models.provider_group.one
+            text: >
+              Los proveedores se agrupan en grupos de proveedores para permitir hacer balanceo y
+              failover entre ellos.
+
+              En el caso de ISPs que poseen un gran número de proveedores es común que los agrupen
+              por la naturaleza de cada uno, por ejemplo los ADSLs por un lado, los dedicados por
+              otro. Luego se crean planes que navegaran exclusivamente por un grupo u otro.
+              En el caso de tener pocos proveedores es conveniente tenerlos todos en un mismo y
+              único grupo (por ejemplo el grupo Default).
+          rate_down:
+            text: >
+              Velocidad de bajada o download de este proveedor. Se recomienda colocar un valor
+              lo más ajustado a la realidad posible ya que mientras más exacto sea este valor
+              con la realidad mejor funcionará el control de ancho de banda en general, las
+              prioridades de tráfico y los garantidos.
+          rate_up:
+            text: >
+              Equivalente a la velocidad de bajada pero para la subida. Aquí también se recomienda
+              ajustar el valor lo más cercano a la realidad posible, incluso en conexiones de ADSL
+              se recomienda colocar un valor un 5% inferior al real.
+          kind:
+            text: >
+              Sequre ISP soporta todo tipo de proveedores de Internet, los mismos se pueden resumir
+              en 3 casos
+
+              * *IP fija*
+
+              Estos son los proveedores más común dentro de los ISPs como los dedicados por fibra
+              óptica. Nos proporcionan una IP pública fija, o un rango de IPs las cuales podemos 
+              utilizar.
+
+              * *ADSL*
+
+              En esta opción se utiliza para los proveedores de ADSL con marcación PPPoE. Recomendamos
+              usar los modem de ADSL en modo bridge y utilizar esta opción especificando el usuario
+              contraseñas para realizar la marcación
+
+              * *DHCP*
+
+              Esta opción sirve para todos aquellos proveedores que entregan IP mediante DHCP, es muy
+              popular entre los proveedores de cablemodem. Al obtener todos sus parámetros dinámicamente
+              esta opción no requiere ninguna configuración de IP adicional.
+
+          shape_rate_down_on_ingress:
+            text: >
+              El control del ancho de banda total entregado por el proveedor se hace solo hacia
+              los clientes.
+
+              Esto tiene una razón y es que la única forma de controlar el ancho de banda en el
+              ingreso WAN es descartando los paquetes que exceden el rate estipulado.
+
+              Descartar estos paquetes en el ingreso no es recomendado ya que estaríamos 
+              descartando paquetes totalmente válidos que luego deberán ser retransmitidos.
+
+              Ademas sería una lástima si un proveedor configurado a 10mbit de pronto nos entrega una
+              ráfaga de 11mbit y nosotros descartamos el excedente.
+
+              Sin embargo hay situaciones en las que es imprescindible que el proveedor no consuma
+              más ancho de banda que el estipulado en su configuración. Para esos casos existe esta
+              opción que generalmente se usa en combinación con la activación del web cache.
+          unique_mac_address:
+            text: >
+              Esta opción permite generar una MAC Address única para la placa de red de este proveedor,
+              distinta a la MAC Address real del dispositivo físico.
+
+              Esto es útil en los ISP que tienen múltiples proveedores a través de una única placa de
+              red por medio de la configuración de VLANs contra un switch VLAN.
+
+              En esos casos todos los proveedores que salgan por el switch VLAN deberían tener activada
+              esta opción.
+      provider_group:
+        text: >
+          Los grupos de proveedores sirven para el manejo del balanceo y failover.
+          Cada proveedor que se agrega debe sí o sí pertenecer a un grupo.
+          Luego los proveedores que pertenezcan a un mismo grupo serán integrados y funcionarán
+          como un único enlace sumando todos sus anchos de banda.
+
+          Si uno de los proveedores de un grupo cae, esto es detectado automáticamente
+          por el sistema y ese proveedor es dado de baja del balanceo hasta que recupere su
+          servicio.
+
+          Cuando un grupo de proveedores queda sin ningún proveedor en linea, entonces los
+          contratos que navegaban por ese grupo comienzan a navegar por el resto de los grupos
+          que este disponible.
+
+          Es común agrupar los proveedores según la calidad del servicio que brindan,
+          por ejemplo agrupar los ADSLs en un grupo homónimo, los enlaces dedicados en
+          otro y así. Luego se configuran planes utilizando estos grupos y cobrando
+          precios diferenciados según la calidad de servicio.
+        attributes:
+          name:
+            text: 'Nombre genérico para describir al grupo.'
+          state:
+            text: >
+              Determina si el grupo estará activo o no. Un grupo deshabilitado *no será
+              utilizado en la navegación*.
+      interface:
+        text: >
+          Las interfaces son las placas de red físicas conectadas al servidor. Debe existir una
+          interfaz por cada placa conectada al server.
+        attributes:
+          name:
+            text: >
+              Este es el nombre *real* de la interfaz y *no puede ser inventado*, es decir,
+              debe coincidir con el nombre que le asignó el sistema operativo al momento
+              de detectar la interfaz de red.
+          vlan:
+            text: >
+              Chequeando esta casilla se puede crear una interfaz VLAN sobre la interfaz de red
+              real.
+
+              Las VLANs se pueden utilizar en conjunto con un switch VLAN para conectar
+              múltiples proveedores de red utilizando una única placa de red en el servidor.
+              Este tipo de configuración permite tener tantos proveedores como bocas de
+              switch VLAN en una única placa de red del server.
+          vlan_interface_id:
+            title: I18n.activerecord.attributes.interface.vlan_interface
+            text: >
+              La interfaz real sobre la cual se configurará la VLAN.
+          vlan_id:
+            text: El número de tag VLAN, también conocido como VLAN ID.
+          description:
+            text: >
+              Es un campo libre en el cual puede dar una descripción familiar para reconocer
+              que es lo que está conectado a esta placa, por ejemplo 'clientes' o 'proveedor 1',
+              etc.
+          kind:
+            text: >
+              Determina el uso que se le dará a esta interfaz de red.
+
+              Si se define como LAN significa que a esta interfaz se conectarán clientes.
+
+              Si se define como WAN significa que a esta interfaz se conectara un proveedor de
+              Internet.
+      configuration:
+        attributes:
+          deliver_notifications:
+            text: >
+              Activando esta casilla usted recibirá notificaciones a su e-mail cada vez que
+              un proveedor cambie de estado (online/offline) como así también cada vez que
+              una interfaz de red cambie su estado de link.
+          notification_timeframe:
+            text: >
+              Muchas veces los proveedores tienen microcortes y esto hace que se reciban
+              demasiadas notificaciones vía e-mail por día, sobre todo en el caso de ISPs
+              que tienen configurados un gran número de proveedores.
+
+              Ajustando el tiempo en segundos que un proveedor debe estar caído para enviar
+              la notificación puede reducir la cantidad de e-mails recibidos y de esta forma
+              identificar mejor cuándo un proveedor esta realmente caído y requiere de
+              intervención de parte de un técnico para solucionar el problema.
+          default_tcp_prio_ports:
+            text: >
+              TCP es el protocolo usado en Internet para transmitir datos, imágenes, archivos,
+              etc.
+              Cada aplicación usa un puerto diferente para comunicarse, en este campo se
+              pueden definir que puertos TCP obtendrán prioridad sobre el resto del tráfico.
+
+              Por defecto se elijen puertos estándar como 80 (navegación web), 110 y 143
+              (correo pop e imap) entre otros.
+
+              Para una lista completa de todos los puertos TCP disponibles y las aplicaciones
+              que comunmente los usan consulte
+              "aqui":https://secure.wikimedia.org/wikipedia/en/wiki/List_of_TCP_and_UDP_port_numbers
+          default_udp_prio_ports:
+            text: >
+              UDP es un protocolo de transmisión de datos, pero sin garantizar su entrega.
+
+              Es usado principalmente para transmitir voz en llamadas VOIP o similares
+              como por ejemplo Skype. También es utilizado por algunas tecnologías de
+              streaming, y por muchos vídeo juegos online entre otros.
+
+              Aquí se pueden definir todos los puertos UDP que obtendrán prioridad, por
+              defecto esta en blanco ya que en la opción siguiente "Protocolos prioritarios"
+              está definido *todo el protocolo UDP como prioritario*.
+          default_prio_protos:
+            text: >
+              Aquí es posible definir protocolos enteros para que obtengan prioridad.
+
+              Por defecto se prioriza UDP para aplicaciones de tiempo real, icmp e igmp
+              que son mensajes que permiten la comunicación y diagnostico de redes, y
+              esp, ah y gre que son protocolos de VPN.
+
+              Para una lista completa de todos los protocolos disponible consulte
+              "aquí":http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml
+          default_prio_helpers:
+            text: >
+              Los helpers de netfilter permiten identificar protocolos dinámicos, que elijen
+              puertos TCP o UDP al azar por lo que es imposible asignar un número de puerto
+              fijo para identificar ese tráfico como prioritario.
+
+              Cabe aclarar que el protocolo a rastrear debe estar soportado oficialmente
+              por un helper de netfilter, a la fecha los netfilter soportados son:
+
+              proto_sctp, h323, pptp, snmp_basic, irc, tftp, proto_gre, proto_dccp, ftp,
+              proto_udplite, sip.
+          transparent_proxy:
+            text: >
+              Esta opción activa la funcionalidad de proxy o web cache en el servidor.
+              Luego desde los planes y los contratos se definirá que usuarios tendrán
+              el proxy habilitado o no.
+
+              Cuando esta opción esta desactivada el proxy deja de funcionar para todos
+              los clientes, independientemente de cualquier otra configuración. Esto permite
+              detener el proxy en caso de experimentar problemas o para realizar diagnósticos
+              en general.
+          transparent_proxy_n_to_m:
+            text: >
+              Recomendamos tener esta casilla activada si hace uso del proxy. Esta opción
+              asegurará que se cumplan las restricciones de upload para el tráfico web aún
+              si el cliente esta usando el proxy.
+
+              Por razones técnicas al activar el proxy la navegación en upload queda liberada
+              y con esta opción activa es posible controlar nuevamente ese tráfico.
+          transparent_proxy_zph_enabled:
+            text: >
+              Si esta opción está activa, el contenido cacheado por el proxy será entregado
+              a los clientes sin ningún tipo de restricción de ancho de banda, es decir a la
+              velocidad que la red lo permita.
+
+              Esto permite acelerar notoriamente la navegación sin que tenga un costo extra
+              en el ancho de banda del proveedor ya que es contenido previamente cacheado.
+
+              Sin embargo es posible desactivar esa funcionalidad en el caso de que el ISP
+              tenga su última milla saturada y no pueda permitirse enviar grandes ráfagas
+              de tráfico a altas velocidades.
+          filter_by_mac_address:
+            text: >
+              Activando esta opción se fuerza a que los clientes deban navegar exclusivamente
+              usando la MAC Address que se especifica en el contrato. Esta restricción aplica
+              únicamente para los contratos que tengan especificada su MAC Address.
+
+              Si esta opción esta desactivada los clientes pueden navegar desde cualquier
+              dirección MAC.
+          tc_contracts_per_provider_in_wan:
+            text: >
+              Esta opción dibuja un árbol de contratos con los pisos y techos de ancho de banda
+              de cada uno, por cada proveedor en su interfaz WAN.
+
+              De esta forma se puede determinar en que grado de saturación se encuentra un
+              proveedor en particular en su subida y siempre se podrán respetar los techos y
+              pisos por cada contrato.
+
+              *Recomendamos tenerla activa.*
+          tc_contracts_per_provider_in_lan:
+            text: >
+              Esta opción es equivalente a la anterior para el tráfico de bajada.
+
+              A diferencia de los proveedores WAN en donde hay una interfaz por cada proveedor
+              en la red LAN tenemos una única interfaz en la cual convergen todos nuestros
+              clientes, por lo que el árbol total de proveedores y contratos impacta sobre
+              una única interfaz.
+
+              Debido a una restricción de Linux y su herramienta de manejo de ancho de banda (tc)
+              el número máximo de clases que se puede tener en una única interfaz no puede superar
+              las 8000 unidades aproximadamente. Cada cliente consume una clase de tc, y por
+              cada proveedor se debe dibujar un árbol completo de clientes.
+
+              De esta forma el valor total de clases a generar es la multiplicación de número de
+              proveedores por números de contratos.
+
+              Si usted tiene un único proveedor y 8000 clientes puede activar esta opción, ya que
+              8000 * 1 es igual a 8000. También puede activarla si tiene 2000 clientes y
+              4 proveedores. Pero no debe activarla si su número de clientes por el número de
+              proveedores da un total mayor a 8000.
+          iptables_tree_optimization_enabled:
+            text: >
+              Esta opción habilita una optimización en las reglas de firewall(iptables) para el
+              marcado de paquetes y reduce considerablemente el uso de CPU en servidores con un
+              gran número de clientes.
+              Debido a la limitación en el direccionamiento de memoria que poseen los CPU de 32
+              bits, esta opción no puede ser habilitada en esa arquitectura.
+          use_global_prios:
+            text:
+              En casos de ISPs con un gran número de clientes (mayor a 2500) la construcción de
+              prioridades individual por cada contrato puede resultar muy costosa a nivel de
+              recursos del CPU, como memoria de kernel o capacidad de procesamiento.
+
+              Para esos casos particulares se desarrolló esta opción en donde las prioridades
+              son manejadas en forma global y no individualmente por contrato.
+      address:
+        title: I18n.fieldsets.providers.configuration_static_ips
+        attributes:
+          use_in_nat_pool:
+            title: I18n.activerecord.attributes.address.use_in_nat_pool
+            text: >
+              Esta opción permite agregar esta IP adicional al balanceo de NAT.
+
+              Esto significa que todas las peticiones que  los clientes con IP privada hagan
+              serán mapeadas entre todas las IP públicas disponibles en el balanceo.
+
+              De esta forma se evitan problemas con sitios que permiten solo un número de
+              registros por IP por día (caso de Hotmail) o también para acceder a
+              descargas de Rapidshare o Megauplod que permiten solo 1 descarga por IP al
+              mismo tiempo.
+    custom:
+      contract:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          details:
+            level_class: 'help_level_1'
+            text: ''
+          prios:
+            level_class: 'help_level_1'
+            text: >
+              Aquí es posible definir el tráfico prioritario individualmente por cada
+              contrato.
+
+              Por cada campo que queda en blanco en el contrato se toman
+              los valores globales definidos en Configuración.
+
+              Si ingresa información en algún campo, esta se superpone a la definida
+              globalmente para este contrato, por lo que si quiere, por ejemplo,
+              agregar el puerto 8193 a los puertos TCP prioritarios y no quiere perder
+              los puertos TCP prioritarios definidos en Configuración, entonces deberá
+              copiar los puertos globales y luego agregar el puerto 8193 a la lista.
+
+              Si en cambio, únicamente deja el puerto 8193 como puerto TCP prioritario
+              entonces este único puerto obtendrá prioridad sobre el resto de puertos
+              TCP y esto generalmente no es deseado a menos que sepa exactamente lo que
+              está haciendo.
+      configuration:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          global_prios:
+            level_class: 'help_level_1'
+            text: >
+              Sequre ISP tiene un exclusivo sistema de manejo de prioridades según el tipo
+              de tráfico.
+
+              Esto permite definir un tráfico prioritario que tendrá un trato preferencial
+              sobre un tráfico no prioritario o p2p. Además sobre el tráfico p2p se puede
+              aplicar una restricción sobre la velocidad máxima de descarga.
+
+              Los puertos y protocolos aquí definidos determinarán que tráfico será
+              tratado como prioritario para este servidor.
+
+              En Configuración se definen las prioridades globales que afectaran a todos
+              los clientes y todos los planes.
+
+              Si algún cliente tiene necesidades en particular y necesita que algún trafico en
+              especial sea clasificado como prioritario, conviene agregar esa excepción en las
+              prioridades del contrato, de esta forma ese cambio solo afectará a ese cliente en
+              particular.
+
+              Por cada campo que queda en blanco en el contrato se toman
+              los valores globales definidos en Configuración.
+          notifications:
+            level_class: 'help_level_1'
+            text: ''
+          proxy:
+            level_class: 'help_level_1'
+            text: >
+              El proxy o web cache permite acelerar la navegación de los clientes y además ahorrar
+              ancho de banda mediante el cacheo de páginas, imágenes y archivos entre otros.
+
+              Advertimos que esta funcionalidad consume recursos del servidor y que en el caso de
+              contar con un gran número de clientes esto puede causar que el servidor se sature.
+              En servidores con más de 300 clientes se recomienda usar un disco exclusivo para el
+              almacenamiento de cache, y en servidores con más de 1000 clientes el cache debe estar
+              directamente en otro servidor exclusivo para esa función.
+      plan:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          configuration_static_ips:
+            level_class: 'help_level_1'
+            text: ''
+
