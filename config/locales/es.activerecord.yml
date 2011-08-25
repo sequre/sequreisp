@@ -44,6 +44,9 @@ es:
       contract:
         one: "Contrato"
         other: "Contratos"
+      forwarded_port:
+        one: "Puerto redireccionado"
+        other: "Puertos redireccionados"
       interface:
         one: "Interfaz"
         other: "Interfaces"
