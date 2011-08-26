@@ -377,7 +377,6 @@ class Contract < ActiveRecord::Base
     total
   end
 
-  attr_accessor :autocomplete_client_name
   include CommaSeparatedArray
   comma_separated_array_field :prio_protos, :prio_helpers, :tcp_prio_ports, :udp_prio_ports
 
