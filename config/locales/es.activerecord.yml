@@ -113,6 +113,7 @@ es:
         long_download_max: "Límite para descargas de gran tamaño [kbytes]"
         long_upload_max: "Límite para cargas de gran tamaño [kbytes]"
         transparent_proxy: "Proxy transparente"
+        number_of_contracts: "Cantidad de contratos"
       provider_group:
         name: "Nombre"
         rate_down: "Descendente [kbps]"

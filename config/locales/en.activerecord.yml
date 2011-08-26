@@ -110,6 +110,7 @@ en:
         long_download_max: "Bandwidth limit for big size downloads [kbytes]"
         long_upload_max: "Bandwidth limit for big size uploads [kbytes]"
         transparent_proxy: "Transparent Proxy"
+        number_of_contracts: "Number of contracts"
       provider_group:
         name: "name"
         rate_down: "Download(kbps)"
