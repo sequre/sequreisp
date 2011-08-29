@@ -101,12 +101,7 @@ class ClientsController < ApplicationController
   end
   def names
     respond_to do |format|
-      format.json { render :json => Client.all(:conditions => ["name like ?", "%#{params[:term]}%"], :limit => 5, :select => :name).collect(&:name) }
-    end
-  end
-  def autocomplete_names
-    respond_to do |format|
-      format.json { render :json => Client.all(:conditions => ["name like ?", "%#{params[:term]}%"], :limit => 10, :select => 'id, name').collect {|c| { :id => c.id, :value => c.name } } }
+      format.json { render :json => Client.all(:conditions => ["name like ?", "%#{params[:term]}%"], :limit => 10, :select => :name).collect(&:name) }
     end
   end
   private

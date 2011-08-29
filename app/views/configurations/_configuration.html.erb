@@ -23,7 +23,8 @@
       <%= form.input :language, :as => :select, :collection => Language.languages_for_select, :include_blank => false %>
       <%= form.input :time_zone, :as => :time_zone, :priority_zones => /America/%> 
     <% end %>
-    <% form.inputs :name => t('fieldsets.configuration.notifications') do %>
+    <% form.inputs :name => t('fieldsets.configuration.notifications'),
+                   :context_help => { :path => { :custom => 'configuration.fieldsets.notifications' } } do %>
       <%= form.input :deliver_notifications %>
       <%= form.input :notification_email %>
       <%= form.input :notification_timeframe  %>
@@ -31,18 +32,21 @@
     <% form.inputs :name => t('fieldsets.configuration.users') do %>
       <%= form.input :logged_in_timeout %> 
     <% end %>
-    <% form.inputs :name => t('fieldsets.configuration.global_prios'), :id => "prios" do %>
+    <% form.inputs :name => t('fieldsets.configuration.global_prios'),
+                   :context_help => { :path => { :custom => 'configuration.fieldsets.global_prios' } } do %>
       <%= form.input :default_tcp_prio_ports %> 
       <%= form.input :default_udp_prio_ports %> 
       <%= form.input :default_prio_protos %> 
       <%= form.input :default_prio_helpers %> 
     <% end %>
-    <% form.inputs :name => t('fieldsets.configuration.proxy'), :id => "proxy" do %>
+    <% form.inputs :name => t('fieldsets.configuration.proxy'),
+                   :context_help => { :path => { :custom => 'configuration.fieldsets.proxy' } } do %>
       <%= form.input :transparent_proxy %> 
       <%= form.input :transparent_proxy_n_to_m %> 
       <%= form.input :transparent_proxy_zph_enabled %> 
     <% end %>
-    <% form.inputs :name => t('fieldsets.configuration.advanced'), :id => "bandwidth" do %>
+    <% form.inputs :name => t('fieldsets.configuration.advanced'),
+                   :context_help => { :path => { :custom => 'configuration.fieldsets.advanced' } } do %>
       <%= form.input :filter_by_mac_address %> 
       <%= form.input :tc_contracts_per_provider_in_wan %> 
       <%= form.input :tc_contracts_per_provider_in_lan %> 

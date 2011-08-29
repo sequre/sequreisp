@@ -195,11 +195,13 @@ padding:2px;
 /* layout */
 
 	#container{	
-		margin:0 auto;
 		width:902px;
 		text-align:left;
 		position:relative;
 		}
+	#container.centered {
+	  margin:0 auto;
+	  } 
 	.inner{
 		position:relative;
 		}

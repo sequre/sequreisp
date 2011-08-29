@@ -108,6 +108,7 @@ pt:
         burst_down: "Rajada descendente [kbytes] (Burst)"
         burst_up: "Rajada ascendente [kbytes] (Burst)"
         transparent_proxy: "Proxy transparente"
+        number_of_contracts: "Número de contratos"
       provider_group:
         name: "Nome"
         rate_down: "Descendente [kbps]"

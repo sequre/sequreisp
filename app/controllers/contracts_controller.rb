@@ -168,12 +168,12 @@ class ContractsController < ApplicationController
 
   def free_ips
     respond_to do |format|
-      format.json { render :json => Contract.free_ips(params[:term])[0..4] }
+      format.json { render :json => Contract.free_ips(params[:term])[0..9] }
     end
   end
   def ips
     respond_to do |format|
-      format.json { render :json => Contract.all(:conditions => ["ip like ?", "%#{params[:term]}%"], :limit => 5, :select => :ip).collect(&:ip) }
+      format.json { render :json => Contract.all(:conditions => ["ip like ?", "%#{params[:term]}%"], :limit => 10, :select => :ip).collect(&:ip) }
     end
   end
   private
