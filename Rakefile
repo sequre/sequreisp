@@ -8,3 +8,7 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 
 require 'tasks/rails'
+
+Dir.glob(File.join(File.dirname(__FILE__), 'vendor', 'plugins', '**', "Rakefile.base")) do |rakefile|
+    self.send(:eval, File.open(rakefile, 'r').read)
+end
