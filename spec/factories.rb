@@ -23,4 +23,23 @@ end
 
 Factory.define :provider_group do |f|
   f.sequence(:name) {|n| "Test Provider Group #{n}" }
+  f.after_build do |u|
+    Factory.create(:provider, :provider_group => u)
+  end
+end
+
+Factory.define :provider do |f|
+  f.association :provider_group
+  f.association :interface
+  f.sequence(:name) { |n| "Test Provider#{n}" }
+  f.rate_down 10000000000
+  f.rate_up 10000000000
+  f.sequence(:ip) { |n| "192.168.0.#{n}" }
+  f.kind 'static'
+  f.netmask '255.255.255.0'
+  f.gateway '192.168.0.254'
+end
+
+Factory.define :interface do |f|
+  f.sequence(:name) { |n| 'eth' + n.to_s }
 end
