@@ -50,11 +50,9 @@ def check_squid
   #2: swap.state check
   max_swap_size=500*1024*1024
   swap_file="/var/spool/squid/swap.state"
-  f = File.open(swap_file)
-  swap_size = f.size
-  f.close
+  swap_size = File.open(swap_file) do |sf| sf.size end
   if swap_size > max_swap_size
-    Rails.logger.warn "sequreispd: #{Time.now.to_s} swap.state bigger than max: #{max_swap_size}, current: #{f.size}, killing"
+    Rails.logger.warn "sequreispd: #{Time.now.to_s} swap.state bigger than max: #{max_swap_size}, current: #{swap_size}, killing"
     max_sleep = 20
     while pid.present? and max_sleep > 0
       system "kill -9 #{pid}"
