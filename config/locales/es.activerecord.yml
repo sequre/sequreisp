@@ -155,6 +155,7 @@ es:
         transparent_proxy: "Habilitar proxy transparente (global)"
         transparent_proxy_n_to_m: "Control de ancho de banda ascendente para proxy transparente"
         transparent_proxy_zph_enabled: "Entregar contenido en caché a velocidad del enlace"
+        transparent_proxy_max_load_average: "Si el 'load average' de los últimos 5 minutos supera este valor, el proxy será desactivado automáticamente"
         nf_conntrack_max: "Máximo nº de conexiones (nf_conntrack_max)"
         gc_thresh1: "Entradas ARP (gc_thresh1)"
         gc_thresh2: "Entradas ARP (gc_thresh2)"

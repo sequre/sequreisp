@@ -8,6 +8,9 @@
   #configuration_notification_timeframe{
     width: 50px;
 }
+  #configuration_transparent_proxy_max_load_average {
+    width: 50px;
+  }
 </style>
 <% unless current_user.may_update_configuration?(@configuration) %>
 <script type="text/javascript">
@@ -43,7 +46,9 @@
                    :context_help => { :path => { :custom => 'configuration.fieldsets.proxy' } } do %>
       <%= form.input :transparent_proxy %> 
       <%= form.input :transparent_proxy_n_to_m %> 
-      <%= form.input :transparent_proxy_zph_enabled %> 
+      <%= form.input :transparent_proxy_zph_enabled %>
+      <li><br/></li>
+      <%= form.input :transparent_proxy_max_load_average %>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.advanced'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.advanced' } } do %>

@@ -72,7 +72,7 @@ def check_squid
   end
 
   #3: load average check
-  max_load_average=10
+  max_load_average = Configuration.transparent_proxy_max_load_average
   load_average=`uptime | awk -F "load average:" '{ print $2 }' | cut -d, -f1 | sed 's/ //g'`.chomp.to_f
   if load_average > max_load_average
     Rails.logger.error "sequreispd: #{Time.now.to_s} disabling squid because load average is bigger than max: #{max_load_average}, current: #{load_average}"

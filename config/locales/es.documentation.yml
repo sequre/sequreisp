@@ -390,6 +390,25 @@ es:
               Sin embargo es posible desactivar esa funcionalidad en el caso de que el ISP
               tenga su última milla saturada y no pueda permitirse enviar grandes ráfagas
               de tráfico a altas velocidades.
+          transparent_proxy_max_load_average:
+            text:
+              En los systemas Linux, se puede tener una noción de la carga a la que está
+              expuesto el sistema en todo momento gracias al comando uptime.
+
+              Uptime nos devuelve un valor numérico que representa la carga del sistema en
+              el momento, además de los últimos 5 y 15 minutos.
+
+              Cuando el servidor hace frente a mucha carga generalmente se comienzan a
+              producir cuellos de botella de IO(entrada/salida) y esto realmente impacta
+              sobre el rendimiento del proxy alentando notablemente la navegación.
+
+              Este valor permite configurar un valor máximo de carga de sistema a partir
+              del cual, si es alcanzado, el proxy será deshabilitado automáticamente.
+
+              Recomendamos dejar este valor por defecto y consultar al soporte técnico o
+              en los foros si el proxy se desactiva debido a esta opción. Generalmente
+              en servidor con un número de clientes mayor a 500 ya deben pensar en un
+              disco exclusivo para el cache o una PC dedicada.
           filter_by_mac_address:
             text: >
               Activando esta opción se fuerza a que los clientes deban navegar exclusivamente
