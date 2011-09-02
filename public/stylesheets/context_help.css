@@ -60,9 +60,15 @@ div#context_help_bar {
 }
 
 div#context_help_bar div.chb_top_bar {
-  background-color: #E3E2DA;
+  /*background-color: #E3E2DA;*/
+  font-weight: bold;
+  font-size: 1.1em;
+  background-color: #900;
+  color: white;
   line-height: 41px;
   text-align: left;
+  cursor: pointer;
+  padding-left: 10px;
 }
 
 div#context_help_bar div.chb_top_bar a {

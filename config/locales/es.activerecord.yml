@@ -275,6 +275,9 @@ es:
     scan_interfaces: "Detectar nuevas interfaces"
     more: "Más"
     view_audit: "Auditoría"
+    context_help:
+      help: "Ayuda"
+      close: "Cerrar"
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"

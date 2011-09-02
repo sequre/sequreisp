@@ -5,7 +5,7 @@
 %>
 <div id="context_help_bar">
   <div class="chb_top_bar">
-    <a class="chb_close_button">Cerrar</a>
+  <%= t 'buttons.context_help.close' %>
   </div>
   <div class="chb_content">
       <%= help %>
@@ -18,7 +18,7 @@
                 <div id="context_help_button" class="hbb_button" unselectable="on">
                     <div class="hbb_body">
                         <span class="hbb_space"></span>
-                        Ayuda
+                        <%= t 'buttons.context_help.help' %>
                         <span class="hbb_space"></span>
                       </div>
                 </div>
@@ -34,7 +34,7 @@
             $('body div#container').removeClass('centered');
             $.cookie('context_help_bar_visibility', 'visible');
         });
-        $('a.chb_close_button').click(function() {
+        $('div.chb_top_bar').click(function() {
             $('div#context_help_button_bar').animate({right: '-270px'}, 'fast');
             $('div#context_help_bar').animate({right: '-350px'}, 'fast', function() {
                 $('body div#container').addClass('centered');

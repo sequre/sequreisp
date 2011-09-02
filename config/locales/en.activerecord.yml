@@ -272,6 +272,9 @@ en:
     scan_interfaces: "Scan for new interfaces"
     more: "More"
     view_audit: 'Audit'
+    context_help:
+      help: "Help"
+      close: "Close"
   backup:
     backup_db_legend: "Backup DB (just database)"
     backup_full_legend: "Backup Full (application and database)"
