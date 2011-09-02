@@ -182,13 +182,15 @@ def gen_tc(f)
             tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
           end
         end
+        # real iface setup
+        tc.puts "qdisc add dev #{iface} ingress"
         if p.shape_rate_down_on_ingress
-          # real iface setup
-          tc.puts "qdisc add dev #{iface} ingress"
           # this is supposed to match ack packets with size < 64bytes (from http://lartc.org/howto/lartc.adv-filter.html)
           tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
           # redirect traffic to the ifb
           tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
+        else
+          tc.puts "filter add dev eth1.4 parent ffff: protocol ip prio 1 handle 1 flow hash keys nfct-dst divisor 1024"
         end
       end
     rescue => e
