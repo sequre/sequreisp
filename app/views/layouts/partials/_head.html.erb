@@ -21,3 +21,5 @@
   <%= stylesheet_link_tag "chosen-changes.css" %>
   <!-- Autogrow Textarea Plugin -->
   <%= javascript_include_tag "jquery.autogrowtextarea" %>
+  <!-- Let views include javascript in header %>
+  <%= yield :javascript %>
