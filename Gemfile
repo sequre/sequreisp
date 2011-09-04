@@ -24,6 +24,11 @@ gem "context_help", '~>0.0.4'
 group :development, :test do
   gem 'faker'
   gem 'rspec-rails', '1.3.3'
+  gem 'guard-rspec'
+  group :linux do
+    gem 'rb-inotify'
+    gem 'libnotify'
+  end
 end
 
 group :development do
