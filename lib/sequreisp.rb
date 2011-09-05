@@ -190,7 +190,7 @@ def gen_tc(f)
           # redirect traffic to the ifb
           tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
         else
-          tc.puts "filter add dev eth1.4 parent ffff: protocol ip prio 1 handle 1 flow hash keys nfct-dst divisor 1024"
+          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 handle 1 flow hash keys nfct-dst divisor 1024"
         end
       end
     rescue => e
@@ -806,7 +806,7 @@ def setup_proxy(f)
   if Configuration.transparent_proxy
     f.puts "[ -f #{squid_file_off} ] && mv #{squid_file_off} #{squid_file}"
     #relodearlo si ya está corriendo, arrancarlo sino
-    f.puts 'if [[ -n "$(pidof squid)" ]] ; then  squid -k reconfigure ; else ; service squid start ; fi'
+    f.puts 'if [[ -n "$(pidof squid)" ]] ; then  squid -k reconfigure ; else service squid start ; fi'
     # dummy iface con ips para q cada cliente salga por su grupo
     f.puts "modprobe dummy"
     f.puts "ip link set dummy0 up"
