@@ -49,7 +49,7 @@
     <%= form.input :client, :wrapper_html => { :class => "left" } %>
     <div style="clear:both"></div>
     <%= form.input :plan, :wrapper_html => { :class => "left" }, :hint => false %> 
-    <%= form.input :state, :collection => Contract.aasm_states_for_select, :include_blank => false ,:wrapper_html => { :class => "left" } %> 
+    <%= form.input :state, :collection => form.object.aasm_states_for_select, :include_blank => false ,:wrapper_html => { :class => "left" } %> 
     <div style="clear:both"></div>
     <%= form.input :ip, :wrapper_html => { :class => "left" } %> 
     <%= form.input :ceil_dfl_percent, :as => :select, :collection => (30..100).step(10).to_a, :include_blank => false, :wrapper_html => { :class => "left" } %>
