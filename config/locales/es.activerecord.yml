@@ -167,7 +167,7 @@ es:
         tc_contracts_per_provider_in_wan: "Árbol total de contratos idividual por cada proveedor (WAN)"
         logged_in_timeout: "Tiempo en minutos para cerrar la sesión del usuario actual si está inactivo"
         filter_by_mac_address: "Bloquear tráfico de clientes si su dirección MAC no coincide con la del contrato"
-        time_zone: "Huso horario"
+        time_zone: "Uso horario"
         deliver_notifications: "Enviar notificaciones del sistema via e-mail (ej: cambio de estado de enlaces)"
         clamp_mss_to_pmtu: "Ajustar el MSS (tamaño máximo de segmento) al MTU de la ruta (PMTU)"
         language: "Idioma"
