@@ -152,6 +152,7 @@ en:
         transparent_proxy: "Enable Transparent Proxy(global)"
         transparent_proxy_n_to_m: "Transparent proxy upload control"
         transparent_proxy_zph_enabled: "Deliver cached content at link speed"
+        transparent_proxy_windows_update_hack: "Enable Windows Update cache (see help)"
         transparent_proxy_max_load_average: "If system's 'load average' of the last 5 minutes is above this value, then the  proxy is automaticaly disabled"
         nf_conntrack_max: "Maximum number of connections (nf_conntrack_max)"
         gc_thresh1: "ARP entries (gc_thresh1)"

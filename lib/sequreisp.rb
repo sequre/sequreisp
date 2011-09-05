@@ -830,6 +830,11 @@ def setup_proxy(f)
             f.puts "ip address add #{pg.proxy_bind_ip} dev dummy0"
           end
         end
+        if Configuration.transparent_proxy_windows_update_hack
+          fsquid.puts "#Windows update hacks see http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
+          fsquid.puts "range_offset_limit -1"
+          fsquid.puts "quick_abort_min -1"
+        end
         BootHook.run :hook => :setup_proxy, :boot_script => f, :proxy_script => fsquid
       end
     rescue => e
