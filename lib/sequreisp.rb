@@ -182,13 +182,15 @@ def gen_tc(f)
             tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
           end
         end
+        # real iface setup
+        tc.puts "qdisc add dev #{iface} ingress"
         if p.shape_rate_down_on_ingress
-          # real iface setup
-          tc.puts "qdisc add dev #{iface} ingress"
           # this is supposed to match ack packets with size < 64bytes (from http://lartc.org/howto/lartc.adv-filter.html)
           tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
           # redirect traffic to the ifb
           tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
+        else
+          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 handle 1 flow hash keys nfct-dst divisor 1024"
         end
       end
     rescue => e
@@ -804,7 +806,7 @@ def setup_proxy(f)
   if Configuration.transparent_proxy
     f.puts "[ -f #{squid_file_off} ] && mv #{squid_file_off} #{squid_file}"
     #relodearlo si ya está corriendo, arrancarlo sino
-    f.puts 'if [[ -n "$(pidof squid)" ]] ; then  squid -k reconfigure ; else ; service squid start ; fi'
+    f.puts 'if [[ -n "$(pidof squid)" ]] ; then  squid -k reconfigure ; else service squid start ; fi'
     # dummy iface con ips para q cada cliente salga por su grupo
     f.puts "modprobe dummy"
     f.puts "ip link set dummy0 up"
@@ -827,6 +829,11 @@ def setup_proxy(f)
             fsquid.puts "tcp_outgoing_address #{pg.proxy_bind_ip} pg_#{pg.klass.number}"
             f.puts "ip address add #{pg.proxy_bind_ip} dev dummy0"
           end
+        end
+        if Configuration.transparent_proxy_windows_update_hack
+          fsquid.puts "#Windows update hacks see http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
+          fsquid.puts "range_offset_limit -1"
+          fsquid.puts "quick_abort_min -1"
         end
         BootHook.run :hook => :setup_proxy, :boot_script => f, :proxy_script => fsquid
       end

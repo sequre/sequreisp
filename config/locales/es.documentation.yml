@@ -390,9 +390,30 @@ es:
               Sin embargo es posible desactivar esa funcionalidad en el caso de que el ISP
               tenga su última milla saturada y no pueda permitirse enviar grandes ráfagas
               de tráfico a altas velocidades.
+          transparent_proxy_windows_update_hack:
+            text: >
+              Para que el cache de Windows Update funcione es necesario habilitar en la
+              configuración del proxy algunas funcionalidades extras.
+
+              Dos características se habilitan en el cache activando esta opción:
+
+
+              1) Si una descarga en curso es cancelada por un cliente, el archivo es igualmente
+                descargado por el proxy para futuro uso
+
+              2) Si un cliente reanuda una descarga parcial, el proxy intentara descargar el
+                total del archivo desde el principio y no sólo el rango que el cliente está
+                solicitando.
+
+
+              Habilitar Windows Update es opcional ya que estos comportamientos antes mencionados
+              no son del todo estándar y pueden traer problemas en algunos escenarios particulares.
+
+              Para más información visitar la página:"http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
+              de squid al respecto.
           transparent_proxy_max_load_average:
             text:
-              En los systemas Linux, se puede tener una noción de la carga a la que está
+              En los sistemas Linux, se puede tener una noción de la carga a la que está
               expuesto el sistema en todo momento gracias al comando uptime.
 
               Uptime nos devuelve un valor numérico que representa la carga del sistema en
