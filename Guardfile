@@ -19,10 +19,10 @@ guard 'rspec', :version => 1, :spec_paths => ['spec', 'vendor/plugins'], :cli =>
   watch(%r{^app/views/(.+)/.*\.(erb|haml)$})          { |m| "spec/requests/#{m[1]}_spec.rb" }
 
   # Plugins
-  watch(%r{^vendor/plugins/(.+)/spec/spec_helper\.rb$})         {  |m| "vendor/plugins/# { m[1]}/spec/" }
+  watch(%r{^vendor/plugins/(.+)/spec/spec_helper\.rb$})         {  |m| "vendor/plugins/#{m[1]}/spec/" }
   watch(%r{^vendor/plugins/(.+)/spec/.+_spec\.rb$})
-  watch(%r{^vendor/plugins/(.+)/app/(.+)\.rb$})                 {  |m| "vendor/plugins/# { m[1]}/spec/#        { m[2]}_spec.rb" }
-  watch(%r{^vendor/plugins/(.+)/lib/.+patches/(.+)_patch\.rb$}) {  |m| "vendor/plugins/# { m[1]}/spec/models/# { m[2]}_spec.rb" }
+  watch(%r{^vendor/plugins/(.+)/app/(.+)\.rb$})                 {  |m| "vendor/plugins/#{m[1]}/spec/#{m[2]}_spec.rb" }
+  watch(%r{^vendor/plugins/(.+)/lib/.+patches/(.+)_patch\.rb$}) {  |m| "vendor/plugins/#{m[1]}/spec/models/#{m[2]}_spec.rb" }
 
 end
 

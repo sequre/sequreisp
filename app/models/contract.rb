@@ -240,6 +240,10 @@ class Contract < ActiveRecord::Base
     AASM::StateMachine[self].states.map { |state| [I18n.t("aasm.contract.#{state.name.to_s}"),state.name.to_s] }
   end
 
+  def aasm_states_for_select
+    Contract.aasm_states_for_select
+  end
+
   def name
     plan.name
   end
