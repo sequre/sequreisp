@@ -3,7 +3,7 @@ module SequreISP
 
   class Version
     RELEASE = 2
-    MAJOR = 2
+    MAJOR = 5
     MINOR = 0
 
     def self.to_a
