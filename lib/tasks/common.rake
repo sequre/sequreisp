@@ -8,6 +8,9 @@ namespace :db do
     Rake::Task["db:schema:dump"].invoke
   end
 
+  desc 'Remigrate and seed'
+  task :reseed => [:remigrate, :seed]
+
   desc 'Same as script/runner misc/simulate-rrd.rb'
   task :simulate => :environment do
     eval(File.open('misc/simulate-rrd.rb', 'r').read)
