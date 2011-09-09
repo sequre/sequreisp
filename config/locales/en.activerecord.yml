@@ -76,7 +76,7 @@ en:
         udp_prio_ports: "High priority UDP ports"
         prio_protos: "High priority protocols"
         prio_helpers: "High priority netfilter helpers"
-        state: "state"
+        state: "State"
         proxy_arp: "Proxy ARP enabled"
         proxy_arp_interface: "LAN interface"
         forwarded_ports: "Forwarded Ports"
