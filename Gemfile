@@ -19,7 +19,7 @@ gem 'aegis', '~>2.5'
 gem 'acts_as_audited', '~>1.1'
 gem 'whenever', '~>0.6'
 gem 'RedCloth'
-gem "context_help", '~>0.0.4'
+gem "context_help", '~>0.0.6'
 
 group :development, :test do
   gem 'faker'
