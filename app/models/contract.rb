@@ -227,6 +227,15 @@ class Contract < ActiveRecord::Base
   aasm_state :enabled
   aasm_state :disabled
 
+  def state
+    s = self[:state]
+    if not s.respond_to?(:human)
+      def s.human
+        I18n.t "aasm.contract.#{self}"
+      end
+    end
+    s
+  end
 
   aasm_event :enable do
     transitions :from => :disabled, :to => :enabled

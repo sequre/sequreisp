@@ -97,7 +97,7 @@
             <% end %>
           </td>
           <td><%= contract.forwarded_ports.collect{|fp| "<span class=\"forwarded_port\">#{fp.to_s}</span><br/>"} %></td>
-          <td><%=h t "aasm.contract.#{contract.state}" %></td>
+          <td><%=h contract.state.human %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => contract} %>
           <% if current_user.may_update_contract?(contract) %>
             <td><%= link_to t('buttons.edit'), edit_contract_path(contract) %></td>
