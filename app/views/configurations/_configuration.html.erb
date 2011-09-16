@@ -53,6 +53,8 @@
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.advanced'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.advanced' } } do %>
+      <%= form.input :apply_changes_automatically %>
+      <%= form.input :apply_changes_automatically_hour, :as => :select, :collection => (0...24).map, :include_blank => false %>
       <%= form.input :filter_by_mac_address %> 
       <%= form.input :tc_contracts_per_provider_in_wan %> 
       <%= form.input :tc_contracts_per_provider_in_lan %> 

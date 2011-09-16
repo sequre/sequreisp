@@ -36,11 +36,12 @@ class Configuration < ActiveRecord::Base
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
   validates_presence_of :notification_timeframe
   validates_presence_of :language
-  
+
   validates_format_of :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers, :with => /^([0-9a-z-]+,)*[0-9a-z-]+$/, :allow_blank => true
 
   validates_numericality_of :notification_timeframe, :only_integer => true, :greater_than_or_equal_to => 0
   validates_numericality_of :transparent_proxy_max_load_average, :only_integer => true, :greater_than => 0, :less_than => 100
+  validates_presence_of :apply_changes_automatically_hour, :if => :apply_changes_automatically?
 
   def validate
     if !notification_email.blank?
@@ -98,5 +99,10 @@ class Configuration < ActiveRecord::Base
 
   include CommaSeparatedArray
   comma_separated_array_field :default_prio_protos, :default_prio_helpers, :default_tcp_prio_ports, :default_udp_prio_ports
+
+  def self.apply_changes_automatically!
+    return if Time.now.hour != apply_changes_automatically_hour
+    apply_changes if changes_to_apply?
+  end
 
 end

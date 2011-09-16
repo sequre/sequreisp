@@ -477,13 +477,19 @@ es:
               Debido a la limitación en el direccionamiento de memoria que poseen los CPU de 32
               bits, esta opción no puede ser habilitada en esa arquitectura.
           use_global_prios:
-            text:
+            text: >
               En casos de ISPs con un gran número de clientes (mayor a 2500) la construcción de
               prioridades individual por cada contrato puede resultar muy costosa a nivel de
               recursos del CPU, como memoria de kernel o capacidad de procesamiento.
 
               Para esos casos particulares se desarrolló esta opción en donde las prioridades
               son manejadas en forma global y no individualmente por contrato.
+          apply_changes_automatically:
+            text: >
+              Active esta opción si desea que los cambios se apliquen automáticamente una vez al día.
+          apply_changes_automatically_hour:
+            text: >
+              Hora del día en la que se van a aplicar los cambios automáticamente si dicha opción esta activada.
       address:
         title: I18n.fieldsets.providers.configuration_static_ips
         attributes:

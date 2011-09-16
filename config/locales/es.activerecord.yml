@@ -173,6 +173,8 @@ es:
         language: "Idioma"
         use_global_prios: "Deshabilitar prioridades por contrato y usar prioridades globales (experimental)"
         iptables_tree_optimization_enabled: "Optimizar reglas de iptables (usar sólo en versión de 64 bits)"
+        apply_changes_automatically: "Aplicar cambios automáticamente"
+        apply_changes_automatically_hour: "Hora de aplicación de los cambios automáticos"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
