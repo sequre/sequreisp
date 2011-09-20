@@ -1,9 +1,9 @@
 <% if !flash[:notice].blank? %>
-  <p class="notification" style="color: green"><%= flash[:notice] %></p>
+  <p class="notification" style="color: green"><%=h flash[:notice] %></p>
 <% end %>
 <% if !flash[:warning].blank? %>
-  <p class="notification notification_warning" style="color: yellow"><%= flash[:warning] %></p>
+  <p class="notification notification_warning" style="color: yellow"><%=h flash[:warning] %></p>
 <% end %>
 <% if !flash[:error].blank? %>
-  <p class="notification notification_error" style="color: red"><%= flash[:error] %></p>
+  <p class="notification notification_error" style="color: red"><%=h flash[:error] %></p>
 <% end %>
