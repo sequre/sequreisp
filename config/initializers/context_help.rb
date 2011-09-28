@@ -7,7 +7,7 @@ ContextHelp::Base.config[:link_to_help_builder] = lambda do |options|
   title = ContextHelp::Helpers.get_title(options)
   if title and options[:link_to_help] and !options[:link_to_help_shown]
     options[:link_to_help_shown] = true
-    "<a href=\"#\" onclick=\"context_help_link_to_help(this, '##{options[:item_id]}'); return false;\" id=\"#{options[:item_id]}_object\" class=\"context_help_link_to_help\"><span class=\"ui-icon ui-icon-help\" style=\"display: inline-block\"></a>"
+    "<a href=\"#\" onclick=\"context_help_link_to_help(this, '##{options[:item_id]}'); return false;\" id=\"#{options[:item_id]}_object\" class=\"context_help_link_to_help\"><span class=\"ui-icon ui-icon-help\" style=\"display: inline-block\"></span></a>"
   else
     ''
   end
