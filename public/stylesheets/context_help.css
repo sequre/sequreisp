@@ -59,6 +59,10 @@ div#context_help_bar {
   background-color: #eaeaea;
 }
 
+div#context_help_bar_ie6 {
+  background-color: #eaeaea;
+}
+
 div#context_help_bar div.chb_top_bar {
   /*background-color: #E3E2DA;*/
   font-weight: bold;
@@ -89,17 +93,28 @@ div#context_help_bar div.chb_content {
   overflow: scroll;
 }
 
-div#context_help_bar div.chb_content h1.help_title {
+div#context_help_bar_ie6 div.chb_content {
+  text-align: left;
+  padding-left: 10px;
+  padding-top: 10px;
+  padding-right: 5px; 
+}
+
+div#context_help_bar div.chb_content h1.help_title,
+div#context_help_bar_ie6 div.chb_content h1.help_title {
   font-size: 12px;
   font-weight: bold;
   word-wrap: break-word;
 }
 
-div#context_help_bar div.chb_content h1.help_title a {
+div#context_help_bar div.chb_content h1.help_title a,
+div#context_help_bar_ie6 div.chb_content h1.help_title a {
+  
   color: #fff;
 }
 
-div#context_help_bar div.chb_content h1.help_title.help_level_1 {
+div#context_help_bar div.chb_content h1.help_title.help_level_1,
+div#context_help_bar_ie6 div.chb_content h1.help_title.help_level_1 {
   font-size: 13px;
   background-color: #333;
   color: #fff;
@@ -109,16 +124,21 @@ div#context_help_bar div.chb_content h1.help_title.help_level_1 {
 }
 
 div#context_help_bar div.chb_content h1.help_title.help_level_2,
-div#context_help_bar div.chb_content h1.help_title.help_level_3 {
+div#context_help_bar div.chb_content h1.help_title.help_level_3,
+div#context_help_bar_ie6 div.chb_content h1.help_title.help_level_2,
+div#context_help_bar_ie6 div.chb_content h1.help_title.help_level_3 {
   margin-left: 10px;
 }
 
 div#context_help_bar div.chb_content h1.help_title.help_level_2 a,
-div#context_help_bar div.chb_content h1.help_title.help_level_3 a {
+div#context_help_bar div.chb_content p.help_title.help_level_3 a,
+div#context_help_bar_ie6 div.chb_content h1.help_title.help_level_2 a,
+div#context_help_bar_ie6 div.chb_content h1.help_title.help_level_3 a {
   color: #333;
 }
 
-div#context_help_bar div.chb_content div.help_text {
+div#context_help_bar div.chb_content div.help_text,
+div#context_help_bar_ie6 div.chb_content div.help_text {
   display: inline-block;
   font-size: 11px;
   line-height: 16px;
@@ -127,6 +147,8 @@ div#context_help_bar div.chb_content div.help_text {
 }
 
 div#context_help_bar div.chb_content div.help_text.help_level_2,
-div#context_help_bar div.chb_content div.help_text.help_level_3 {
+div#context_help_bar div.chb_content div.help_text.help_level_3,
+div#context_help_bar_ie6 div.chb_content div.help_text.help_level_2,
+div#context_help_bar_ie6 div.chb_content div.help_text.help_level_3 {
   margin-left: 10px;
 }

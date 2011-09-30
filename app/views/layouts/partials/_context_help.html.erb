@@ -3,6 +3,15 @@
     ContextHelp::Base.flush_items
     if help != ''
 %>
+<!--[if IE 6]>
+<div id="context_help_bar_ie6">
+  <div class="chb_content">
+    <h3><%= t 'buttons.context_help.help' %></h3>
+    <%= help %>
+  </div>
+</div>       
+<![endif]-->  
+<!--[if gt IE 6]>
 <div id="context_help_bar">
   <div class="chb_top_bar">
   <%= t 'buttons.context_help.close' %>
@@ -10,7 +19,7 @@
   <div class="chb_content">
       <%= help %>
   </div>
-</div>
+</div>       
 <div id="context_help_button_bar" class="horizontal_button_bar">
     <div class="hbb_container">
         <div class="hbb_content">
@@ -26,8 +35,39 @@
         </div>
     </div>
 </div>
+<![endif]-->  
+<!--[if !IE]> -->
+<div id="context_help_bar">
+  <div class="chb_top_bar">
+  <%= t 'buttons.context_help.close' %>
+  </div>
+  <div class="chb_content">
+      <%= help %>
+  </div>
+</div>       
+<div id="context_help_button_bar" class="horizontal_button_bar">
+    <div class="hbb_container">
+        <div class="hbb_content">
+            <div class="hbb_rotator">
+                <div id="context_help_button" class="hbb_button" unselectable="on">
+                    <div class="hbb_body">
+                        <span class="hbb_space"></span>
+                        <%= t 'buttons.context_help.help' %>
+                        <span class="hbb_space"></span>
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- <![endif]-->
 <script type="text/javascript">
-    $(function() {
+    $(function() {       
+        if ($.browser.msie && $.browser.version.substr(0,1)<7) {
+          var help = $('div#context_help_bar_ie6');
+          $('div#context_help_bar_ie6').detach();
+          $('div#container div#footer').before(help);
+        }
         $('div#context_help_button').click(function() {
             $('div#context_help_button_bar').animate({right: '-300px'}, 'fast');
             $('div#context_help_bar').animate({right: '0px'}, 'fast');
