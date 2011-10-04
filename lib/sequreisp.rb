@@ -572,9 +572,9 @@ def gen_iptables
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
+      f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
-        f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       end
 
       #
