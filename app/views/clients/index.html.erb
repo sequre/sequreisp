@@ -1,5 +1,6 @@
 <script type="text/javascript">
   $(function(){
+    initMoreToggle('#search_more', '#search_advanced', 'toggle_clients_search_advanced');
     $('#search_name_like').autocomplete({
       delay: 200,
       source: '<%= names_clients_path %>',
@@ -38,6 +39,21 @@
       <%= f.label :phone_like_or_phone_mobile_like, t('activerecord.attributes.client.phone') + '/' + t('activerecord.attributes.client.phone_mobile')%>
       <%= f.text_field :phone_like_or_phone_mobile_like %>
     </li>
+    <div sytle="clear: both">
+      <li><a id="search_more"><%= I18n.t('buttons.more') %></a><li>
+    </div>
+
+    <div id="search_advanced">
+      <li>
+        <%= f.label :address_like, t('activerecord.attributes.client.address') %>
+        <%= f.text_field :address_like %>
+      </li>
+      <li>
+        <%= f.label :detail_like, t('activerecord.attributes.client.details') %>
+        <%= f.text_field :details_like %>
+      </li>
+      <div style="clear: both"></div>
+    </div>
     <li>
       <br/>
       <%= f.submit t('buttons.search') %>
