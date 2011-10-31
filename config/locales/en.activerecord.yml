@@ -136,6 +136,7 @@ en:
         arp_filter: "Enable arp_filter for this link"
         current_status_time: "Uptime/Downtime"
         shape_rate_down_on_ingress: "Check that download traffic is not exceeded for this provider"
+        interface_id: "Interface"
       forwarded_port:
         provider: "Provider"
         public_port: "Public port"

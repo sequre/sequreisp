@@ -133,6 +133,7 @@ pt:
         arp_announce: "Fazer consultas ARP desde endereços IP locais na rede de destino"
         arp_filter: "Responder consultas ARP só pela interface pela qual se enrota o tráfico para o endereço consultado"
         current_status_time: "Tempo em serviço/fora de serviço"
+        interface_id: "Interface"
       forwarded_port:
         provider: "Fornecedor"
         public_port: "Porta pública"

@@ -139,6 +139,7 @@ es:
         arp_filter: "Responder consultas ARP sólo por la interfaz por la cual se enruta el tráfico a la dirección consultada"
         current_status_time: "Tiempo en servicio/fuera de servicio"
         shape_rate_down_on_ingress: "Controlar que no se exceda el tráfico descendente de este proveedor"
+        interface_id: "Interfaz"
       forwarded_port:
         provider: "Proveedor"
         public_port: "Puerto público"
