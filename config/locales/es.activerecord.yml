@@ -340,6 +340,7 @@ es:
     ip_already_in_use: "Ya está en uso"
     interface:
       unable_to_change_kind: "No se puede cambiar el tipo, esta interfaz tiene un proveedor asignado"
+      name_cannot_be_changed: "El nombre de una interfaz no se puede cambiar una vez creada"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "El proveedor seleccionado no pertenece al grupo del plan asignado"
       protocol_must_be_specified: "Debe especificar el protocolo"

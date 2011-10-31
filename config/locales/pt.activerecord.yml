@@ -317,6 +317,7 @@ pt:
     ip_already_in_use: "Endereço IP já está em uso"
     interface:
       unable_to_change_kind: "Não se pode mudar o tipo, esta interface tem um fornecedor atribuído"
+      name_cannot_be_changed: "O nome da interface não pode ser alterado uma vez criado"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "O fornecedor escolhido não pertence ao grupo do plano atribuído"
       protocol_must_be_specified: "Deve especificar o protocolo"

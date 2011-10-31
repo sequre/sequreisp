@@ -36,6 +36,8 @@ class Interface < ActiveRecord::Base
   validates_numericality_of :vlan_id, :allow_nil => true, :only_integer => true, :greater_than => 1, :less_than => 4095
   validates_uniqueness_of :name
 
+  validate :name_cannot_be_changed
+
   def validate
     if kind_changed? and kind_was == "wan" and provider
       errors.add(:kind, I18n.t('validations.interface.unable_to_change_kind'))
@@ -47,6 +49,10 @@ class Interface < ActiveRecord::Base
 
   after_update :queue_update_commands
   after_destroy :queue_destroy_commands
+
+  def name_cannot_be_changed
+    errors.add(:name, I18n.t('validations.interface.name_cannot_be_changed')) if not new_record? and name_changed?
+  end
 
   def queue_update_commands
     cq = QueuedCommand.new

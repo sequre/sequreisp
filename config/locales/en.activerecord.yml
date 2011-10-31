@@ -337,6 +337,7 @@ en:
     ip_already_in_use: "Already in use"
     interface:
       unable_to_change_kind: "Unable to change kind, this interface has a provider assigned"
+      name_cannot_be_changed: "The interface name cannot be changed once created"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "The seleceted provider does not belong to the group's assigned plan"
       protocol_must_be_specified: "Protocol must be specified"
