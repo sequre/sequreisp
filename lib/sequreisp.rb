@@ -965,6 +965,15 @@ def check_links
     end
 
     p.save(false) if p.changed?
+
+    #TODO refactorizar esto de alguna manera
+    # la idea es killear el dhcp si esta caido más de 30 segundos
+    # pero solo hacer kill en la primer pasada cada minuto, para darle tiempo de levantar
+    # luego lo de abajo lo va a levantar
+    offline_time = p.offline_time
+    if p.kind == "dhcp" and offline_time > 30 and (offline_time-30)%120 < 16
+      system "/usr/bin/pkill -f 'dhclient.#{p.interface.name}'"
+    end
   end
 
   begin
