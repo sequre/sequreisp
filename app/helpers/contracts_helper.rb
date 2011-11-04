@@ -33,4 +33,7 @@ module ContractsHelper
     end
     value
   end
+  def contract_ip_link(ip)
+    link_to '<span class="ui-icon ui-icon-newwin" style="display: inline-block"></span>', "http://#{ip}/"
+  end
 end

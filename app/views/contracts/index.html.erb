@@ -85,9 +85,9 @@
           <td><%=link_to h(contract.plan.name), plan_path(contract.plan) %></td>
           <td>
             <% if contract.public_address %>
-              <span class="public_address"><%= contract.public_address.ip %>-&gt;</span><%=h contract.ip %>
+              <span class="public_address"><%= contract.public_address.ip %>-&gt;</span><%= h(contract.ip) + contract_ip_link(contract.ip) %>
             <% else %>
-              <%=h contract.ip %>
+              <%= h(contract.ip) + contract_ip_link(contract.ip) %>
             <% end %>
             <% if !contract.mac_address.blank? %>
               <br/><span class="mac_address">(<%= contract.mac_address %>)</span>
