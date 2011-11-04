@@ -278,6 +278,7 @@ es:
     add_ip: "Agregar dirección IP"
     scan_interfaces: "Detectar nuevas interfaces"
     more: "Más"
+    less: "Menos"
     view_audit: "Auditoría"
     context_help:
       help: "Ayuda"

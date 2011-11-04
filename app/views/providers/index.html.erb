@@ -6,6 +6,15 @@
     font-style: italic;
   }
 </style>
+<script type="text/javascript">
+  $(function(){
+    $('.truncate').jTruncate({
+      length: 100,
+      moreText: '<%= I18n.t('buttons.more') %>',
+      lessText: '<%= I18n.t('buttons.less') %>'
+    })
+  })
+</script>
 <% content_for :title, t('menu.providers') %>
 <% heading t('menu.providers') %>
 <% render_new_button_for :provider %>
@@ -82,9 +91,9 @@
               <% end %>
             <% end %>
           </td>
-          <td>
+          <td class="truncate">
             <%=h provider.ip %><br/>
-            <%= provider.addresses.collect{ |a| a.ip}.join("<br/>") %>
+            <%= provider.addresses.collect{ |a| a.ip}.join(" <br/>") %>
           </td>
           <td><%=h provider.rate_down %>/<%=h provider.rate_up %></td>
           <td><%=h provider.provider_group.name rescue 'Undefined' %></td>

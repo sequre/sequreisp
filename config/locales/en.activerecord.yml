@@ -275,6 +275,7 @@ en:
     add_ip: "Add IP address"
     scan_interfaces: "Scan for new interfaces"
     more: "More"
+    less: "Less"
     view_audit: 'Audit'
     context_help:
       help: "Help"

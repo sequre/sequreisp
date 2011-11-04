@@ -259,6 +259,7 @@ pt:
     add_ip: "Agregar endereço IP"
     scan_interfaces: "Detectar novas interfaces"
     more: "Mais"
+    less: "Menos"
   backup:
     backup_db_legend: "Fazer cópia de resguardo (base de dados)"
     backup_full_legend: "Fazer cópia de resguardo completa (aplicativo e base de datos)"
