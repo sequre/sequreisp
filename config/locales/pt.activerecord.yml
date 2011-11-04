@@ -337,7 +337,9 @@ pt:
       notification_email_invalid: "Não é um e-mail válido"
     plan:
       not_enough_down_bandwidth_in_this_plan: "Não há suficiente largo de banda descendente para atribuir este este plano"
+      not_enough_down_bandwidth: "Não há suficiente largo de banda descendente"
       not_enough_up_bandwidth_in_this_plan: "Não há suficiente largo de banda ascendente para atribuir este plano"
+      not_enough_up_bandwidth: "Não há suficiente largo de banda ascendente"
   fieldsets:
     contract:
       details: "Detalhes"

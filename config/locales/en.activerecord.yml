@@ -357,7 +357,9 @@ en:
       notification_email_invalid: "Invalid email address"
     plan:
       not_enough_down_bandwidth_in_this_plan: "There's not enough download bandwidth to assign this plan"
+      not_enough_down_bandwidth: "There's not enough download bandwidth"
       not_enough_up_bandwidth_in_this_plan: "There's not enough upload bandwidth to assign this plan"
+      not_enough_up_bandwidth: "There's not enough upload bandwidth"
   fieldsets:
     contract:
       details: "Details"

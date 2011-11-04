@@ -30,6 +30,48 @@ class Plan < ActiveRecord::Base
   validates_numericality_of :rate_down, :ceil_down, :rate_up, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than_or_equal_to => 0
   validates_numericality_of :burst_down, :burst_up, :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0
 
+  validate :remaining_rate_down
+  validate :remaining_rate_up
+
+  def remaining_rate_down
+    if not new_record?
+      if rate_down_changed? or provider_group_id_changed?
+        remaining_rate_down = if provider_group_id_changed?
+          ProviderGroup.find(provider_group_id).remaining_rate_down
+        else
+          provider_group.gremaining_rate_down + used_rate_down(rate_down_was)
+        end
+        if used_rate_down > remaining_rate_down
+          errors.add(:rate_down, I18n.t('validations.plan.not_enough_down_bandwidth'))
+        end
+      end
+    end
+  end
+
+  def remaining_rate_up
+    if not new_record?
+      if rate_up_changed? or provider_group_id_changed?
+        remaining_rate_up = if provider_group_id_changed?
+          ProviderGroup.find(provider_group_id).remaining_rate_up
+        else
+          provider_group.gremaining_rate_up + used_rate_up(rate_up_was)
+        end
+        if used_rate_up > remaining_rate_up
+          errors.add(:rate_up, I18n.t('validations.plan.not_enough_up_bandwidth'))
+        end
+      end
+    end
+  end
+  def used_rate_down(old_rate_down=nil)
+    rd = old_rate_down.nil? ? rate_down : old_rate_down
+    multiplier = rd == 0 ? 0.008 : rd
+    contracts.count * multiplier
+  end
+  def used_rate_up(old_rate_up=nil)
+    rd = old_rate_up.nil? ? rate_up : old_rate_up
+    multiplier = rd == 0 ? 0.008 : rd
+    contracts.count * multiplier
+  end
   def burst_down_to_bytes
     burst_down * 1024
   end

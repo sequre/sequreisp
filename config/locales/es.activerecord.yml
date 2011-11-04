@@ -360,7 +360,9 @@ es:
       notification_email_invalid: "No es un e-mail válido"
     plan:
       not_enough_down_bandwidth_in_this_plan: "No hay suficiente ancho de banda descendente para asignar este plan"
+      not_enough_down_bandwidth: "No hay suficiente ancho de banda descendente"
       not_enough_up_bandwidth_in_this_plan: "No hay suficiente ancho de banda ascendente para asignar este plan"
+      not_enough_up_bandwidth: "No hay suficiente ancho de banda ascendente"
   fieldsets:
     contract:
       details: "Detalles"
