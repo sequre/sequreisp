@@ -39,7 +39,7 @@ class Plan < ActiveRecord::Base
         remaining_rate_down = if provider_group_id_changed?
           ProviderGroup.find(provider_group_id).remaining_rate_down
         else
-          provider_group.gremaining_rate_down + used_rate_down(rate_down_was)
+          provider_group.remaining_rate_down + used_rate_down(rate_down_was)
         end
         if used_rate_down > remaining_rate_down
           errors.add(:rate_down, I18n.t('validations.plan.not_enough_down_bandwidth'))
@@ -54,7 +54,7 @@ class Plan < ActiveRecord::Base
         remaining_rate_up = if provider_group_id_changed?
           ProviderGroup.find(provider_group_id).remaining_rate_up
         else
-          provider_group.gremaining_rate_up + used_rate_up(rate_up_was)
+          provider_group.remaining_rate_up + used_rate_up(rate_up_was)
         end
         if used_rate_up > remaining_rate_up
           errors.add(:rate_up, I18n.t('validations.plan.not_enough_up_bandwidth'))
