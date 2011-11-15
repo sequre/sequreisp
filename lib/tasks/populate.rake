@@ -24,7 +24,7 @@ namespace :db do
       ProviderGroup.create!( :name => "ComSat")
       ProviderGroup.create!( :name => "IFX")
       ProviderGroup.create!( :name => "ADSLs")
-      p = Provider.create!(
+      provider_comsat = Provider.create!(
         :provider_group => ProviderGroup.find_by_name("ComSat"),
         :interface => Interface.find_by_name("eth0.3"),
         :kind => "static",
@@ -36,9 +36,9 @@ namespace :db do
         :rate_down => "10240",
         :rate_up => "10240"
       )
-      p.addresses.create!(:ip => "200.100.100.11", :netmask => "255.255.255.0")
-      p.addresses.create!(:ip => "200.100.101.2", :netmask => "255.255.255.0")
-      p.addresses.create!(:ip => "200.100.101.3", :netmask => "255.255.255.0")
+      provider_comsat.addresses.create!(:ip => "200.100.100.11", :netmask => "255.255.255.0")
+      provider_comsat.addresses.create!(:ip => "200.100.101.2", :netmask => "255.255.255.0")
+      provider_comsat.addresses.create!(:ip => "200.100.101.3", :netmask => "255.255.255.0")
       p = Provider.create!(
         :provider_group => ProviderGroup.find_by_name("IFX"),
         :interface => Interface.find_by_name("eth0.2"),
@@ -97,7 +97,7 @@ namespace :db do
         :pppoe_user => "test@speedy.com.ar",
         :pppoe_pass => "123456"
       )
-      Plan.create!(
+      plan_comsat_simetrico_2m = Plan.create!(
         :name => "Compartido Simetrico hasta 2M",
         :provider_group => ProviderGroup.find_by_name("ComSat"),
         :rate_down => 0,
@@ -148,7 +148,10 @@ namespace :db do
           :ip => "192.168.#{ip3}.#{ip4.to_s}",
           :ceil_dfl_percent => 70,
           :client_id => client.id,
-          :plan_id => plans.sort_by{rand}.first
+          :plan_id => plans.sort_by{rand}.first,
+          :detail => Faker::Lorem.words(1),
+          :cpe => Faker::Lorem.words(1),
+          :node => Faker::Lorem.words(1)
         )
         ip4+=1
         if ip4==254
@@ -156,7 +159,14 @@ namespace :db do
           ip4=2
         end
       end
-   
+      c = Contract.first
+      c.plan = plan_comsat_simetrico_2m
+      c.public_address = provider_comsat.addresses.first
+      c.save
+      c = Contract.first(:offset => 1)
+      c.forwarded_ports << ForwardedPort.create(:provider => c.plan.provider_group.providers.first, :public_port => 8080, :private_port => 80, :tcp => true)
+      c.forwarded_ports << ForwardedPort.create(:provider => c.plan.provider_group.providers.first, :public_port => 8081, :private_port => 81, :tcp => true)
+      c.forwarded_ports << ForwardedPort.create(:provider => c.plan.provider_group.providers.first, :public_port => 8082, :private_port => 82, :tcp => true)
     end
   end
 end

@@ -11,6 +11,9 @@ namespace :db do
   desc 'Remigrate and seed'
   task :reseed => [:remigrate, :seed]
 
+  desc 'Remigrate and seed'
+  task :repopulate => [:remigrate, :seed, 'populate:all']
+
   desc 'Same as script/runner misc/simulate-rrd.rb'
   task :simulate => :environment do
     eval(File.open('misc/simulate-rrd.rb', 'r').read)
