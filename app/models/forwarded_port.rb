@@ -32,11 +32,11 @@ class ForwardedPort < ActiveRecord::Base
   validate :public_port_cant_be_on_the_prohibited_list
 
   def validate
-    if !provider_id.nil? and !contract_id.nil?
-      if Provider.find(provider_id).provider_group !=  Contract.find(contract_id).provider_group
-        errors.add(:provider, I18n.t("validations.forwarded_port.provider_doesnt_belong_to_group_plan"))
-      end
-    end
+    #if !provider_id.nil? and !contract_id.nil?
+    #  if Provider.find(provider_id).provider_group !=  Contract.find(contract_id).provider_group
+    #    errors.add(:provider, I18n.t("validations.forwarded_port.provider_doesnt_belong_to_group_plan"))
+    #  end
+    #end
     if !tcp and !udp
       errors.add(:tcp, I18n.t("validations.forwarded_port.protocol_must_be_specified"))
     end
