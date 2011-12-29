@@ -182,6 +182,12 @@ class Contract < ActiveRecord::Base
   before_save :check_integer_overflow  
   before_create :bind_klass
 
+  alias :real_klass :klass
+  def klass
+    bind_klass if real_klass.nil?
+    real_klass
+  end
+
   def ip= val
     write_attribute(:ip, val)
     save_netmask
