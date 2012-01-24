@@ -286,6 +286,7 @@ pt:
     heading: "Estatísticas %{name}"
     instant: "Instântaneo"
     last_24h: "Últimas 24 horas"
+    last_week: "Última semana"
     last_month: "Último mês"
     last_year: "Último ano"
   about:

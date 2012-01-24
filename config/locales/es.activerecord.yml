@@ -309,6 +309,7 @@ es:
     heading: "Estadísticas %{name}"
     instant: "Instántaneo"
     last_24h: "Últimas 24 horas"
+    last_week: "Última semana"
     last_month: "Último mes"
     last_year: "Último año"
   about:
