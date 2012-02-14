@@ -31,6 +31,12 @@ class Permissions < Aegis::Permissions
     end
   end
 
+  resources :interfaces, :provider_groups, :contracts do
+    action :instant_rate do
+      allow :technical, :technical_readonly, :administrative, :administrative_readonly
+    end
+  end
+
   resources :providers, :provider_groups, :interfaces do
     writing do
       allow :technical
