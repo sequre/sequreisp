@@ -101,7 +101,7 @@ class DashboardsController < ApplicationController
       @kind = kind == 'Mem:' ? "RAM" : "Swap"
       @total = total.to_i
       @free = free.to_i + cached.to_i
-      @free_p = @free * 100 / @total
+      @free_p = @free * 100 / @total rescue 0
       @used = @total - @free
       @used_p = 100 - @free_p
     end
@@ -126,7 +126,7 @@ class DashboardsController < ApplicationController
       @total = total.to_i
       @total_g = to_g @total
       @free = free.to_i
-      @free_p = @free * 100 / @total
+      @free_p = @free * 100 / @total rescue 0
       @used = @total - @free 
       @used_p = 100 - @free_p
       @mount_point = mount_point
@@ -143,7 +143,7 @@ class DashboardsController < ApplicationController
     end
     def self.load_all
       ret = []
-      `/bin/df -text3 -text4`.each_with_index do |l,i| 
+      `/bin/df -P -text3 -text4`.each_with_index do |l,i|
         next if i==0; 
         d = Disk.new([i] + l.split)
         ret << d
