@@ -70,5 +70,11 @@ class Permissions < Aegis::Permissions
   resources :audits do
   end
 
+  resource :dashboard do
+    action :index, :cpu, :services, :load_average do
+      allow :technical, :technical_readonly
+    end
+  end
+
 end
 

@@ -60,6 +60,10 @@ ul li a:hover {
         </li>
       <% end %>
 
+      <% if current_user.may_show_dashboard? %>
+        <li><%= link_to t('menu.dashboard'), dashboard_path %></li>
+      <% end %>
+
       <% if current_user.may_index_configuration? %>
         <li><%= link_to t('menu.configuration'), configurations_path %>
           <ul class="submenu">

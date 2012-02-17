@@ -253,6 +253,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
+    dashboard: "Dashboard"
     apply_changes: "Apply changes"
     backups: "Backups"
     modules: "Plugins"
@@ -312,6 +313,22 @@ en:
   about:
     version: "SequreISP version"
     url: "Upgrades, plugins and support available at"
+  dashboard:
+    services: "Services"
+    cpu: "CPU Usage"
+    memory: "Memory Usage"
+    disks: "Disk Usage"
+    services_table:
+      service: "Service"
+      status: "Status"
+    load_average: "Load Average"
+    load_average_chart:
+      now: "Last minute"
+      min5: "Last 5 minutes"
+      min15: "Last 15 minutes"
+    pie:
+      free: "Free"
+      use: "In use"
   actions:
     edit: "Editing %{model}"
     new: "Creating %{model}"

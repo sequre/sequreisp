@@ -256,6 +256,7 @@ es:
     interfaces: "Interfaces"
     users: "Usuarios"
     configuration: "Configuración"
+    dashboard: "Panel"
     apply_changes: "Aplicar cambios"
     backups: "Copias de resguardo"
     modules: "Módulos"
@@ -315,6 +316,22 @@ es:
   about:
     version: "Version SequreISP"
     url: "Actualizaciones, módulos y soporte disponible en"
+  dashboard:
+    services: "Servicios"
+    cpu: "Uso de CPU"
+    memory: "Uso de Memoria"
+    disks: "Uso de discos"
+    services_table:
+      service: "Servicio"
+      status: "Estado"
+    load_average: "Load Average (Promedio de Carga)"
+    load_average_chart:
+      now: "Último minuto"
+      min5: "Últimos 5 minutos"
+      min15: "Últimos 15 minutos"
+    pie:
+      free: "Libre"
+      use: "En uso"
   actions:
     edit: "Editando %{model}"
     new: "Creando %{model}"
