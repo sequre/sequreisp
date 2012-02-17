@@ -57,10 +57,10 @@ class DashboardsController < ApplicationController
       @mem /= 1024
       @name = service[:name]
 
-      color = mem_p > 60 ? '#ff0000' : '#00aa00'
+      color = (mem_p > 60 or not up) ? '#ff0000' : '#00aa00'
       @mem_p_html = "<span style=\"color: #{color}\">#{mem_p} (#{mem.round}MB)</span>"
 
-      color = cpu_p > 60 ? '#ff0000' : '#00aa00'
+      color = (cpu_p > 60 or not up) ? '#ff0000' : '#00aa00'
       @cpu_p_html = "<span style=\"color: #{color}\">#{cpu_p}</span>"
 
       color = up ? '#00aa00' : '#ff0000'
