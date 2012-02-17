@@ -70,7 +70,9 @@ class DashboardsController < ApplicationController
     def stats
     end
     def self.load_all
-      SERVICES.each_with_object([]) do |s,memo|
+      servs = SERVICES
+      servs << { :id => 99,:name => 'SSH', :command => 'sshd', :pattern => 'sshd' } if Rails.env.development?
+      servs.each_with_object([]) do |s,memo|
         memo << Service.new(s)
       end
     end
