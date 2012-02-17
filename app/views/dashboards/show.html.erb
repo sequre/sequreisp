@@ -126,14 +126,13 @@
     });
     setInterval(function() {
       $('.services_loader').show();
-      $.get('<%= services_dashboard_path %>',function() {
-        $('.services_loader').hide();
-        },function(services){
+      $.get('<%= services_dashboard_path %>', function(services){
         $.each(services, function (index, s) {
           $('#up_'+ s.id).html(s.up_html);
           $('#cpu_p_'+ s.id).html(s.cpu_p_html);
           $('#mem_p_'+ s.id).html(s.mem_p_html);
         });
+        $('.services_loader').hide();
       },'json');
     }, 15000);
     load_average_chart = new Highcharts.Chart({
