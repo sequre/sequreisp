@@ -80,7 +80,10 @@ class Permissions < Aegis::Permissions
   end
 
   resource :dashboard do
-    action :index, :cpu, :services, :load_average do
+    reading do
+      allow :technical, :technical_readonly
+    end
+    action :cpu, :services, :load_average do
       allow :technical, :technical_readonly
     end
   end
