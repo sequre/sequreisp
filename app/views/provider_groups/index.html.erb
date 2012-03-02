@@ -11,8 +11,14 @@
     <tbody>
       <tr class="odd">
         <th><%=t 'activerecord.attributes.provider_group.name' %></th>
-        <th><%=t 'activerecord.attributes.provider_group.rate_down' %></th>
-        <th><%=t 'activerecord.attributes.provider_group.rate_up' %></th>
+        <th><%=
+            "#{t 'activerecord.attributes.provider_group.rate_down'}" +
+            " (#{t 'activerecord.attributes.provider_group.concurrency_index'})" %>
+        </th>
+        <th><%=
+            "#{t 'activerecord.attributes.provider_group.rate_up'}" +
+            " (#{t 'activerecord.attributes.provider_group.concurrency_index'})" %>
+        </th>
         <th><%=t 'activerecord.attributes.provider_group.state' %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
         <% if current_user.may_update_provider_groups? or current_user.may_index_provider_groups? %>
@@ -30,8 +36,8 @@
             <%= provider_group.name %><br/>
             <%= link_to Graph.new(:element => provider_group).img("day", "small"), graph_path(provider_group ,:class => "ProviderGroup") %>
           </td>
-          <td><%=h provider_group.rate_down %></td>
-          <td><%=h provider_group.rate_up %></td>
+          <td><%=h provider_group.rate_down %> (<%= pretty_currency_index(provider_group.concurrency_index_down) %>%)</td>
+          <td><%=h provider_group.rate_up %> (<%= pretty_currency_index(provider_group.concurrency_index_up) %>%)</td>
           <td><%=h t "aasm.provider_group.#{provider_group.state}" %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => provider_group} %>
           <% if current_user.may_update_provider_group?(provider_group) %>

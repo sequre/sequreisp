@@ -116,6 +116,7 @@ en:
         rate_down: "Download(kbps)"
         rate_up: "Upload(kbps)"
         state: "State"
+        concurrency_index: "Concurrency %"
       provider:
         provider_group: "Provider Group"
         name: "Name"

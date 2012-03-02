@@ -149,4 +149,18 @@ class ProviderGroup < ActiveRecord::Base
   def auditable_name
     "#{self.class.human_name}: #{name}"
   end
+  def concurrency_index_down
+    begin
+      rate_down * 100 / contracts.all(:include => :plan).collect{ |c| c.plan.ceil_down }.sum
+    rescue
+      0
+    end
+  end
+  def concurrency_index_up
+    begin
+      rate_up * 100 / contracts.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
+    rescue
+      0
+    end
+  end
 end

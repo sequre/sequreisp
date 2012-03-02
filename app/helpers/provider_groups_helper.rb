@@ -16,4 +16,8 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 module ProviderGroupsHelper
+  def pretty_currency_index(ci)
+    color =  ci > 20 ? "#00cc00" : "#ff0000"
+    "<b><span style=\"color: #{color}\">#{ci}</span></b>"
+  end
 end

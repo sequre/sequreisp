@@ -119,6 +119,7 @@ es:
         rate_down: "Descendente [kbps]"
         rate_up: "Ascendente [kbps]"
         state: "Estado"
+        concurrency_index: "Simultaneidad %"
       provider:
         provider_group: "Grupo de proveedores"
         name: "Nombre"
