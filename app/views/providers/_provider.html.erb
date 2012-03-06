@@ -52,18 +52,18 @@
       <%= form.input :netmask, :wrapper_html => { :class => "left" }  %> 
       <div style="clear: both"></div> 
       <%= form.input :gateway %> 
-      <% form.inputs :name => t('fieldsets.provider.configuration_static_ips') + " <a id=\"ip_alias_more\">#{I18n.t('buttons.more')}</a>", :id => "ips",
-                     :context_help => { :path => { :custom => 'plan.fieldsets.configuration_static_ips' } } do %>
-        <% form.semantic_fields_for :addresses do |address| %>
-          <%= render "shared/address_fields", :f => address %>
-        <% end %>
-        <li><%= link_to_add_fields t('buttons.add_ip'), form, :addresses %> </li>
-      <% end %>
     <% end %>
     <% form.inputs :name => t('fieldsets.provider.configuration_adsl'), :id => "adsl", :class => :provider_kind do %>
       <%= form.input :pppoe_user, :wrapper_html => { :class => "left" } %> 
       <%= form.input :pppoe_pass, :wrapper_html => { :class => "left" }  %> 
       <div style="clear: both"></div> 
+    <% end %>
+    <% form.inputs :name => t('fieldsets.provider.configuration_static_ips') + " <a id=\"ip_alias_more\">#{I18n.t('buttons.more')}</a>", :id => "ips",
+                   :context_help => { :path => { :custom => 'plan.fieldsets.configuration_static_ips' } } do %>
+      <% form.semantic_fields_for :addresses do |address| %>
+        <%= render "shared/address_fields", :f => address %>
+      <% end %>
+      <li><%= link_to_add_fields t('buttons.add_ip'), form, :addresses %> </li>
     <% end %>
     <% form.inputs :name => t('fieldsets.provider.advanced'), :id => "advanced",
                    :context_help => { :path => { :custom => 'plan.fieldsets.advanced' } } do %>

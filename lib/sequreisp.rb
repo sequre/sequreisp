@@ -873,6 +873,12 @@ def do_provider_up(p)
         do_port_forwardings f, fp, false
         do_port_forwardings_avoid_nat_triangle f, fp, false
       end
+      # if we have aditional ips...
+      p.addresses.each do |a|
+        f.puts "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
+        f.puts "ip route re #{a.network} dev #{p.link_interface}"
+        #ips << "#{a.ruby_ip.to_s}"
+      end
       if p.kind == "adsl"
         f.puts "tc qdisc del dev #{p.link_interface} root"
         f.puts "tc qdisc del dev #{p.link_interface} ingress"
