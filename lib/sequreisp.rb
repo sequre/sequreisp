@@ -766,11 +766,23 @@ def setup_provider_interface(f, p)
     if pppd_running < 2  and not system("/sbin/ifconfig #{p.link_interface} 1>/dev/null 2>/dev/null")
       f.puts "/usr/bin/pon #{p.interface.name}"
     end
+    if p.online?
+      p.addresses.each do |a|
+        f.puts "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
+        f.puts "ip route re #{a.network} dev #{p.link_interface}"
+      end
+    end
   when "dhcp"
     #pgrep se ejecuta via 'sh -c' entonces siempre se ve a si mismo y la cuenta si o si arranca en 1
     dhcp_running = `/usr/bin/pgrep -c -f 'dhclient.#{p.interface.name}' 2>/dev/null`.chomp.to_i || 0
     if dhcp_running < 2
       f.puts "dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
+    end
+    if p.online?
+      p.addresses.each do |a|
+        f.puts "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
+        f.puts "ip route re #{a.network} dev #{p.link_interface}"
+      end
     end
   when "static"
     #current_ips = `ip address show dev #{p.link_interface} 2>/dev/null`.scan(/inet ([\d.\/]+) /).flatten.collect { |ip| (IP.new ip).to_s }
