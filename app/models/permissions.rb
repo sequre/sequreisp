@@ -30,6 +30,9 @@ class Permissions < Aegis::Permissions
       allow :administrative, :technical, :administrative_readonly, :technical_readonly
     end
   end
+  action :names_clients do
+    allow :technical, :technical_readonly, :administrative, :administrative_readonly
+  end
 
   resources :contracts do
     writing do
@@ -41,6 +44,9 @@ class Permissions < Aegis::Permissions
     action :instant_rate do
       allow :technical, :technical_readonly, :administrative, :administrative_readonly
     end
+  end
+  action :free_ips_contracts, :ips_contracts do
+    allow :technical, :technical_readonly, :administrative, :administrative_readonly
   end
 
   resources :providers, :provider_groups, :interfaces do
