@@ -14,6 +14,7 @@
         <th><%=
             "#{t 'activerecord.attributes.provider_group.rate_down'}" +
             " (#{t 'activerecord.attributes.provider_group.concurrency_index'})" %>
+            <%= ContextHelp::Base.help_for(:context_help => {:path => {:tag => :th, :custom => 'provider_group.concurrency_index' }, :level_class => 'help_level_1'})%>
         </th>
         <th><%=
             "#{t 'activerecord.attributes.provider_group.rate_up'}" +

@@ -24,7 +24,7 @@ end
 ContextHelp::Base.config[:inline_help_builder] = lambda do |options|
   if options[:show_inline]
     ContextHelp::Base.html_help(options)
-  elsif options[:link_to_help] and options[:path][:tag] == :label
+  elsif options[:link_to_help] and [:label, :th].include?(options[:path][:tag])
     ContextHelp::Base.link_to_help(options)
   else
     ''

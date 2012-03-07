@@ -583,4 +583,15 @@ es:
           configuration_static_ips:
             level_class: 'help_level_1'
             text: ''
-
+      provider_group:
+        concurrency_index:
+            title: 'Índice de simutaniedad'
+            text: >
+              El índice de simultaniedad nos da información acerca de la relación entre el ancho de
+              banda que prometemos a nuestros clientes y el que realmente tenemos.
+              Se habla de que para ser ISP se debe tener al menos un 20% del ancho de banda que se
+              vende nominalmente a los clientes, ya que nunca el 100% de los clientes van a estar
+              reclamando el 100% del ancho de banda que contrataron.
+              La relación óptima va a variar para cada ISP en particular, el 20% es sólo una guía.
+              Pero el seguimiento de este número a lo largo del tiempo le puede dar una mano para saber
+              cuando es el momento de comprar más ancho de banda.
