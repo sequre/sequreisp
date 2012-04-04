@@ -16,9 +16,6 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Contract < ActiveRecord::Base
-  FILE_SERVICES = RAILS_ROOT + "/db/files/valid_services"
-  FILE_PROTOCOLS = RAILS_ROOT + "/db/files/valid_protocols"
-  FILE_HELPERS = RAILS_ROOT + "/db/files/valid_helpers"
   acts_as_audited :except => [:netmask,
                               :queue_down_prio, :queue_up_prio, :queue_down_dfl, :queue_up_dfl,
                               :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl]
@@ -94,22 +91,7 @@ class Contract < ActiveRecord::Base
     netmask == "255.255.255.255"
   end
 
-  def validate_in_range_or_in_file(attr, min, max, file)
-    valid_services= IO.readlines(file).collect{ |i| i.chomp } rescue [] 
-    invalid_values = []
-    if not self[attr].nil?
-      self[attr].split(/,|:/).each do |i|
-        is_integer = Integer(i) rescue false
-        unless (is_integer and i.to_i > min and i.to_i < max) or valid_services.include?(i)
-          invalid_values << i
-        end
-      end
-      if not invalid_values.empty? 
-        errors.add(attr, I18n.t('validations.contract.in_range_or_in_file_invalid', :invalid_values => invalid_values.join(",")))
-      end
-    end
-  end
-
+  include PriosCheck
   def validate
     if not ip.blank?
       # Address tiene las ips de las interfaces y los  proveedores
@@ -117,18 +99,11 @@ class Contract < ActiveRecord::Base
         errors.add(:ip, I18n.t('validations.ip_already_in_use'))
       end
     end
-    if not tcp_prio_ports.blank?
-      validate_in_range_or_in_file(:tcp_prio_ports, 0,65536, FILE_SERVICES)
-    end
-    if not udp_prio_ports.blank?
-      validate_in_range_or_in_file(:udp_prio_ports, 0,65536, FILE_SERVICES)
-    end
-    if not prio_protos.blank?
-      validate_in_range_or_in_file(:prio_protos, -1,256, FILE_PROTOCOLS)
-    end
-    if not prio_helpers.blank?
-      validate_in_range_or_in_file(:prio_helpers, 0, 0, FILE_HELPERS)
-    end
+    validate_in_range_or_in_file(:tcp_prio_ports, 0,65536, :service)
+    validate_in_range_or_in_file(:udp_prio_ports, 0,65536, :service)
+    validate_in_range_or_in_file(:prio_protos, -1,256, :protocol)
+    validate_in_range_or_in_file(:prio_helpers, 0, 0, :helper)
+
     if not plan_id.nil?
       new_plan = Plan.find(plan_id)
       remaining_rate_down = new_plan.provider_group.remaining_rate_down

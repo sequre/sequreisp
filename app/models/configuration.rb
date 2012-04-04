@@ -43,7 +43,13 @@ class Configuration < ActiveRecord::Base
   validates_numericality_of :transparent_proxy_max_load_average, :only_integer => true, :greater_than => 0, :less_than => 30
   validates_presence_of :apply_changes_automatically_hour, :if => :apply_changes_automatically?
 
+  include PriosCheck
   def validate
+    validate_in_range_or_in_file(:default_tcp_prio_ports, 0,65536, :service)
+    validate_in_range_or_in_file(:default_udp_prio_ports, 0,65536, :service)
+    validate_in_range_or_in_file(:default_prio_protos, -1,256, :protocol)
+    validate_in_range_or_in_file(:default_prio_helpers, 0, 0, :helper)
+
     if !notification_email.blank?
       invalid=false
       notification_email.split(",").each do |ne|
