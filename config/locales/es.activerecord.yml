@@ -358,6 +358,7 @@ es:
   mailing:
   validations:
     ip_already_in_use: "Ya está en uso"
+    ip_is_not_valid: "La ip ingresada no es válida"
     interface:
       unable_to_change_kind: "No se puede cambiar el tipo, esta interfaz tiene un proveedor asignado"
       name_cannot_be_changed: "El nombre de una interfaz no se puede cambiar una vez creada"

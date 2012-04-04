@@ -355,6 +355,7 @@ en:
   mailing:
   validations:
     ip_already_in_use: "Already in use"
+    ip_is_not_valid: "Invalid IP address"
     interface:
       unable_to_change_kind: "Unable to change kind, this interface has a provider assigned"
       name_cannot_be_changed: "The interface name cannot be changed once created"

@@ -26,9 +26,11 @@ class Address < ActiveRecord::Base
   watch_on_destroy
 
   validates_presence_of :ip, :netmask
-  validates_format_of :ip, :with => /^([12]{0,1}[0-9]{0,1}[0-9]{1}\.){3}[12]{0,1}[0-9]{0,1}[0-9]{1}(\/[123]{0,1}[0-9]{1}){0,1}$/, :allow_blank => true
   validates_format_of :netmask, :with => /^([12]{0,1}[0-9]{0,1}[0-9]{1}\.){3}[12]{0,1}[0-9]{0,1}[0-9]{1}$/, :allow_blank => true
   validates_uniqueness_of :ip
+
+  include IpAddressCheck
+  validate_ip_format_of :ip
 
   def validate
     if not ip.blank?

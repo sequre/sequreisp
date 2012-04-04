@@ -317,6 +317,7 @@ pt:
   mailing:
   validations:
     ip_already_in_use: "Endereço IP já está em uso"
+    ip_is_not_valid: "Endereço ip é inválido"
     interface:
       unable_to_change_kind: "Não se pode mudar o tipo, esta interface tem um fornecedor atribuído"
       name_cannot_be_changed: "O nome da interface não pode ser alterado uma vez criado"

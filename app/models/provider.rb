@@ -44,7 +44,6 @@ class Provider < ActiveRecord::Base
   validates_presence_of :ip, :netmask, :gateway, :if => Proc.new { |p| p.kind == "static" }
   validates_presence_of :pppoe_user, :pppoe_pass, :if => Proc.new { |p| p.kind == "adsl" }
   validates_length_of :name, :in => 3..128
-  validates_format_of :ip, :gateway, :with => /^([12]{0,1}[0-9]{0,1}[0-9]{1}\.){3}[12]{0,1}[0-9]{0,1}[0-9]{1}(\/[123]{0,1}[0-9]{1}){0,1}$/, :allow_blank => true
   validates_format_of :netmask, :with => /^([12]{0,1}[0-9]{0,1}[0-9]{1}\.){3}[12]{0,1}[0-9]{0,1}[0-9]{1}$/, :allow_blank => true
   validates_numericality_of :rate_down, :rate_up, :only_integer => true
   validates_inclusion_of :kind, :in => %w( static adsl dhcp )
@@ -59,6 +58,9 @@ class Provider < ActiveRecord::Base
       end
     end
   end
+
+  include IpAddressCheck
+  validate_ip_format_of :ip, :gateway
 
   before_create :set_default_online_changed_at
   def set_default_online_changed_at
