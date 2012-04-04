@@ -100,7 +100,7 @@ class Contract < ActiveRecord::Base
     if not self[attr].nil?
       self[attr].split(/,|:/).each do |i|
         is_integer = Integer(i) rescue false
-        unless (is_integer and i.to_i > 0 and i.to_i < 65536) or valid_services.include?(i)
+        unless (is_integer and i.to_i > min and i.to_i < max) or valid_services.include?(i)
           invalid_values << i
         end
       end
