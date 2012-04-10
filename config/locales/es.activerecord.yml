@@ -383,6 +383,8 @@ es:
       not_enough_down_bandwidth: "No hay suficiente ancho de banda descendente"
       not_enough_up_bandwidth_in_this_plan: "No hay suficiente ancho de banda ascendente para asignar este plan"
       not_enough_up_bandwidth: "No hay suficiente ancho de banda ascendente"
+    user:
+      not_allowed_to_change_this_fields_in_demo_mode: "Este campo no se puede actualizar en la versión demo"
   fieldsets:
     contract:
       details: "Detalles"

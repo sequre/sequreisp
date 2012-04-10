@@ -39,7 +39,16 @@ class User < ActiveRecord::Base
   validates_role
 
   validates_presence_of :name, :email, :role_name
+  validate_on_update :not_change_if_demo
 
+  def not_change_if_demo
+    if SequreispConfig::CONFIG["demo"] and email_was == "admin@sequre.com.ar"
+      errors.add(:password, I18n.t('validations.user.not_allowed_to_change_this_fields_in_demo_mode')) if password_changed?
+      errors.add(:email, I18n.t('validations.user.not_allowed_to_change_this_fields_in_demo_mode')) if email_changed?
+      errors.add(:role_name, I18n.t('validations.user.not_allowed_to_change_this_fields_in_demo_mode')) if role_name_changed?
+      errors.add(:name, I18n.t('validations.user.not_allowed_to_change_this_fields_in_demo_mode')) if name_changed?
+    end
+  end
   def auditable_name
     "#{self.class.human_name}: #{email}"
   end

@@ -342,6 +342,8 @@ pt:
       not_enough_down_bandwidth: "Não há suficiente largo de banda descendente"
       not_enough_up_bandwidth_in_this_plan: "Não há suficiente largo de banda ascendente para atribuir este plano"
       not_enough_up_bandwidth: "Não há suficiente largo de banda ascendente"
+    user:
+      not_allowed_to_change_this_fields_in_demo_mode: "Este campo não pode ser atualizado em modo de demonstração"
   fieldsets:
     contract:
       details: "Detalhes"
