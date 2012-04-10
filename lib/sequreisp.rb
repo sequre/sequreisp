@@ -314,7 +314,14 @@ def gen_iptables
       if Configuration.transparent_proxy
         if Configuration.transparent_proxy_n_to_m
           Contract.not_disabled.descend_by_netmask.each do |c|
-            mark = c.public_address.nil? ? c.plan.provider_group.mark_hex : c.public_address.addressable.mark_hex
+            mark = if not c.public_address.nil?
+                     c.public_address.addressable.mark_hex
+                   elsif not c.unique_provider.nil?
+                     # marko los contratos que salen por un único provider
+                     c.unique_provider.mark_hex
+                   else
+                     c.plan.provider_group.mark_hex
+                  end
             f.puts "-A OUTPUT -s #{c.proxy_bind_ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
           end
         else
