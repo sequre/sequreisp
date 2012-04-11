@@ -282,6 +282,7 @@ en:
     context_help:
       help: "Help"
       close: "Close"
+    get_arping_mac_address: "Get MAC Address"
   backup:
     backup_db_legend: "Backup DB (just database)"
     backup_full_legend: "Backup Full (application and database)"

@@ -285,6 +285,7 @@ es:
     context_help:
       help: "Ayuda"
       close: "Cerrar"
+    get_arping_mac_address: "Obtener MAC Address"
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"

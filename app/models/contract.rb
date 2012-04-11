@@ -408,4 +408,13 @@ class Contract < ActiveRecord::Base
   def self.slash_16_networks
     Contract.all(:select => :ip).collect { |c| c.ip.split(".")[0,2].join(".") + ".0.0/16" }.uniq
   end
+
+  def arping_mac_address
+    mac = nil
+    Interface.all(:conditions => {:kind => "lan"}).each do |i|
+      mac = `sudo arping #{ip} -I#{i.name} -f -w1 2>/dev/null`.split("\n").grep(/reply/).to_s.match(/([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}/)[0] rescue nil
+      break if mac
+    end
+    mac
+  end
 end

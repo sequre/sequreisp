@@ -8,6 +8,9 @@
   #prios {
     width: auto;
   }
+  .arping_mac_address {
+    padding-top: 26px;
+  }
 </style>
 <script type="text/javascript">
   $(function(){
@@ -33,6 +36,25 @@
       }
     })
     $('#contract_client_id').chosen();
+    $('#arping_mac_address').click(function(){
+      $('.arping_loader').show();
+      $.get('<%= arping_mac_address_contracts_path %>', {ip: $('#contract_ip').val()}, function(data){
+        if (data.mac_address) {
+          $('#contract_mac_address').val(data.mac_address);
+          //$.scrollTo('#contract_mac_address_input', 600);
+          $('#contract_mac_address').css('background-color', '#00FF00').effect('pulsate', {times: 3}, null, function(){
+            $('#contract_mac_address').css('background-color', '#FFFFFF');
+          })
+        } else {
+          $('#contract_mac_address').css('background-color', '#FF0000').effect('pulsate', {times: 3}, null, function(){
+            $('#contract_mac_address').css('background-color', '#FFFFFF');
+          })
+          $('#contract_ip').focus();
+        }
+        $('.arping_loader').hide();
+      },'json');
+    });
+    $('.arping_loader').hide();
   })
 </script>
 <% unless current_user.may_update_contract?(@contract) %>
@@ -51,8 +73,14 @@
     <%= form.input :plan, :wrapper_html => { :class => "left" }, :hint => false %> 
     <%= form.input :state, :collection => form.object.aasm_states_for_select, :include_blank => false ,:wrapper_html => { :class => "left" } %> 
     <div style="clear:both"></div>
-    <%= form.input :ip, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :ip, :wrapper_html => { :class => "left" } %>
     <%= form.input :ceil_dfl_percent, :as => :select, :collection => (30..100).step(10).to_a, :include_blank => false, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
+    <%= form.input :mac_address, :wrapper_html => {:class => "left" } %>
+    <li class="arping_mac_address">
+      <a id="arping_mac_address" href="javascript:void(null)"><%= I18n.t('buttons.get_arping_mac_address') %></a>
+      <%= image_tag "loader_horizontal.gif", :class => 'arping_loader' %>
+    </li>
     <div style="clear:both"></div>
     <% if not @contract.new_record? %>
     <li class="left">
@@ -76,7 +104,6 @@
     <% end %>
     <% form.inputs :name => t('fieldsets.contract.advanced'), :id => "advanced", :class => "left inputs",
                    :context_help => { :path => { :custom => 'contract.fieldsets.advanced' } } do %>
-      <%= form.input :mac_address %> 
       <%= form.input :proxy_arp, :wrapper_html => { :class => "left" } %> 
       <%= form.input :proxy_arp_interface, :wrapper_html => { :class => "left" } %>
       <div style="clear: both"></div> 

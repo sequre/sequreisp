@@ -260,6 +260,7 @@ pt:
     scan_interfaces: "Detectar novas interfaces"
     more: "Mais"
     less: "Menos"
+    get_arping_mac_address: "Obter o endereço MAC"
   backup:
     backup_db_legend: "Fazer cópia de resguardo (base de dados)"
     backup_full_legend: "Fazer cópia de resguardo completa (aplicativo e base de datos)"

@@ -176,6 +176,14 @@ class ContractsController < ApplicationController
       format.json { render :json => Contract.all(:conditions => ["ip like ?", "%#{params[:term]}%"], :limit => 10, :select => :ip).collect(&:ip) }
     end
   end
+  def arping_mac_address
+    # arping will be excecuted by sudo, let's enshure that only an ip address is submited
+    c = Contract.new(:ip => params[:ip])
+    mac_address = (IP.new(params[:ip]) rescue nil).nil? ? nil : c.arping_mac_address
+    respond_to do |format|
+      format.json { render :json => {:mac_address => mac_address} }
+    end
+  end
   private
   def object
     @object ||= Contract.find(params[:id])
