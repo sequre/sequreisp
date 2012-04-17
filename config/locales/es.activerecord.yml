@@ -35,6 +35,9 @@ es:
       address:
         one: "Dirección IP"
         other: "Direcciones IP"
+      avoid_balancing_host:
+        one: "Sitio sin balanceo"
+        other: "Sitios sin balanceo"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -209,6 +212,10 @@ es:
         ip: "Dirección IP"
         netmask: "Máscara de red"
         use_in_nat_pool: "Usar en balanceo de NAT"
+      avoid_balancing_host:
+        name: "IP o nombre de dominio del sitio"
+        provider: "Proveedor de salida"
+        detail: "Detalle"
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -257,6 +264,7 @@ es:
     interfaces: "Interfaces"
     users: "Usuarios"
     configuration: "Configuración"
+    avoid_balancing_hosts: "Sitos sin balanceo"
     dashboard: "Panel"
     apply_changes: "Aplicar cambios"
     backups: "Copias de resguardo"

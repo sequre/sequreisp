@@ -1,0 +1,24 @@
+<% unless current_user.may_update_avoid_balancing_host?(@avoid_balancing_host) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @avoid_balancing_host do |form| %>
+  <%= error_messages @avoid_balancing_host %>
+  <% form.inputs do %>
+    <%= form.input :name, :wrapper_html => { :class => "left" } %>
+    <%= form.input :provider, :wrapper_html => { :class => "left" } %>
+    <%= form.input :detail, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
+    <%= form_extensions form %>
+  <% end %>
+  <% if current_user.may_update_avoid_balancing_host?(@avoid_balancing_host) or current_user.may_create_avoid_balancing_host? %>
+    <% form.buttons do %>
+      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+    <% end %>
+  <% end %>
+<% end %>
+</div>

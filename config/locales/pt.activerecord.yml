@@ -35,6 +35,9 @@ pt:
       address:
         one: "Endereço IP"
         other: "Endereços IP"
+      avoid_balancing_host:
+        one: "Site sem balanceamento"
+        other: "Sites sem balanceamento"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -196,6 +199,10 @@ pt:
         ip: "Endereço IP"
         netmask: "Máscara de rede"
         use_in_nat_pool: "Uso en balanceamento de NAT"
+      avoid_balancing_host:
+        name: "IP ou o nome do site"
+        provider: "Proveedor de saída"
+        detail: "Detalhe"
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"
@@ -238,6 +245,7 @@ pt:
     interfaces: "Interfaces"
     users: "Usuários"
     configuration: "Configuração"
+    avoid_balancing_hosts: "Sites sim balanceamento"
     apply_changes: "Aplicar câmbios"
     backups: "Cópias de resguardo"
     modules: "Módulos"

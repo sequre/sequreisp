@@ -269,6 +269,17 @@ def gen_iptables
         f.puts "-A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
       end
       # CONNMARK PREROUTING
+      # Evito balanceo para los hosts configurados
+      f.puts ":avoid_balancing - [0:0]"
+      f.puts "-A PREROUTING -j avoid_balancing"
+      AvoidBalancingHost.all.each do |abh|
+        if abh.provider
+          abh.ip_addresses.each do |ip|
+            f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
+            f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
+          end
+        end
+      end
       # restauro marka en PREROUTING
       f.puts "-A PREROUTING -j CONNMARK --restore-mark"
 
@@ -308,6 +319,8 @@ def gen_iptables
         f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT" 
       end
       # CONNMARK OUTPUT
+      # Evito balanceo para los hosts configurados
+      f.puts "-A OUTPUT -j avoid_balancing"
       # restauro marka en OUTPUT pero que siga viajando
       f.puts "-A OUTPUT -j CONNMARK --restore-mark"
       f.puts "-A OUTPUT -m mark ! --mark 0 -j ACCEPT"

@@ -1,0 +1,69 @@
+<% content_for :title, t('menu.avoid_balancing_hosts') %>
+<% heading t('menu.avoid_balancing_hosts') %>
+<% render_new_button_for :avoid_balancing_host %>
+
+<%= render :partial => "shared/submenu_items"%>
+
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul>
+    <li>
+      <%= f.label :name_like, t('activerecord.attributes.avoid_balancing_host.name') %>
+      <%= f.text_field :name_like %>
+    </li>
+    <li>
+    <%= f.label :provider_id_equals, t('activerecord.attributes.avoid_balancing_host.provider') %>
+    <%= f.collection_select :provider_id_equals, Provider.all, :id, :name, :include_blank => true %>
+    </li>
+    <li>
+      <%= f.label :detail_like, t('activerecord.attributes.avoid_balancing_host.detail') %>
+      <%= f.text_field :detail_like %>
+    </li>
+    <li>
+      <br/>
+      <%= f.submit t('buttons.search') %>
+      <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
+<div class="separador"></div>
+
+<div class="main">
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= order @search, :by => :name , :as => t('activerecord.attributes.avoid_balancing_host.name') %></th>
+        <th><%= order @search, :by => :provider_name , :as => t('activerecord.attributes.avoid_balancing_host.provider') %></th>
+        <th><%= order @search, :by => :detail , :as => t('activerecord.attributes.avoid_balancing_host.detail') %></th>
+        <%= render :partial => "shared/plugins_table_headers" %>
+        <% if current_user.may_update_avoid_balancing_hosts? or current_user.may_index_avoid_balancing_hosts? %>
+        <th></th>
+        <% end %>
+        <% if current_user.may_destroy_avoid_balancing_host?(AvoidBalancingHost.new) %>
+        <th></th>
+        <% end %>
+      </tr>
+
+      <% @avoid_balancing_hosts.each_with_index do |avoid_balancing_host,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%=h avoid_balancing_host.name %></td>
+          <td><%= avoid_balancing_host.provider.name rescue 'Undefined' %></td>
+          <td><%=h avoid_balancing_host.detail %></td>
+          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => avoid_balancing_host} %>
+          <% if current_user.may_update_avoid_balancing_host?(avoid_balancing_host) %>
+            <td><%= link_to t('buttons.edit'), edit_avoid_balancing_host_path(avoid_balancing_host) %></td>
+          <% elsif current_user.may_show_avoid_balancing_host?(avoid_balancing_host) %>
+            <td><%= link_to t('buttons.show'), avoid_balancing_host_path(avoid_balancing_host) %></td>
+          <% end %>
+          <% if current_user.may_destroy_avoid_balancing_host?(avoid_balancing_host) %>
+          <td><%= link_to t('buttons.delete'), avoid_balancing_host, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @avoid_balancing_hosts %>
+</div>
+

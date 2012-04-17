@@ -35,6 +35,9 @@ en:
       address:
         one: "IP Address"
         other: "IP Addresses"
+      avoid_balancing_host:
+        one: "Avoid balancing host"
+        other: "Avoid balancing hosts"
       client:
         one: "Client"
         other: "Clients"
@@ -206,6 +209,10 @@ en:
         ip: "IP address"
         netmask: "Netmask"
         use_in_nat_pool: "Use in NAT pool"
+      avoid_balancing_host:
+        name: "IP address or domain name"
+        provider: "Provider to use"
+        detail: "Detail"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
@@ -254,6 +261,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
+    avoid_balancing_hosts: "Avoid Balancing Hosts"
     dashboard: "Dashboard"
     apply_changes: "Apply changes"
     backups: "Backups"

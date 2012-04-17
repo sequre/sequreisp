@@ -1,0 +1,2 @@
+module AvoidBalancingHostsHelper
+end

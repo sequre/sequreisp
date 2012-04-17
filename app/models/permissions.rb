@@ -61,6 +61,15 @@ class Permissions < Aegis::Permissions
     end
   end
 
+  resources :avoid_balancing_hosts do
+    writing do
+      allow :technical
+    end
+    reading do
+      allow :technical, :technical_readonly
+    end
+  end
+
   resources :users do
   end
 

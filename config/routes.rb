@@ -4,7 +4,9 @@ ActionController::Routing::Routes.draw do |map|
   map.resources :configurations, :collection => {:doreload => :get}
 
   map.resources :users
-  
+
+  map.resources :avoid_balancing_hosts
+
   map.resources :audits, :member => { :go_back => :get }
 
   map.resources :provider_groups, :member => { :instant_rate => :get }
