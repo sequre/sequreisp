@@ -1,0 +1,6 @@
+<% content_for :title, t('actions.new', :model => AvoidProxyHost.human_name) %>
+<% heading t('actions.new', :model => AvoidProxyHost.human_name)  %>
+
+<%= render :partial => "shared/empty_submenu" %>
+
+<%= render @avoid_proxy_host %>

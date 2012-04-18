@@ -38,6 +38,9 @@ es:
       avoid_balancing_host:
         one: "Sitio sin balanceo"
         other: "Sitios sin balanceo"
+      avoid_proxy_host:
+        one: "Sitio sin proxy"
+        other: "Sitios sin proxy"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -216,6 +219,9 @@ es:
         name: "IP o nombre de dominio del sitio"
         provider: "Proveedor de salida"
         detail: "Detalle"
+      avoid_proxy_host:
+        name: "IP o nombre de dominio del sitio"
+        detail: "Detalle"
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -265,6 +271,7 @@ es:
     users: "Usuarios"
     configuration: "Configuración"
     avoid_balancing_hosts: "Sitos sin balanceo"
+    avoid_proxy_hosts: "Sitos sin proxy"
     dashboard: "Panel"
     apply_changes: "Aplicar cambios"
     backups: "Copias de resguardo"

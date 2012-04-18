@@ -1,0 +1,63 @@
+<% content_for :title, t('menu.avoid_proxy_hosts') %>
+<% heading t('menu.avoid_proxy_hosts') %>
+<% render_new_button_for :avoid_proxy_host %>
+
+<%= render :partial => "shared/submenu_items"%>
+
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul>
+    <li>
+      <%= f.label :name_like, t('activerecord.attributes.avoid_proxy_host.name') %>
+      <%= f.text_field :name_like %>
+    </li>
+    <li>
+      <%= f.label :detail_like, t('activerecord.attributes.avoid_proxy_host.detail') %>
+      <%= f.text_field :detail_like %>
+    </li>
+    <li>
+      <br/>
+      <%= f.submit t('buttons.search') %>
+      <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
+<div class="separador"></div>
+
+<div class="main">
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= order @search, :by => :name , :as => t('activerecord.attributes.avoid_proxy_host.name') %></th>
+        <th><%= order @search, :by => :detail , :as => t('activerecord.attributes.avoid_proxy_host.detail') %></th>
+        <%= render :partial => "shared/plugins_table_headers" %>
+        <% if current_user.may_update_avoid_proxy_hosts? or current_user.may_index_avoid_proxy_hosts? %>
+        <th></th>
+        <% end %>
+        <% if current_user.may_destroy_avoid_proxy_host?(AvoidProxyHost.new) %>
+        <th></th>
+        <% end %>
+      </tr>
+
+      <% @avoid_proxy_hosts.each_with_index do |avoid_proxy_host,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%=h avoid_proxy_host.name %></td>
+          <td><%=h avoid_proxy_host.detail %></td>
+          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => avoid_proxy_host} %>
+          <% if current_user.may_update_avoid_proxy_host?(avoid_proxy_host) %>
+            <td><%= link_to t('buttons.edit'), edit_avoid_proxy_host_path(avoid_proxy_host) %></td>
+          <% elsif current_user.may_show_avoid_proxy_host?(avoid_proxy_host) %>
+            <td><%= link_to t('buttons.show'), avoid_proxy_host_path(avoid_proxy_host) %></td>
+          <% end %>
+          <% if current_user.may_destroy_avoid_proxy_host?(avoid_proxy_host) %>
+          <td><%= link_to t('buttons.delete'), avoid_proxy_host, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @avoid_proxy_hosts %>
+</div>
+

@@ -1,0 +1,12 @@
+<% content_for :title, t('actions.edit', :model => AvoidProxyHost.human_name) %>
+<% heading t('actions.edit', :model => AvoidProxyHost.human_name)  %>
+
+<ul class="nav" style="float:right">
+  <li><%= link_to t('buttons.view_audit'), audits_path('search[auditable_type_is]' => 'AvoidProxyHost', 'search[auditable_id_equals]' => @avoid_proxy_host.id) %> </li>
+  <%= render :partial => "shared/submenu_items"%>
+</ul>
+<div style="clear: both"></div>
+
+<%= render @avoid_proxy_host %>
+
+

@@ -73,6 +73,9 @@ ul li a:hover {
             <% if current_user.may_index_avoid_balancing_hosts? %>
             <li><%= link_to t('menu.avoid_balancing_hosts'), avoid_balancing_hosts_path %></li>
             <% end %>
+            <% if current_user.may_index_avoid_proxy_hosts? %>
+            <li><%= link_to t('menu.avoid_proxy_hosts'), avoid_proxy_hosts_path %></li>
+            <% end %>
           </ul>
         </li>
       <% end %>

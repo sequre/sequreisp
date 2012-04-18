@@ -38,6 +38,9 @@ en:
       avoid_balancing_host:
         one: "Avoid balancing host"
         other: "Avoid balancing hosts"
+      avoid_proxy_host:
+        one: "Avoid proxy host"
+        other: "Avoid proxy hosts"
       client:
         one: "Client"
         other: "Clients"
@@ -213,6 +216,9 @@ en:
         name: "IP address or domain name"
         provider: "Provider to use"
         detail: "Detail"
+      avoid_proxy_host:
+        name: "IP address or domain name"
+        detail: "Detail"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
@@ -262,6 +268,7 @@ en:
     users: "Users"
     configuration: "Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
+    avoid_proxy_hosts: "Avoid Proxy Hosts"
     dashboard: "Dashboard"
     apply_changes: "Apply changes"
     backups: "Backups"

@@ -535,6 +535,16 @@ def gen_iptables
 
       BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
 
+      # Evito pasar por el proxy para los hosts configurados
+      #
+      #
+      f.puts ":avoid_proxy - [0:0]"
+      AvoidProxyHost.all.each do |aph|
+        aph.ip_addresses.each do |ip|
+          f.puts "-A avoid_proxy -d #{ip} -p tcp --dport 80 -j ACCEPT"
+        end
+      end
+      f.puts "-A PREROUTING -j avoid_proxy"
       Contract.not_disabled.descend_by_netmask.each do |c|
         # attribute: transparent_proxy
         if c.transparent_proxy?

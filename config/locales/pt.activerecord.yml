@@ -35,9 +35,9 @@ pt:
       address:
         one: "Endereço IP"
         other: "Endereços IP"
-      avoid_balancing_host:
-        one: "Site sem balanceamento"
-        other: "Sites sem balanceamento"
+      avoid_proxy_host:
+        one: "Site sem proxy"
+        other: "Sites sem proxy"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -203,6 +203,9 @@ pt:
         name: "IP ou o nome do site"
         provider: "Proveedor de saída"
         detail: "Detalhe"
+      avoid_proxy_host:
+        name: "IP ou o nome do site"
+        detail: "Detalhe"
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"
@@ -246,6 +249,7 @@ pt:
     users: "Usuários"
     configuration: "Configuração"
     avoid_balancing_hosts: "Sites sim balanceamento"
+    avoid_proxy_hosts: "Sites sim proxy"
     apply_changes: "Aplicar câmbios"
     backups: "Cópias de resguardo"
     modules: "Módulos"
