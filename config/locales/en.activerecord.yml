@@ -56,6 +56,9 @@ en:
       interface:
         one: "Interface"
         other: "Interfaces"
+      iproute:
+        one: "Route"
+        other: "Routes"
       plan:
         one: "Plan"
         other: "Plans"
@@ -222,6 +225,11 @@ en:
       avoid_proxy_host:
         name: "IP address or domain name"
         detail: "Detail"
+      iproute:
+        dst_address: "Destination IP address"
+        gateway: "Gateway"
+        interface: "Interface"
+        detail: "Detail"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
@@ -272,6 +280,7 @@ en:
     configuration: "Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
     avoid_proxy_hosts: "Avoid Proxy Hosts"
+    iproutes: "Static routes"
     dashboard: "Dashboard"
     apply_changes: "Apply changes"
     backups: "Backups"

@@ -1,0 +1,75 @@
+<% content_for :title, t('menu.iproutes') %>
+<% heading t('menu.iproutes') %>
+<% render_new_button_for :iproute %>
+
+<%= render :partial => "shared/submenu_items"%>
+
+<div id="busqueda">
+<% form_for @search do |f| %>
+  <ul>
+    <li>
+      <%= f.label :dst_address_like, t('activerecord.attributes.iproute.dst_address') %>
+      <%= f.text_field :dst_address_like %>
+    </li>
+    <li>
+      <%= f.label :gateway_like, t('activerecord.attributes.iproute.gateway') %>
+      <%= f.text_field :gateway_like %>
+    </li>
+    <li>
+    <%= f.label :interface_id_equals, t('activerecord.attributes.iproute.interface') %>
+    <%= f.collection_select :interface_id_equals, Interface.all, :id, :name, :include_blank => true %>
+    </li>
+    <li>
+      <%= f.label :detail_like, t('activerecord.attributes.iproute.detail') %>
+      <%= f.text_field :detail_like %>
+    </li>
+    <li>
+      <br/>
+      <%= f.submit t('buttons.search') %>
+      <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+    </li>
+  </ul>
+<% end %>
+</div>
+<div class="separador"></div>
+
+<div class="main">
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= order @search, :by => :dst_address , :as => t('activerecord.attributes.iproute.dst_address') %></th>
+        <th><%= order @search, :by => :gateway , :as => t('activerecord.attributes.iproute.gateway') %></th>
+        <th><%= order @search, :by => :interface_name , :as => t('activerecord.attributes.iproute.interface') %></th>
+        <th><%= order @search, :by => :detail , :as => t('activerecord.attributes.iproute.detail') %></th>
+        <%= render :partial => "shared/plugins_table_headers" %>
+        <% if current_user.may_update_iproutes? or current_user.may_index_iproutes? %>
+        <th></th>
+        <% end %>
+        <% if current_user.may_destroy_iproute?(Iproute.new) %>
+        <th></th>
+        <% end %>
+      </tr>
+
+      <% @iproutes.each_with_index do |iproute,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%=h iproute.dst_address %></td>
+          <td><%=h iproute.gateway %></td>
+          <td><%= iproute.interface.name rescue '' %></td>
+          <td><%=h iproute.detail %></td>
+          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => iproute} %>
+          <% if current_user.may_update_iproute?(iproute) %>
+            <td><%= link_to t('buttons.edit'), edit_iproute_path(iproute) %></td>
+          <% elsif current_user.may_show_iproute?(iproute) %>
+            <td><%= link_to t('buttons.show'), iproute_path(iproute) %></td>
+          <% end %>
+          <% if current_user.may_destroy_iproute?(iproute) %>
+          <td><%= link_to t('buttons.delete'), iproute, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @iproutes %>
+</div>
+

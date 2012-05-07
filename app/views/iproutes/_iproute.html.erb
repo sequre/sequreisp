@@ -1,0 +1,25 @@
+<% unless current_user.may_update_iproute?(@iproute) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @iproute do |form| %>
+  <%= error_messages @iproute %>
+  <% form.inputs do %>
+    <%= form.input :dst_address, :wrapper_html => { :class => "left" } %>
+    <%= form.input :gateway, :wrapper_html => { :class => "left" } %>
+    <%= form.input :interface, :wrapper_html => { :class => "left" } %>
+    <%= form.input :detail, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
+    <%= form_extensions form %>
+  <% end %>
+  <% if current_user.may_update_iproute?(@iproute) or current_user.may_create_iproute? %>
+    <% form.buttons do %>
+      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+    <% end %>
+  <% end %>
+<% end %>
+</div>

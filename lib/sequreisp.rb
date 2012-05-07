@@ -33,6 +33,7 @@ PROVIDER_DOWN_FILE_PREFIX= "#{BASE_SCRIPTS}/provider_down_"
 ARP_FILE="#{BASE_SCRIPTS}/arp"
 IP_RU_FILE="#{BASE_SCRIPTS}/ip_ru"
 IP_RO_FILE="#{BASE_SCRIPTS}/ip_ro"
+IP_RO_STATIC_FILE="#{BASE_SCRIPTS}/ip_ro_static"
 IPTABLES_FILE="#{BASE_SCRIPTS}/iptables"
 IPTABLES_PRE_FILE="#{BASE}/etc/iptables_pre.sh"
 IPTABLES_POST_FILE="#{BASE}/etc/iptables_post.sh"
@@ -1125,6 +1126,16 @@ def boot(run=true)
         arp.chmod 0755
       end
       f.puts "#{ARP_FILE}"
+      # rutas estáticas
+      File.open(IP_RO_STATIC_FILE, "w") do |ipro|
+        ipro.puts "#!/bin/bash"
+        ipro.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
+        Iproute.all.each do |ipr|
+          ipro.puts "ip ro re #{ipr.route}"
+        end
+        ipro.chmod 0755
+      end
+      f.puts "#{IP_RO_STATIC_FILE}"
       # setup de las ifb
       f.puts "modprobe ifb numifbs=3"
       f.puts "ip link set #{IFB_UP} up"

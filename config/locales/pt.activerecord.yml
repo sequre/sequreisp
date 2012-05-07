@@ -53,6 +53,9 @@ pt:
       interface:
         one: "Interface"
         other: "Interfaces"
+      iproute:
+        one: "Rota"
+        other: "Rotas"
       plan:
         one: "Plano"
         other: "Planos"
@@ -219,6 +222,11 @@ pt:
       avoid_proxy_host:
         name: "IP ou o nome do site"
         detail: "Detalhe"
+      iproute:
+        dst_address: "Endereço IP de destino"
+        gateway: "Porta de ligação"
+        interface: "Interface"
+        detail: "Detalhe"
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"
@@ -269,6 +277,7 @@ pt:
     configuration: "Configuração"
     avoid_balancing_hosts: "Sites sim balanceamento"
     avoid_proxy_hosts: "Sites sim proxy"
+    iproutes: "Rotas estáticas"
     dashboard: "Painel"
     apply_changes: "Aplicar câmbios"
     backups: "Cópias de resguardo"

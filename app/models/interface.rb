@@ -22,6 +22,7 @@ class Interface < ActiveRecord::Base
   has_one :provider, :dependent => :nullify
   has_many :addresses, :as => :addressable, :class_name => "Address", :dependent => :destroy
   has_many :contracts, :dependent => :nullify, :foreign_key => "proxy_arp_interface_id"
+  has_many :iproutes, :dependent => :destroy
 
   #accepts_nested_attributes_for :addresses, :reject_if => lambda { |a| a[:content].blank? }, :allow_destroy => true
   accepts_nested_attributes_for :addresses, :reject_if => lambda { |a| a[:ip].blank? }, :allow_destroy => true

@@ -56,6 +56,9 @@ es:
       interface:
         one: "Interfaz"
         other: "Interfaces"
+      iproute:
+        one: "Ruta"
+        other: "Rutas"
       plan:
         one: "Plan"
         other: "Planes"
@@ -222,6 +225,11 @@ es:
       avoid_proxy_host:
         name: "IP o nombre de dominio del sitio"
         detail: "Detalle"
+      iproute:
+        dst_address: "Dirección IP de destino"
+        gateway: "Puerta de enlace"
+        interface: "Interfaz"
+        detail: "Detalle"
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -272,6 +280,7 @@ es:
     configuration: "Configuración"
     avoid_balancing_hosts: "Sitos sin balanceo"
     avoid_proxy_hosts: "Sitos sin proxy"
+    iproutes: "Rutas estáticas"
     dashboard: "Panel"
     apply_changes: "Aplicar cambios"
     backups: "Copias de resguardo"

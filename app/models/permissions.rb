@@ -61,7 +61,7 @@ class Permissions < Aegis::Permissions
     end
   end
 
-  resources :avoid_balancing_hosts, :avoid_proxy_hosts do
+  resources :avoid_balancing_hosts, :avoid_proxy_hosts, :iproutes do
     writing do
       allow :technical
     end
