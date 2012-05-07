@@ -5,7 +5,7 @@ es:
         text: ''
         attributes:
           state:
-            text: 'Si el contrato está deshabilitado *no podrá navegar en Internet*.'
+            text: 'El contrato *no podrá acceder a Internet* si se encuentra desahilitado.'
           ip:
             text: >
               La dirección IP que será asignada a este contrato, puede ser una dirección IP individual o
@@ -40,7 +40,7 @@ es:
               bloquear el acceso a Internet si ambas no coinciden.
           proxy_arp:
             text: >
-              Permite pasar una IP pública pura a un cliente. Se usa en los casos
+              Permite pasar una dirección IP pública pura a un cliente. Se usa en los casos
               en los que el proveedor del plan del contrato tiene un conjunto de direcciones
               públicas asignado y las mismas pertenecen a una única subred, no pudiendo ser
               enrutadas.
@@ -55,8 +55,8 @@ es:
               realizará una traducción de dirección de red de destino (DNAT) completa de la dirección IP pública
               a la dirección IP privada del contrato.
 
-              Asímismo, todo acceso a Internet realizado por este contrato
-              *no participará del balanceo y utilizará siempre la IP pública asignada*.
+              Asimismo, todo acceso a Internet realizado por este contrato
+              *no participará del balanceo y utilizará siempre la dirección IP pública asignada*.
           unique_provider_id:
             title: I18n.activerecord.attributes.contract.unique_provider
             text: >
@@ -87,7 +87,7 @@ es:
           Los planes reflejan el servicio que se les vende a los clientes.
 
           Determinan principalmente a qué velocidad navegará el cliente y que grupo de
-          proveedores utilizará. También permite manipular opciones más avanzadas como las
+          proveedores utilizará. También permiten manipular opciones más avanzadas como las
           ráfagas o el web caché, para diferenciar los planes con distintas calidades de
           servicio.
         attributes:
@@ -108,7 +108,7 @@ es:
               este plan.
           rate_up:
             text: >
-              Define el ancho de banda de subida que garantizá este plan. Este valor sólo
+              Define el ancho de banda de subida que garantiza este plan. Este valor sólo
               debe ser distinto de cero cuando se quiere crear un plan con ancho de banda
               garantizado o dedicado.
           ceil_up:
@@ -126,7 +126,7 @@ es:
               por el plan. Esto hace que las páginas web carguen velozmente.
 
               Conviene empezar con valores bajos ya que esta opción puede consumir mucho ancho
-              de banda en el caso de tener una gran cantidad clientes.
+              de banda en el caso de tener una gran cantidad de clientes.
           burst_up:
             text: >
               Esta opción hace que se suban los primeros datos de cada conexión a la
@@ -157,15 +157,15 @@ es:
         attributes:
           state:
             text: >
-              El estado determina si este proveedor debe ser utilizado o no. Un proveedor marcado
-              como deshabilitado *no será utilizado para el acceso a Internet*.
+              El estado determina si el proveedor debe ser utilizado o no. Un proveedor marcado
+              como deshabilitado *no será utilizado para proveer acceso a Internet*.
           interface_id:
             title: I18n.activerecord.models.interface.one
-            text: 'La interfaz de red a la cual está conectado fisicamente el proveedor.'
+            text: 'La interfaz de red a la cual está conectado físicamente el proveedor.'
           provider_group_id:
             title: I18n.activerecord.models.provider_group.one
             text: >
-              Los proveedores se agrupan en grupos, para permitir hacer balanceo y
+              Los proveedores se organizan en grupos, para permitir hacer balanceo y
               failover entre ellos.
 
               En el caso de ISPs que poseen un gran número de proveedores es común que se los agrupe
@@ -176,17 +176,17 @@ es:
           rate_down:
             text: >
               Velocidad de bajada o descarga de este proveedor. Se recomienda colocar un valor
-              lo más ajustado a la realidad posible ya que mientras más exacto sea este valor
-              con la realidad mejor funcionará el control de ancho de banda en general, las
+              lo más ajustado a la realidad posible ya que mientras más cercano sea este valor a
+              la realidad, mejor funcionará el control de ancho de banda en general, las
               prioridades de tráfico y los garantidos.
           rate_up:
             text: >
               Equivalente a la velocidad de bajada pero para la subida. Aquí también se recomienda
-              ajustar el valor lo más cercano a la realidad posible, incluso en conexiones de ADSL
+              ajustar el valor lo más cercano a la realidad posible, aunque en conexiones de ADSL
               se recomienda colocar un valor un 5% inferior al real.
           kind:
             text: >
-              SequreISP soporta todo tipo de proveedores de Internet, los mismos se pueden resumir
+              SequreISP soporta todo tipo de proveedores de Internet, los que se pueden resumir
               en 3 casos:
 
               * *IP fija*
@@ -197,7 +197,7 @@ es:
 
               * *ADSL*
 
-              En esta opción se utiliza para los proveedores de ADSL con marcación PPPoE. Recomendamos
+              Esta opción se utiliza para los proveedores de ADSL con marcación PPPoE. Recomendamos
               usar los módems de ADSL en modo bridge y utilizar esta opción especificando el usuario y la
               contraseña para realizar la marcación.
 
@@ -218,16 +218,16 @@ es:
               Descartar estos paquetes en el ingreso no es recomendable ya que estaríamos
               descartando paquetes totalmente válidos que luego deberán ser retransmitidos.
 
-              Además sería una lástima si un proveedor configurado a 10 Mbps ocasionalmente entrega una
-              ráfaga a 11 Mbps y nosotros descartamos el excedente.
+              Además sería una lástima si un proveedor configurado a 10 Mbps ocasionalmente entregara una
+              ráfaga a 11 Mbps y nosotros descartásemos el excedente.
 
-              Sin embargo hay situaciones en las que es imprescindible que el proveedor no consuma
+              Sin embargo hay situaciones en las que es imprescindible no consumir del proveedor
               más ancho de banda que el estipulado en su configuración. Para esos casos existe esta
               opción que generalmente se usa en combinación con la activación del web caché.
           unique_mac_address:
             text: >
               Permite generar una dirección MAC única para la placa de red de este proveedor,
-              distinta de la dirección MAC real del dispositivo físico.
+              distinta de la dirección MAC real del dispositivo de hardware.
 
               Esto es útil en los ISP que tienen múltiples proveedores a través de una única placa de
               red por medio de la configuración de VLANs contra un switch VLAN.
@@ -258,12 +258,12 @@ es:
             text: 'Nombre genérico para describir al grupo.'
           state:
             text: >
-              Determina si el grupo estará activo o no. Un grupo deshabilitado *no será
+              El estado determina si el grupo estará activo o no. Un grupo deshabilitado *no será
               utilizado para proveer acceso a Internet*.
       interface:
         text: >
-          Las interfaces son las placas de red físicas conectadas al servidor. Debe existir una
-          interfaz por cada placa conectada al server.
+          Las interfaces son la representación del sistema de las placas de red presentes en el servidor.
+          Debe existir una interfaz por cada placa de red en el servidor.
         attributes:
           name:
             text: >
@@ -309,12 +309,12 @@ es:
             text: >
               Muchas veces los proveedores tienen microcortes y esto hace que se reciban
               demasiadas notificaciones vía e-mail por día, sobre todo en el caso de ISPs
-              que tienen configurados un gran número de proveedores.
+              que tienen configurado un gran número de proveedores.
 
               Ajustando el tiempo en segundos que un proveedor debe estar caído para enviar
               la notificación puede reducir la cantidad de e-mails recibidos y de esta forma
-              identificar mejor cuándo un proveedor está realmente caído y requiere de
-              intervención de parte de un técnico para solucionar el problema.
+              identificar mejor cuándo un proveedor está realmente caído y requiere la
+              intervención de un técnico para solucionar el problema.
           default_tcp_prio_ports:
             text: >
               TCP es el protocolo usado en Internet para transmitir confiablemente datos, imágenes, archivos,
@@ -322,7 +322,7 @@ es:
               Cada aplicación usa un puerto diferente para comunicarse; en este campo se
               puede definir qué puertos TCP obtendrán prioridad sobre el resto del tráfico.
 
-              Por defecto se elijen puertos estándar como 80 (navegación web), 110 y 143
+              Por defecto se eligen puertos estándar como 80 (navegación web), 110 y 143
               (correo electrónico POP e IMAP), entre otros.
 
               Para una lista completa de todos los puertos TCP disponibles y las aplicaciones
@@ -330,7 +330,7 @@ es:
               "aquí":https://secure.wikimedia.org/wikipedia/en/wiki/List_of_TCP_and_UDP_port_numbers
           default_udp_prio_ports:
             text: >
-              UDP es un protocolo de transmisión de datos, pero sin garantizar su entrega.
+              UDP es un protocolo usado en Internet para transmisión de datos, pero sin garantizar su entrega.
 
               Es usado principalmente para transmitir voz en llamadas VOIP o similares
               como por ejemplo Skype. También es utilizado por algunas tecnologías de
@@ -344,19 +344,19 @@ es:
               Aquí es posible definir protocolos enteros para que obtengan prioridad.
 
               Por defecto se prioriza UDP para aplicaciones de tiempo real. ICMP e IGMP
-              son mensajes que permiten la comunicación y diagnostico de redes, y
+              son mensajes que permiten la comunicación y diagnóstico de redes, y
               ESP, AH y GRE que son protocolos de VPN.
 
               Para una lista completa de todos los protocolos disponibles consulte
               "aquí":http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml
           default_prio_helpers:
             text: >
-              Los helpers de netfilter permiten identificar protocolos dinámicos, que elijen
+              Los helpers de netfilter permiten identificar protocolos dinámicos, que eligen
               puertos TCP o UDP al azar por lo que es imposible asignar un número de puerto
               fijo para identificar ese tráfico como prioritario.
 
               Cabe aclarar que el protocolo a rastrear debe estar soportado oficialmente
-              por un helper de netfilter, a la fecha los netfilter soportados son:
+              por un helper de netfilter, a la fecha los helpers soportados son:
 
               proto_sctp, h323, pptp, snmp_basic, irc, tftp, proto_gre, proto_dccp, ftp,
               proto_udplite, sip.
@@ -372,20 +372,18 @@ es:
               en general.
           transparent_proxy_n_to_m:
             text: >
-              Recomendamos tener esta casilla activada si hace uso del proxy. Esta opción
+              Recomendamos tener esta opción activada si hace uso del proxy. Esta opción
               asegurará que se cumplan las restricciones de subida para el tráfico web aún
-              si el cliente esta usando el proxy.
-
-              Por razones técnicas al activar el proxy la navegación en upload queda liberada
-              y con esta opción activa es posible controlar nuevamente ese tráfico.
+              si el cliente está usando el proxy; ya que de otro modo, el tráfico web de
+              subida quedaría liberado por razones técnicas.
           transparent_proxy_zph_enabled:
             text: >
-              Si esta opción está activada, el contenido cacheado por el proxy será entregado
+              Si esta opción está activada, el contenido almacenado por el proxy será entregado
               a los clientes sin ningún tipo de restricción de ancho de banda, es decir a la
               velocidad que la red lo permita.
 
               Esto permite acelerar notoriamente la navegación sin que tenga un costo extra
-              en el ancho de banda del proveedor ya que es contenido previamente cacheado.
+              en el ancho de banda del proveedor ya que es contenido previamente almacenado en el caché.
 
               Sin embargo es posible desactivar esa funcionalidad en el caso de que el ISP
               tenga su última milla saturada y no pueda permitirse enviar grandes ráfagas
@@ -398,11 +396,11 @@ es:
               Dos características se habilitan en el caché activando esta opción:
 
 
-              1) Si una descarga en curso es cancelada por un cliente, el archivo es igualmente
-                descargado por el proxy para futuro uso
+              1) Si una descarga en curso es cancelada por un cliente, el proxy igualmente
+                descarga el archivo por completo para uso futuro.
 
               2) Si un cliente reanuda una descarga parcial, el proxy intentará descargar el
-                total del archivo desde el principio y no sólo el rango que el cliente está
+                archivo completo desde el principio y no sólo el fragmento que el cliente esté
                 solicitando.
 
 
@@ -420,12 +418,12 @@ es:
               producir cuellos de botella de IO (entrada/salida) y esto realmente impacta
               sobre el rendimiento del proxy enlenteciendo notablemente la navegación.
 
-              Este valor permite configurar un valor máximo de carga de sistema a partir
+              Este valor permite configurar un valor máximo de carga del sistema a partir
               del cual, si es superado, el proxy será deshabilitado automáticamente.
 
               Recomendamos dejar este valor por defecto y consultar al soporte técnico o
               en los foros si el proxy se desactiva debido a esta opción. Generalmente
-              en servidor con un número de clientes mayor a 500 ya se debe pensar en un
+              en servidores con un número de clientes mayor a 500 ya se debe pensar en un
               disco exclusivo para el caché o una PC dedicada.
           filter_by_mac_address:
             text: >
@@ -437,47 +435,36 @@ es:
               dirección MAC.
           tc_contracts_per_provider_in_wan:
             text: >
-              Esta opción dibuja un árbol de contratos con los pisos y techos de ancho de banda
-              de cada uno, por cada proveedor en su interfaz WAN.
+              Esta opción configura los mecanismos internos de control de ancho de banda del servidor
+              de modo que los mínimos y máximos de ancho de banda de cada contrato se controlen
+              para el tráfico de subida de las interfaces WAN, de tal modo que se tenga en cuenta el grado de
+              saturación de cada proveedor, a expensas de un mayor consumo de recursos del sistema.
 
-              De esta forma se puede determinar en qué grado de saturación se encuentra un
-              proveedor en particular en su subida y siempre se podrán respetar los máximos y
-              mínimos por cada contrato.
-
-              *Recomendamos tenerla activa.*
+              *Recomendamos tener esta opción activada siempre*
           tc_contracts_per_provider_in_lan:
             text: >
-              Esta opción es equivalente a la anterior para el tráfico de bajada.
+              Esta opción aplica un control similar al anterior, para el tráfico de bajada en las interfaces LAN.
 
-              A diferencia de los proveedores WAN en donde hay una interfaz por cada proveedor,
-              en la red LAN tenemos una única interfaz en la cual convergen todos nuestros
-              clientes, por lo que el árbol total de proveedores y contratos impacta sobre
-              una única interfaz.
+              A diferencia de las interfaces WAN en donde hay un proveedor por cada interfaz,
+              en las interfaces LAN se tienen múltiples clientes por cada interfaz, y debido a limitaciones
+              técnicas, no es posible activar esta opción cuando el producto del número de clientes
+              por el número de proveedores excede 8000.
 
-              Debido a una restricción de Linux y su herramienta de manejo de ancho de banda (tc)
-              el número máximo de clases que se puede tener en una única interfaz no puede superar
-              las 8000 unidades aproximadamente. Cada cliente consume una clase de tc, y por
-              cada proveedor se debe dibujar un árbol completo de clientes.
-
-              De esta forma el valor total de clases a generar es la multiplicación de número de
-              proveedores por números de contratos.
-
-              Si usted tiene un único proveedor y 8000 clientes puede activar esta opción, ya que
-              8000 * 1 es igual a 8000. También puede activarla si tiene 2000 clientes y
-              4 proveedores. Pero no debe activarla si su número de clientes por el número de
-              proveedores da un total mayor a 8000.
+              Por ejemplo, si usted tiene un único proveedor y 8000 clientes puede activar esta opción,
+              lo mismo que si tiene 2000 clientes y 4 proveedores. Pero no la active si tiene 5000
+              clientes y 2 proveedores, ya que 5000×2>8000.
           iptables_tree_optimization_enabled:
             text: >
-              Esta opción habilita una optimización en las reglas de firewall (iptables) para el
-              marcado de paquetes y reduce considerablemente el uso de CPU en servidores con un
+              Esta opción habilita una optimización en el mecanismo interno de control de ancho de banda del
+              servidor que reduce considerablemente el uso de CPU en servidores con un
               gran número de clientes.
-              Debido a la limitación en el direccionamiento de memoria que poseen los CPU de 32
-              bits, esta opción no puede ser habilitada en esa arquitectura.
+              Debido al límite de memoria que poseen los servidores con CPU de 32
+              bits, esta opción no puede ser habilitada en servidores de esa arquitectura.
           use_global_prios:
             text: >
               En casos de ISPs con un gran número de clientes (mayor a 2500) la construcción de
               prioridades individuales por cada contrato puede resultar muy costosa a nivel de
-              recursos del CPU, como memoria de kernel o capacidad de procesamiento.
+              recursos del CPU, como memoria del kernel o capacidad de procesamiento.
 
               Para esos casos particulares se desarrolló esta opción en donde las prioridades
               son manejadas en forma global y no individualmente por contrato.
@@ -486,7 +473,7 @@ es:
               Active esta opción si desea que los cambios se apliquen automáticamente una vez al día.
           apply_changes_automatically_hour:
             text: >
-              Hora del día en la que se van a aplicar los cambios automáticamente si dicha opción esta activada.
+              Hora del día en la que se van a aplicar los cambios automáticamente si dicha opción está activada.
       address:
         title: I18n.fieldsets.providers.configuration_static_ips
         attributes:
@@ -496,11 +483,11 @@ es:
               Esta opción permite agregar esta dirección IP adicional al balanceo de NAT.
 
               Esto significa que todas las peticiones que los clientes con dirección IP privada hagan
-              serán mapeadas entre todas las direcciones IP públicas disponibles en el balanceo.
+              serán mapeadas entre todas las direcciones IP públicas disponibles para el balanceo.
 
               De esta forma se evitan problemas con sitios que permiten solo un número de
-              registros por IP por día (caso de Hotmail) o también para acceder a
-              descargas de Rapidshare o Megaupload que permiten solo 1 descarga por IP al
+              registros por dirección IP por día (caso de Hotmail) o también para acceder a
+              descargas de Rapidshare o Megaupload que permiten sólo 1 descarga por dirección IP al
               mismo tiempo.
     custom:
       contract:
@@ -514,17 +501,17 @@ es:
           prios:
             level_class: 'help_level_1'
             text: >
-              Aquí es posible definir el tráfico prioritario individualmente por cada
+              Aquí es posible definir el tráfico prioritario individualmente para cada
               contrato.
 
               Por cada campo que queda en blanco en el contrato se toman
               los valores globales definidos en Configuración.
 
               Si ingresa información en algún campo, esta se superpone a la definida
-              globalmente para este contrato, por lo que si quiere, por ejemplo,
-              agregar el puerto 8193 a los puertos TCP prioritarios y no quiere perder
-              los puertos TCP prioritarios definidos en Configuración, entonces deberá
-              copiar los puertos globales y luego agregar el puerto 8193 a la lista.
+              globalmente para este contrato, campo por campo, por lo que si quiere, por ejemplo,
+              agregar el puerto 8193 a los puertos TCP prioritarios sin que se dejen de considerar
+              prioritarios los puertos definidos en Configuración, entonces deberá
+              copiar los puertos prioritarios globales y luego agregar el puerto 8193 a la lista.
 
               Si en cambio, únicamente deja el puerto 8193 como puerto TCP prioritario
               entonces este único puerto obtendrá prioridad sobre el resto de puertos
@@ -548,7 +535,7 @@ es:
               tratado como prioritario para este servidor.
 
               En Configuración se definen las prioridades globales que afectarán a todos
-              los clientes y todos los planes.
+              los clientes y a todos los planes.
 
               Si algún cliente tiene necesidades en particular y necesita que algún tráfico en
               especial sea clasificado como prioritario, conviene agregar esa excepción en las
@@ -564,12 +551,12 @@ es:
             level_class: 'help_level_1'
             text: >
               El proxy o web caché permite acelerar la navegación de los clientes y además ahorrar
-              ancho de banda mediante el cacheo de páginas, imágenes y archivos entre otros.
+              ancho de banda mediante el almacenamiento local de páginas, imágenes y archivos entre otros.
 
               Advertimos que esta funcionalidad consume recursos del servidor y que en el caso de
               contar con un gran número de clientes esto puede causar que el servidor se sature.
               En servidores con más de 300 clientes se recomienda usar un disco exclusivo para el
-              almacenamiento de caché, y en proveedores con más de 1000 clientes el caché debe estar
+              almacenamiento de caché, y en ISPs con más de 1000 clientes el caché debe estar
               directamente en otro servidor exclusivo para esa función.
       plan:
         fieldsets:
@@ -581,13 +568,13 @@ es:
             text: ''
       provider_group:
         concurrency_index:
-            title: 'Índice de simutaniedad'
+            title: 'Índice de simultaneidad'
             text: >
-              El índice de simultaniedad nos da información acerca de la relación entre el ancho de
+              El índice de simultaneidad nos da información acerca de la relación entre el ancho de
               banda que prometemos a nuestros clientes y el que realmente tenemos.
-              Se habla de que para ser ISP se debe tener al menos un 20% del ancho de banda que se
-              vende nominalmente a los clientes, ya que nunca el 100% de los clientes van a estar
-              reclamando el 100% del ancho de banda que contrataron.
-              La relación óptima va a variar para cada ISP en particular, el 20% es sólo una guía.
-              Pero el seguimiento de este número a lo largo del tiempo le puede dar una mano para saber
+              Se dice que un ISP debe disponer al menos del 20% del ancho de banda que le
+              vende nominalmente a sus clientes, ya que nunca el 100% de los clientes van a estar
+              utilizando el 100% del ancho de banda que contrataron.
+              La relación óptima va a variar para cada ISP en particular; el 20% es sólo una guía.
+              El seguimiento de este número a lo largo del tiempo puede ser de ayuda para saber
               cuándo es el momento de comprar más ancho de banda.
