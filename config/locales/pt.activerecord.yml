@@ -25,7 +25,7 @@ pt:
         dhcp: "DHCP"
     contract:
       transparent_proxy:
-        default: "Por defeito (segundo o plano)"
+        default: "Padrão (segundo o plano)"
         "false": "Desabilitado"
         "true": "Habilitado"
     afirmative: "Sim"
