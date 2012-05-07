@@ -1,0 +1,580 @@
+pt:
+  context_help:
+    models:
+      contract:
+        text: ''
+        attributes:
+          state:
+            text: 'O contrato *não poderá acessar a Internet* se estiver deshabilitado.'
+          ip:
+            text: >
+              O endereço IP que será atribuído a este contrato, pode ser um endereço IP individual ou
+              uma subrede com notação "CIDR":https://secure.wikimedia.org/wikipedia/es/wiki/Classless_Inter-Domain_Routing
+              (ex: 192.168.0.0/24).
+          ceil_dfl_percent:
+            text: >
+              Define o máximo largo de banda de baixada que poderá ser usado para o tráfego não
+              prioritário (P2P). A percentagem se calcula em base aos largos de
+              banda máximos do plano selecionado.
+          detail:
+            text: >
+              Campo de texto livre que permite adicionar informação sobre este contrato em particular
+          cpe:
+            text: >
+              Campo de texto livre que permite adicionar informação sobre este contrato em particular
+          node:
+            text: >
+              Campo de texto livre que permite adicionar informação sobre este contrato em particular
+          transparent_proxy:
+            text: >
+              Permite definir se o proxy transparente (web cache) estará
+              habilitado ou não para este contrato. Pode-se habilitar ou desabilitar explícitamente,
+              ou deixá-lo padrão, em cujo caso estará habilitado ou desabilitado segundo o estiver no
+              plano atribuído.
+
+              Para o proxy transparente funcionar, deve estar ativado globalmente na
+              seção correspondente de Configuração.
+          mac_address:
+            text: >
+              Relaciona o endereço MAC e o endereço IP do contrato para depois
+              bloquear o acesso à Internet se ambas não coincidirem.
+          proxy_arp:
+            text: >
+              Permite passar um endereço IP público puro para um cliente. Usa-se nos casos
+              nos que o fornecedor do plano do contrato tem um conjunto de endereços
+              públicos atribuído e os mesmos pertencem a uma única subrede, não pudendo ser
+              enrotadas.
+
+              Habilitando esta opção o cliente poderá ter atribuído um desses endereços IP
+              públicos, embora esteja dentro de uma LAN.
+          public_address_id:
+            title: I18n.activerecord.attributes.contract.public_address
+            text: >
+              Permite atribuir um endereço IP público previamente carregado como endereço IP adicional de um
+              fornecedor a um contrato. O contrato seguirá tendo seu endereço IP privado, mas se
+              realizará uma tradução de endereço de rede de destino (DNAT) completa do endereço IP público
+              para o endereço IP privado do contrato.
+
+              Assim mesmo, todo acesso à Internet realizado por este contrato
+              *não participará do balanço e utilizará sempre o endereço IP público atribuído*.
+          unique_provider_id:
+            title: I18n.activerecord.attributes.contract.unique_provider
+            text: >
+              Permite excluir este contrato do balanço. Isto é necesario
+              em algunos serviços de telefonía IP ou outros serviços especiais que não são
+              compatíveis com o balanço.
+      forwarded_port:
+        title: I18n.activerecord.models.forwarded_port.other
+        text: >
+          Permitem redirecionar portas públicas ao endereço IP privado do cliente. Usam-se para
+          permitir acesso remoto a PCs, aplicações e cámaras IP, entre outros.
+        attributes:
+          provider_id:
+            title: I18n.activerecord.models.provider.one
+            text: >
+              O fornecedor sobre o qual vai se fazer o redirecionamiento. Isto vai
+              determinar o endereço IP público a utilizar para acessar desde à Internet.
+          public_port:
+            text: >
+              A porta pública é a porta externa que será visível desde a Internet e à
+              qual se conectarão os usuários quando quiserem acessar desde fora.
+          private_port:
+            text:  >
+              A porta privada é a porta do PC ou equipamento do cliente que recebirá o
+              redirecionamiento. Pode ser a mesma que o porta pública ou não.
+      plan:
+        text: >
+          Os planos refletem o serviço que se lhes vende aos clientes.
+
+          Determinam principalmente a que velocidade navegará o cliente e que grupo de
+          fornecedores utilizará. Também permitem manipular opções mais avançadas como as
+          ráfegas ou o web cache, para diferenciar os planos com distintas qualidades de
+          serviço.
+        attributes:
+          provider_group_id:
+            title: I18n.activerecord.models.provider_group.one
+            text: >
+              Define o grupo de fornecedores que utilizarão para navegar os clientes que
+              tenham configurado este plano.
+          rate_down:
+            text: >
+              Define o largo de banda de baixada que garante este plano. Este valor só
+              deve ser diferente de zero quando se quer criar um plano com largo de banda
+              garantido ou dedicado.
+          ceil_down:
+            text: >
+              Define o largo de banda de baixada máximo para este plano. Isto marcará o
+              teto de velocidade à qual podem navegar os clientes que tenham configurado
+              este plano.
+          rate_up:
+            text: >
+              Define o largo de banda de subida que garante este plano. Este valor só
+              deve ser diferente de zero quando se quer criar um plano com largo de banda
+              garantido ou dedicado.
+          ceil_up:
+            text: >
+              Define o largo de banda de subida máximo para este plano. Isto marcará o
+              teto de velocidade à qual podem navegar os clientes que tenham configurado
+              este plano.
+          burst_down:
+            text: >
+              A ráfega de baixada é uma aceleração da navegação web. Afeita só as
+              portas 80 e 443 (http e https).
+
+              Esta opção faz que se descarreguem os primeiros dados de cada conexão à
+              máxima velocidade disponível antes de estabelecer o limite de velocidade imposto
+              pelo plano. Isto faz que as páginas web carreguem velozmente.
+
+              Convem começar com valores baixos já que esta opção pode consumir muito largo
+              de banda no caso de ter uma grande quantidade de clientes.
+          burst_up:
+            text: >
+              Esta opção faz que se subam os primeiros dados de cada conexão à
+              máxima velocidade disponível antes de estabelecer o limite de velocidade imposto
+              pelo plano. Pode ser útil para o envio de adjuntos ou para subir
+              imagens ou outros arquivos às redes sociais. Faz falta possuir bom largo de
+              banda de subida para aproveitar esta opção.
+          long_download_max:
+            text: >
+              Permite aplicar um tratamento especial às descargas de grande tamanho,
+              como las descargas diretas de Rapidshare ou Megaupload, entre outras.
+
+              Ativando esta opção,
+              quando a descarga de um arquivo superar certa quantidade de kB, será penalizada e
+              a partir desse momento seu tráfego será qualificado como P2P e se aplicarão as
+              restrições para P2P configuradas no contrato, mesmo que baixará sua
+              prioridade de descarga.
+          long_upload_max:
+            text: >
+              É equivalente ao limite para descargas de grande tamanho mas para as
+              cargas de arquivos de grande tamanho.
+          transparent_proxy:
+            text: >
+              Determina se o uso de proxy transparente (web cache) estará habilitado
+              por padrão para este plano em particular.
+      provider:
+        text: ''
+        attributes:
+          state:
+            text: >
+              O estado determina se o fornecedor deve ser utilizado ou não. Um fornecedor marcado
+              como desabilitado *não será utilizado para prover acesso a Internet*.
+          interface_id:
+            title: I18n.activerecord.models.interface.one
+            text: 'A interface de rede à qual está ligado físicamente o fornecedor.'
+          provider_group_id:
+            title: I18n.activerecord.models.provider_group.one
+            text: >
+              Os fornecedores se organizam em grupos, para permitir fazer balanço e
+              failover entre eles.
+
+              No caso de ISPs que possuam um grande número de fornecedores é comum que se os agrupe
+              pela natureza de cada um. Por exemplo os ADSLs por um lado, os dedicados por
+              outro. Depois se criam planos que accederão à Internet exclusivamente por um grupo ou outro.
+              No caso de ter poucos fornecedores é conveniente tê-los todos em um mesmo e
+              único grupo (por exemplo o grupo Default).
+          rate_down:
+            text: >
+              Velocidade de baixada ou descarga deste fornecedor. Recomenda-se colocar um valor
+              o mais ajustado à realidade possível pois entanto mais perto for este valor
+              da realidade, melhor funcionará o controle de largo de banda em geral, as
+              prioridades de tráfego e os garantidos.
+          rate_up:
+            text: >
+              Equivalente à velocidade de baixada mas para a subida. Aqui também se recomenda
+              ajustar o valor o mais perto à realidade possível; embora em conexões de ADSL
+              se recomenda colocar um valor um 5% inferior ao real.
+          kind:
+            text: >
+              SequreISP suporta todo tipo de fornecedores de Internet, os que se podem resumir
+              em 3 casos:
+
+              * *IP fixa*
+
+              Estes são os fornecedores mais comuns dentro dos ISPs, como os dedicados por fibra
+              ótica. Nos proporcionam um endereço IP público fixo, ou uma série de endereços IPs que podemos
+              utilizar.
+
+              * *ADSL*
+
+              Esta opção se utiliza para os fornecedores de ADSL com marcação PPPoE. Recomendamos
+              usar os módems de ADSL em modo bridge e utilizar esta opção especificando o usuário e a
+              senha para realizar a marcação.
+
+              * *DHCP*
+
+              Esta opção serve para todos aqueles fornecedores que entregam endereço IP por meio de DHCP. É muito
+              utilizado entre os fornecedores de cablemodem. Ao obter todos os parâmetros dinamicamente
+              esta opção não requer nenhuma configuração de IP adicional.
+
+          shape_rate_down_on_ingress:
+            text: >
+              O controle do largo de banda total entregado por o fornecedor se faz só em direção para
+              os clientes.
+
+              Isto tem uma razão, que é que o único jeito de controlar o largo de banda no
+              ingresso WAN é descartando os pacotes que excedem o largo de banda estipulado.
+
+              Descartar esses pacotes no ingresso não é recomendável pois estaríamos
+              descartando pacotes totalmente válidos que luego deverão ser retransmitidos.
+
+              Além disso, seria uma pena se um fornecedor configurado para 10 Mbps ocasionalmente entregasse uma
+              ráfega a 11 Mbps e nós descartássemos o excedente.
+
+              Contudo, há situações nas que é imprescindível não consumir de um fornecedor mais
+              largo de banda que o estipulado em sua configuração. Para esses casos existe esta
+              opção que geralmente se usa combinada com a ativação do web cache.
+          unique_mac_address:
+            text: >
+              Permite gerar um endereço MAC único para a placa de rede dste fornecedor,
+              diferente do endereço MAC real do dispositivo de hardware.
+
+              Isto é útil nos ISP que têm múltiplos fornecedores através de uma única placa de
+              rede por meio da configuração de VLANs contra um switch VLAN.
+
+              Nesses casos todos os fornecedores que saiam pelo switch VLAN deveríam ter ativada
+              esta opção.
+      provider_group:
+        text: >
+          Os grupos de fornecedores servem para o manejo do balanço e failover.
+          Cada fornecedor que se agrega deve obrigatoriamente pertencer a um grupo.
+          Depois os fornecedores que pertençam a um mesmo grupo ficarão integrados e funcionarão
+          como um único enlace sumando todos seus largos de banda.
+
+          Se um dos fornecedores de um grupo sair de linha, isto será detetado automáticamente
+          pelo sistema e esse fornecedor será dado de baixa do balanço até que recuperar seu
+          serviço.
+
+          Quando um grupo de fornecedores fica sem nenhum fornecedor em linha, os
+          contratos que tinham acesso à Internet por esse grupo começarão a tê-lo através do resto dos grupos
+          que estiverem disponíveis.
+
+          É comum agrupar os fornecedores segundo a qualidade do serviço que brindam,
+          por exemplo agrupar os ADSLs num grupo homónimo, os enlaces dedicados em
+          outro, etc. Depois se configuram planos utilizando estes grupos e cobrando
+          preços diferenciados segundo a qualidade de serviço.
+        attributes:
+          name:
+            text: 'Nome genérico para descrever ao grupo.'
+          state:
+            text: >
+              O estado determina se o grupo estará ativo ou não. Um grupo desabilitado *não será
+              utilizado para prover acesso  à Internet*.
+      interface:
+        text: >
+          As interfaces são a representação do sistema das placas de rede presentes no servidor.
+          Deve existir uma interface por cada placa de rede no servidor.
+        attributes:
+          name:
+            text: >
+              Este é o nome *real* da interface e *não pode ser inventado*, é dizer,
+              deve coincidir com o nome que lhe atribuiu o sistema operativo ao momento
+              de detetar a interface de rede.
+          vlan:
+            text: >
+              Marcando esta caixa se pode criar uma interface VLAN sobre a interface de rede
+              real.
+
+              As VLANs se podem utilizar em conjunto com um switch VLAN para ligar
+              múltiplos fornecedores de rede utilizando uma única placa de rede no servidor.
+              Este tipo de configuração permite ter tantos fornecedores quantas bocas de
+              switch VLAN em uma única placa de rede do servidor.
+          vlan_interface_id:
+            title: I18n.activerecord.attributes.interface.vlan_interface
+            text: >
+              A interface real sobre a qual se configurará a VLAN.
+          vlan_id:
+            text: O número de tag VLAN, também conhecido como VLAN ID.
+          description:
+            text: >
+              É um campo de texto livre no qual se pode dar uma descrição familiar para reconhecer
+              o que é que está ligado a esta placa, por exemplo 'clientes' ou 'fornecedor 1',
+              etc.
+          kind:
+            text: >
+              Determina o uso que se lhe dará a esta interface de rede.
+
+              Se se define como LAN significa que a esta interface se ligarção clientes.
+
+              Se se define como WAN significa que a esta interface se ligará um fornecedor de
+              acesso à Internet.
+      configuration:
+        attributes:
+          deliver_notifications:
+            text: >
+              Ativando esta caixa, receberá notificações por e-mail cada vez que
+              um fornecedor mudar de estado (em linha/fora de linha) bem como cada vez que
+              uma interface de rede mudar seu estado de enlace.
+          notification_timeframe:
+            text: >
+              Muitas vezes os fornecedores têm microcortes e isto faz que se recebam
+              notificações demais via e-mail por dia, sobre tudo no caso de ISPs
+              que têm configurado um grande número de fornecedores.
+
+              Ajustando o tempo em segundos que um fornecedor deve estar fora de linha para enviar
+              a notificação pode reduzir a quantidade de e-mails recebedos e desse jeito
+              identificar melhor quando um fornecedor está realmente fora de linha e requer a
+              intervenção por parte de um técnico para solucionar o problema.
+          default_tcp_prio_ports:
+            text: >
+              TCP é o protocolo usado na Internet para transmitir confiavelmente dados, imagens, arquivos,
+              etc.
+              Cada aplicação usa uma porta diferente para se comunicar; neste campo se
+              pode definir que portas TCP obterão prioridade sobre o resto do tráfego.
+
+              Por padrão se escolhem portas padrão como 80 (navegação web), 110 e 143
+              (correio eletrônico POP e IMAP), entre outros.
+
+              Para uma lista completa de todas os portas TCP disponíveis e as aplicações
+              que comumente os usam consulte
+              "aqui":https://secure.wikimedia.org/wikipedia/en/wiki/List_of_TCP_and_UDP_port_numbers
+          default_udp_prio_ports:
+            text: >
+              UDP é um protocolo usado na Internet para transmissão de dados, mas sem garantir sua entrega.
+
+              É usado principalmente para transmitir voz em ligações VOIP ou similares
+              como por exemplo Skype. Também é utilizado por algumas tecnologias de
+              streaming, e por muitos vídeo jogos em linha, entre outros.
+
+              Aqui se podem definir todas as portas UDP que obterão prioridade. Por
+              padrão está em branco, já que na opção seguinte "Protocolos prioritários"
+              está definido *todo o protocolo UDP como prioritário*.
+          default_prio_protos:
+            text: >
+              Aqui é possível definir protocolos enteiros para que obtenhan prioridade.
+
+              Por padrão se prioriza UDP para aplicações de tempo real. ICMP e IGMP
+              são mensagens que permitem a comunicação e diagnóstico de redes, e
+              ESP, AH e GRE que são protocolos de VPN.
+
+              Para uma lista completa de todos os protocolos disponívels consulte
+              "aqui":http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml
+          default_prio_helpers:
+            text: >
+              Os helpers de netfilter permitem identificar protocolos dinâmicos, que escolhem
+              portas TCP ou UDP ao acaso pelo que é impossível atribuir um número de porta
+              fixo para identificar esse tráfego como prioritário.
+
+              Cabe aclarar que o protocolo a rastrear deve estar suportado oficialmente
+              por um helper de netfilter, à data os helpers suportados são:
+
+              proto_sctp, h323, pptp, snmp_basic, irc, tftp, proto_gre, proto_dccp, ftp,
+              proto_udplite, sip.
+          transparent_proxy:
+            text: >
+              Esta opção ativa a funcionalidade de proxy ou web cache no servidor.
+              Depois desde os planos e os contratos se definirá que usuários terão
+              o proxy habilitado ou não.
+
+              Quando esta opção está desativada o proxy deixa de funcionar para todos
+              os clientes, independentemente de qualquer outra configuração. Isto permite
+              deter o proxy em caso de experimentar problemas ou para realizar diagnósticos
+              em geral.
+          transparent_proxy_n_to_m:
+            text: >
+              Recomendamos ter esta opção ativada se faz uso do proxy. Esta opção
+              asegurará que se cumpram as restrições de subida para o tráfego web ainda
+              se o cliente estiver usando o proxy; já que de outro modo, o tráfego web de
+              subida quedaria liberado por razões técnicas.
+          transparent_proxy_zph_enabled:
+            text: >
+              Se esta opção está ativada, o conteúdo armacenado pelo proxy será entregue
+              aos clientes sem nenhum tipo de restrição de largo de banda, é dizer à
+              velocidade que a rede permitir.
+
+              Isto permite acelerar notoriamente a navegação sem incorrer num custo extra
+              no largo de banda do fornecedor já que é conteúdo previamente armazenado no cache.
+
+              Contudo é possível desativar essa funcionalidade no caso de que o ISP
+              tenha seu última milha saturada e não possa permitir-se enviar grandes ráfegas
+              de tráfego a altas velocidades.
+          transparent_proxy_windows_update_hack:
+            text: >
+              Para que o cache de Windows Update funcione é necessário habilitar na
+              configuração do proxy algumas funcionalidades extras.
+
+              Duas caraterísticas se habilitam no cache ativando esta opção:
+
+
+              1) Se uma descarga em curso for cancelada por um cliente, o proxy igualmente
+                descarregará o arquivo por completo para uso futuro.
+
+              2) Se um cliente reanudar uma descarga parcial, o proxy intentará descarregar o
+                arquivo completo desde o começo e não apenas o fragmento que o cliente estiver
+                solicitando.
+
+
+              Habilitar Windows Update é opcional já que estes comportamentos antes mencionados
+              não são de todo normais e podem trazer problemas em alguns cenários particulares.
+
+              Para mais informação visitar a página:"http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
+              de Squid ao respecto.
+          transparent_proxy_max_load_average:
+            text:
+              Nos sistemas Linux, se levam estatísticas da carga de trabalho que está experimentando
+              o sistema, em forma instantânea e promedio nos últimos 5 e 15 min.
+
+              Quando o servidor faz frente a muita carga geralmente começam a se
+              produzir engarrafamentos de IO (entrada/saída) e isto realmente impacta
+              sobre o rendimento do proxy, alentecendo notavelmente a navegação.
+
+              Este valor permite configurar um valor máximo de carga do sistema a partir
+              do qual, se for ultrapassado, o proxy será desabilitado automaticamente.
+
+              Recomendamos deixar este valor por padrão e consultar ao suporte técnico ou
+              nos foros se o proxy se desativa debido a esta opção. Geralmente
+              em servidores com um número de clientes superior a 500 já se deve pensar num
+              disco exclusivo para o cache ou uma PC dedicada.
+          filter_by_mac_address:
+            text: >
+              Ativando esta opção se força a que os clientes devam navegar exclusivamente
+              usando o endereço MAC que se especifica no contrato. Esta restrição se aplica
+              unicamente para os contratos que tenham especificado seu endereço MAC.
+
+              Si esta opção esta desativada os clientes podem navegar desde qualquer
+              endereço MAC.
+          tc_contracts_per_provider_in_wan:
+            text: >
+              Esta opção configura os mecanismos internos de controle de largo de banda do servidor
+              de modo que os mínimos e máximos de largo de banda de cada contrato se controlem
+              para o tráfego de subida das interfaces WAN, de jeito que se tenha em conta o gráu de
+              saturação de cada fornecedor, a expensas de um maior consumo de recursos do sistema.
+
+              *Recomendamos ter esta opção ativada siempre*
+          tc_contracts_per_provider_in_lan:
+            text: >
+              Esta opção aplica um controle similar ao anterior, para o tráfego de baixada nas interfaces LAN.
+
+              A diferença das interfaces WAN ondee há um fornecedor por cada interface,
+              nas interfaces LAN se têm múltiplos clientes por cada interface, e debido a limitações
+              técnicas, não é possível ativar esta opção quando o producto do número de clientes
+              por o número de fornecedores exceda 8000.
+
+              Por exemplo, si você tem um único fornecedor e 8000 clientes pode ativar esta opção,
+              mesmo se tem 2000 clientes e 4 fornecedores. Mas não a active si tem 5000
+              clientes e 2 fornecedores, pois 5000×2>8000.
+          iptables_tree_optimization_enabled:
+            text: >
+              Esta opção habilita uma optimização no mecanismo interno de controle de largo de banda do
+              servidor que reduz consideravelmente o uso de CPU em servidores com um
+              grande número de clientes.
+              Devido ao limite de memória que possuem os servidores com CPU de 32
+              bits, esta opção não pode ser habilitada em servidores dessa arquitetura.
+          use_global_prios:
+            text: >
+              Em casos de ISPs com um grande número de clientes (mais do que 2500) a construção de
+              prioridades individuais por cada contrato pode resultar muito custosa en termos de
+              recursos do CPU, como memória do kernel ou capacidade de procesamento.
+
+              Para esse casos particulares se desenvolveu esta opção onde as prioridades
+              são manejadas de jeito global e não individualmente por contrato.
+          apply_changes_automatically:
+            text: >
+              Ative esta opção si deseja que os câmbios se apliquem automaticamente uma vez por dia.
+          apply_changes_automatically_hour:
+            text: >
+              Hora do dia na que vão se aplicar os câmbios automaticamente se dita opção estiver ativada.
+      address:
+        title: I18n.fieldsets.providers.configuration_static_ips
+        attributes:
+          use_in_nat_pool:
+            title: I18n.activerecord.attributes.address.use_in_nat_pool
+            text: >
+              Esta opção permite agregar este endereço IP adicional ao balanço de NAT.
+
+              Isto significa que todas as petições que os clientes com endereço IP privado fizerem
+              serão mapeadas entre todos os endereços IP públicos disponíveis para o balanço.
+
+              Desse jeito se evitam problemas com sítios que permitem só alguns
+              registros por endereço IP por dia (caso de Hotmail) ou também para acessar a
+              descargas de Rapidshare ou Megaupload que permitem só 1 descarga por endereço IP o
+              mesmo tempo.
+    custom:
+      contract:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          details:
+            level_class: 'help_level_1'
+            text: ''
+          prios:
+            level_class: 'help_level_1'
+            text: >
+              Aqui é possível definir o tráfego prioritário individualmente para cada
+              contrato.
+
+              Por cada campo que ficar em branco no contrato se usarão
+              os valores globais definidos em Configuração.
+
+              Se ingressar informação em algún campo, ela se suporá à definida
+              globalmente para este contrato, campo a campo, pelo que se quiser, por exemplo,
+              adicionar a porta 8193 às portas TCP prioritárias sem que se deixem de considerar
+              prioritárias as portas definidas em Configuração, então deverá
+              copiar as portas prioritárias globais e depois adicionar a porta 8193 à lista.
+
+              Se em câmbio, unicamente deixar a porta 8193 como porta TCP prioritária
+              então esta única porta obterá prioridade sobre o resto de portas
+              TCP e isto geralmente não é o que se pretende.
+      configuration:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          global_prios:
+            level_class: 'help_level_1'
+            text: >
+              SequreISP tem um exclusivo sistema de manejo de prioridades segundo o tipo
+              de tráfego.
+
+              Isto permite definir um tráfego prioritário que terá um tratamento preferencial
+              sobre um tráfego não prioritário ou P2P. Além disso, sobre o tráfego P2P se pode
+              aplicar uma restrição sobre a velocidade máxima de descarga.
+
+              As portas e protocolos aqui definidos determinarão que tráfego será
+              tratado como prioritário para este servidor.
+
+              Em Configuração se definem as prioridades globais que afetarão a todos
+              os clientes e a todos os planos.
+
+              Se algum cliente tem necessidades em particular e precisa que algum tráfego em
+              especial seja classificado como prioritário, convem adicionar essa exceção nas
+              prioridades do contrato. Deste jeito esse câmbio só afetará a esse cliente em
+              particular.
+
+              Por cada campo que fica em branco no contrato se usam
+              os valores globais definidos em Configuração.
+          notifications:
+            level_class: 'help_level_1'
+            text: ''
+          proxy:
+            level_class: 'help_level_1'
+            text: >
+              O proxy ou web cache permite acelerar a navegação dos clientes e poupar
+              largo de banda mediante o armazenamento local de páginas, imagens e arquivos entre outros.
+
+              Advertimos que esta funcionalidade consume recursos do servidor e que no caso de
+              contar com um grande número de clientes isto pode causar que o servidor se sature.
+              Em servidores com mais de 300 clientes se recomenda usar um disco exclusivo para o
+              armazenamento de cache, e em ISPs com mais de 1000 clientes o cache deve estar
+              diretamente em outro servidor exclusivo para essa função.
+      plan:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          configuration_static_ips:
+            level_class: 'help_level_1'
+            text: ''
+      provider_group:
+        concurrency_index:
+            title: 'Índice de simultaneidade'
+            text: >
+              O índice de simultaneidade nos da informação sobre a razão entre o largo de
+              banda que prometemos a nossos clientes e o que realmente temos.
+              Diz-se que um ISP deve dispor ao mínimo do 20% do largo de banda que lhe
+              vende nominalmente a seus clientes, pois nunca o 100% dos clientes vão estar
+              utilizando o 100% do largo de banda que contrataram.
+              A relação ótima vai variar para cada ISP em particular; o 20% é só uma guia.
+              O seguimento deste número ao longo do tempo pode ser de ajuda para saber
+              quando é o momento de comprar mais largo de banda.
