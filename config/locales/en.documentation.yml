@@ -1,0 +1,535 @@
+es:
+  context_help:
+    models:
+      contract:
+        text: ''
+        attributes:
+          state:
+            text: 'The contract *will not be able to access the Internet* if it is disabled.'
+          ip:
+            text: >
+              The IP address to be assigned to this contract can be an individual host address or a subnet address with
+              CIDR:https://secure.wikimedia.org/wikipedia/es/wiki/Classless_Inter-Domain_Routing (v.grke
+              192.168.0.0/24.
+          ceil_dfl_percent:
+            text: >
+              Defines the maximal bandwidth available to be used by non-priority traffic (P2P).
+              This percentage is calculated based on the maximal band widths for the selected plan.
+          detail:
+            text: >
+              Free text field for entering additional information about this particular contract.
+          cpe:
+            text: >
+              Free text field for entering additional information about this particular contract.
+          node:
+            text: >
+              Free text field for entering additional information about this particular contract.
+          transparent_proxy:
+            text: >
+              Defines whether the transparent proxy (web cache) will be enabled or disabled for this contract.
+              This can be explicitly enabled or disabled, or be left by default, in which case it will be
+              enabled or disabled according to whether it is in the assigned plan.
+
+              In order for the transparent proxy to work, it must be globally enabled in the corresponding
+              section in Configuration.
+          mac_address:
+            text: >
+              Allows to bind the IP address to the MAC address of the contract and then deny Internet access
+              if both differ.
+          proxy_arp:
+            text: >
+              Allows to pass a public IP address to a client. This is used when the provider of the contract's
+              plan got assigned a pool of public addresses from the same subnet, which therefore can not be
+              routed.
+
+              Enabling this option, the client will be able to have one of the public IP addresses from the
+              provider's pool, despite being inside a LAN.
+          public_address_id:
+            title: I18n.activerecord.attributes.contract.public_address
+            text: >
+              Allows to assign a public IP address previously entered as an additional IP address of a contract's provider.
+              The contract will continue to have its private IP address, but a full network destination
+              address translation (DNAT) will be performed from the public IP address to the contract's private address.
+
+              Likewise, all Internet access from this contract
+              *will not participate in load balancing and will use always the assigned public IP address*.
+          unique_provider_id:
+            title: I18n.activerecord.attributes.contract.unique_provider
+            text: >
+              Allows to exclude this contract from load balancing. This is necessary
+              for some IP telephony services or other special services that are not compatible
+              with load balancing.
+      forwarded_port:
+        title: I18n.activerecord.models.forwarded_port.other
+        text: >
+          Allow to redirect public ports to the client's private IP address. They are used to
+          enable remote access to PCs, applications and IP cameras, among others.
+        attributes:
+          provider_id:
+            title: I18n.activerecord.models.provider.one
+            text: >
+              The provider over which the redirection is to be performed. This is going to
+              determine the public IP address that will have to be used for accessing from the Internet.
+          public_port:
+            text: >
+              The public port is the external port that will be visible from the Interent and
+              to which users will connect when they want to access from the outside.
+          private_port:
+            text:  >
+              The private port is the port of the client's PC or device that will receive the
+              redirection. It can be the same as the public port or not.
+      plan:
+        text: >
+          Plans reflect the service that is sold to clients.
+
+          They mainly set the speed at which the client will access the Internet and what group
+          of providers she will use. They also allow more advanced settings as bursts or web cache,
+          to differentiate plans with distinct service qualities.
+        attributes:
+          provider_group_id:
+            title: I18n.activerecord.models.provider_group.one
+            text: >
+              Defines the group of providers that clients configured with this plan will use to access the Internet.
+          rate_down:
+            text: >
+              Defines the download bandwidth guaranteed by this plan. This value should only be
+              different from zero when you want to create a plan with dedicated bandwidth.
+          ceil_down:
+            text: >
+              Defines the maximum download bandwidth for this plan. This will cap the speed at which
+              clients assigned this plan will be able to access the Internet.
+          rate_up:
+            text: >
+              Defines the upload bandwidth guaranteed by this plan. This value should only be
+              different from zero when you want to create a plan with dedicated bandwidth.
+          ceil_up:
+            text: >
+              Defines the maximum upload bandwidth for this plan. This will cap the speed at which
+              clients assigned this plan will be able to access the Internet.
+          burst_down:
+            text: >
+              The download burst is a web browsing throttle. It only affects
+              ports 80 and 443 (http and https).
+
+              This option makes the firt chunks of data of each connection download at the maximum available speed
+              before enforcing the plan's speed limit, thus making web pages load hastily.
+
+              It is convenient to start by enabling this option with a low value, as it can consume a lot of
+              bandwidth in case of having many clients.
+          burst_up:
+            text: >
+              This option makes the first chunks of data of each connection upload at the maximum available speed
+              before enforcing the plan's speed limit. This can help sending e-mail attachments or sharing images
+              or other files in social networks. It is required to have a good upload bandwidth
+              to take advantage from this option.
+          long_download_max:
+            text: >
+              This allows to treat in a special way long downloads like those from Rapidshare or Megaupload, among others.
+
+              Enablig this option, when the download of a file exceeds some amount of kB, it will be penalized
+              and from that moment on, its traffic will be classified as P2P, and the contract's P2P
+              configured restrictions will be applied, as well as its download priority will be lowered.
+          long_upload_max:
+            text: >
+              This is equivalent to the long download limit, but for uploading big files.
+          transparent_proxy:
+            text: >
+              Tells whether the usage of a transparent proxy (web cache) will be enabled by default
+              for this particular plan.
+      provider:
+        text: ''
+        attributes:
+          state:
+            text: >
+              The provider's state sets whether this provider should be used. A provider marked
+              as disabled *will not be used for providing Internet access*.
+          interface_id:
+            title: I18n.activerecord.models.interface.one
+            text: 'The network interface to which the provider is physically attached.'
+          provider_group_id:
+            title: I18n.activerecord.models.provider_group.one
+            text: >
+              Providers are bundled in groups, enabling load balancing and failover among them.
+
+              In the case of an ISP having a large number of providers, it is common to group them
+              by kind of link. For example, all ADSLs on one group, all dedicated links on
+              another. Then plans that access the Interent exclusively through one group or the other
+              are created.
+              When having only a few providers, it is convenient to have all of them in the same and
+              only group (for example the Default group).
+          rate_down:
+            text: >
+              Download speed of this provider. It is recommended to enter a value that is as close to
+              reality as possible, because the more exact this value is, in general the better the
+              bandwidth control and traffic priorities will work.
+
+          rate_up:
+            text: >
+              This is equivalent to the download speed, but for uploading. It is also recommended here to
+              adjust the value as close to reality as possible, but on ADSL connections it is
+              recommended to put a value 5% lower than the real one.
+          kind:
+            text: >
+              SequreISP supports all kind of Internet providers, which can be sumarized in 3 cases:
+
+              * *Fixed IP*
+
+              These are the most common providers used by ISPs, as those using dedicated fiber optic links.
+              They provide a public fixed IP address, or a range of IP addresses to use.
+
+              * *ADSL*
+
+              These are the ADSL providers with PPPoE dialing. We recommend
+              using the ADSL modem in bridge mode and using it with this option providing username and password for dialing.
+
+              * *DHCP*
+
+              This option is useful for all those providers that offer an IP address by DHCP. This is often
+              used among cable modem providers. When obtaining al parameters dynamically,
+              this option does not require any additional IP configuration.
+
+          shape_rate_down_on_ingress:
+            text: >
+              Control of the total bandwith delivered by the provider is done only towards clients.
+
+              This is for a reason, which is that the only way to control bandwidth in the WAN ingress would be by
+              dropping packages that exceed the stipulated bandwidth.
+
+              Dropping those packages in the ingress is not recommended, because we would be discarding totally valid
+              data that will have to be retransmitted latter.
+
+              It would be also a shame if a provider configured to 10 Mpbs occasionally delivers a burst at 11 Mbps and
+              we discard the excess.
+
+              However there are situations in which it is required that we not consume from a provider
+              more bandwidth than set in its configuration. For these cases exists this option that
+              is generally used in combination with the web cache.
+          unique_mac_address:
+            text: >
+              This allows to generate a unique MAC address for the network interface for this provider,
+              different from the real MAC addresss of the hardware device.
+
+              This is useful for ISPs that have multiple providers attached to a single network card by means
+              of VLANs configured in a VLAN-capable switch.
+
+              In that cases, all the providers reached through the VLAN switch should have
+              this option enabled.
+      provider_group:
+        text: >
+          Provider groups are needed for load balancing and failover managment.
+          Each provider added must forcibly belong to a group.
+          Then, providers belonging to the same group will be integrated and will work as a single link,
+          summing up all its bandwidths.
+
+          If one of the providers of a group goes offline, this is automatically detected by
+          the system and that provider is excluded from load balancing until it goes online again.
+
+          When a group of providers goes out of online providers, then the contracts that were accessing
+          the Internet through that group start getting it through the rest of available groups.
+
+          It is common practice to group providers by the quality of service they provide;
+          for example, creating a group named ADSL for all ADSL providers, dedicated links
+          in another and so on. Then, plans are configured usign those groups, charging differentiated
+          prices depending on the quality of service.
+        attributes:
+          name:
+            text: 'Generic name to describe the group.'
+          state:
+            text: >
+              The group's state sets whether the group should be used. A group marked
+              as disabled *will not be used for providing Internet access*.
+      interface:
+        text: >
+          Interfaces are the system's representation of the network cards present in the server.
+          There must be one interface for each network card in the server.
+        attributes:
+          name:
+            text: >
+              This is the *actual* name of the interface and *cannot be made out*, that is,
+              it must be the same as the name assigned by the operating system when
+              the interface was detected.
+          vlan:
+            text: >
+              Checking this box, you can create a VLAN interface over the actual network interface.
+
+              VLAN interfaces can be used with a VLAN switch to connect to multiple providers using
+              a single network card in the server.
+              This kind of setup allows to have as many providers as ports the VLAN switch has, in one single
+              network card in the server.
+          vlan_interface_id:
+            title: I18n.activerecord.attributes.interface.vlan_interface
+            text: >
+              The actual interface over which the VLAN interface will be created.
+          vlan_id:
+            text: VLAN tag number, also known as VLAN ID.
+          description:
+            text: >
+              Free text field to enter a familiar description to recognize what is connected
+              to this interface, for example: "clients" or "provider 1".
+          kind:
+            text: >
+              Sets the usage that this network interface will have.
+
+              If it is defined as LAN, it means it will be connected to clients.
+
+              If it is defined as WLAN, it means it will be connected to an Internet access provider.
+      configuration:
+        attributes:
+          deliver_notifications:
+            text: >
+              Enabling this box, you will receive an e-mail notification whenever a provider changes
+              its state (online/offline) as well as whenever an interface changes its link state.
+          notification_timeframe:
+            text: >
+              Often providers have micro-outages and this causes too many notifications to be received a day
+              by e-mail, specially in the case of ISPs that have many providers.
+
+              Adjusting the time in seconds a provider must be offline to send the notification can reduce the
+              number of e-mails received and therefore one can better identify when a provider is really offline
+              and requires a technician's intervention to address the problem.
+          default_tcp_prio_ports:
+            text: >
+              TCP is the protocol used in the Internet to trustfully transmit data, images, files,
+              etc.
+              Each application uses a different port to communicate; in this field you
+              can define which TCP ports will get priority over the rest of the traffic.
+
+              By default, some standard ports as 80 (web browsing), 110 and 143
+              (POP and IMAP e-mail), among others.
+
+              For a complete list of available TCP ports and the aplications that commonly use them
+              see
+              "here":https://secure.wikimedia.org/wikipedia/en/wiki/List_of_TCP_and_UDP_port_numbers
+          default_udp_prio_ports:
+            text: >
+              UDP is a protocol used in the Internet to transmit data, but without guaranteeing its delivery.
+
+              It is used chiefly to transmit voice in VOIP calls or similar applications, as Skype.
+              It is also used by some streaming technologies and by many on-line video games among others.
+
+              Here you can define all the UDP ports that will get priority.
+              By default this is blank, as the next option "Priority protocols" is set as
+              *all UDP protocol as priority*
+          default_prio_protos:
+            text: >
+              Here it is possible to arrange for entire protocols to get priority.
+
+              By default, UDP is prioritized for real time applications. ICMP and IGMP are
+              messages enabling network communication and diagnostics, and ESP, AH and GRE are VPN
+              protocols.
+
+              For a complete list of all the available protocols, see
+              "here":http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml
+          default_prio_helpers:
+            text: >
+              Netfilter helpers allow to identify dynamic protocols, that choose randomly
+              TCP or UDP ports, making it impossible to set a fixed port number to identify that
+              traffic as priority.
+
+              It should be clarified that the protocols to track must be officially supported
+              by a netfilter helper. To date, the netfilter helpers supported are:
+
+              proto_sctp, h323, pptp, snmp_basic, irc, tftp, proto_gre, proto_dccp, ftp,
+              proto_udplite, sip.
+          transparent_proxy:
+            text: >
+              This option enables the proxy or web cache functionality in the server.
+              After plans and contracts, you must define which users will have
+              the proxy enabled or disabled.
+
+              When this option is disabled, the proxy ceases to work for all clients,
+              independently from any other configuration. This allows to stop the proxy
+              in case of experiencing problems or performing diagnosis in general.
+          transparent_proxy_n_to_m:
+            text: >
+              We recomment having this box checked if you use the proxy. This will ensure that upload
+              limits are enforced for the web traffic even if the client is using the proxy, because
+              otherwise the upload web traffic would remain unbounded for technical reasons.
+          transparent_proxy_zph_enabled:
+            text: >
+              If this option is enabled, the content cached by the proxy will be delivered to the clients
+              with no bandwidth restriction, that is to say, at the speed permitted by the network.
+
+              This allows to notoriously throttle web browsing without incurring an extra cost
+              in terms of the provider's bandwidth, because it is previously cached content.
+
+              Nevertheless it is possible to disable this functionality in case the ISP has its
+              last mile saturated and it cannot be permitted to send large bursts of traffic at
+              high speeds.
+          transparent_proxy_windows_update_hack:
+            text: >
+              For Windows Update cache to work, it is necessary to enable some extra functionalities in
+              the proxy configuration.
+
+              Two features are activated by enabling this option:
+
+
+              1) If an ongoing download is cancelled by a client, the file is equally downloaded in whole
+                by the proxy for later use.
+
+              2) If a client resumes a partial download, the proxy will try to download the full file
+               from the beggining, not only the range requested by the client.
+
+              Enabling Windows Update is optional because the aforementioned behaviors are not entirely
+              standard and can cause problems in some particular scenarios.
+
+              For more information visit the Squid's page:"http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
+              about it.
+          transparent_proxy_max_load_average:
+            text:
+              Linux systems carry statistics on the work load the system is experiencing, instantaneously
+              and on average in the last 5 or 15 min.
+
+              When the server faces a lot of load, IO (input/output) bottlenecks usually begin to occur,
+              which impacts on the proxy performance, and noticeably slowing down the web browsing.
+
+              This value allows to set a maximum value for system load, above which the proxy will be automatically disabled.
+
+              We recommend to leave this setting in its default value, and to consult the technical support or in forums
+              if the proxy gets disabled for ths reason. Generally speaking, a server with more than 500 clients
+              should have a dedicated disk for the cache, or even a separated server should be used.
+          filter_by_mac_address:
+            text: >
+              Enabling this option forces clients to access the Internet exclusively using the MAC address specified in the
+              contract. This restriction applies only for contracts that specify a MAC address.
+
+              When this option is disabled, clients can access the Internet from any MAC address.
+          tc_contracts_per_provider_in_wan:
+            text: >
+              This option sets up the server's internal bandwidth mechanisms so that minimum and maximum
+              bandwidths of each contract is controlled for the upload traffic in all WAN interfaces, taking into account the
+              degree of saturation of each provider, at the expense of a slightly larger resources consumption.
+
+              *We recommend to have this option enabled.*
+          tc_contracts_per_provider_in_lan:
+            text: >
+              This options applies a control similar to the previous one, but for download traffic in the LAN interfaces.
+
+              Unlike WAN interfaces, where there is one provider for each interface,
+              in each LAN interface there are many clients, and due to technical limitations,
+              it is not possible to enable this option when the product of the number of clients times
+              the number of providers exceeds 8000.
+
+              For example, if you have a single provider and 8000 clients, you can enable this option,
+              and also if you have  2000 clients and 4 providers. But you must not enable this option if you have 5000
+              clients and 2 providers, as 5000×2>8000.
+          iptables_tree_optimization_enabled:
+            text: >
+              This option enables an optimization in the server's internal bandwidth control mechanism
+              that considerably reduces the use of CPU in servers with many clients.
+              Due to a limitation in maximum memory size of 32-bit CPUs, this optimization cannot be enabled in
+              servers with that architecture.
+          use_global_prios:
+            text: >
+              In cases of ISPs with a large number of clients (more than 2500) the individual control of
+              priorities for each contract and provider can be very consuming in terms of processing power
+              and memory.
+
+              This option, that is best suited for those cases, allows to control priorities globally and not
+              individually on a by contract basis.
+          apply_changes_automatically:
+            text: >
+              Enable this option if you want configuration changes to be applied once a day.
+          apply_changes_automatically_hour:
+            text: >
+              Time of the day in which configuration changes are to be applied automatically if that option is enabled.
+      address:
+        title: I18n.fieldsets.providers.configuration_static_ips
+        attributes:
+          use_in_nat_pool:
+            title: I18n.activerecord.attributes.address.use_in_nat_pool
+            text: >
+              This option allows to add this additional IP address to the NAT balancing.
+
+              This means that all requests from clients with private IP addresses will be mapped among
+              all the public IP addresses available for balancing.
+
+              This way, problems with sites allowing a single registration by IP address per day (as Hotmail) are avoided.
+              It also allows to access Rapidshare or Megaupload downloads, that permit only one download
+              by IP address at a time.
+    custom:
+      contract:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          details:
+            level_class: 'help_level_1'
+            text: ''
+          prios:
+            level_class: 'help_level_1'
+            text: >
+              Here it is possible to set individually the priority traffic for each contract.
+
+              For each field left blank in the contract, the global value set in Configuration
+              will be used as default.
+
+              If you enter information in some fields, it will be overlaid to the globally defined
+              information for this contract, on a field by field basis.
+              So if you want, for example, to add port 8193 to the priority TCP ports without
+              unsetting as priority ports, those set in Configuration, then you'll have to copy
+              the list of global priority ports and add port 8193 to it.
+
+              On the other hand, if you leave only port 8193 as TCP priority port, then only
+              that port will get priority over the rest of the ports, and is not what is usually
+              intended.
+      configuration:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          global_prios:
+            level_class: 'help_level_1'
+            text: >
+              SequreISP has an exclussive system of priority management according to the type
+              of traffic.
+
+              This allows to define a priority traffic that will have a preference treatment
+              over non priority or P2P traffic.
+              Besides, it can be applied a restriction on maximum download speed to P2P traffic.
+
+              Ports and protocols set here will determine which traffic will be treated as priority
+              by this server.
+
+              Global priorities are defined in Configuration, which will affect all clients and plans.
+
+              If a client has special needs for some traffic in particular to be classified as priority,
+              it is convenient to add that exception in the contract's priority. This way, the change
+              will only affect that client in particular.
+
+              For each field left blank in the contract, the global value set in Configuration
+              will be used as default.
+          notifications:
+            level_class: 'help_level_1'
+            text: ''
+          proxy:
+            level_class: 'help_level_1'
+            text: >
+              The proxy or web cache allows to throttle web browsing for clients as well as saving
+              bandwidth by means of locally caching pages, images and files, among others.
+
+              Notice that this feature consumes resources of the server and in case of having
+              a large number of clients, this can cause the server to saturate.
+              In servers with more than 300 clients it is recommended to use a dedicated disk for
+              cache storing, and in ISPs with more than 1000 clients the cache must be directly
+              in a separated server exclusive for this feature.
+      plan:
+        fieldsets:
+          advanced:
+            level_class: 'help_level_1'
+            text: ''
+          configuration_static_ips:
+            level_class: 'help_level_1'
+            text: ''
+      provider_group:
+        concurrency_index:
+            title: 'Simultaneity index'
+            text: >
+              The simultaneity index gives information about the the ratio of the bandwidth promised to clients and
+              to the actual bandwidth available.
+              It is said that an ISP should have at its disposal at least the 20% of the bandwidth
+              nominally sold to its clients, as hardly never the 100% of the clients are going to}
+              be claiming the 100% of the bandwidth they bought.
+              The optimal relationship will vary from ISP to ISP; 20% is just a rule of thumb.
+              Tracking this figure over time can be of assistance in knowing when it is time to buy
+              more bandwidth.
