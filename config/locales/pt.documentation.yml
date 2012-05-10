@@ -207,6 +207,14 @@ pt:
               utilizado entre os fornecedores de cablemodem. Ao obter todos os parâmetros dinamicamente
               esta opção não requer nenhuma configuração de IP adicional.
 
+          dhcp_force_32_netmask:
+            text: >
+               Esta opção irá forçar uma máscara de rede / 32 para este fornecedor.
+
+               Selecione esta opção se você tiver mais de um provedor tipo DHCP da mesma empresa.
+               Sem essa opção, pode acontecer
+               ter 2 (ou mais) fornecedores com o endereços IP na mesma sub-rede,
+               resultando em um comportamento errático.
           shape_rate_down_on_ingress:
             text: >
               O controle do largo de banda total entregado por o fornecedor se faz só em direção para

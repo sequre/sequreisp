@@ -188,6 +188,13 @@ es:
               used among cable modem providers. When obtaining al parameters dynamically,
               this option does not require any additional IP configuration.
 
+          dhcp_force_32_netmask:
+            text: >
+              This option forces a /32 netmask for this provider.
+
+              Enable this option if you have more than one dhcp provider from the same company.
+              Without this option, it could happen to have 2(or more) providers with IP addresses in the same
+              subnet, resulting in erratic behaviour.
           shape_rate_down_on_ingress:
             text: >
               Control of the total bandwith delivered by the provider is done only towards clients.
