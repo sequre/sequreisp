@@ -752,7 +752,7 @@ def setup_dynamic_providers_hooks
       f.puts "unset new_domain_name_servers"
       f.puts "unset new_host_name"
       Provider.all(:conditions => { :kind => 'dhcp', :dhcp_force_32_netmask => true }).each do |p|
-        f.puts "[ \"$interface\" = \"#{p.interface.name}\" ] && new_subnet_mask=\"255.255.255.255\""
+        f.puts "[ \"$interface\" = \"#{p.interface.name}\" ] && new_subnet_arg=\"netmask 255.255.255.255\" new_subnet_mask=\"255.255.255.255\""
       end
     end
   rescue => e
