@@ -1,4 +1,4 @@
-es:
+pt:
   authlogic:
     error_messages:
       login_blank: não pode estar em blanco
