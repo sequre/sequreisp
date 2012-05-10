@@ -140,6 +140,7 @@ en:
         rate_up: "Upload [kbps]"
         pppoe_user: "User"
         pppoe_pass: "Password"
+        dhcp_force_32_netmask: "Force netmask to 255.255.255.255"
         kind: "Kind"
         state: "State"
         online: "Online"
@@ -428,6 +429,7 @@ en:
       configuration_static: "Static IP configuration"
       configuration_static_ips: "Additional IP addresses"
       configuration_adsl: "ADSL configuration"
+      configuration_dhcp: "DHCP configuration"
       advanced: "Advanced"
     plan:
       advanced: "Advanced"

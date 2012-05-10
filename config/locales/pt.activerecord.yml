@@ -137,6 +137,7 @@ pt:
         rate_up: "Subida [kbps]"
         pppoe_user: "Usuário"
         pppoe_pass: "Senha"
+        dhcp_force_32_netmask: "Força máscara de rede 255.255.255.255"
         kind: "Tipo"
         state: "Estado"
         online: "Online"
@@ -425,6 +426,7 @@ pt:
       configuration_static: "Configuração IP fixa"
       configuration_static_ips: "Endereços IP adicionais"
       configuration_adsl: "Configuração ADSL"
+      configuration_dhcp: "Configuração DHCP"
       advanced: "Avanzado"
     plan:
       advanced: "Avanzado"
