@@ -16,4 +16,8 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 module ProvidersHelper
+  # this display_name is hookeable with alias_method_chain, should check plugins if changed
+  def display_name(provider)
+    h "#{provider.name} (#{t('selects.provider.kind.' + provider.kind)})"
+  end
 end

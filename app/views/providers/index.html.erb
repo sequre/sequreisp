@@ -80,7 +80,7 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td>
-            <%=h "#{provider.name} (#{t('selects.provider.kind.' + provider.kind)})" %><br/>
+            <%= display_name(provider) %><br/>
             <%= link_to Graph.new(:element => provider).img("day", "small"), graph_path(provider ,:class => "Provider") %>
           </td>
           <td>
