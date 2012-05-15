@@ -414,10 +414,10 @@ def gen_iptables
           # prio1
           do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
           # prio2
-          do_prio_protos_iptables :file => f, :protos => Configuration.default_prio_protos_array, :chain => chain, :mark => mark_prio2
-          do_prio_helpers_iptables :file => f, :helpers => Configuration.default_prio_helpers_array, :chain => chain, :mark => mark_prio2
-          do_prio_ports_iptables :file => f, :ports => Configuration.default_tcp_prio_ports_array, :proto => "tcp", :chain => chain, :mark => mark_prio2
-          do_prio_ports_iptables :file => f, :ports => Configuration.default_udp_prio_ports_array, :proto => "udp", :chain => chain, :mark => mark_prio2
+          do_prio_protos_iptables :file => f, :protos => Configuration.default_prio_protos_array, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+          do_prio_helpers_iptables :file => f, :helpers => Configuration.default_prio_helpers_array, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+          do_prio_ports_iptables :file => f, :ports => Configuration.default_tcp_prio_ports_array, :proto => "tcp", :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+          do_prio_ports_iptables :file => f, :ports => Configuration.default_udp_prio_ports_array, :proto => "udp", :chain => chain, :mark_if => mark_if, :mark => mark_prio2
           # prio3 (catch_all)
           f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
 
@@ -460,13 +460,13 @@ def gen_iptables
           do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
           # prio2
           do_prio_protos_iptables :protos => (Configuration.default_prio_protos_array + c.prio_protos_array).uniq,
-                                  :file => f, :chain => chain, :mark => mark_prio2
+                                  :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
           do_prio_helpers_iptables :helpers => (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq,
-                                   :file => f, :chain => chain, :mark => mark_prio2
+                                   :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
           do_prio_ports_iptables :ports => (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq,
-                                 :proto => "tcp", :file => f, :chain => chain, :mark => mark_prio2
+                                 :proto => "tcp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
           do_prio_ports_iptables :ports => (Configuration.default_udp_prio_ports_array + c.udp_prio_ports_array).uniq,
-                                 :proto => "udp", :file => f, :chain => chain, :mark => mark_prio2
+                                 :proto => "udp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
           # prio3 (catch_all)
           f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
 
