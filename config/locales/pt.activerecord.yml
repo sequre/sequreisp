@@ -406,6 +406,8 @@ pt:
       not_enough_down_bandwidth: "Não há suficiente largo de banda de baixada"
       not_enough_up_bandwidth_in_this_plan: "Não há suficiente largo de banda de subida para atribuir este plano"
       not_enough_up_bandwidth: "Não há suficiente largo de banda de subida"
+    provider:
+      provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "O grupo de fornecedores não pode ser mudado, há contratos que utilizam este fornecedor para evitar el balanceamento"
     user:
       not_allowed_to_change_this_fields_in_demo_mode: "Este campo não pode ser atualizado em modo de demonstração"
   fieldsets:

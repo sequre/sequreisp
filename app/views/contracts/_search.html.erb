@@ -69,6 +69,10 @@
         <%= f.label :client_external_client_number_like, t('activerecord.attributes.client.external_client_number') %>
         <%= f.text_field :client_external_client_number_like %>
       </li>
+      <li>
+        <%= f.label :unique_provider_id_equals, t('activerecord.attributes.contract.unique_provider') %>
+        <%= f.collection_select :unique_provider_id_equals, Provider.all, :id, :name, :include_blank => true %>
+      </li>
       <%= render_search_extensions :form => f  %>
     </div>
 

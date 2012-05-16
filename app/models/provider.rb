@@ -59,7 +59,13 @@ class Provider < ActiveRecord::Base
       end
     end
   end
+  validate :unique_provider_contracts_on_group_change
 
+  def unique_provider_contracts_on_group_change
+    if provider_group_id_changed? and unique_provider_contracts.count > 0
+      errors.add(:provider_group, I18n.t('validations.provider.provider_group_can_not_be_changed_if_unique_provider_contracts_exists'))
+    end
+  end
   include IpAddressCheck
   validate_ip_format_of :ip, :gateway
 
