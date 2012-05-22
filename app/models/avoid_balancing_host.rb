@@ -6,6 +6,7 @@ class AvoidBalancingHost < ActiveRecord::Base
 
   include ModelsWatcher
   watch_fields :name, :provider_id
+  watch_on_destroy
 
   def ip_addresses
     require 'resolv'

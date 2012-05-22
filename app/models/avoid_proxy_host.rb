@@ -5,6 +5,7 @@ class AvoidProxyHost < ActiveRecord::Base
 
   include ModelsWatcher
   watch_fields :name
+  watch_on_destroy
 
   def ip_addresses
     require 'resolv'
