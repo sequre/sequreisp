@@ -10,7 +10,7 @@ class AvoidBalancingHost < ActiveRecord::Base
   def ip_addresses
     require 'resolv'
     begin
-      Resolv.getaddresses(name)
+      Resolv.getaddresses(name).select do |a| IP.new(a).is_a?(IP::V4) end
     rescue
       []
     end
