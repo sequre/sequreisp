@@ -267,8 +267,8 @@ class Contract < ActiveRecord::Base
   def class_prio3_hex
     self.klass.prio3.to_s(16)
   end
-  def mark_hex
-    self.klass.number.to_s(16)
+  def mark_hex(prefix=0)
+    (self.klass.number | prefix).to_s(16)
   end
   def mark_prio1_hex(prefix=0)
     (self.klass.prio1 | prefix).to_s(16)

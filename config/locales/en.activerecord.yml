@@ -23,6 +23,11 @@ en:
         static: "Static IP"
         adsl: "ADSL"
         dhcp: "DHCP"
+    configuration:
+        use_global_prios_strategy:
+          disabled: "Disabled"
+          provider: "Per provider(recommended)"
+          full: "Full"
     contract:
       transparent_proxy:
         default: "By Default (according to the plan)"
@@ -184,6 +189,7 @@ en:
         clamp_mss_to_pmtu: "Set MSS (maximum transfer unit) according to PMTU (path MTU)"
         language: "Language"
         use_global_prios: "Disable per contract priorities and use global priorities instead (experimental)"
+        use_global_prios_strategy: "Guaranteed bandwidth control rules"
         iptables_tree_optimization_enabled: "Optimize iptables rules (use only on 64 bits version)"
         apply_changes_automatically: "Apply changes automatically"
         apply_changes_automatically_hour: "Time for automatic application of changes"

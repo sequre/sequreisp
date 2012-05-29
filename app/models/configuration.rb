@@ -111,4 +111,15 @@ class Configuration < ActiveRecord::Base
     apply_changes if changes_to_apply?
   end
 
+  def use_global_prios_strategy_options_for_select
+    [
+      [I18n.t('selects.configuration.use_global_prios_strategy.disabled'), 'disabled'],
+      [I18n.t('selects.configuration.use_global_prios_strategy.provider'), 'provider'],
+      [I18n.t('selects.configuration.use_global_prios_strategy.full'), 'full']
+    ]
+  end
+
+  def use_global_prios_strategy
+    ActiveSupport::StringInquirer.new read_attribute(:use_global_prios_strategy)
+  end
 end

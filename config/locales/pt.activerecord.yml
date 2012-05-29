@@ -23,6 +23,11 @@ pt:
         static: "IP fixa"
         adsl: "ADSL"
         dhcp: "DHCP"
+    configuration:
+        use_global_prios_strategy:
+          disabled: "Desabilitado"
+          provider: "Por fornecedor(recomendado)"
+          full: "Completo"
     contract:
       transparent_proxy:
         default: "Padrão (segundo o plano)"
@@ -181,6 +186,7 @@ pt:
         clamp_mss_to_pmtu: "Ajustar o MSS (tamanho máximo de segmento) ao PMTU (MTU da rota)"
         language: "Língua"
         use_global_prios: "Desabilitar por prioridades contrato e usar prioridades globais em vez (experimental)"
+        use_global_prios_strategy: "Regras de controle de largura de banda garantida"
         iptables_tree_optimization_enabled: "Optimizar regras de iptables (usar só em versão de 64 bits)"
         apply_changes_automatically: "Aplicar câmbios automáticamente"
         apply_changes_automatically_hour: "Hora de aplicação dos câmbios automáticos"

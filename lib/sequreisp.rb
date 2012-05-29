@@ -98,7 +98,7 @@ def gen_tc(f)
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{quantum_total}"
     if Configuration.use_global_prios
       #huérfano, solo el filter
-      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{klass}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
+      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
     else
       #hijos
       #prio1
@@ -128,13 +128,37 @@ def gen_tc(f)
     # htb tree de clientes en gral en IFB
     f.puts "tc qdisc del dev #{IFB_UP} root"
     tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 htb default 0"
-    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 htb rate 1000mbit"
     f.puts "tc qdisc del dev #{IFB_DOWN} root"
     tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 htb default 0"
-    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
-    Contract.not_disabled.descend_by_netmask.each do |c|
-      do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
-      do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
+    if Configuration.use_global_prios and not Configuration.use_global_prios_strategy.disabled?
+      Provider.enabled.with_klass_and_interface.each do |p|
+        #max quantum posible para este provider, necesito saberlo con anticipación
+        quantum = Configuration.mtu * p.quantum_factor * 3
+        #up
+        tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_up}kbit quantum #{quantum}"
+        tc_ifb_up.puts "filter add dev #{IFB_UP} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
+        tc_ifb_up.puts "qdisc add dev #{IFB_UP} parent 1:#{p.class_hex} handle #{p.class_hex}: htb default 0"
+        tc_ifb_up.puts "class add dev #{IFB_UP} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
+        #down
+        tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
+        tc_ifb_down.puts "filter add dev #{IFB_DOWN} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
+        tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} parent 1:#{p.class_hex} handle #{p.class_hex}: htb default 0"
+        tc_ifb_down.puts "class add dev #{IFB_DOWN} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
+
+        #TODONOW solo van los contratos de este provider y/o provider_group
+        contracts =  Configuration.use_global_prios_strategy.provider? ? p.provider_group.contracts.not_disabled.descend_by_netmask : Contract.not_disabled.descend_by_netmask
+        contracts.each do |c|
+          do_per_contract_prios_tc tc_ifb_up, c.plan, c, p.class_hex, 1, IFB_UP, "up", p.mark
+          do_per_contract_prios_tc tc_ifb_down, c.plan, c, p.class_hex, 1, IFB_DOWN, "down", p.mark
+        end
+      end
+    else
+      Contract.not_disabled.descend_by_netmask.each do |c|
+        tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 htb rate 1000mbit"
+        do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
+        tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
+        do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
+      end
     end
     tc_ifb_up.close
     tc_ifb_down.close
