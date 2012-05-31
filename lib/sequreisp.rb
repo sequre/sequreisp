@@ -153,10 +153,10 @@ def gen_tc(f)
         end
       end
     else
+      tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 htb rate 1000mbit"
+      tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
       Contract.not_disabled.descend_by_netmask.each do |c|
-        tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 htb rate 1000mbit"
         do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
-        tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
         do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
       end
     end
