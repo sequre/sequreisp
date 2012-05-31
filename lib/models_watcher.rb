@@ -1,9 +1,9 @@
 module ModelsWatcher
 
   def self.included(base)
-    return if base.include? InstanceMethods
-
-    base.send(:include, InstanceMethods)
+    # Prevent run the extend and initialization twice
+    # Do I need to do this?
+    return if not @__watched_fields.nil?
     base.send(:extend, ClassMethods)
 
     base.class_eval do
@@ -24,33 +24,32 @@ module ModelsWatcher
 
   end
 
-  module InstanceMethods
-
-    def check_watched_fields
-      if @__skip_check_watched_fields_callback
-        @__skip_check_watched_fields_callback = false
-        return
-      end
-
-      fields = self.class.instance_eval do @__watched_fields end
-      fields.each do |field|
-        if self.send "#{field}_changed?"
-          update_changes_to_apply
-          break
-        end
-      end
+  def check_watched_fields
+    if @__skip_check_watched_fields_callback
+      @__skip_check_watched_fields_callback = false
+      return
     end
 
-    def update_changes_to_apply
-      if Configuration.first
-        Configuration.first.update_attribute(:changes_to_apply, true)
+    fields = self.class.instance_eval do @__watched_fields end
+    # I need to do this again, if i don't call watch_fields, fields is nil at this point
+    fields ||= []
+    fields.each do |field|
+      if self.send "#{field}_changed?"
+        update_changes_to_apply
+        break
       end
     end
+  end
 
-    def save_without_applying_changes
-      @__skip_check_watched_fields_callback = true
-      save
+  def update_changes_to_apply
+    if Configuration.first
+      Configuration.first.update_attribute(:changes_to_apply, true)
     end
+  end
+
+  def save_without_applying_changes
+    @__skip_check_watched_fields_callback = true
+    save
   end
 
 end
