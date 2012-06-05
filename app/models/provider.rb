@@ -38,7 +38,7 @@ class Provider < ActiveRecord::Base
   watch_fields :provider_group_id, :interface_id, :kind, :ip, :netmask, :gateway,
                :rate_down, :rate_up, :pppoe_user, :pppoe_pass, :state,
                :unique_mac_address, :arp_ignore, :arp_announce, :arp_filter,
-               :shape_rate_down_on_ingress
+               :shape_rate_down_on_ingress, :dhcp_force_32_netmask
   watch_on_destroy
 
   validates_presence_of :name, :interface, :provider_group, :rate_down, :rate_up
