@@ -76,9 +76,8 @@ def check_squid
   load_average=`uptime | awk -F "load average:" '{ print $2 }' | cut -d, -f1 | sed 's/ //g'`.chomp.to_f
   if load_average > max_load_average
     Rails.logger.error "sequreispd: #{Time.now.to_s} disabling squid because load average is bigger than max: #{max_load_average}, current: #{load_average}"
-    Configuration.transparent_proxy = false
-    Configuration.daemon_reload = true
-    Configuration.save(false)
+    Configuration.first.update_attribute :transparent_proxy, false
+    Configuration.first.update_attribute :daemon_reload, true
   end
 end
 
@@ -96,16 +95,13 @@ def backup_restore
   case Configuration.backup_restore
   when "respawn_and_boot"
     $running = false
-    Configuration.backup_restore = "boot"
-    Configuration.save(false)
+    Configuration.first.update_attribute :backup_restore, "boot"
   when "boot"
     boot
-    Configuration.last_changes_applied_at = Time.now
-    Configuration.backup_restore = nil
-    Configuration.save(false)
+    Configuration.first.update_attribute :last_changes_applied_at, Time.now
+    Configuration.first.update_attribute :backup_restore, nil
     if Configuration.backup_reboot
-      Configuration.backup_reboot = false
-      Configuration.save(false)
+      Configuration.first.update_attribute :backup_reboot, false
       system "/sbin/reboot"
     end
   end
@@ -137,8 +133,7 @@ while($running) do
   if Configuration.daemon_reload
     Rails.logger.debug "sequreispd: #{Time.now.to_s} boot (apply_changes)"
     boot
-    Configuration.daemon_reload = false
-    Configuration.save(false)
+    Configuration.first.update_attribute :daemon_reload, false
   end
 
   if Configuration.backup_restore
