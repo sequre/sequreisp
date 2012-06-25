@@ -64,7 +64,7 @@ module ApplicationHelper
 
     list = []
     errors.each_error do |attr, error|
-      attr_name = t("activerecord.attributes.#{error.base.class.model_name.underscore}.#{error.attribute.to_s}")
+      attr_name = attr == 'base' ? "" : attr_name = t("activerecord.attributes.#{error.base.class.model_name.underscore}.#{error.attribute.to_s}")
       list << content_tag(:span, attr_name, :class => "attribute_name") + " " + error.message
     end
 
