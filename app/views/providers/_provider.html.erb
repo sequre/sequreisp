@@ -69,6 +69,9 @@
       <% end %>
       <li><%= link_to_add_fields t('buttons.add_ip'), form, :addresses %> </li>
     <% end %>
+    <% form.inputs :name => t('fieldsets.provider.avoid_nat'), :id => "avoid_nat" do %>
+      <%= form.input :avoid_nat_addresses %>
+    <% end %>
     <% form.inputs :name => t('fieldsets.provider.advanced'), :id => "advanced",
                    :context_help => { :path => { :custom => 'plan.fieldsets.advanced' } } do %>
       <%= form.input :shape_rate_down_on_ingress %>

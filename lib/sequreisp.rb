@@ -580,6 +580,10 @@ def gen_iptables
         p.networks.each do |network|
           f.puts "-A POSTROUTING -o #{p.link_interface} -s #{network} -j ACCEPT"
         end
+        # skip NAT for selected networks
+        p.avoid_nat_addresses_as_ips.each do |ip|
+          f.puts "-A POSTROUTING -o #{p.link_interface} -s #{ip} -j ACCEPT"
+        end
         # do we have an ip yet?
         if p.ip.blank? or p.kind != 'static'
           f.puts "-A POSTROUTING -o #{p.link_interface}  -j MASQUERADE"

@@ -153,6 +153,7 @@ pt:
         current_status_time: "Tempo em serviço/fora de serviço"
         shape_rate_down_on_ingress: "Controlar que no se ultrapassem o limites de largo de banda de baixada deste fornecedor"
         interface_id: "Interface"
+        avoid_nat_addresses: "Endereços IP para o qual se deseja evitar NAT"
       forwarded_port:
         provider: "Fornecedor"
         public_port: "Porta pública"
@@ -273,6 +274,7 @@ pt:
         use_global_prios: "Habilitar somente se o número do contratos é superior a 2500"
       provider:
         shape_rate_down_on_ingress: "O controle de tráfego de baixada se faz na interface LAN; se habilita esta opção se habilitará um controle adicional na interface WAN que garantirá que o tráfego dos clientes mais o do servidor não excedam o limite configurado"
+        avoid_nat_addresses: "Um endereço por linha, notação CIDR, como 200.10.20.0/24"
   menu:
     clients: "Clientes"
     contracts: "Contratos"
@@ -414,6 +416,7 @@ pt:
       not_enough_up_bandwidth: "Não há suficiente largo de banda de subida"
     provider:
       provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "O grupo de fornecedores não pode ser mudado, há contratos que utilizam este fornecedor para evitar el balanceamento"
+      invalid_avoid_nat_addresses: "Endereço IP inválido %{invalid_ip}, use a notação CIDR"
     user:
       not_allowed_to_change_this_fields_in_demo_mode: "Este campo não pode ser atualizado em modo de demonstração"
   fieldsets:
@@ -436,6 +439,7 @@ pt:
       configuration_adsl: "Configuração ADSL"
       configuration_dhcp: "Configuração DHCP"
       advanced: "Avanzado"
+      avoid_nat: "Evite NAT para intervalos IP públicos"
     plan:
       advanced: "Avanzado"
   app_mailer:

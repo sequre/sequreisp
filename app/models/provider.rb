@@ -69,6 +69,32 @@ class Provider < ActiveRecord::Base
   include IpAddressCheck
   validate_ip_format_of :ip, :gateway
 
+  validate :avoid_nat_addresses_format
+  def avoid_nat_addresses_format
+    if avoid_nat_addresses.present?
+      #avoid_addresses = avoid_nat_addresses.split("\n")
+      avoid_nat_addresses.each_line do |ad|
+        ad.chomp!
+        unless ip = IP.new(ad) rescue nil
+          errors.add :avoid_nat_addresses, I18n.t('validations.provider.invalid_avoid_nat_addresses',:invalid_ip => ad)
+          break
+        end
+      end
+    end
+  end
+
+  def avoid_nat_addresses_as_ips
+    ips = []
+    if avoid_nat_addresses.present?
+      avoid_nat_addresses.each_line.collect do |ad|
+        ad.chomp!
+        if ip = IP.new(ad) rescue nil
+          ips << ip if ip.is_a?(IP::V4)
+        end
+      end
+    end
+    ips
+  end
   before_create :set_default_online_changed_at
   def set_default_online_changed_at
     self.online_changed_at = Time.now
