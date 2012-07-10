@@ -15,7 +15,6 @@ $(function(){
     $("input[type='text']").val('');
     $("select").val('');
   });
-  $("p.notification").fadeOut().fadeIn().delay(2000).fadeOut(1000);
 
 });
 function remove_fields(link) {

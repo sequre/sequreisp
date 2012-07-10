@@ -642,15 +642,29 @@ width:266px;
 margin-top:11px;
 
 	-webkit-border-radius: 5px;
-	-khtml-border-radius: 5px;	
+	-khtml-border-radius: 5px;
 	-moz-border-radius: 5px;
 	 border-radius: 5px;
 }
-p.notification_warning {
+span.notification_icon{
+background-color:#005500;
+color:#FFFFFF !important;
+padding:0px;
+text-align:center;
+font-size: 10px;
+width:15px;
+margin-top:0px;
+
+	-webkit-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	-moz-border-radius: 5px;
+	 border-radius: 5px;
+}
+p.notification_warning, span.notification_warning {
   background-color:#FFDF00;
   color:#444 !important;
 }
-p.notification_error {
+p.notification_error, span.notification_error {
   background-color:#550000;
 }
 .btn_login{

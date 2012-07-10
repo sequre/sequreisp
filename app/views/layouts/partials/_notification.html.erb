@@ -1,9 +1,38 @@
-<% if !flash[:notice].blank? %>
-  <p class="notification" style="color: green"><%=h flash[:notice] %></p>
-<% end %>
-<% if !flash[:warning].blank? %>
-  <p class="notification notification_warning" style="color: yellow"><%=h flash[:warning] %></p>
-<% end %>
-<% if !flash[:error].blank? %>
-  <p class="notification notification_error" style="color: red"><%=h flash[:error] %></p>
+<% if flash[:notice].present? or flash[:warning].present? or flash[:error].present? %>
+  <script type="text/javascript">
+    $(function() {
+      $("p.notification").fadeOut().fadeIn().delay(2000).fadeOut(1000, function(){
+        $("#notification_toggler").show();
+      });
+      $("#notification_toggler").click(function(){
+        if ($("p.notification").css('display') == 'none') {
+          $("p.notification").fadeIn()
+          }else{
+            $("p.notification").fadeOut()
+          };
+      });
+    })
+  </script>
+  <div id="notification">
+  <a href="javascript:void(null)" id="notification_toggler" style="display: none">
+  <% if flash[:notice].present? %>
+    <span class="notification_icon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+  <% end %>
+  <% if flash[:warning].present? %>
+    <span class="notification_icon notification_warning">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+  <% end %>
+  <% if flash[:error].present? %>
+    <span class="notification_icon notification_error">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+  <% end %>
+  </a>
+  <% if flash[:notice].present? %>
+    <p class="notification"><%=h flash[:notice] %></p>
+  <% end %>
+  <% if flash[:warning].present? %>
+    <p class="notification notification_warning"><%=h flash[:warning] %></p>
+  <% end %>
+  <% if flash[:error].present? %>
+    <p class="notification notification_error"><%=h flash[:error] %></p>
+  <% end %>
+  </div>
 <% end %>
