@@ -591,7 +591,7 @@ def gen_iptables
           provider_ips = p.nat_pool_addresses
           if provider_ips.size > 1
             # find all contract ips for this provider
-            contracts_ips = Contract.not_disabled.descend_by_ip_custom.all(:joins => :plan ,:conditions => ["provider_group_id = ?", p.provider_group_id]  , :select => :ip).collect(&:ip)
+            contracts_ips = Contract.not_disabled.descend_by_ip_custom.all(:joins => :plan ,:conditions => ["provider_group_id = ?", p.provider_group_id]  , :select => :ip).collect { |c| c.ip.gsub(/\/.*/,"") }
             # need to know if we have more ip than contracts
             start_at = 0
             if contracts_ips.size > provider_ips.size
