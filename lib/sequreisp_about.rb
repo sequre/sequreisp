@@ -2,9 +2,9 @@ module SequreISP
   URL = "http://www.sequreisp.com/"
 
   class Version
-    RELEASE = 2
-    MAJOR = 8
-    MINOR = 6
+    RELEASE = 3
+    MAJOR = 0
+    MINOR = 0
 
     def self.to_a
       [ RELEASE, MAJOR, MINOR ]
