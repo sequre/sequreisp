@@ -941,6 +941,11 @@ def do_provider_up(p)
       f.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
       f.puts "ip rule add from #{p.network} table #{p.table} prio 100"
       f.puts "ip rule add from #{p.ip}/32 table #{p.check_link_table} prio 90"
+      if p.dhcp_force_32_netmask
+        f.puts "ip ro re table #{p.table} #{p.gateway} dev #{p.link_interface}"
+        f.puts "ip ro re table #{p.check_link_table} #{p.gateway} dev #{p.link_interface}"
+      end
+      #pongo solo la ruta en check_link, si esta todo ok, el chequeador despues la pone para el balanceo
       f.puts "ip ro re table #{p.check_link_table} #{p.default_route}"
 
       ForwardedPort.all(:conditions => { :provider_id => p.id }, :include => [ :contract, :provider ]).each do |fp|
