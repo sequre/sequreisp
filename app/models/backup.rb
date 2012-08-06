@@ -60,12 +60,19 @@ class Backup
     File.join(Dir::tmpdir, name)
   end
   def flush_db
-    system("echo 'DROP DATABASE #{CONFIG["database"]}; CREATE DATABASE #{CONFIG["database"]}' | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]}")
+    success = system("echo 'DROP DATABASE #{CONFIG["database"]}; CREATE DATABASE #{CONFIG["database"]}' | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]}")
+    Rails.logger.error("Backup::flush_db  failed") unless success
+    success
+  end
+  def pop_db
+    success = system("zcat #{file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+    Rails.logger.error("Backup::pop_db failed") unless success
+    success
   end
   def restore_db(file, reboot=false)
     success = false
     if flush_db
-      success = system("zcat #{file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+      success = pop_db(file)
     end
     respawn(reboot) if success
     success
@@ -75,8 +82,10 @@ class Backup
     # tar exit_status == 1 is not fatal
     if system("#{SequreispConfig::CONFIG["tar_command"]} -zxpf #{file} -C /") or $?.exitstatus == 1
       if flush_db
-        success = system("cat #{base_dir}/sequreisp.sql  | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+        success = pop_db("#{base_dir}/sequreisp.sql")
       end
+    else
+      Rails.logger.error("Backup::restore_full tar_command failure")
     end
     respawn(reboot) if success
     success
