@@ -59,8 +59,14 @@ class Backup
   def full_path
     File.join(Dir::tmpdir, name)
   end
+  def flush_db
+    system("echo 'DROP DATABASE #{CONFIG["database"]}; CREATE DATABASE #{CONFIG["database"]}' | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]}")
+  end
   def restore_db(file, reboot=false)
-    success = system("zcat #{file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+    success = false
+    if flush_db
+      success = system("zcat #{file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+    end
     respawn(reboot) if success
     success
   end
@@ -68,7 +74,9 @@ class Backup
     success = false
     # tar exit_status == 1 is not fatal
     if system("#{SequreispConfig::CONFIG["tar_command"]} -zxpf #{file} -C /") or $?.exitstatus == 1
-      success = system("cat #{base_dir}/sequreisp.sql  | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+      if flush_db
+        success = system("cat #{base_dir}/sequreisp.sql  | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+      end
     end
     respawn(reboot) if success
     success
