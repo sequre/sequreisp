@@ -64,8 +64,8 @@ class Backup
     Rails.logger.error("Backup::flush_db  failed") unless success
     success
   end
-  def pop_db
-    success = system("zcat #{file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+  def pop_db(sql_file)
+    success = system("zcat #{sql_file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
     Rails.logger.error("Backup::pop_db failed") unless success
     success
   end
