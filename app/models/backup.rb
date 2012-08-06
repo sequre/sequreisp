@@ -60,24 +60,37 @@ class Backup
     File.join(Dir::tmpdir, name)
   end
   def flush_db
-    success = system("echo 'DROP DATABASE #{CONFIG["database"]}; CREATE DATABASE #{CONFIG["database"]}' | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]}")
-    Rails.logger.error("Backup::flush_db  failed") unless success
+    command = "/usr/bin/mysqldump --no-data --add-drop-table -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]} | /bin/grep '^DROP' |  /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}"
+    success = system(command)
+    Rails.logger.error("Backup::flush_db command failed: #{command}") unless success
     success
   end
-  def pop_db(sql_file)
-    success = system("zcat #{sql_file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}")
+  def pop_db(sql_file, compressed=false)
+    cat_command = compressed ? "zcat" : "cat"
+    command = "#{cat_command} #{sql_file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}"
+    Rails.logger.debug "Backup:pop_db poping db with command: #{command}"
+    success = system(command)
     Rails.logger.error("Backup::pop_db failed") unless success
     success
   end
-  def restore_db(file, reboot=false)
+  def restore_db(file, reboot=false, failsafe=false)
+    failsafe_backup = Backup.new.db unless failsafe
     success = false
     if flush_db
-      success = pop_db(file)
+      success = pop_db(file, true)
     end
-    respawn(reboot) if success
+    unless failsafe
+      if success
+        respawn(reboot)
+      else
+        #recursive call, we use failsafe=true to avoid an infinite loop
+        Backup.new.restore_db(failsafe_backup, false, true)
+      end
+    end
     success
   end
-  def restore_full(file, reboot=false)
+  def restore_full(file, reboot=false, failsafe=false)
+    failsafe_backup = Backup.new.full(false) unless failsafe
     success = false
     # tar exit_status == 1 is not fatal
     if system("#{SequreispConfig::CONFIG["tar_command"]} -zxpf #{file} -C /") or $?.exitstatus == 1
@@ -87,7 +100,14 @@ class Backup
     else
       Rails.logger.error("Backup::restore_full tar_command failure")
     end
-    respawn(reboot) if success
+    unless failsafe
+      if success
+        respawn(reboot)
+      else
+        #recursive call, we use failsafe=true to avoid an infinite loop
+        Backup.new.restore_full(failsafe_backup, false, true)
+      end
+    end
     success
   end
   def respawn(reboot)
