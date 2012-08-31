@@ -28,7 +28,8 @@ class Plan < ActiveRecord::Base
   validates_presence_of :name, :provider_group, :rate_down, :ceil_down, :rate_up, :ceil_up
   validates_length_of :name, :in => 3..128
   validates_numericality_of :rate_down, :ceil_down, :rate_up, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than_or_equal_to => 0
-  validates_numericality_of :burst_down, :burst_up, :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0
+  validates_numericality_of :burst_down, :burst_up, :only_integer => true, :greater_than_or_equal_to => 0
+  validates_numericality_of :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0, :less_than => 4294967295
 
   validate :remaining_rate_down
   validate :remaining_rate_up
