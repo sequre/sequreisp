@@ -417,4 +417,55 @@ class Contract < ActiveRecord::Base
     end
     mac
   end
+  def self.to_csv(_contracts)
+    # header row
+    csv_string = FasterCSV.generate(:col_sep => ";") do |csv|
+      csv << [
+        I18n.t('activerecord.models.contract.one') + " " + I18n.t('activerecord.attributes.contract.id'),
+        I18n.t('activerecord.attributes.contract.created_at'),
+        I18n.t('activerecord.attributes.contract.client'),
+        I18n.t('activerecord.models.client.one') + " " + I18n.t('activerecord.attributes.client.id'),
+        I18n.t('activerecord.attributes.client.external_client_number'),
+        I18n.t('activerecord.attributes.client.email'),
+        I18n.t('activerecord.attributes.client.address'),
+        I18n.t('activerecord.attributes.client.phone'),
+        I18n.t('activerecord.attributes.client.phone_mobile'),
+        I18n.t('activerecord.attributes.client.details'),
+        I18n.t('activerecord.attributes.contract.plan'),
+        I18n.t('activerecord.models.provider_group.one'),
+        I18n.t('activerecord.attributes.plan.rate_down'),
+        I18n.t('activerecord.attributes.plan.ceil_down'),
+        I18n.t('activerecord.attributes.plan.rate_up'),
+        I18n.t('activerecord.attributes.plan.ceil_up'),
+        I18n.t('activerecord.attributes.contract.ip'),
+        #I18n.t('activerecord.attributes.contract.forwarded_ports'),
+        I18n.t('activerecord.attributes.contract.state')
+      ]
+
+      # data rows
+      _contracts.each do |c|
+        csv << [
+          c.id,
+          I18n.l(c.created_at.to_date),
+          c.client.name,
+          c.client.id,
+          c.client.external_client_number,
+          c.client.email,
+          c.client.address,
+          c.client.phone,
+          c.client.phone_mobile,
+          c.client.details,
+          c.plan.name,
+          c.plan.provider_group.name,
+          c.plan.rate_down,
+          c.plan.ceil_down,
+          c.plan.rate_up,
+          c.plan.ceil_up,
+          c.ip,
+          #c.forwarded_ports.collect{ |fp| "[#{fp.provider.name}]#{fp.public_port}=>#{fp.private_port}" }.join("|"),
+          c.state
+        ]
+      end
+    end
+  end
 end

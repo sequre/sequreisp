@@ -32,65 +32,22 @@ class ContractsController < ApplicationController
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @contracts }
-      format.csv do
-          # header row
-        @contracts = Contract.search(params[:search])
-        csv_string = FasterCSV.generate(:col_sep => ";") do |csv|
-          csv << [
-            t('activerecord.models.contract.one') + " " + t('activerecord.attributes.contract.id'),
-            t('activerecord.attributes.contract.created_at'),
-            t('activerecord.attributes.contract.client'),
-            t('activerecord.models.client.one') + " " + t('activerecord.attributes.client.id'),
-            t('activerecord.attributes.client.external_client_number'),
-            t('activerecord.attributes.client.email'),
-            t('activerecord.attributes.client.address'),
-            t('activerecord.attributes.client.phone'),
-            t('activerecord.attributes.client.phone_mobile'),
-            t('activerecord.attributes.client.details'),
-            t('activerecord.attributes.contract.plan'),
-            t('activerecord.models.provider_group.one'),
-            t('activerecord.attributes.plan.rate_down'),
-            t('activerecord.attributes.plan.ceil_down'),
-            t('activerecord.attributes.plan.rate_up'),
-            t('activerecord.attributes.plan.ceil_up'),
-            t('activerecord.attributes.contract.ip'),
-            #t('activerecord.attributes.contract.forwarded_ports'),
-            t('activerecord.attributes.contract.state')
-          ]
-  
-          # data rows
-          @contracts.each do |c|
-            csv << [
-              c.id,
-              l(c.created_at.to_date),
-              c.client.name,
-              c.client.id,
-              c.client.external_client_number,
-              c.client.email,
-              c.client.address,
-              c.client.phone,
-              c.client.phone_mobile,
-              c.client.details,
-              c.plan.name,
-              c.plan.provider_group.name,
-              c.plan.rate_down,
-              c.plan.ceil_down,
-              c.plan.rate_up,
-              c.plan.ceil_up,
-              c.ip,
-              #c.forwarded_ports.collect{ |fp| "[#{fp.provider.name}]#{fp.public_port}=>#{fp.private_port}" }.join("|"),
-              c.state 
-            ]
-          end
-        end
-        # send it to the browsah
-        send_data csv_string,
-                :type => 'text/csv; charset=UTF-8; header=present',
-                :disposition => "attachment; filename=sequreisp_contracts_#{Time.now.strftime("%Y-%m-%d")}.csv"
-      end
     end
   end
 
+  def excel
+    params[:search] ||= {}
+    # delete proxy_arp boolean condition unless it is true
+    # that results in a more intuitive behavior
+    params[:search].delete("proxy_arp_is") if params[:search]["proxy_arp_is"] == "0"
+    params[:search][:order] ||= 'ascend_by_ip_custom'
+    @contracts = Contract.search(params[:search])
+
+    # send it to the browsah
+    send_data Contract.to_csv(@contracts),
+            :type => 'text/csv; charset=UTF-8; header=present',
+            :disposition => "attachment; filename=sequreisp_contracts_#{Time.now.strftime("%Y-%m-%d")}.csv"
+  end
   # GET /contracts/1
   # GET /contracts/1.xml
   def show
