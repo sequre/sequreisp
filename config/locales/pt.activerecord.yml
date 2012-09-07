@@ -386,6 +386,8 @@ pt:
   controllers:
     successfully_updated: "Atualização de dados bem-sucedida"
     successfully_created: "Criação bem-sucedida"
+    successfully_deleted: "Registro eliminado com sucesso"
+    unsuccessfully_deleted: "Registro não pode ser eliminado"
   mailing:
   validations:
     ip_already_in_use: "Endereço IP já está em uso"

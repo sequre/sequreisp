@@ -389,6 +389,8 @@ en:
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
+    successfully_deleted: "Record successfuly deleted"
+    unsuccessfully_deleted: "Record could not be deleted"
   mailing:
   validations:
     ip_already_in_use: "Already in use"
