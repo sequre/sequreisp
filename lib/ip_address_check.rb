@@ -29,7 +29,8 @@ module IpAddressCheck
       fields.each do |f|
         next if self[f].blank?
         begin
-          IP.new self[f]
+          ip = IP.new self[f]
+          self[f] = ip.to_s
         rescue
           errors.add f, I18n.t("validations.ip_is_not_valid")
         end
