@@ -184,12 +184,12 @@ class Contract < ActiveRecord::Base
     cq = QueuedCommand.new 
     if proxy_arp_changed? 
       if proxy_arp_was
-        _interface = Interface.find proxy_arp_interface_id_was
-        cq.command += "arp -i #{_interface.name} -d #{ip_was}"
+        _interface = Interface.find(proxy_arp_interface_id_was) rescue nil
+        cq.command += "arp -i #{_interface.name} -d #{ip_was}" if _interface
       end
     elsif proxy_arp and proxy_arp_interface_id_changed?
-      _interface = Interface.find proxy_arp_interface_id_was
-      cq.command += "arp -i #{_interface.name} -d #{ip_was}"
+      _interface = Interface.find(proxy_arp_interface_id_was) rescue nil
+      cq.command += "arp -i #{_interface.name} -d #{ip_was}" if _interface
     end
     cq.save if not cq.command.empty?
   end
