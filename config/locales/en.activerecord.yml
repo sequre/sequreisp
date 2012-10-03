@@ -341,6 +341,7 @@ en:
       success_full: "Restore process succesfully completed; changes are being applied"
       success_db: "Restore process succesfully completed; changes are being applied"
       no_backups_in_demo: "We are sorry, but backup functionality is not available in demo mode"
+      different_version: "Can't restore a backup from a version different than current: %{version}. Please upgrade until versions match or reinstall"
   graph:
     heading: "Statistics %{name}"
     instant: "Real time"

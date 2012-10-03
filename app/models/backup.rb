@@ -20,7 +20,8 @@ class Backup
   attr_reader :name
 
   def initialize
-    @name = "sequreisp_backup_#{Time.now.strftime("%Y-%m-%d_%H%M")}"
+    require 'sequreisp_about'
+    @name = "sequreisp_#{::SequreISP::Version.to_s}_backup_#{Time.now.strftime("%Y-%m-%d_%H%M")}"
   end
 
   def base_dir
@@ -36,8 +37,9 @@ class Backup
   end
   def mysqldump(file)
     begin
+      _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
       File.open file, "w" do |f|
-        IO.popen("/usr/bin/mysqldump -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}") do |p|
+        IO.popen("/usr/bin/mysqldump -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]}") do |p|
           f.write p.read
         end
       end
@@ -60,14 +62,16 @@ class Backup
     File.join(Dir::tmpdir, name)
   end
   def flush_db
-    command = "/usr/bin/mysqldump --no-data --add-drop-table -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]} | /bin/grep '^DROP' |  /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}"
+    _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
+    command = "/usr/bin/mysqldump --no-data --add-drop-table -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]} | grep '^DROP' |  /usr/bin/mysql -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]}"
     success = system(command)
     Rails.logger.error("Backup::flush_db command failed: #{command}") unless success
     success
   end
   def pop_db(sql_file, compressed=false)
     cat_command = compressed ? "zcat" : "cat"
-    command = "#{cat_command} #{sql_file} | /usr/bin/mysql -u#{CONFIG["username"]} -p#{CONFIG["password"]} #{CONFIG["database"]}"
+    _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
+    command = "#{cat_command} #{sql_file} | /usr/bin/mysql -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]}"
     Rails.logger.debug "Backup:pop_db poping db with command: #{command}"
     success = system(command)
     Rails.logger.error("Backup::pop_db failed") unless success

@@ -47,14 +47,22 @@ class BackupController < ApplicationController
       flash[:error] = t 'backup.notice.missing_file'
       redirect_to :back
     else
+      require 'sequreisp_about'
       backup_path = save_uploaded_file(backup)
-      if Backup.new.restore_full(backup_path, @reboot)
-        flash[:notice] = t 'backup.notice.success_full'
+      backup_version = File.basename(backup_path).match(/sequreisp_(.*)_backup/)[1] rescue nil
+      if backup_version.nil? or ::SequreISP::Version.new(backup_version) != ::SequreISP::Version.new
+        File.delete(backup_path)
+        flash[:error] = t 'backup.notice.different_version', { :version => ::SequreISP::Version.to_s }
+        redirect_to :back
       else
-        flash[:error] = t 'backup.notice.restore_error'
+        if Backup.new.restore_full(backup_path, @reboot)
+          flash[:notice] = t 'backup.notice.success_full'
+        else
+          flash[:error] = t 'backup.notice.restore_error'
+        end
+        File.delete(backup_path)
+        redirect_to :root
       end
-      File.delete(backup_path)
-      redirect_to :root
     end
   end
   def upload_full_and_reboot

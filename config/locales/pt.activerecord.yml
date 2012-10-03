@@ -338,6 +338,7 @@ pt:
       success_full: "Restauração bem-sucedida; os câmbios estão sendo aplicados"
       success_db: "Restauração bem-sucedida; os câmbios estão sendo aplicados"
       no_backups_in_demo: "Disculpe, mas as cópias de resguardo não estão disponíveis na versão de prova"
+      different_version: "Não é possível restaurar um backup de uma versão diferente do atual:% {version}. Por favor, atualize até versões igualar ou reinstalar"
   graph:
     heading: "Estatísticas %{name}"
     instant: "Instântaneo"

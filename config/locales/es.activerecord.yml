@@ -341,6 +341,7 @@ es:
       success_full: "Restauración exitosa; los cambios están siendo aplicados"
       success_db: "Restauración exitosa; los cambios están siendo aplicados"
       no_backups_in_demo: "Lo sentimos, pero las copias de resguardo no están disponibles en la versión de prueba"
+      different_version: "No se puede restaurar un backup de una versión distinta a la actual: %{version}. Por favor actualice hasta que las versiones coincidan o reinstale"
   graph:
     heading: "Estadísticas %{name}"
     instant: "Instántaneo"
