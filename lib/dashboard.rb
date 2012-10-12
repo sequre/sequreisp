@@ -118,7 +118,7 @@ module Dashboard
     end
     def self.load_all
       ret = []
-      `/bin/df -P -text3 -text4`.each_with_index do |l,i|
+      `/bin/df -P -text3 -text4 -treiserfs`.each_with_index do |l,i|
         next if i==0; 
         d = Disk.new([i] + l.split)
         ret << d
