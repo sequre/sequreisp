@@ -132,8 +132,8 @@ while($running) do
   # checking if we need to apply changes 
   if Configuration.daemon_reload
     Rails.logger.debug "sequreispd: #{Time.now.to_s} boot (apply_changes)"
-    boot
     Configuration.first.update_attribute :daemon_reload, false
+    boot
   end
 
   if Configuration.backup_restore
