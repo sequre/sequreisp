@@ -28,6 +28,7 @@ class Contract < ActiveRecord::Base
   has_one :provider_group, :through => :plan
   belongs_to :public_address, :class_name => 'Address', :conditions => "addressable_id is not null and addressable_type = 'provider'"
   belongs_to :proxy_arp_interface, :class_name => 'Interface', :conditions => "kind = 'lan'"
+  belongs_to :proxy_arp_provider, :class_name => 'Provider'
   belongs_to :unique_provider, :class_name => 'Provider'
 
   named_scope :enabled, :conditions => { :state => "enabled" }
@@ -86,6 +87,7 @@ class Contract < ActiveRecord::Base
   end
   include IpAddressCheck
   validate_ip_format_of :ip, :with_netmask => true
+  validate_ip_format_of :proxy_arp_gateway, :with_netmask => false
 
   def ip_is_single_host?
     netmask == "255.255.255.255"
@@ -147,11 +149,20 @@ class Contract < ActiveRecord::Base
     end
     # Often occurs that we have a second pool of ip address that is not configured in the provider itself
     # Also is possible that we can not use a wider mask than /32, and still have the pool
-    #if proxy_arp
-    #  if proxy_arp_provider.nil?
-    #    errors.add(:ip, I18n.t('validations.contract.proxy_arp_ip_does_not_belongs_to_plan'))
-    #  end
-    #end
+    if proxy_arp
+      if guess_proxy_arp_provider.nil? and proxy_arp_provider_id.nil?
+        errors.add(:proxy_arp_provider, I18n.t('validations.contract.proxy_arp_provider_can_not_be_guessed'))
+      end
+      if plan_id
+        _proxy_arp_provider = Provider.find proxy_arp_provider_id rescue nil
+        _proxy_arp_provider = guess_proxy_arp_provider if _proxy_arp_provider.nil?
+        _providers_ids = Plan.find(plan_id).provider_ids
+
+        if _proxy_arp_provider and not _providers_ids.include?(_proxy_arp_provider.id)
+          errors.add(:proxy_arp_provider, I18n.t('validations.contract.proxy_arp_provider_does_not_belongs_to_plan'))
+        end
+      end
+    end
   end
 
   include OverflowCheck
@@ -239,7 +250,7 @@ class Contract < ActiveRecord::Base
     plan.name
   end
 
-  def proxy_arp_provider
+  def guess_proxy_arp_provider
     begin
       c_ip = IP.new self.ip
       provider=nil

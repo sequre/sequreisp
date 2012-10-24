@@ -27,6 +27,7 @@ class Provider < ActiveRecord::Base
   has_many :forwarded_ports, :dependent => :destroy
   has_many :unique_provider_contracts, :class_name => "Contract", :foreign_key => 'unique_provider_id', :dependent => :nullify
   has_many :avoid_balancing_hosts, :dependent => :nullify
+  has_many :proxy_arp_contracts, :class_name => "Contract", :foreign_key => 'proxy_arp_provider_id', :dependent => :nullify
   #named_scope :working, :conditions => "state = 'enabled' and online = 1 and ip not null and netmask not null and gateway not null"
   named_scope :ready, :conditions => "ip is not null and ip != '' and netmask is not null and netmask != '' and gateway is not null and gateway != ''"
   named_scope :online, :conditions => "online = 1"

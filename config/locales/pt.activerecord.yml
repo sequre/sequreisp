@@ -93,6 +93,8 @@ pt:
         state: "Estado"
         proxy_arp: "Proxy ARP habilitado"
         proxy_arp_interface: "Interface LAN"
+        proxy_arp_provider: "Fornecedor Proxy ARP"
+        proxy_arp_gateway: "Gateway Proxy ARP"
         forwarded_ports: "Portas redirecionadas"
         transparent_proxy: "Proxy transparente"
         created_at: "Data de cadastro"
@@ -254,6 +256,8 @@ pt:
         prio_protos: "Números ou nomes como em /etc/protocols (ex: icmp,gre,50)"
         prio_helpers: "Netfilter helpers (Ex: ftp,pptp,irc)"
         proxy_arp: "No caso de atribuir um endereço IP público da mesma subrede do que o fornecedor"
+        proxy_arp_provider: "Opcional: especificar somente se o endereço IP público não pertence a rede configurada no fornecedor"
+        proxy_arp_gateway: "Opcional: especificar somente se o endereço IP público não usa o mesmo gateway do fornecedor"
       client:
         external_client_number: "Para sincronização com sistemas externos"
       plan:
@@ -384,6 +388,8 @@ pt:
       scan_fail: "Não se detectaram novas interfaces"
       could_not_be_deleted_has_vlans: "Esta interface tem VLANs associadas e não pode ser eliminada"
       could_not_be_deleted_has_provider: "Esta interface tem um fornecedor associado e não pode ser eliminada"
+    provider:
+      could_not_be_deleted_has_proxy_arp_contracts: "Este fornecedor tem contratos com Proxy ARP associado e não pode ser eliminado"
   controllers:
     successfully_updated: "Atualização de dados bem-sucedida"
     successfully_created: "Criação bem-sucedida"
@@ -409,6 +415,8 @@ pt:
       public_address_does_not_belongs_to_plan: "O endereço IP atribuído não pertence ao plano escolhido"
       proxy_arp_incompatible_with_full_dnat: "Esta opção não é compatível com DNAT completo"
       proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP está hablitado mas o endereço IP não pertence a nenhúm dos fornecedores deste plano"
+      proxy_arp_provider_does_not_belongs_to_plan: "O provedor selecionado não pertence a nenhum dos fornecedores listados no plano de este contrato"
+      proxy_arp_provider_can_not_be_guessed: "O endereço IP atribuído a este contrato não pertence a nenhum dos fornecedores, você deve selecionar um fornecedor"
       unique_provider_does_not_belongs_to_plan: "O fornecedor atribuído não pertence ao plano escolhido"
     configuration:
       notification_email_invalid: "Endereço de e-mail inválido"
@@ -426,6 +434,7 @@ pt:
     contract:
       details: "Detalhes"
       advanced: "Avanzado"
+      proxy_arp: "Proxy ARP"
       prio_customization: "Personalização de prioridades"
     configuration:
       system: "Sistema"

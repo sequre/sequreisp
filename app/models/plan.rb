@@ -17,6 +17,7 @@
 
 class Plan < ActiveRecord::Base
   has_many :contracts, :dependent => :destroy, :include => :klass
+  has_many :providers, :through => :provider_group
   acts_as_audited
   belongs_to :provider_group
 

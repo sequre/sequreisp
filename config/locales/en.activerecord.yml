@@ -96,6 +96,8 @@ en:
         state: "State"
         proxy_arp: "Proxy ARP enabled"
         proxy_arp_interface: "LAN interface"
+        proxy_arp_provider: "Proxy ARP Provider"
+        proxy_arp_gateway: "Proxy ARP Gateway"
         forwarded_ports: "Forwarded ports"
         transparent_proxy: "Transparent proxy"
         created_at: "Created at"
@@ -257,6 +259,8 @@ en:
         prio_protos: "Numbers or names like in /etc/protocols (e.g. icmp,gre,50)"
         prio_helpers: "Netfilter helpers (e.g. ftp,pptp,irc)"
         proxy_arp: "In case a public IP address from the same subnet as the provider is asigned"
+        proxy_arp_provider: "Optional: specify only if public IP address does not belongs to provider's configured network"
+        proxy_arp_gateway: "Optional: specify only if public IP address does not use the same gateway as provider"
       client:
         external_client_number: "For synchronization with external applications"
       plan:
@@ -387,6 +391,8 @@ en:
       scan_fail: "No new interfaces have been detected"
       could_not_be_deleted_has_vlans: "This interface has VLANs assigned, therefore it can't be deleted"
       could_not_be_deleted_has_provider: "This interface has a provider assigned, therefore it can't be deleted"
+    provider:
+      could_not_be_deleted_has_proxy_arp_contracts: "This provider has contracts with Proxy ARP associated, therefore it can't be deleted"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
@@ -412,6 +418,8 @@ en:
       public_address_does_not_belongs_to_plan: "The assigned IP does not belong to the selected plan"
       proxy_arp_incompatible_with_full_dnat: "Option is incompatible with full DNAT"
       proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP is enabled but the IP address does not belong to any of the providers of this plan"
+      proxy_arp_provider_does_not_belongs_to_plan: "The selected provider does not belong to any of the providers listed in this contract's plan"
+      proxy_arp_provider_can_not_be_guessed: "The IP address assigned to this contract does not belongs to any of the providers, you must select a provider"
       unique_provider_does_not_belongs_to_plan: "The assigned provider does not belong to the selected plan"
     configuration:
       notification_email_invalid: "Invalid email address"
@@ -429,6 +437,7 @@ en:
     contract:
       details: "Details"
       advanced: "Advanced"
+      proxy_arp: "Proxy ARP"
       prio_customization: "Priorities customization"
     configuration:
       system: "Global options"

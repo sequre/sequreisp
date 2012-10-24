@@ -925,11 +925,12 @@ end
 
 def setup_proxy_arp(f,arp)
   Contract.find(:all, :conditions => "proxy_arp = 1 and proxy_arp_interface_id is not null").each do |c|
-    p = c.proxy_arp_provider
+    p = c.proxy_arp_provider.present? ? c.proxy_arp_provider : c.guess_proxy_arp_provider
     if p
+      g = c.proxy_arp_gateway.present? ? c.proxy_arp_gateway : p.gateway
       arp.puts "arp -i #{p.interface.name} -Ds #{c.ip} #{p.interface.name} pub"
       f.puts "ip ro re #{c.ip} dev #{c.proxy_arp_interface.name}"
-      arp.puts "arp -i #{c.proxy_arp_interface.name} -Ds #{p.gateway} #{c.proxy_arp_interface.name} pub"
+      arp.puts "arp -i #{c.proxy_arp_interface.name} -Ds #{g} #{c.proxy_arp_interface.name} pub"
     end
   end
 end

@@ -96,6 +96,8 @@ es:
         state: "Estado"
         proxy_arp: "Proxy ARP habilitado"
         proxy_arp_interface: "Interfaz LAN"
+        proxy_arp_provider: "Proveedor Proxy ARP"
+        proxy_arp_gateway: "Puerta de enlace Proxy ARP"
         forwarded_ports: "Puertos redireccionados"
         transparent_proxy: "Proxy transparente"
         created_at: "Fecha de alta"
@@ -257,6 +259,8 @@ es:
         prio_protos: "Números o nombres como en /etc/protocols (ej: icmp,gre,50)"
         prio_helpers: "Netfilter helpers (ej: ftp,pptp,irc)"
         proxy_arp: "En caso de asignar una dirección IP pública de la misma subred que el proveedor"
+        proxy_arp_provider: "Opcional: espicificar en caso de que la IP pública no pertenezca al rango configurado en el proveedor"
+        proxy_arp_gateway: "Opcional: especificar en caso de que la IP pública no use la misma puerta de enlace del proveedor"
       client:
         external_client_number: "Para sincronización con sistemas externos"
       plan:
@@ -387,6 +391,8 @@ es:
       scan_fail: "No se han detectado nuevas interfaces"
       could_not_be_deleted_has_vlans: "Esta interfaz tiene VLANs asociadas y no puede ser borrada"
       could_not_be_deleted_has_provider: "Esta interfaz tiene un proveedor asociado y no puede ser borrada"
+    provider:
+      could_not_be_deleted_has_proxy_arp_contracts: "Este proveedor no puede ser borrado, hay contratos con Proxy ARP asociado a este proveedor"
   controllers:
     successfully_updated: "Actualización de datos exitosa"
     successfully_created: "Creación exitosa"
@@ -412,6 +418,8 @@ es:
       public_address_does_not_belongs_to_plan: "La dirección IP asignada no pertenece al plan seleccionado"
       proxy_arp_incompatible_with_full_dnat: "Esta opción no es compatible con DNAT completo"
       proxy_arp_ip_does_not_belongs_to_plan: "Proxy ARP está hablitado pero la dirección IP no pertenece a ninguno de los proveedores de este plan"
+      proxy_arp_provider_does_not_belongs_to_plan: "El proveedor seleccionado no pertenece a ninguno de los proveedores del plan asignado al contrato"
+      proxy_arp_provider_can_not_be_guessed: "La IP asignada al contrato no pertenece a ningun proveedor, debe especificar el proveedor"
       unique_provider_does_not_belongs_to_plan: "El proveedor asignado no pertenece al plan seleccionado"
     configuration:
       notification_email_invalid: "Dirección de e-mail inválida"
@@ -429,6 +437,7 @@ es:
     contract:
       details: "Detalles"
       advanced: "Avanzado"
+      proxy_arp: "Proxy ARP"
       prio_customization: "Personalización de prioridades"
     configuration:
       system: "Sistema"

@@ -11,16 +11,26 @@
   .arping_mac_address {
     padding-top: 26px;
   }
+  #contract_proxy_arp_gateway {
+    width: 150px
+  }
+  #contract_proxy_arp_provider {
+    width: 150px
+  }
 </style>
 <script type="text/javascript">
   $(function(){
     function checkbox_proxy_arp() {
       if ($('#contract_proxy_arp').attr('checked')) {
         $('#contract_proxy_arp_interface_input').removeAttr("disabled"); 
-        $('#contract_proxy_arp_interface_input').fadeIn(); 
+        $('#contract_proxy_arp_interface_input').fadeIn();
+        $('#contract_proxy_arp_provider_input').fadeIn();
+        $('#contract_proxy_arp_gateway_input').fadeIn();
       } else {
         $('#contract_proxy_arp_interface_input').attr("disabled", true); 
-        $('#contract_proxy_arp_interface_input').hide(); 
+        $('#contract_proxy_arp_interface_input').hide();
+        $('#contract_proxy_arp_provider_input').hide();
+        $('#contract_proxy_arp_gateway_input').hide();
       }
     }
     checkbox_proxy_arp();
@@ -104,9 +114,14 @@
     <% end %>
     <% form.inputs :name => t('fieldsets.contract.advanced'), :id => "advanced", :class => "left inputs",
                    :context_help => { :path => { :custom => 'contract.fieldsets.advanced' } } do %>
-      <%= form.input :proxy_arp, :wrapper_html => { :class => "left" } %> 
-      <%= form.input :proxy_arp_interface, :wrapper_html => { :class => "left" } %>
-      <div style="clear: both"></div> 
+      <% form.inputs :name => t('fieldsets.contract.proxy_arp'), :id => "proxy_arp" do %>
+        <%= form.input :proxy_arp, :wrapper_html => { :class => "left" } %>
+        <%= form.input :proxy_arp_interface, :wrapper_html => { :class => "left" } %>
+        <div style="clear: both"></div>
+        <%= form.input :proxy_arp_provider, :wrapper_html => { :class => "left" } %>
+        <%= form.input :proxy_arp_gateway, :wrapper_html => { :class => "left" } %>
+      <% end %>
+      <div style="clear: both"></div>
       <%= form.input :public_address %> 
       <%= form.input :unique_provider %>
     <% end %>
