@@ -391,6 +391,7 @@ es:
       scan_fail: "No se han detectado nuevas interfaces"
       could_not_be_deleted_has_vlans: "Esta interfaz tiene VLANs asociadas y no puede ser borrada"
       could_not_be_deleted_has_provider: "Esta interfaz tiene un proveedor asociado y no puede ser borrada"
+      could_not_be_deleted_has_proxy_arp_contracts: "Esta interfaz no puede ser borrada, hay contratos con Proxy ARP asociado a esta interfaz"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "Este proveedor no puede ser borrado, hay contratos con Proxy ARP asociado a este proveedor"
   controllers:

@@ -100,6 +100,9 @@ class InterfacesController < ApplicationController
     elsif @interface.provider
       flash[:error] = t 'messages.interface.could_not_be_deleted_has_provider'
       redirect_to :back
+    elsif @interface.contracts.size > 0
+      flash[:error] = t 'messages.interface.could_not_be_deleted_has_proxy_arp_contracts'
+      redirect_to :back
     else
       @interface.destroy
       redirect_to(interfaces_url)

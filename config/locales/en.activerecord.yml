@@ -391,6 +391,7 @@ en:
       scan_fail: "No new interfaces have been detected"
       could_not_be_deleted_has_vlans: "This interface has VLANs assigned, therefore it can't be deleted"
       could_not_be_deleted_has_provider: "This interface has a provider assigned, therefore it can't be deleted"
+      could_not_be_deleted_has_proxy_arp_contracts: "This interface has contracts with Proxy ARP associated, therefore it can't be deleted"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "This provider has contracts with Proxy ARP associated, therefore it can't be deleted"
   controllers:
