@@ -254,16 +254,17 @@ class Contract < ActiveRecord::Base
     begin
       c_ip = IP.new self.ip
       provider=nil
-      Plan.find(plan_id).provider_group.providers.each do |p|
+      Plan.find(plan_id).providers.ready.each do |p|
         p_ip = IP.new "#{p.ip}/#{p.netmask_suffix}"
         provider = p if (p_ip.to_i & p_ip.netmask.to_i) == (c_ip.to_i & p_ip.netmask.to_i)
         p.addresses.each do |a|
           provider = p if (a.ruby_ip.to_i & a.ruby_ip.netmask.to_i) == (c_ip.to_i & p_ip.netmask.to_i)
-        end 
+        end
       end
       provider
     rescue
-      nil
+      provider ||= nil
+      provider
     end
   end
   def class_hex
