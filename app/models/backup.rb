@@ -30,6 +30,9 @@ class Backup
   def backup_include
     "#{base_dir}/.sequreisp_backup.include"
   end
+  def backup_exclude
+    "#{base_dir}/.sequreisp_backup.exclude"
+  end
   def exclude(include_graphs)
     paths = ["/deploy/old/*", "/deploy/shared/log/*", "/deploy/shared/public/images/rrd/*"]
     paths << "/deploy/shared/db/rrd/*" unless include_graphs
@@ -54,7 +57,8 @@ class Backup
   def full(include_graphs=false)
     if mysqldump "#{base_dir}/sequreisp.sql"
       FileUtils.touch backup_include if not File.exists? backup_include
-      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{exclude(include_graphs)} --files-from #{backup_include} -zSpcf #{full_path}.tar.gz #{base_dir}"
+      FileUtils.touch backup_exclude if not File.exists? backup_exclude
+      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{exclude(include_graphs)} --files-from #{backup_include} --exclude-from #{backup_exclude} -zSpcf #{full_path}.tar.gz #{base_dir}"
     end
     "#{full_path}.tar.gz" if success
   end
