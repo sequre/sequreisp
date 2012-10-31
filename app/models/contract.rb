@@ -44,7 +44,8 @@ class Contract < ActiveRecord::Base
   watch_fields :ip, :plan_id, :mac_address, :ceil_dfl_percent, :state,
                :tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers,
                :transparent_proxy, :proxy_arp, :proxy_arp_interface_id, :public_address_id,
-               :unique_provider_id
+               :unique_provider_id,
+               :proxy_arp_provider_id, :proxy_arp_gateway
   watch_on_destroy
 
   validates_presence_of :ip, :ceil_dfl_percent, :client, :plan
