@@ -45,11 +45,12 @@ class Contract < ActiveRecord::Base
                :tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers,
                :transparent_proxy, :proxy_arp, :proxy_arp_interface_id, :public_address_id,
                :unique_provider_id,
-               :proxy_arp_provider_id, :proxy_arp_gateway
+               :proxy_arp_provider_id, :proxy_arp_gateway, :proxy_arp_use_lan_gateway, :proxy_arp_lan_gateway
   watch_on_destroy
 
   validates_presence_of :ip, :ceil_dfl_percent, :client, :plan
   validates_presence_of :proxy_arp_interface, :if => Proc.new { |c| c.proxy_arp } 
+  validates_presence_of :proxy_arp_lan_gateway, :if => Proc.new { |c| c.proxy_arp_use_lan_gateway }
 
   validates_format_of :tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers, :with => /^([0-9a-z-]+(:[0-9]+)*,)*[0-9a-z-]+(:[0-9]+)*$/, :allow_blank => true
   validates_format_of :mac_address, :with => /^([0-9A-Fa-f]{2}\:){5}[0-9A-Fa-f]{2}$/, :allow_blank => true
@@ -89,6 +90,7 @@ class Contract < ActiveRecord::Base
   include IpAddressCheck
   validate_ip_format_of :ip, :with_netmask => true
   validate_ip_format_of :proxy_arp_gateway, :with_netmask => false
+  validate_ip_format_of :proxy_arp_lan_gateway, :with_netmask => false
 
   def ip_is_single_host?
     netmask == "255.255.255.255"
@@ -194,14 +196,37 @@ class Contract < ActiveRecord::Base
   
   def queue_update_commands
     cq = QueuedCommand.new 
-    if proxy_arp_changed? 
-      if proxy_arp_was
-        _interface = Interface.find(proxy_arp_interface_id_was) rescue nil
-        cq.command += "arp -i #{_interface.name} -d #{ip_was}" if _interface
+    _interface = Interface.find(proxy_arp_interface_id_was) rescue nil
+    if _interface
+      if proxy_arp_changed?
+        if proxy_arp_was
+          cq.command += "arp -i #{_interface.name} -d #{ip_was};"
+          if proxy_arp_use_lan_gateway_was
+            cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
+          else
+            cq.command += "ip ro del #{ip_was} dev #{_interface.name};"
+          end
+        end
+      elsif proxy_arp
+        if proxy_arp_interface_id_changed? or ip_changed?
+          cq.command += "arp -i #{_interface.name} -d #{ip_was};"
+          if proxy_arp_use_lan_gateway_was
+            cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
+          else
+            cq.command += "ip ro del #{ip_was} dev #{_interface.name};"
+          end
+        end
+        if proxy_arp_use_lan_gateway_changed?
+          if proxy_arp_use_lan_gateway_was
+            cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
+          else
+            cq.command += "ip ro del #{ip_was} dev #{_interface.name};"
+          end
+        end
+        if proxy_arp_lan_gateway_changed? and proxy_arp_lan_gateway_was
+          cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
+        end
       end
-    elsif proxy_arp and proxy_arp_interface_id_changed?
-      _interface = Interface.find(proxy_arp_interface_id_was) rescue nil
-      cq.command += "arp -i #{_interface.name} -d #{ip_was}" if _interface
     end
     cq.save if not cq.command.empty?
   end
@@ -209,7 +234,12 @@ class Contract < ActiveRecord::Base
   def queue_destroy_commands
     cq = QueuedCommand.new 
     if proxy_arp
-      cq.command += "arp -i #{proxy_arp_interface.name} -d #{ip}"
+      cq.command += "arp -i #{proxy_arp_interface.name} -d #{ip};"
+      if proxy_arp_use_lan_gateway
+        cq.command += "ip ro del #{ip} via #{proxy_arp_lan_gateway} dev #{proxy_arp_interface.name};"
+      else
+        cq.command += "ip ro del #{ip} dev #{proxy_arp_interface.name};"
+      end
     end
     cq.save if not cq.command.empty?
   end

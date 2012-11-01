@@ -11,6 +11,9 @@
   .arping_mac_address {
     padding-top: 26px;
   }
+  #contract_proxy_arp_lan_gateway {
+    width: 150px
+  }
   #contract_proxy_arp_gateway {
     width: 150px
   }
@@ -26,16 +29,33 @@
         $('#contract_proxy_arp_interface_input').fadeIn();
         $('#contract_proxy_arp_provider_input').fadeIn();
         $('#contract_proxy_arp_gateway_input').fadeIn();
+        $('#contract_proxy_arp_use_lan_gateway_input').fadeIn();
+        checkbox_proxy_arp_use_lan_gateway();
       } else {
-        $('#contract_proxy_arp_interface_input').attr("disabled", true); 
+        $('#contract_proxy_arp_interface_input').attr("disabled", true);
         $('#contract_proxy_arp_interface_input').hide();
         $('#contract_proxy_arp_provider_input').hide();
         $('#contract_proxy_arp_gateway_input').hide();
+        $('#contract_proxy_arp_use_lan_gateway_input').hide();
+        $('#contract_proxy_arp_lan_gateway_input').attr("disabled", true);
+        $('#contract_proxy_arp_lan_gateway_input').hide();
       }
     }
     checkbox_proxy_arp();
     $('#contract_proxy_arp').change( function() {
       checkbox_proxy_arp();
+    });
+    function checkbox_proxy_arp_use_lan_gateway() {
+      if ($('#contract_proxy_arp_use_lan_gateway').attr('checked')) {
+        $('#contract_proxy_arp_lan_gateway_input').removeAttr("disabled");
+        $('#contract_proxy_arp_lan_gateway_input').fadeIn();
+      } else {
+        $('#contract_proxy_arp_lan_gateway_input').attr("disabled", true);
+        $('#contract_proxy_arp_lan_gateway_input').hide();
+      }
+    }
+    $('#contract_proxy_arp_use_lan_gateway').change( function() {
+      checkbox_proxy_arp_use_lan_gateway();
     });
     $('#contract_ip').autocomplete({
       delay: 150,
@@ -120,6 +140,9 @@
         <div style="clear: both"></div>
         <%= form.input :proxy_arp_provider, :wrapper_html => { :class => "left" } %>
         <%= form.input :proxy_arp_gateway, :wrapper_html => { :class => "left" } %>
+        <div style="clear: both"></div>
+        <%= form.input :proxy_arp_use_lan_gateway, :wrapper_html => { :class => "left" } %>
+        <%= form.input :proxy_arp_lan_gateway, :wrapper_html => { :class => "left" } %>
       <% end %>
       <div style="clear: both"></div>
       <%= form.input :public_address %> 

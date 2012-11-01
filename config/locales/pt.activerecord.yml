@@ -95,6 +95,8 @@ pt:
         proxy_arp_interface: "Interface LAN"
         proxy_arp_provider: "Fornecedor Proxy ARP"
         proxy_arp_gateway: "Gateway Proxy ARP"
+        proxy_arp_use_lan_gatewas: "Usar gateway LAN"
+        proxy_arp_lan_gateway: "Gateway LAN"
         forwarded_ports: "Portas redirecionadas"
         transparent_proxy: "Proxy transparente"
         created_at: "Data de cadastro"
@@ -258,6 +260,7 @@ pt:
         proxy_arp: "No caso de atribuir um endereço IP público da mesma subrede do que o fornecedor"
         proxy_arp_provider: "Opcional: especificar somente se o endereço IP público não pertence a rede configurada no fornecedor"
         proxy_arp_gateway: "Opcional: especificar somente se o endereço IP público não usa o mesmo gateway do fornecedor"
+        proxy_arp_use_lan_gateway: "Opcional: especificar somente se o endereço IP está atrás de um roteador na LAN"
       client:
         external_client_number: "Para sincronização com sistemas externos"
       plan:

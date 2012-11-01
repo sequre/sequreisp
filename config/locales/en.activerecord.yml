@@ -96,8 +96,10 @@ en:
         state: "State"
         proxy_arp: "Proxy ARP enabled"
         proxy_arp_interface: "LAN interface"
-        proxy_arp_provider: "Proxy ARP Provider"
-        proxy_arp_gateway: "Proxy ARP Gateway"
+        proxy_arp_provider: "Proxy ARP provider"
+        proxy_arp_gateway: "Proxy ARP gateway"
+        proxy_arp_use_lan_gateway: "Use LAN gateway"
+        proxy_arp_lan_gateway: "Lan gateway"
         forwarded_ports: "Forwarded ports"
         transparent_proxy: "Transparent proxy"
         created_at: "Created at"
@@ -261,6 +263,7 @@ en:
         proxy_arp: "In case a public IP address from the same subnet as the provider is asigned"
         proxy_arp_provider: "Optional: specify only if public IP address does not belongs to provider's configured network"
         proxy_arp_gateway: "Optional: specify only if public IP address does not use the same gateway as provider"
+        proxy_arp_use_lan_gateway: "Optional: specify only if the IP address is behind a router in the LAN"
       client:
         external_client_number: "For synchronization with external applications"
       plan:

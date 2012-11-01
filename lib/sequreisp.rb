@@ -928,8 +928,9 @@ def setup_proxy_arp(f,arp)
     p = c.proxy_arp_provider.present? ? c.proxy_arp_provider : c.guess_proxy_arp_provider
     if p
       g = c.proxy_arp_gateway.present? ? c.proxy_arp_gateway : p.gateway
+      route = c.proxy_arp_use_lan_gateway ? "via #{c.proxy_arp_lan_gateway}" : "dev #{c.proxy_arp_interface.name}"
       arp.puts "arp -i #{p.interface.name} -Ds #{c.ip} #{p.interface.name} pub"
-      f.puts "ip ro re #{c.ip} dev #{c.proxy_arp_interface.name}"
+      f.puts "ip ro re #{c.ip} #{route}"
       arp.puts "arp -i #{c.proxy_arp_interface.name} -Ds #{g} #{c.proxy_arp_interface.name} pub"
     end
   end
