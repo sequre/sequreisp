@@ -91,8 +91,9 @@ class UsersController < ApplicationController
   # DELETE /users/1.xml
   def destroy
     @user = object
-    @user.destroy
-
+    unless SequreispConfig::CONFIG["demo"] and @user.email == "admin@sequre.com.ar"
+      @user.destroy
+    end
     respond_to do |format|
       format.html { redirect_to(users_url) }
       format.xml  { head :ok }
