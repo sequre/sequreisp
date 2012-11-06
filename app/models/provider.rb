@@ -255,8 +255,10 @@ class Provider < ActiveRecord::Base
   end
   def weight
     # max 256 (from iproute.c)
-    # ponemos quantos de 512 ya que 100Mbit/512kbps=200 quantos
-    (self.rate_down/512.0).round
+    # dinamic quantum from the bigest rate_down provider
+    _quantum = Provider.enabled.first(:order => 'rate_down DESC').rate_down/255.0
+    _weight = (self.rate_down/_quantum).round
+    _weight > 0 ? _weight : 1
   end
   def check_link_table
     self.klass.number << 8
