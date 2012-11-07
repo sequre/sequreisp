@@ -866,9 +866,12 @@ def setup_provider_interface(f, p)
   end
 end
 def setup_clock(f)
-  tz_path = "/usr/share/zoneinfo/#{ActiveSupport::TimeZone.new(Configuration.first.time_zone).tzinfo.name}"
-  f.puts "echo '#{tz_name}' > /etc/timezone"
-  f.puts "cp #{tz_path} /etc/localtime"
+  tz_path = "/usr/share/zoneinfo/"
+  tz_name = ActiveSupport::TimeZone.new(Configuration.time_zone).tzinfo.name
+  if tz_name
+    f.puts "echo '#{tz_path}' > /etc/timezone"
+    f.puts "cp #{File.join(tz_path, tz_name)} /etc/localtime"
+  end
 end
 def setup_proc(f)
   # setup de params generales de sysctl
