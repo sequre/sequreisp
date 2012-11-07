@@ -865,6 +865,11 @@ def setup_provider_interface(f, p)
     f.puts "ip route re table #{p.check_link_table} #{p.default_route}"
   end
 end
+def setup_clock(f)
+  tz_path = "/usr/share/zoneinfo/#{ActiveSupport::TimeZone.new(Configuration.first.time_zone).tzinfo.name}"
+  f.puts "echo '#{tz_name}' > /etc/timezone"
+  f.puts "cp #{tz_path} /etc/localtime"
+end
 def setup_proc(f)
   # setup de params generales de sysctl
   f.puts "echo 1 > /proc/sys/net/ipv4/ip_forward"
@@ -1129,6 +1134,7 @@ def boot(run=true)
       %w{nf_nat_ftp nf_nat_amanda nf_nat_pptp nf_nat_proto_gre nf_nat_sip nf_nat_irc 8021q}.each do |m|
         f.puts "modprobe #{m}"
       end
+      setup_clock f
       setup_proc f 
       setup_proxy f 
       Interface.all(:conditions => "vlan = 0").each do |i|
