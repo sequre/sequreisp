@@ -31,6 +31,7 @@ class DashboardsController < ApplicationController
     else
       flash[:error] = I18n.t('messages.dashboard.reboot_error')
     end
+    redirect_to :back
   end
   def halt
     if system("sudo /usr/sbin/halt")
@@ -38,5 +39,6 @@ class DashboardsController < ApplicationController
     else
       flash[:error] = I18n.t('messages.dashboard.halt_error')
     end
+    redirect_to :back
   end
 end
