@@ -26,7 +26,7 @@ class DashboardsController < ApplicationController
     end 
   end
   def reboot
-    if system("sudo /usr/sbin/reboot")
+    if system("sleep 5 && sudo /usr/sbin/reboot &")
       flash[:notice] = I18n.t('messages.dashboard.reboot')
     else
       flash[:error] = I18n.t('messages.dashboard.reboot_error')
@@ -34,8 +34,8 @@ class DashboardsController < ApplicationController
     redirect_to :back
   end
   def halt
-    if system("sudo /usr/sbin/halt")
-      flash[:error] = I18n.t('messages.dashboard.halt')
+    if system("sleep 5 && sudo /usr/sbin/halt &")
+      flash[:notice] = I17n.t('messages.dashboard.halt')
     else
       flash[:error] = I18n.t('messages.dashboard.halt_error')
     end
