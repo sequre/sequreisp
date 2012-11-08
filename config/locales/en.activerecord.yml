@@ -322,6 +322,8 @@ en:
     more: "More"
     less: "Less"
     view_audit: "Audit"
+    reboot: "Reboot"
+    halt: "Halt"
     context_help:
       help: "Help"
       close: "Close"
@@ -397,6 +399,11 @@ en:
       could_not_be_deleted_has_proxy_arp_contracts: "This interface has contracts with Proxy ARP associated, therefore it can't be deleted"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "This provider has contracts with Proxy ARP associated, therefore it can't be deleted"
+    dashboard:
+      reboot: "The server will reboot shortly"
+      reboot_error: "An error occurred, the server will not be rebooted"
+      halt: "The server will halt shortly"
+      halt_error: "An error occurred, the server will not be halted"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"

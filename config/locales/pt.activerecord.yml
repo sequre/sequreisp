@@ -320,6 +320,8 @@ pt:
     less: "Menos"
     get_arping_mac_address: "Obter o endereço MAC"
     view_audit: "Auditoria"
+    reboot: "Reiniciar"
+    halt: "Desligar"
     context_help:
       help: "Ajuda"
       close: "Fechar"
@@ -394,6 +396,11 @@ pt:
       could_not_be_deleted_has_proxy_arp_contracts: "Esta interface tem contratos com Proxy ARP associado e não pode ser eliminado"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "Este fornecedor tem contratos com Proxy ARP associado e não pode ser eliminado"
+    dashboard:
+      reboot: "O servidor será reiniciado em breve"
+      reboot_error: "Ocorreu um erro, o servidor não será reiniciado"
+      halt: "O servidor será desligado em breve"
+      halt_error: "Ocorreu um erro, o servidor não será desligado"
   controllers:
     successfully_updated: "Atualização de dados bem-sucedida"
     successfully_created: "Criação bem-sucedida"

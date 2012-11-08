@@ -25,4 +25,18 @@ class DashboardsController < ApplicationController
       format.json { render :json => @load_average }
     end 
   end
+  def reboot
+    if system("sudo /usr/sbin/reboot")
+      flash[:notice] = I18n.t('messages.dashboard.reboot')
+    else
+      flash[:error] = I18n.t('messages.dashboard.reboot_error')
+    end
+  end
+  def halt
+    if system("sudo /usr/sbin/halt")
+      flash[:error] = I18n.t('messages.dashboard.halt')
+    else
+      flash[:error] = I18n.t('messages.dashboard.halt_error')
+    end
+  end
 end

@@ -322,6 +322,8 @@ es:
     more: "Más"
     less: "Menos"
     view_audit: "Auditoría"
+    reboot: "Reiniciar"
+    halt: "Apagar"
     context_help:
       help: "Ayuda"
       close: "Cerrar"
@@ -397,6 +399,11 @@ es:
       could_not_be_deleted_has_proxy_arp_contracts: "Esta interfaz no puede ser borrada, hay contratos con Proxy ARP asociado a esta interfaz"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "Este proveedor no puede ser borrado, hay contratos con Proxy ARP asociado a este proveedor"
+    dashboard:
+      reboot: "El servidor se reiniciará en breve"
+      reboot_error: "Ocurrió un error, el servidor no será reiniciado"
+      halt: "El servidor se apagara en breve"
+      halt_error: "Ocurrió un error, el servidor no se apagará"
   controllers:
     successfully_updated: "Actualización de datos exitosa"
     successfully_created: "Creación exitosa"
