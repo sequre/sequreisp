@@ -111,14 +111,26 @@ class Contract < ActiveRecord::Base
 
     if not plan_id.nil?
       new_plan = Plan.find(plan_id)
-      remaining_rate_down = new_plan.provider_group.remaining_rate_down
-      remaining_rate_up = new_plan.provider_group.remaining_rate_up
-      if plan_id_changed? and not plan_id_was.nil?
-        old_plan = Plan.find(plan_id_was)
-        if old_plan.provider_group_id == new_plan.provider_group_id
-          remaining_rate_down += old_plan.rate_down
-          remaining_rate_up += old_plan.rate_up
-        end
+      old_plan = Plan.find(plan_id_was) rescue nil
+      remaining_rate_down = if new_record?
+        # si es nuevo, entonces el rate actual no está cargado en ningún pg
+        new_plan.provider_group.remaining_rate_down
+      elsif old_plan and new_plan.provider_group_id != old_plan.provider_group_id
+        # si estoy cambiando de pg entonces en el nuevo no está cargado
+        new_plan.provider_group.remaining_rate_down
+      else
+        # mismo pg, puede variar o no el plan, en ambos casos libero el rate_down que estaba contando
+        new_plan.provider_group.remaining_rate_down + old_plan.rate_down
+      end
+      remaining_rate_up = if new_record?
+        # si es nuevo, entonces el rate actual no está cargado en ningún pg
+        new_plan.provider_group.remaining_rate_up
+      elsif old_plan and new_plan.provider_group_id != old_plan.provider_group_id
+        # si estoy cambiando de pg entonces en el nuevo no está cargado
+        new_plan.provider_group.remaining_rate_up
+      else
+        # mismo pg, puede variar o no el plan, en ambos casos libero el rate_up que estaba contando
+        new_plan.provider_group.remaining_rate_up + old_plan.rate_up
       end
       logger.debug("plan: #{plan.name} plan_id:#{plan_id} new_plan:#{new_plan.name}")
       if new_plan.rate_down > remaining_rate_down
