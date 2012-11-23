@@ -169,7 +169,7 @@ class Provider < ActiveRecord::Base
     AASM::StateMachine[self].states.map { |state| [I18n.t("aasm.provider.#{state.name.to_s}"),state.name.to_s] }
   end
   
-  before_create :bind_klass
+  after_create :bind_klass
  
   def bind_klass
     self.klass = ProviderKlass.find(:first, :conditions => "klassable_id is null")
