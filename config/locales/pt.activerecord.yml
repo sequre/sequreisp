@@ -351,6 +351,7 @@ pt:
   graph:
     heading: "Estatísticas %{name}"
     instant: "Instântaneo"
+    latency: "Latência"
     last_24h: "Últimas 24 horas"
     last_week: "Última semana"
     last_month: "Último mês"

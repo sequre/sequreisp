@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Sequreisp - Copyright 2010, 2011 Luciano Ruete
 #
 # This file is part of Sequreisp.
@@ -21,7 +22,7 @@ class Contract < ActiveRecord::Base
                               :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl]
   belongs_to :client
   belongs_to :plan
-  
+
   has_many :forwarded_ports, :dependent => :destroy
   accepts_nested_attributes_for :forwarded_ports, :reject_if => :all_blank, :allow_destroy => true
   has_one :klass, :dependent => :nullify
@@ -49,7 +50,7 @@ class Contract < ActiveRecord::Base
   watch_on_destroy
 
   validates_presence_of :ip, :ceil_dfl_percent, :client, :plan
-  validates_presence_of :proxy_arp_interface, :if => Proc.new { |c| c.proxy_arp } 
+  validates_presence_of :proxy_arp_interface, :if => Proc.new { |c| c.proxy_arp }
   validates_presence_of :proxy_arp_lan_gateway, :if => Proc.new { |c| c.proxy_arp_use_lan_gateway }
 
   validates_format_of :tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers, :with => /^([0-9a-z-]+(:[0-9]+)*,)*[0-9a-z-]+(:[0-9]+)*$/, :allow_blank => true
@@ -61,7 +62,7 @@ class Contract < ActiveRecord::Base
 
   validate :state_should_be_included_in_the_list
 
-  def state_should_be_included_in_the_list 
+  def state_should_be_included_in_the_list
     unless AASM::StateMachine[Contract].states.map(&:name).include?(state.to_sym)
       errors.add(:state, I18n.t('activerecord.errors.messages.inclusion'))
     end
@@ -169,7 +170,7 @@ class Contract < ActiveRecord::Base
   end
 
   include OverflowCheck
-  before_save :check_integer_overflow  
+  before_save :check_integer_overflow
   before_create :bind_klass
 
   alias :real_klass :klass
@@ -190,12 +191,12 @@ class Contract < ActiveRecord::Base
     self.klass = Klass.find(:first, :conditions => "contract_id is null")
     raise "TODO nos quedamos sin clases!" if self.klass.nil?
   end
-  
+
   after_update :queue_update_commands
   after_destroy :queue_destroy_commands
-  
+
   def queue_update_commands
-    cq = QueuedCommand.new 
+    cq = QueuedCommand.new
     _interface = Interface.find(proxy_arp_interface_id_was) rescue nil
     if _interface
       if proxy_arp_changed?
@@ -232,7 +233,7 @@ class Contract < ActiveRecord::Base
   end
 
   def queue_destroy_commands
-    cq = QueuedCommand.new 
+    cq = QueuedCommand.new
     if proxy_arp
       cq.command += "arp -i #{proxy_arp_interface.name} -d #{ip};"
       if proxy_arp_use_lan_gateway
@@ -325,7 +326,7 @@ class Contract < ActiveRecord::Base
   def proxy_bind_ip
     # 198.18.0.0/15 reserved for Network Interconnect Device Benchmark Testing [RFC5735]
     # calculo una sola vez su valor en int para ahorro de computo
-    IP::V4.new(IP.new("198.18.0.0") | self.klass.number).to_s 
+    IP::V4.new(IP.new("198.18.0.0") | self.klass.number).to_s
   end
   def transparent_proxy?
     # Habilitable por plan y reescribible por cliente
@@ -335,15 +336,71 @@ class Contract < ActiveRecord::Base
         true
       when "false"
         false
-      else 
+      else
         self.plan.transparent_proxy
     end
     enabled and Configuration.transparent_proxy
   end
+
+  # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
+  def instant_latency
+    return rand(890)+10 if SequreispConfig::CONFIG["demo"]
+    time = 0
+    if _ip = get_address?
+      if iface = arping_interface
+        time = arping_ping("sudo arping -c 1 -I #{iface} #{_ip}", "r")
+      else
+        time = arping_ping("/bin/ping -c 1 -n -W 4 #{_ip}", "r")
+      end
+    end
+    return time.to_i
+  end
+
+  # Dado la ip del cliente obtengo su ip en caso de ser una subnet devuelve
+  # nil
+  def get_address?
+    _ip = IP.new(ip)
+    if _ip.mask == 0
+      return _ip.to_addr
+    else
+      return nil
+    end
+  end
+
+# En caso de la red estar routeada devolvera nil (dado que debera usarse si o si
+# ping) caso contrario se usara arp por lo que es necesario la interfaz
+  def arping_interface
+    _interface = nil
+    IO.popen("ip ro get #{ip}", "r") do |io|
+      io.each do |line|
+        if line.include?("via")
+          _interface = nil
+        elsif line.include?("dev")
+          _interface = line.split("dev")[1].split(" ")[0] rescue nil
+        end
+      end
+    end
+    _interface
+  end
+
+  # Ejecuta el comando y retorna el tiempo de respuesta(Latency)
+  def arping_ping(command, permission)
+    #_time=0 implica que no hay interfaz para llegar al host
+    _time = 0
+    IO.popen(command, permission) do |io|
+      io.each do |line|
+        if line.include?("time=")
+          _time = line.split("time=")[1].split(" ")[0]
+        end
+      end
+    end
+    _time
+  end
+
   def instant_rate_down
     return rand(plan.ceil_down)*1024 if SequreispConfig::CONFIG["demo"]
     instant_rate SequreispConfig::CONFIG["ifb_down"]
-    
+
   end
   def instant_rate_up
     return rand(plan.ceil_up)*1024/2 if SequreispConfig::CONFIG["demo"]

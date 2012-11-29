@@ -70,6 +70,63 @@
       }
       ]
     });
+  chartping = new Highcharts.Chart({
+      chart: {
+        renderTo: 'instant_ping',
+        defaultSeriesType: 'area',
+        marginRight: 0,
+        events: {
+          load: function() {
+            // set up the updating of the chart each second
+            var request = this.series[0];
+            $.get('<%= instant_latency_contract_path %>',null,function(data){
+              request.addPoint(data.ping, true, true);
+            },'json');
+            setInterval(function() {
+              $.get('<%= instant_latency_contract_path %>',null,function(data){
+                request.addPoint(data.ping, true, true);
+              },'json');
+            }, 5000);
+          }
+        }
+      },
+      title: {
+        text: ''
+      },
+      xAxis: {
+        type: 'datetime',
+      },
+      yAxis: {
+        title: {
+          text: 'latency(Ms)'
+        },
+      },
+      tooltip: {
+        formatter: function() {
+            return '<b>'+ this.series.name +'</b><br/>'+
+            Highcharts.numberFormat(this.y, 2);
+        }
+      },
+      legend: {
+        enabled: false
+      },
+      exporting: {
+        enabled: false
+      },
+      plotOptions: {
+        series: {
+        pointStart: (new Date()).getTime() + <%= Time.zone.utc_offset %> * 1000 - 5*40000,
+          pointInterval: 5000 // 5 seconds
+        }
+      },
+      series: [{
+        name: 'Request',
+        type: "area",
+        color: "#00aa00",
+        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+      }
+      ]
+    });
   });
 </script>
 
@@ -118,6 +175,11 @@
     <% end %>
     </tbody>
   </table>
+  <h2><%=t 'graph.latency' %></h2>
+  <div id="instant_ping" style="width: 747px; height: 247px"></div>
+  <br/>
+  <br/>
+  <br/>
   <h2><%=t 'graph.instant' %></h2>
   <div id="instant" style="width: 747px; height: 247px"></div>
   <br/>
