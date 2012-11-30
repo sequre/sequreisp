@@ -119,10 +119,10 @@ class ContractsController < ApplicationController
     end
   end
 
-  def instant_rate_latency
+  def instant
     @contract = object
     respond_to do |format|
-      format.json { render :json => { :times => @contract.instant_rate_latency} }
+      format.json { render :json => @contract.instant }
     end
   end
 

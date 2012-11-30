@@ -354,18 +354,19 @@ class Contract < ActiveRecord::Base
     enabled and Configuration.transparent_proxy
   end
 
-  def instant_rate_latency
-    times = {:down => nil, :up => nil, :ping => nil, :arping => nil}
-    ping_arping = instant_latency
-    ping_arping.each { |key, value| times[key] = value }
-    times[:down] = instant_rate_down
-    times[:up] = instant_rate_up
-    return times
+  def instant
+    latencies = instant_latency
+    {
+      :rate_down => instant_rate_down,
+      :rate_up => instant_rate_up,
+      :ping_latency => latencies[:ping],
+      :arping_latency => latencies[:arping]
+    }
   end
 
   # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
   def instant_latency
-    return rand(890)+10 if SequreispConfig::CONFIG["demo"]
+    return { :ping => rand(890)+10, :arping => rand(100)+50 } if SequreispConfig::CONFIG["demo"]
     time = {:ping => nil, :arping => nil}
     if _ip = get_address? # si es ip/32
       thread_ping = Thread.new do
@@ -388,7 +389,7 @@ class Contract < ActiveRecord::Base
       end
       thread_ping.join
     end
-    return time
+    time
   end
 
   # Obtengo su ip en caso de ser una subnet devuelve nil
