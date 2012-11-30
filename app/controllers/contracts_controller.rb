@@ -119,20 +119,6 @@ class ContractsController < ApplicationController
     end
   end
 
-  def instant_rate
-    @contract = object
-    respond_to do |format|
-      format.json { render :json => { :down => @contract.instant_rate_down, :up => @contract.instant_rate_up } }
-    end
-  end
-
-  def instant_latency
-    @contract = object
-    respond_to do |format|
-      format.json { render :json => { :ping => @contract.instant_latency} }
-    end
-  end
-
   def instant_rate_latency
     @contract = object
     respond_to do |format|
