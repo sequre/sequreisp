@@ -1,4 +1,4 @@
-<% content_for :javascript do %>
+<<% - -%> content_for :javascript do %>
   <%= javascript_include_tag "highcharts" %>
 <% end %>
 <script type="text/javascript">
@@ -14,14 +14,14 @@
             // set up the updating of the chart each second
             var down = this.series[0];
             var up = this.series[1];
-            $.get('<%= instant_rate_path %>',null,function(data){
-              down.addPoint(data.down, true, true);
-              up.addPoint(data.up, true, true);
+            $.get('<%= instant_rate_latency_contract_path %>',null,function(data){
+              down.addPoint(data.times.down, true, true);
+              up.addPoint(data.times.up, true, true);
             },'json');
             setInterval(function() {
-              $.get('<%= instant_rate_path %>',null,function(data){
-                down.addPoint(data.down, true, true);
-                up.addPoint(data.up, true, true);
+              $.get('<%= instant_rate_latency_contract_path %>',null,function(data){
+                down.addPoint(data.times.down, true, true);
+                up.addPoint(data.times.up, true, true);
               },'json');
             }, 5000);
           }
@@ -80,14 +80,14 @@
             // set up the updating of the chart each second
             var ping = this.series[0];
             var arping = this.series[1];
-            $.get('<%= instant_latency_contract_path %>',null,function(data){
-              ping.addPoint(data.ping.ping, true, true);
-              arping.addPoint(data.ping.arping, true, true);
+            $.get('<%= instant_rate_latency_contract_path %>',null,function(data){
+              ping.addPoint(data.times.ping, true, true);
+              arping.addPoint(data.times.arping, true, true);
             },'json');
             setInterval(function() {
-              $.get('<%= instant_latency_contract_path %>',null,function(data){
-                ping.addPoint(data.ping.ping, true, true);
-                arping.addPoint(data.ping.arping, true, true);
+              $.get('<%= instant_rate_latency_contract_path %>',null,function(data){
+                ping.addPoint(data.times.ping, true, true);
+                arping.addPoint(data.times.arping, true, true);
               },'json');
             }, 5000);
           }

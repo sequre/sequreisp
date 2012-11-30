@@ -41,7 +41,7 @@ class Permissions < Aegis::Permissions
     reading do
       allow :administrative, :technical, :administrative_readonly, :technical_readonly
     end
-    action :instant_rate, :instant_latency do
+    action :instant_rate_latency do
       allow :technical, :technical_readonly, :administrative, :administrative_readonly
     end
   end

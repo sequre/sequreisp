@@ -118,6 +118,7 @@ class ContractsController < ApplicationController
       format.xml  { head :ok }
     end
   end
+
   def instant_rate
     @contract = object
     respond_to do |format|
@@ -129,6 +130,13 @@ class ContractsController < ApplicationController
     @contract = object
     respond_to do |format|
       format.json { render :json => { :ping => @contract.instant_latency} }
+    end
+  end
+
+  def instant_rate_latency
+    @contract = object
+    respond_to do |format|
+      format.json { render :json => { :times => @contract.instant_rate_latency} }
     end
   end
 
