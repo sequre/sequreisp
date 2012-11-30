@@ -373,7 +373,7 @@ class Contract < ActiveRecord::Base
         IO.popen("/bin/ping -c 1 -n -W 4 #{_ip}", "r") do |io|
           io.each do |line|
             if line.include?("time=")
-              time[:ping] = line.split("time=")[1].split(" ")[0].to_i
+              time[:ping] = line.split("time=")[1].split(" ")[0].to_f
             end
           end
         end
@@ -382,7 +382,7 @@ class Contract < ActiveRecord::Base
         IO.popen("sudo arping -c 1 -I #{iface} #{_ip}", "r") do |io|
           io.each do |line|
             if line.include?("ms")
-              time[:arping] = line.split(" ").last.chomp.delete("ms").to_i
+              time[:arping] = line.split(" ").last.chomp.delete("ms").to_f
             end
           end
         end
