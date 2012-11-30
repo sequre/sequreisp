@@ -32,7 +32,7 @@ class ProviderGroup < ActiveRecord::Base
  
   include OverflowCheck
   before_save :check_integer_overflow
-  before_create :bind_klass
+  after_create :bind_klass
   
   #AASM conf http://github.com/rubyist/aasm
   include AASM

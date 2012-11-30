@@ -3,6 +3,7 @@ class Iproute < ActiveRecord::Base
   belongs_to :interface
   include ModelsWatcher
   watch_fields :dst_address, :gateway, :interface_id
+  watch_on_destroy
 
   include IpAddressCheck
   validate_ip_format_of :dst_address, :with_netmask => true
