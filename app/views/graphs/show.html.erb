@@ -78,13 +78,16 @@
         events: {
           load: function() {
             // set up the updating of the chart each second
-            var request = this.series[0];
+            var ping = this.series[0];
+            var arping = this.series[1];
             $.get('<%= instant_latency_contract_path %>',null,function(data){
-              request.addPoint(data.ping, true, true);
+              ping.addPoint(data.ping.ping, true, true);
+              arping.addPoint(data.ping.arping, true, true);
             },'json');
             setInterval(function() {
               $.get('<%= instant_latency_contract_path %>',null,function(data){
-                request.addPoint(data.ping, true, true);
+                ping.addPoint(data.ping.ping, true, true);
+                arping.addPoint(data.ping.arping, true, true);
               },'json');
             }, 5000);
           }
@@ -120,9 +123,14 @@
         }
       },
       series: [{
-        name: 'Request',
+        name: 'ping',
         type: "area",
         color: "#00aa00",
+        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+      },{
+        name: 'arping',
+        type: "line",
+        color: "#ff0000",
         data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
       }
       ]

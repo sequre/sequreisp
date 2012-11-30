@@ -345,19 +345,32 @@ class Contract < ActiveRecord::Base
   # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
   def instant_latency
     return rand(890)+10 if SequreispConfig::CONFIG["demo"]
-    time = 0
-    if _ip = get_address?
-      if iface = arping_interface
-        time = arping_ping("sudo arping -c 1 -I #{iface} #{_ip}", "r")
-      else
-        time = arping_ping("/bin/ping -c 1 -n -W 4 #{_ip}", "r")
+    time = {:ping => nil, :arping => nil}
+    if _ip = get_address? # si es ip/32
+      thread_ping = Thread.new do
+        IO.popen("/bin/ping -c 1 -n -W 4 #{_ip}", "r") do |io|
+          io.each do |line|
+            if line.include?("time=")
+              time[:ping] = line.split("time=")[1].split(" ")[0].to_i
+            end
+          end
+        end
       end
+      if iface = arping_interface
+        IO.popen("sudo arping -c 1 -I #{iface} #{_ip}", "r") do |io|
+          io.each do |line|
+            if line.include?("ms")
+              time[:arping] = line.split(" ").last.chomp.delete("ms").to_i
+            end
+          end
+        end
+      end
+      thread_ping.join
     end
-    return time.to_i
+    return time
   end
 
-  # Dado la ip del cliente obtengo su ip en caso de ser una subnet devuelve
-  # nil
+  # Obtengo su ip en caso de ser una subnet devuelve nil
   def get_address?
     _ip = IP.new(ip)
     if _ip.mask == 0
@@ -368,7 +381,7 @@ class Contract < ActiveRecord::Base
   end
 
 # En caso de la red estar routeada devolvera nil (dado que debera usarse si o si
-# ping) caso contrario se usara arp por lo que es necesario la interfaz
+# ping) caso contrario se usara arping por lo que es necesario la interfaz
   def arping_interface
     _interface = nil
     IO.popen("ip ro get #{ip}", "r") do |io|
@@ -381,20 +394,6 @@ class Contract < ActiveRecord::Base
       end
     end
     _interface
-  end
-
-  # Ejecuta el comando y retorna el tiempo de respuesta(Latency)
-  def arping_ping(command, permission)
-    #_time=0 implica que no hay interfaz para llegar al host
-    _time = 0
-    IO.popen(command, permission) do |io|
-      io.each do |line|
-        if line.include?("time=")
-          _time = line.split("time=")[1].split(" ")[0]
-        end
-      end
-    end
-    _time
   end
 
   def instant_rate_down
