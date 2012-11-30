@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 source "http://gems.github.com"
 gem 'rails', '=2.3.11'
-
+gem 'rdoc'
 gem 'mysql'
 gem 'formtastic', '~>1.2'
 gem 'authlogic', '=2.1.6'
@@ -39,9 +39,8 @@ group :test do
   gem 'factory_girl'
   gem 'shoulda-context'
 end
-# Hack to install gems from each plugin, c&p from 
+# Hack to install gems from each plugin, c&p from
 # http://madebynathan.com/2010/10/19/how-to-use-bundler-with-plugins-extensions/
 Dir.glob(File.join(File.dirname(__FILE__), 'vendor', 'plugins', '**', "Gemfile")) do |gemfile|
     self.send(:eval, File.open(gemfile, 'r').read)
 end
-
