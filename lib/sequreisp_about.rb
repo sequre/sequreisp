@@ -25,7 +25,7 @@ module SequreISP
     end
 
     def self.to_big_decimal
-      BigDecimal.new ("0." + (RELEASE + 1000).to_s[1..3] + (MAJOR + 1000).to_s[1..3] + (MINOR + 1000).to_s[1..3])
+      BigDecimal.new("0." + (RELEASE + 1000).to_s[1..3] + (MAJOR + 1000).to_s[1..3] + (MINOR + 1000).to_s[1..3])
     end
 
 
