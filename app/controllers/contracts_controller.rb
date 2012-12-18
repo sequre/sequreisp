@@ -144,6 +144,13 @@ class ContractsController < ApplicationController
       format.json { render :json => {:mac_address => mac_address} }
     end
   end
+  def graph
+    @graph = Graph.new(:class => object.class.name, :id => object.id)
+    respond_to do |format|
+      format.html # show.html.erb
+      format.xml  { render :xml => @graph }
+    end
+  end
   private
   def object
     @object ||= Contract.find(params[:id])

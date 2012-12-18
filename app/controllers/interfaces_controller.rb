@@ -108,7 +108,7 @@ class InterfacesController < ApplicationController
       redirect_to(interfaces_url)
     end
   end
-  def instant_rate
+  def instant
     @interface = object
     respond_to do |format|
       format.json { render :json => @interface.instant_rate }
@@ -128,6 +128,13 @@ class InterfacesController < ApplicationController
       flash[:warning] = I18n.t('messages.interface.scan_fail')
     end
     redirect_to :back
+  end
+  def graph
+    @graph = Graph.new(:class => object.class.name, :id => object.id)
+    respond_to do |format|
+      format.html # show.html.erb
+      format.xml  { render :xml => @graph }
+    end
   end
   private
   def object

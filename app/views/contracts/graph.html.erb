@@ -1,0 +1,80 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "highcharts" %>
+  <%= javascript_include_tag "sequreispcharts" %>
+<% end %>
+<script type="text/javascript">
+  $(document).ready(function() {
+    chart_rate = new_chart_rate(<%= Time.zone.utc_offset %>);
+    chart_latency = new_chart_latency(<%= Time.zone.utc_offset %>);
+  });
+  function get_data(){
+    $.get('<%= instant_contract_path %>',null,function(data){
+      chart_rate.series[0].addPoint(data.rate_down, true, true);
+      chart_rate.series[1].addPoint(data.rate_up, true, true);
+      chart_latency.series[0].addPoint(data.ping_latency, true, true);
+      chart_latency.series[1].addPoint(data.arping_latency, true, true);
+    },'json');
+  };
+  get_data();
+  setInterval(function() {
+    get_data();
+  }, 5000);
+</script>
+
+<% heading t('graph.heading', :name => @graph.name) %>
+<div class="separador"></div>
+<div id="main">
+  <table style="width: 747px;" cellspacing="0" cellpadding="0">
+    <tbody>
+    <% if @graph.element.class.to_s == "Contract" %>
+      <tr class="odd">
+        <th><%=t 'activerecord.attributes.contract.ip' %></th>
+        <th><%=t 'activerecord.attributes.contract.plan' %></th>
+        <th><%=t 'activerecord.attributes.plan.rate_down' %></th>
+        <th><%=t 'activerecord.attributes.plan.ceil_down' %></th>
+        <th><%=t 'activerecord.attributes.plan.rate_up' %></th>
+        <th><%=t 'activerecord.attributes.plan.ceil_up' %></th>
+      </tr>
+      <tr class="even" >
+        <td><%= @graph.element.ip %></td>
+        <td><%= @graph.element.plan.name rescue 'Undefined' %></td>
+        <td><%= @graph.element.plan.rate_down rescue 'Undefined' %></td>
+        <td><%= @graph.element.plan.ceil_down rescue 'Undefined' %></td>
+        <td><%= @graph.element.plan.rate_up rescue 'Undefined' %></td>
+        <td><%= @graph.element.plan.ceil_up rescue 'Undefined' %></td>
+      </tr>
+    <% elsif @graph.element.class.to_s == "Provider" %>
+      <tr class="odd">
+        <th><%=t 'activerecord.attributes.provider.interface' %></th>
+        <th><%=t 'activerecord.attributes.provider.rate_down' %></th>
+        <th><%=t 'activerecord.attributes.provider.rate_up' %></th>
+      </tr>
+      <tr class="odd" >
+        <td><%= @graph.element.interface.name rescue 'Undefined' %></td>
+        <td><%= @graph.element.rate_down %></td>
+        <td><%= @graph.element.rate_up %></td>
+      </tr>
+    <% elsif @graph.element.class.to_s == "ProviderGroup" %>
+      <tr class="odd">
+        <th><%=t 'activerecord.attributes.provider_group.rate_down' %></th>
+        <th><%=t 'activerecord.attributes.provider_group.rate_up' %></th>
+      </tr>
+      <tr class="odd" >
+        <td><%= @graph.element.rate_down %></td>
+        <td><%= @graph.element.rate_up %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+  <h2><%=t 'graph.latency' %></h2>
+  <div id="instant_latency" style="width: 747px; height: 247px"></div>
+  <br/>
+  <br/>
+  <br/>
+  <h2><%=t 'graph.instant' %></h2>
+  <div id="instant" style="width: 747px; height: 247px"></div>
+  <br/>
+  <br/>
+  <br/>
+  <%= render :partial => 'shared/graph_history' %>
+</div>

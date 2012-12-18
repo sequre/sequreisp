@@ -56,7 +56,7 @@
         <tr class="<%= css_class %>" >
           <td>
             <%=h interface.name + (interface.description.blank? ? "" : " (#{interface.description})") %><br/>
-            <%= link_to Graph.new(:element => interface).img("day", "small"), graph_path(interface ,:class => "Interface") %>
+            <%= link_to Graph.new(:element => interface).img("day", "small"), graph_interface_path(interface) %>
           </td>
           <td><%= interface.kind %></td>
           <td><%=h interface.vlan_id %></td>

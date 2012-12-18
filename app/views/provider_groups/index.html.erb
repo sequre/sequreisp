@@ -35,7 +35,7 @@
         <tr class="<%= css_class %>" >
           <td>
             <%= provider_group.name %><br/>
-            <%= link_to Graph.new(:element => provider_group).img("day", "small"), graph_path(provider_group ,:class => "ProviderGroup") %>
+            <%= link_to Graph.new(:element => provider_group).img("day", "small"), graph_provider_group_path(provider_group) %>
           </td>
           <td><%=h provider_group.rate_down %> (<%= pretty_currency_index(provider_group.concurrency_index_down) %>%)</td>
           <td><%=h provider_group.rate_up %> (<%= pretty_currency_index(provider_group.concurrency_index_up) %>%)</td>

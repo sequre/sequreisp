@@ -110,18 +110,18 @@ class Interface < ActiveRecord::Base
     if SequreispConfig::CONFIG["demo"]
       if kind == "lan"
         # en lan el down de los providers es el up
-        rate[:down] = rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2
-        rate[:up] = rand(ProviderGroup.all.collect(&:rate_down).sum)*1024
+        rate[:rate_down] = rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2
+        rate[:rate_up] = rand(ProviderGroup.all.collect(&:rate_down).sum)*1024
       else
-        rate[:down] = rand(provider.rate_down)*1024 rescue 0
-        rate[:up] = rand(provider.rate_up)*1024/2 rescue 0
+        rate[:rate_down] = rand(provider.rate_down)*1024 rescue 0
+        rate[:rate_up] = rand(provider.rate_up)*1024/2 rescue 0
       end
     else
       rx = rx_bytes
       tx = tx_bytes
       sleep 2
-      rate[:down] = (rx_bytes-rx)*8*1000/1024/2
-      rate[:up] = (tx_bytes-tx)*8*1000/1024/2
+      rate[:rate_down] = (rx_bytes-rx)*8*1000/1024/2
+      rate[:rate_up] = (tx_bytes-tx)*8*1000/1024/2
     end
     rate
   end

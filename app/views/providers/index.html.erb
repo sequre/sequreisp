@@ -81,7 +81,7 @@
         <tr class="<%= css_class %>" >
           <td>
             <%= display_name(provider) %><br/>
-            <%= link_to Graph.new(:element => provider).img("day", "small"), graph_path(provider ,:class => "Provider") %>
+            <%= link_to Graph.new(:element => provider).img("day", "small"), graph_provider_path(provider) %>
           </td>
           <td>
             <% if provider.interface %>

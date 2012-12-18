@@ -127,8 +127,8 @@ class ProviderGroup < ActiveRecord::Base
   def instant_rate
     rate = {}
     if SequreispConfig::CONFIG["demo"]
-      rate[:down] = rand(rate_down)*1024
-      rate[:up] = rand(rate_up)*1024/2
+      rate[:rate_down] = rand(rate_down)*1024
+      rate[:rate_up] = rand(rate_up)*1024/2
     else
       rx = tx = 0 
       rx2 = tx2 = 0 
@@ -141,8 +141,8 @@ class ProviderGroup < ActiveRecord::Base
         rx2 += p.interface.rx_bytes
         tx2 += p.interface.tx_bytes
       end
-      rate[:down] = (rx2-rx)*8*1000/1024/2
-      rate[:up] = (tx2-tx)*8*1000/1024/2
+      rate[:rate_down] = (rx2-rx)*8*1000/1024/2
+      rate[:rate_up] = (tx2-tx)*8*1000/1024/2
     end
     rate
   end

@@ -81,7 +81,7 @@
         <tr class="<%= css_class %>" >
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
-            <%= link_to Graph.new(:element => contract).img("day", "small"), graph_path(contract ,:class => "Contract") %>
+            <%= link_to Graph.new(:element => contract).img("day", "small"), graph_contract_path(contract) %>
           </td>
           <td><%=link_to h(contract.plan.name), plan_path(contract.plan) %></td>
           <td>

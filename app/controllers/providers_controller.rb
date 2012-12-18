@@ -101,6 +101,13 @@ class ProvidersController < ApplicationController
       redirect_to(providers_url)
     end
   end
+  def graph
+    @graph = Graph.new(:class => object.class.name, :id => object.id)
+    respond_to do |format|
+      format.html # show.html.erb
+      format.xml  { render :xml => @graph }
+    end
+  end
   private
   def object
     @object ||= Provider.find(params[:id])

@@ -1,5 +1,5 @@
 ActionController::Routing::Routes.draw do |map|
-  map.resources :interfaces, :member => { :instant_rate => :get }, :collection => { :scan => :get }
+  map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get }
 
   map.resources :configurations, :collection => {:doreload => :get}
 
@@ -13,19 +13,17 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :audits, :member => { :go_back => :get }
 
-  map.resources :provider_groups, :member => { :instant_rate => :get }
+  map.resources :provider_groups, :member => { :instant => :get, :graph => :get }
 
-  map.resources :providers
+  map.resources :providers, :member => { :graph => :get }
 
-  map.resources :contracts, :member => { :instant => :get},
+  map.resources :contracts, :member => { :instant => :get, :graph => :get},
                 :collection => { :free_ips => :get, :ips => :get, :arping_mac_address =>
                 :get, :excel => :get }
 
   map.resources :clients, :has_many => :contracts, :collection => { :names => :get }
 
   map.resources :plans
-
-  map.resources :graphs
 
   map.resource :user_session
 

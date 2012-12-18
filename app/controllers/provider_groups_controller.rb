@@ -100,11 +100,18 @@ class ProviderGroupsController < ApplicationController
       redirect_to(provider_groups_url)
     end
   end
-  def instant_rate
+  def instant
     @provider_group = object
     respond_to do |format|
       format.json { render :json => @provider_group.instant_rate }
     end 
+  end
+  def graph
+    @graph = Graph.new(:class => object.class.name, :id => object.id)
+    respond_to do |format|
+      format.html # show.html.erb
+      format.xml  { render :xml => @graph }
+    end
   end
   private
   def object
