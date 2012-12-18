@@ -22,7 +22,7 @@ class Permissions < Aegis::Permissions
   role :administrative_readonly
   role :technical_readonly
 
-  resources :clients, :plans, :graphs do
+  resources :clients, :plans do
     writing do
       allow :administrative, :technical
     end
@@ -41,7 +41,7 @@ class Permissions < Aegis::Permissions
     reading do
       allow :administrative, :technical, :administrative_readonly, :technical_readonly
     end
-    action :instant do
+    action :instant, :graph do
       allow :technical, :technical_readonly, :administrative, :administrative_readonly
     end
   end
@@ -56,7 +56,7 @@ class Permissions < Aegis::Permissions
     reading do
       allow :technical, :technical_readonly
     end
-    action :instant_rate do
+    action :instant, :graph do
       allow :technical, :technical_readonly, :administrative, :administrative_readonly
     end
   end
