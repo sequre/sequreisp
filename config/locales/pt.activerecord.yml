@@ -105,6 +105,7 @@ pt:
         node: "Nó"
         autocomplete_client_name: "Procurar cliente"
         unique_provider: "Use um provedor específico para este contrato (evita balanceamento)"
+        start_date: "Data de quitação"
       client:
         id: "ID"
         name: "Nome e sobrenome"

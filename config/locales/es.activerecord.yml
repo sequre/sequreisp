@@ -108,6 +108,7 @@ es:
         node: "Nodo"
         autocomplete_client_name: "Buscar cliente"
         unique_provider: "Usar proveedor específico para este contrato (anula el balanceo)"
+        start_date: "Fecha de alta"
       client:
         id: "ID"
         name: "Nombre y apellido"
