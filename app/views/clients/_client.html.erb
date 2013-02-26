@@ -7,7 +7,7 @@
 <script type="text/javascript">
   $(function(){
     $('input,select,textarea').attr('disabled',true)
-  })  
+  })
 </script>
 <% end %>
 <div id="main">
@@ -15,8 +15,8 @@
   <%= error_messages @client%>
   <% form.inputs do %>
     <%= form.input :name, :wrapper_html => { :class => "left" } %>
-    <%= form.input :external_client_number, :wrapper_html => { :class => "left" } %> 
-    <div style="clear: both"></div> 
+    <%= form.input :external_client_number, :wrapper_html => { :class => "left" }, :input_html => {:value => @client.client_number, :disabled => !Configuration.first.use_external_number_client} %>
+    <div style="clear: both"></div>
     <%= form.input :email, :wrapper_html => { :class => "left" } %>
     <% if not @client.new_record? %>
     <li class="left">
@@ -24,10 +24,10 @@
       <p><%= @client.created_at.strftime("%d/%m/%Y") rescue "--/--/----" %></p>
     </li>
     <% end %>
-    <div style="clear: both"></div> 
-    <%= form.input :phone, :wrapper_html => { :class => "left" } %> 
-    <%= form.input :phone_mobile, :wrapper_html => { :class => "left" } %> 
-    <div style="clear: both"></div> 
+    <div style="clear: both"></div>
+    <%= form.input :phone, :wrapper_html => { :class => "left" } %>
+    <%= form.input :phone_mobile, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
     <%= form.input :address %>
     <%= form.input :details %>
     <%= form_extensions form %>
