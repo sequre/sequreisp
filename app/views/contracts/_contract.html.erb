@@ -1,18 +1,20 @@
-<% content_for :javascript do %>
-  <%= stylesheet_link_tag "jquery-ui-1.8.14.custom" %>
-  <%= javascript_include_tag('jquery.ui.datepicker') %>
-  <script type="text/javascript">
-    datepicker_options = {
-          dateFormat: 'yy-mm-dd',
-          showOn: "button",
-          buttonImage: "/plugin_assets/sequreisp_invoicing/images/calendar.gif",
-          buttonImageOnly: true
-        }
-    $(function(){
-        $('.datepicker').datepicker(datepicker_options);
-        $('.datepicker').datepicker("setDate", new Date);
-    });
-  </script>
+<% if @contract.new_record? %>
+  <% content_for :javascript do %>
+    <%= stylesheet_link_tag "jquery-ui-1.8.14.custom" %>
+    <%= javascript_include_tag('jquery.ui.datepicker') %>
+    <script type="text/javascript">
+      datepicker_options = {
+            dateFormat: 'yy-mm-dd',
+            showOn: "button",
+            buttonImage: "/plugin_assets/sequreisp_invoicing/images/calendar.gif",
+            buttonImageOnly: true
+          }
+      $(function(){
+          $('.datepicker').datepicker(datepicker_options);
+          $('.datepicker').datepicker("setDate", new Date);
+      });
+    </script>
+  <% end %>
 <% end %>
 <style type="text/css">
   #advanced {
