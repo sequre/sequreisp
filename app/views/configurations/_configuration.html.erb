@@ -31,7 +31,7 @@
 <script type="text/javascript">
   $(function(){
     $('input,select,textarea').attr('disabled',true)
-  })  
+  })
 </script>
 <% end %>
 <div id="main">
@@ -39,7 +39,8 @@
     <%= error_messages @configuration%>
     <% form.inputs :name => t('fieldsets.configuration.system') do %>
       <%= form.input :language, :as => :select, :collection => Language.languages_for_select, :include_blank => false %>
-      <%= form.input :time_zone, :as => :time_zone, :priority_zones => /America/%> 
+      <%= form.input :time_zone, :as => :time_zone, :priority_zones => /America/%>
+      <%= form.input :use_external_number_client %>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.notifications'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.notifications' } } do %>
@@ -48,19 +49,19 @@
       <%= form.input :notification_timeframe  %>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.users') do %>
-      <%= form.input :logged_in_timeout %> 
+      <%= form.input :logged_in_timeout %>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.global_prios'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.global_prios' } } do %>
-      <%= form.input :default_tcp_prio_ports %> 
-      <%= form.input :default_udp_prio_ports %> 
-      <%= form.input :default_prio_protos %> 
-      <%= form.input :default_prio_helpers %> 
+      <%= form.input :default_tcp_prio_ports %>
+      <%= form.input :default_udp_prio_ports %>
+      <%= form.input :default_prio_protos %>
+      <%= form.input :default_prio_helpers %>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.proxy'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.proxy' } } do %>
-      <%= form.input :transparent_proxy %> 
-      <%= form.input :transparent_proxy_n_to_m %> 
+      <%= form.input :transparent_proxy %>
+      <%= form.input :transparent_proxy_n_to_m %>
       <%= form.input :transparent_proxy_zph_enabled %>
       <%= form.input :transparent_proxy_windows_update_hack, :input_html => { :disabled => true } %>
       <li><br/></li>
@@ -70,18 +71,18 @@
                    :context_help => { :path => { :custom => 'configuration.fieldsets.advanced' } } do %>
       <%= form.input :apply_changes_automatically %>
       <%= form.input :apply_changes_automatically_hour, :as => :select, :collection => (0...24).map, :include_blank => false %>
-      <%= form.input :filter_by_mac_address %> 
-      <%= form.input :tc_contracts_per_provider_in_wan %> 
-      <%= form.input :tc_contracts_per_provider_in_lan %> 
-      <%= form.input :iptables_tree_optimization_enabled %> 
+      <%= form.input :filter_by_mac_address %>
+      <%= form.input :tc_contracts_per_provider_in_wan %>
+      <%= form.input :tc_contracts_per_provider_in_lan %>
+      <%= form.input :iptables_tree_optimization_enabled %>
       <%= form.input :use_global_prios %>
       <%= form.input :use_global_prios_strategy, :as => :select, :collection => Configuration.use_global_prios_strategy_options_for_select, :include_blank => false %>
-      <%= form.input :mtu %> 
-      <%= form.input :clamp_mss_to_pmtu %><br/> 
-      <%= form.input :quantum_factor %> 
-      <%= form.input :nf_conntrack_max %> 
-      <%= form.input :gc_thresh1, :wrapper_html => { :class => "left" } %> 
-      <%= form.input :gc_thresh2, :wrapper_html => { :class => "left" } %> 
+      <%= form.input :mtu %>
+      <%= form.input :clamp_mss_to_pmtu %><br/>
+      <%= form.input :quantum_factor %>
+      <%= form.input :nf_conntrack_max %>
+      <%= form.input :gc_thresh1, :wrapper_html => { :class => "left" } %>
+      <%= form.input :gc_thresh2, :wrapper_html => { :class => "left" } %>
       <%= form.input :gc_thresh3, :wrapper_html => { :class => "left" } %>
     <% end %>
     <%= form_extensions form%>

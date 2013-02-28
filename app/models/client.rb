@@ -22,8 +22,23 @@ class Client < ActiveRecord::Base
   validates_presence_of :name
   validates_length_of :name, :in => 3..128
   validates_format_of :email, :with => /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i, :allow_blank => true
-  validates_uniqueness_of :name 
+  validates_uniqueness_of :name
   #validates_uniqueness_of :email, :allow_blank => true
+
+  named_scope :number_client_like, lambda { |number|
+    if Configuration.first.use_external_number_client;
+      return {:conditions => ['clients.external_client_number LIKE ?', number]};
+    else;
+      return {:conditions => ['clients.id LIKE ?', number]};
+    end;
+  }
+
+  def client_number
+    if Configuration.first.use_external_number_client
+      return self.external_client_number
+    end
+    self.id
+  end
 
   def auditable_name
     self.class.human_name+': '+name

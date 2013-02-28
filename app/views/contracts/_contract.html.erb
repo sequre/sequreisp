@@ -1,3 +1,20 @@
+<% content_for :javascript do %>
+  <%= stylesheet_link_tag "/plugin_assets/sequreisp_invoicing/stylesheets/jquery-ui-1.8.14.custom.css" %>
+  <%= javascript_include_tag('/plugin_assets/sequreisp_invoicing/javascripts/jquery.ui.datepicker.js') %>
+  <%= javascript_include_tag '/plugin_assets/sequreisp_invoicing/javascripts/dynamic_contracts.js' %>
+  <script type="text/javascript">
+    datepicker_options = {
+          dateFormat: 'yy-mm-dd',
+          showOn: "button",
+          buttonImage: "/plugin_assets/sequreisp_invoicing/images/calendar.gif",
+          buttonImageOnly: true
+        }
+    $(function(){
+        $('.datepicker').datepicker(datepicker_options);
+        $('.datepicker').datepicker("setDate", new Date);
+    });
+  </script>
+<% end %>
 <style type="text/css">
   #advanced {
     width: 450px;
@@ -112,13 +129,8 @@
       <%= image_tag "loader_horizontal.gif", :class => 'arping_loader' %>
     </li>
     <div style="clear:both"></div>
-    <% if not @contract.new_record? %>
-    <li class="left">
-      <label><%=t 'activerecord.attributes.contract.created_at' %></label>
-      <p><%= @contract.created_at.strftime("%d/%m/%Y") rescue "--/--/----" %></p>
-    </li>
+      <%= form.input :start_date, :as => :string, :input_html => { :class => 'datepicker', :disabled => (params[:action] == 'edit')}  %>
     <div style="clear: both"></div>
-    <% end %>
     <% form.inputs :name => t('fieldsets.contract.details'),
                    :context_help => { :path => { :custom => 'contract.fieldsets.details' } } do %>
       <%= form.input :detail, :wrapper_html => { :class => "left" } %>

@@ -108,6 +108,7 @@ es:
         node: "Nodo"
         autocomplete_client_name: "Buscar cliente"
         unique_provider: "Usar proveedor específico para este contrato (anula el balanceo)"
+        start_date: "Fecha de alta"
       client:
         id: "ID"
         name: "Nombre y apellido"
@@ -168,6 +169,7 @@ es:
         tcp: "TCP"
         udp: "UDP"
       configuration:
+        use_external_number_client: 'Usar número de cliente externo'
         default_tcp_prio_ports: "Puertos TCP prioritarios (global)"
         default_udp_prio_ports: "Puertos UDP prioritarios (global)"
         default_prio_protos: "Protocolos prioritarios (global)"
@@ -282,6 +284,7 @@ es:
         contact_url: "http://www.ejemplo.com/"
         tc_contracts_per_provider_in_lan: "No habilitar si contratos×providers > 8000 (aprox.)"
         use_global_prios: "Habilitar únicamente en caso de más de 2500 contratos"
+        use_external_number_client: "Al desactivar utiliza como numero de cliente los ids"
       provider:
         shape_rate_down_on_ingress: "El control de tráfico de bajada se hace en la interfaz LAN; si habilita esta opción se habitará un control adicional en la interfaz WAN que asegurará que el tráfico de los clientes más el del servidor no excedan el límite configurado"
         avoid_nat_addresses: "Una dirección por linea, notación CIDR, ejemplo 200.10.20.0/24"
