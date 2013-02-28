@@ -284,7 +284,7 @@ en:
         contact_url: "http://www.example.com/"
         tc_contracts_per_provider_in_lan: "Do not enable if contracts*providers > 8000 (approx.)"
         use_global_prios: "Enable only if there is more than 2500 contracts"
-        use_external_number_client: "Disabling used as client number ids"
+        use_external_number_client: "If disabled, internal ids are used as client numbers"
       provider:
         shape_rate_down_on_ingress: "Download traffic shaping is done on the LAN interface; if you enable this option, an extra control will be enabled on ingress that will shape clients' and server's own traffic to the configured download rate"
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"
