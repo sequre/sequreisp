@@ -278,7 +278,8 @@ class Provider < ActiveRecord::Base
   def mac_address
     # unique mac_address basado en el nro de classe
     # primer BYTE terminado en 10 (locally generated && not broadcast)
-    real_mac = `ip li show dev #{interface.name} 2>/dev/null`.match(/link\/ether ([0-9a-fA-F:]+)/)[1].split(":")[0..4].join(":") rescue nil
+    _interface = interface.vlan? ? interface.vlan_interface : interface
+    real_mac = `ip li show dev #{_interface.name} 2>/dev/null`.match(/link\/ether ([0-9a-fA-F:]+)/)[1].split(":")[0..4].join(":") rescue nil
     # verify that real_mac is valid
     if real_mac.present? and real_mac.match(/^([0-9A-Fa-f]{2}\:){4}[0-9A-Fa-f]{2}$/)
       "#{real_mac}:#{class_hex}"
