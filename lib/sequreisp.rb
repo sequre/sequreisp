@@ -958,7 +958,8 @@ def do_provider_up(p)
       # Direct route in case of force /32bit netmask
       # delete this on do_provider_down is not necesary because routes disapears after interface goes down
       if p.dhcp_force_32_netmask
-        f.puts "ip ro re #{p.gateway} dev #{p.link_interface}"
+        f.puts "ip ro re #{p.gateway} dev #{p.link_interface} table #{p.check_link_table}"
+        f.puts "ip ro re #{p.gateway} dev #{p.link_interface} table #{p.table}"
       end
 
       ForwardedPort.all(:conditions => { :provider_id => p.id }, :include => [ :contract, :provider ]).each do |fp|
