@@ -229,9 +229,9 @@ class Contract < ActiveRecord::Base
           end
         elsif proxy_arp
           # proxy_arp does not changed but is active, so check if other options changed
-          if proxy_arp_interface_id_changed? or ip_changed? or proxy_arp_use_lan_gateway_changed? or proxy_arp_lan_gateway_changed?
-            cq.command += "arp -i #{_interface.name} -d #{g_ip_was};" if p_was and proxy_arp_interface_id_changed?
-            cq.command += "arp -i #{p_was.interface.name} -d #{ip_was};" if p_was and ip_changed?
+          if proxy_arp_interface_id_changed? or ip_changed? or proxy_arp_use_lan_gateway_changed? or proxy_arp_lan_gateway_changed? or proxy_arp_provider_id_changed?
+            cq.command += "arp -i #{_interface.name} -d #{g_ip_was};" if p_was and ( proxy_arp_interface_id_changed? or proxy_arp_provider_id_changed? )
+            cq.command += "arp -i #{p_was.interface.name} -d #{ip_was};" if p_was and ( ip_changed? or proxy_arp_provider_id_changed? )
 
             if proxy_arp_use_lan_gateway_was
               cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
