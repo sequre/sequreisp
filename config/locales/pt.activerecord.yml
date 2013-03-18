@@ -117,6 +117,7 @@ pt:
         external_client_number: "Nº de cliente"
         balance: "Saldo"
         created_at: "Data de cadastro"
+        taxpayer_identification_number: 'Número Identificación contribuinte'
       plan:
         name: "Nombre"
         provider_group: "Grupo de fornecedores"

@@ -120,6 +120,7 @@ en:
         external_client_number: "Client Number"
         balance: "Balance"
         created_at: "Created at"
+        taxpayer_identification_number: 'Taxpayer identificacion number'
       plan:
         name: "Name"
         provider_group: "Providers Group"

@@ -120,6 +120,7 @@ es:
         external_client_number: "Nº de cliente"
         balance: "Saldo"
         created_at: "Fecha de alta"
+        taxpayer_identification_number: 'Numero de identificación tributaria'
       plan:
         name: "Nombre"
         provider_group: "Grupo de proveedores"
