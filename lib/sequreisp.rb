@@ -628,6 +628,7 @@ def gen_iptables
       # FILTER  #
       #---------#
       f.puts "*filter"
+      BootHook.run :hook => :filter_before_all, :iptables_script => f
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"

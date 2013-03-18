@@ -41,6 +41,11 @@ class ApplicationController < ActionController::Base
   # to the page visited before entering the form page (edit or new)
   after_filter :store_request_uri, :except => [:edit, :new]
 
+  def default_url_options(options={})
+    { :locale => I18n.locale }
+  end
+
+
   private
 
   def store_request_uri
@@ -52,10 +57,10 @@ class ApplicationController < ActionController::Base
     redirect_to(session[:last_visited_uri] || default)
     session[:last_visited_uri] = nil
   end
-  
+
   def set_language
     Configuration.do_reload
-    I18n.locale = Configuration.language
+    I18n.locale = params[:locale] || Configuration.language
   end
 
   def set_time_zone
