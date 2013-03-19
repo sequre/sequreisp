@@ -680,7 +680,7 @@ def gen_ip_ru
       ProviderGroup.enabled.with_klass.each do |pg|
         f.puts "rule add fwmark 0x#{pg.mark_hex}/0x00ff0000 table #{pg.table} prio 200"
       end
-      Provider.enabled.with_klass_and_interface.each do |p|
+      Provider.with_klass_and_interface.each do |p|
         f.puts "rule add fwmark 0x#{p.mark_hex}/0x00ff0000 table #{p.table} prio 300"
         p.networks.each do |network|
           f.puts "rule add from #{network} table #{p.table}  prio 100"
@@ -958,7 +958,8 @@ def do_provider_up(p)
       # Direct route in case of force /32bit netmask
       # delete this on do_provider_down is not necesary because routes disapears after interface goes down
       if p.dhcp_force_32_netmask
-        f.puts "ip ro re #{p.gateway} dev #{p.link_interface}"
+        f.puts "ip ro re #{p.gateway} dev #{p.link_interface} table #{p.check_link_table}"
+        f.puts "ip ro re #{p.gateway} dev #{p.link_interface} table #{p.table}"
       end
 
       ForwardedPort.all(:conditions => { :provider_id => p.id }, :include => [ :contract, :provider ]).each do |fp|
@@ -1166,7 +1167,7 @@ def boot(run=true)
       # borro el default gw de main
       f.puts "ip route del default table main"
       setup_dynamic_providers_hooks
-      Provider.enabled.with_klass_and_interface.each do |p|
+      Provider.with_klass_and_interface.each do |p|
         setup_provider_interface f,p
       end
       File.open(ARP_FILE, "w") do |arp| 
