@@ -16,7 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Configuration < ActiveRecord::Base
-
+  ACCEPTED_LOCALES = ["es","en","pt"]
   def self.acts_as_audited_except
     [:daemon_reload]
   end
