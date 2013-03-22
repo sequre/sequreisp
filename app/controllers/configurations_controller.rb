@@ -44,6 +44,9 @@ class ConfigurationsController < ApplicationController
 
     respond_to do |format|
       if @configuration.update_attributes(params[:configuration])
+        # in case that users change language, we need to override locale from params[:locale]
+        # before the redirect
+        I18n.locale = @configuration.language
         flash[:notice] = t 'controllers.successfully_updated'
         format.html { redirect_to(@configuration) }
         format.xml  { head :ok }

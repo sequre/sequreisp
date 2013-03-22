@@ -60,7 +60,12 @@ class ApplicationController < ActionController::Base
 
   def set_language
     Configuration.do_reload
-    I18n.locale = params[:locale] || Configuration.language
+    I18n.locale = if params[:locale] and Configuration::ACCEPTED_LOCALES.include?(params[:locale])
+      params[:locale]
+    else
+      I18n.locale = Configuration.language
+    end
+
   end
 
   def set_time_zone
