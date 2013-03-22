@@ -53,7 +53,7 @@ class ApplicationController < ActionController::Base
     session[:last_visited_uri] = request.request_uri if request.format == :html
   end
 
-  def redirect_back_from_edit_or_to default
+  def redirect_back_from_edit_or_to default=nil
     redirect_to(session[:last_visited_uri] || default)
     session[:last_visited_uri] = nil
   end
