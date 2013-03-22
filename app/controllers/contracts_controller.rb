@@ -94,11 +94,10 @@ class ContractsController < ApplicationController
   # PUT /contracts/1.xml
   def update
     @contract = object
-
     respond_to do |format|
       if @contract.update_attributes(params[:contract])
         flash[:notice] = t 'controllers.successfully_updated'
-        format.html { redirect_back_from_edit_or_to(contracts_path) }
+        format.html { redirect_back_from_edit_or_to() }
         format.xml  { head :ok }
       else
         format.html { render :action => "edit" }
