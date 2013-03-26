@@ -14,6 +14,7 @@ $(function(){
   $(".reset").click(function() {
     $("input[type='text']").val('');
     $("select").val('');
+    $("input[type='checkbox']").removeAttr('checked');
   });
 
 });

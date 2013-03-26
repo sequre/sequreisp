@@ -1,0 +1,36 @@
+<style>
+#menu_divisor {
+  width: 901px;
+  height: 20px;
+  /*background-color: #EEEDED;*/
+  background-color: #B6B6B6;
+  margin-left:-20px;
+  margin-bottom: 5px;
+}
+
+#menu_divisor p {
+  display: inline;
+  margin-left: 40px;
+  margin-top: 19px;
+  /*color: #a8a7a4;*/
+  color: #FFF;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px;
+}
+#plugin_menu {
+  margin-bottom: 50px;
+  margin-left: 20px;
+}
+.plugin_menu ul {
+  float: left;
+}
+</style>
+<div id="menu_divisor">
+  <p><%= yield :plugin_name %></p>
+</div>
+<div style="clear: both"></div>
+
+<div id="plugin_menu">
+  <%= yield :plugin_menu %>
+</div>
+<div style="clear: both"></div>

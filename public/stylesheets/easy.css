@@ -209,7 +209,7 @@ padding:2px;
 		position:relative;
 		background: url(../images/header.png) no-repeat;
 		width: 902px;
-		height: 123px;
+		height: 122px;
 		}	
 	#footer{
 		position:relative;
@@ -221,7 +221,7 @@ padding:2px;
 		
 	.content{
 		clear:both;
-	padding:1em 20px;
+	padding:0px 20px;
 	width:862px;
 /*		height: 407px;*/
 /*		background: url(../images/bg_content.png) no-repeat;*/
@@ -412,6 +412,7 @@ height:23px;
 margin-bottom:14px;
 margin-top:-10px;
 width:902px;
+padding-top: 20px;
 }
 
 #crear_nuevo{
