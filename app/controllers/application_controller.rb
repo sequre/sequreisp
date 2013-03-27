@@ -39,7 +39,7 @@ class ApplicationController < ActionController::Base
   
   # This allows that after an update or create, the user can be redirected
   # to the page visited before entering the form page (edit or new)
-  after_filter :store_request_uri, :except => [:edit, :new, :update]
+  after_filter :store_request_uri, :except => [:edit, :new, :update, :create]
 
   def default_url_options(options={})
     { :locale => I18n.locale }
