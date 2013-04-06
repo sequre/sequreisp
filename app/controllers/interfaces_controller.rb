@@ -105,7 +105,7 @@ class InterfacesController < ApplicationController
       redirect_to :back
     else
       @interface.destroy
-      redirect_to(interfaces_url)
+      redirect_back_from_edit_or_to interfaces_url
     end
   end
   def instant

@@ -77,7 +77,7 @@ class AvoidBalancingHostsController < ApplicationController
   def destroy
     @avoid_balancing_host = object
     @avoid_balancing_host.destroy
-    redirect_to(avoid_balancing_hosts_url)
+    redirect_back_from_edit_or_to avoid_balancing_hosts_url
   end
   private
   def object
