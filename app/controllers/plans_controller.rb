@@ -99,7 +99,7 @@ class PlansController < ApplicationController
       redirect_to :back
     else
       @plan.destroy
-      redirect_to(plans_url)
+      redirect_back_from_edit_or_to plans_url
     end
   end
   private
