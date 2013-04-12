@@ -244,7 +244,7 @@ class Provider < ActiveRecord::Base
       ""
     when 1
       p = providers.first
-      "default via #{p.gateway} dev #{p.link_interface}  proto static"
+      "default via #{p.gateway} dev #{p.link_interface} onlink proto static"
     else
       route = ""
       providers.each do |p|
