@@ -96,10 +96,20 @@ class ContractsController < ApplicationController
     @contract = object
 
     respond_to do |format|
-      if @contract.update_attributes(params[:contract])
-        flash[:notice] = t 'controllers.successfully_updated'
-        format.html { redirect_back_from_edit_or_to(contracts_path) }
-        format.xml  { head :ok }
+      old_client_id = @contract.client_id
+      @contract.attributes = params[:contract]
+      if @contract.valid?
+        if old_client_id != @contract.client_id
+          new_contract = Contract.new @contract.attributes
+          new_contract.start_date = Date.today
+          @contract.destroy
+          new_contract.save
+        else
+          @contract.update_attributes(params[:contract])
+        end
+          flash[:notice] = t 'controllers.successfully_updated'
+          format.html { redirect_back_from_edit_or_to(contracts_path) }
+          format.xml  { head :ok }
       else
         format.html { render :action => "edit" }
         format.xml  { render :xml => @contract.errors, :status => :unprocessable_entity }
