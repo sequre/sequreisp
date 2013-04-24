@@ -95,7 +95,7 @@ class UsersController < ApplicationController
       @user.destroy
     end
     respond_to do |format|
-      format.html { redirect_to(users_url) }
+      format.html { redirect_back_from_edit_or_to users_url }
       format.xml  { head :ok }
     end
   end

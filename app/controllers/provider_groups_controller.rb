@@ -97,7 +97,7 @@ class ProviderGroupsController < ApplicationController
       redirect_to :back
     else
       @provider_group.destroy
-      redirect_to(provider_groups_url)
+      redirect_back_from_edit_or_to provider_groups_url
     end
   end
   def instant

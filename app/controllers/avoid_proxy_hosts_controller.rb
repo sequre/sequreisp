@@ -77,7 +77,7 @@ class AvoidProxyHostsController < ApplicationController
   def destroy
     @avoid_proxy_host = object
     @avoid_proxy_host.destroy
-    redirect_to(avoid_proxy_hosts_url)
+    redirect_back_from_edit_or_to avoid_proxy_hosts_url
   end
   private
   def object

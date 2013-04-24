@@ -124,7 +124,7 @@ class ContractsController < ApplicationController
     @contract.destroy
 
     respond_to do |format|
-      format.html { redirect_to(contracts_url) }
+      format.html { redirect_back_from_edit_or_to contracts_url }
       format.xml  { head :ok }
     end
   end

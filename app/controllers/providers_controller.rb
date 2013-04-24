@@ -98,7 +98,7 @@ class ProvidersController < ApplicationController
       redirect_to :back
     else
       @provider.destroy
-      redirect_to(providers_url)
+      redirect_back_from_edit_or_to providers_url
     end
   end
   def graph
