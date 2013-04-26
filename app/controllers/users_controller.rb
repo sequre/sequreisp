@@ -17,6 +17,7 @@
 
 class UsersController < ApplicationController
   before_filter :require_user
+  before_filter :not_destroy_current_user, :only => [:destroy]
   permissions :users
 
   # GET /users
@@ -103,4 +104,12 @@ class UsersController < ApplicationController
   def object
     @object ||= User.find(params[:id])
   end
+
+  def not_destroy_current_user
+    if object == current_user
+      flash[:error] = t 'controllers.the_user_is_logged'
+      redirect_to :back
+    end
+  end
+
 end
