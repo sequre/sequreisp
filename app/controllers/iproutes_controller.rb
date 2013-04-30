@@ -77,7 +77,7 @@ class IproutesController < ApplicationController
   def destroy
     @iproute = object
     @iproute.destroy
-    redirect_to(iproutes_url)
+    redirect_back_from_edit_or_to iproutes_url
   end
   private
   def object

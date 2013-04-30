@@ -5,7 +5,6 @@
   /*background-color: #EEEDED;*/
   background-color: #B6B6B6;
   margin-left:-20px;
-  margin-bottom: 5px;
 }
 
 #menu_divisor p {
@@ -18,11 +17,19 @@
   font-size: 13px;
 }
 #plugin_menu {
-  margin-bottom: 50px;
+  margin-bottom: 0px;
   margin-left: 20px;
 }
-.plugin_menu ul {
+#plugin_menu:after {
+  content: " ";
+  display: block;
+  height: 0;
+  clear: both;
+}
+ul.plugin_menu {
   float: left;
+  padding-bottom: 10px;
+  padding-top: 5px;
 }
 </style>
 <div id="menu_divisor">
