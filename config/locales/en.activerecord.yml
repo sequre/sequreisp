@@ -409,12 +409,12 @@ en:
       reboot_error: "An error occurred, the server will not be rebooted"
       halt: "The server will halt shortly"
       halt_error: "An error occurred, the server will not be halted"
-      the_user_is_logged: 'The user is logged'
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
     successfully_deleted: "Record successfuly deleted"
     unsuccessfully_deleted: "Record could not be deleted"
+    the_user_is_logged: "The user is logged"
   mailing:
   validations:
     ip_already_in_use: "Already in use"
