@@ -4,7 +4,7 @@ es:
       login_blank: no puede estar en blanco
       login_not_found: no es válido
       login_invalid: debe utilizar sólo letras, números, espacios y .-_@
-      consecutive_failed_logins_limit_exceeded: El número de accesos no autorizados se ha superado, la cuenta ha sido desactivada.
+      consecutive_failed_logins_limit_exceeded: El número de accesos no autorizados se ha superado, la cuenta ha sido desactivada por 2 horas.
       email_invalid: no es una dirección de e-mail válida.
       password_blank: no puede estar en blanco
       password_invalid: no es válido
