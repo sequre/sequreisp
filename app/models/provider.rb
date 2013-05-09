@@ -359,9 +359,9 @@ class Provider < ActiveRecord::Base
     instant_rate_down = (interface.rx_bytes-rx)*8/2/1024
     instant_rate_up = (interface.tx_bytes-tx)*8/2/1024
     # min rates in kbps
-    min_online_rate_down = 56
-    min_online_rate_up = 5
-    result = instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up
+    min_online_rate_down = 256
+    min_online_rate_up = 56
+    result = (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
     Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} result:#{result} down: #{instant_rate_down} up #{instant_rate_up}"
     result
   end
