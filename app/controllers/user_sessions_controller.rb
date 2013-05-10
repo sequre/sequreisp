@@ -22,7 +22,7 @@ class UserSessionsController < ApplicationController
   skip_permissions  
  
   def new
-    redirect_to contracts_path if current_user
+    redirect_to eval(current_user.default_path) if current_user
     @user_session = UserSession.new
   end
   
@@ -30,7 +30,7 @@ class UserSessionsController < ApplicationController
     @user_session = UserSession.new(params[:user_session])
     if @user_session.save
       flash.discard
-      redirect_back_or_default contracts_path
+      redirect_back_or_default eval(current_user.default_path) if current_user
     else
       render :action => :new
     end
@@ -41,4 +41,6 @@ class UserSessionsController < ApplicationController
     #redirect_to new_user_session_url
     redirect_to root_url
   end
+
+
 end
