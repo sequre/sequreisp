@@ -267,8 +267,8 @@ class Contract < ActiveRecord::Base
   include AASM
   aasm_column :state
   aasm_initial_state :enabled
-  aasm_state :enabled
-  aasm_state :disabled
+  aasm_state :enabled rescue nil
+  aasm_state :disabled rescue nil
 
   def state
     s = self[:state]
