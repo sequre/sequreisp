@@ -55,4 +55,8 @@ class ForwardedPort < ActiveRecord::Base
   def auditable_name
     "#{self.class.human_name}: #{contract.ip} - #{provider.name}(#{public_port}->#{private_port}#{',T' if tcp}#{',U' if udp})"
   end
+
+  def auditable_model_to_show
+    contract rescue nil
+  end
 end
