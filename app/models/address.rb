@@ -100,7 +100,7 @@ class Address < ActiveRecord::Base
     ruby_ip.network.to_s rescue nil
   end
 
-  def auditable_name
-    "#{self.class.human_name}: #{addressable.auditable_name} #{ip}"
+  def auditable_model_to_show
+    addressable rescue nil
   end
 end

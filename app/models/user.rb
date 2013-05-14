@@ -62,4 +62,17 @@ class User < ActiveRecord::Base
     [I18n.t("selects.user.role_name.administrative_readonly"),"administrative_readonly"]
     ]  
   end
+
+  def self.default_paths_for_users
+    {}
+  end
+
+  def default_path
+    default_path = User.default_paths_for_users[self.role_name]
+    unless default_path.nil?
+      default_path
+    else
+      "contracts_path"
+    end
+  end
 end

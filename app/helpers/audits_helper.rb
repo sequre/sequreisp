@@ -34,14 +34,9 @@ module AuditsHelper
 
   def link_to_auditable(audit)
     a = nil
-    case audit.auditable_type
-      when "ForwardedPort"
-        a = audit.auditable.contract rescue nil
-      when "Address"
-        a = audit.auditable.addressable rescue nil
-      else
-        a = audit.auditable
-    end
+
+    a = audit.auditable.respond_to?('auditable_model_to_show') ? audit.auditable.auditable_model_to_show : audit.auditable
+
     if a.nil?
       'N/A'
     else
