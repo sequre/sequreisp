@@ -24,10 +24,7 @@ module ContractsHelper
     "#{t('activerecord.attributes.contract.node')})"
   end
   def external_client_number_and_detail_cpe_node(contract)
-    value = ""
-    if not contract.client.external_client_number.blank?
-      value += "| #{contract.client.external_client_number} "
-    end
+    value = "| #{contract.client.client_number} "
     if not contract.detail.blank? or not contract.cpe.blank? or not contract.node.blank?
       value += "(#{contract.detail}/#{contract.cpe}/#{contract.node})"
     end

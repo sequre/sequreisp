@@ -411,6 +411,7 @@ pt:
     successfully_created: "Criação bem-sucedida"
     successfully_deleted: "Registro eliminado com sucesso"
     unsuccessfully_deleted: "Registro não pode ser eliminado"
+    the_user_is_logged: 'O usuário está logado'
   mailing:
   validations:
     ip_already_in_use: "Endereço IP já está em uso"
