@@ -3,8 +3,8 @@ module SequreISP
 
   class Version
     RELEASE = 3
-    MAJOR = 3
-    MINOR = 9
+    MAJOR = 4
+    MINOR = 0
 
     attr_accessor :release, :major, :minor
 
