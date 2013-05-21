@@ -245,6 +245,8 @@ es:
         gateway: "Puerta de enlace"
         interface: "Interfaz"
         detail: "Detalle"
+      search:
+        not_paged: "No Paginar"
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"

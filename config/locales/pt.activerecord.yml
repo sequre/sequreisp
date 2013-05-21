@@ -242,6 +242,8 @@ pt:
         gateway: "Porta de ligação"
         interface: "Interface"
         detail: "Detalhe"
+      search:
+        not_paged: "não paginado"
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"

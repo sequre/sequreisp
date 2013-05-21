@@ -245,6 +245,8 @@ en:
         gateway: "Gateway"
         interface: "Interface"
         detail: "Detail"
+      search:
+        not_paged: "Not Paged"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"

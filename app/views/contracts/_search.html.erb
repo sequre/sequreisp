@@ -1,3 +1,24 @@
+<style type='text/css'>
+  img.ui-datepicker-trigger{
+    margin-left: 4px;
+  }
+  #search_not_paged {
+    margin-top: 3px;
+    margin-left: 6px;
+  }
+  .tiny {
+    padding-bottom: 20px;
+  }
+  .not_paged {
+    margin-top: 29px !important;
+    width: 10px !important;
+  }
+  .not_paged_label {
+    margin-top: 27px !important;
+    margin-left: 1px;
+  }
+</style>
+
 <div id="busqueda">
 <% form_for @search do |f| %>
   <ul>
@@ -16,6 +37,10 @@
     <li>
       <%= f.label :state_equals, t('activerecord.attributes.contract.state') %>
       <%= f.select :state_equals, Contract.aasm_states_for_select, :include_blank => true %>
+    </li>
+    <li>
+      <%= check_box_tag 'search[not_paged]', nil, nil, { :class => "left not_paged" } %>
+      <%= label_tag 'search[not_paged]', t('activerecord.attributes.search.not_paged'), :class => 'left not_paged_label' %>
     </li>
     <div sytle="clear: both">
       <li><a id="search_more"><%= I18n.t('buttons.more') %></a><li>
