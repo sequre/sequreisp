@@ -62,6 +62,7 @@
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
+        <th><%= t('activerecord.attributes.contract.id') %></th>
         <th><%= order @search, :by => :client_name , :as => client_name_plus_external_client_number_and_detail_cpe_node_label %></th>
         <th><%= order @search, :by => :plan_id, :as => t('activerecord.attributes.contract.plan')  %></th>
         <th><%= order @search, :by => :ip, :ascend_scope => "ascend_by_ip_custom", :descend_scope => "descend_by_ip_custom", :as => t('activerecord.attributes.contract.ip') %></th>
@@ -79,6 +80,7 @@
       <% @contracts.each_with_index do |contract,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
+          <td><%= contract.id %></td>
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
             <%= link_to Graph.new(:element => contract).img("day", "small"), graph_contract_path(contract) %>
