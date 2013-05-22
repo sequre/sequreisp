@@ -391,6 +391,7 @@ en:
     new: "Creating %{model}"
     login: "Sign In"
   messages:
+    contracts_with_id_was_updated_successfully: 'contracts with id %{ids} was updated successfully'
     access_denied: "Access denied"
     must_be_logged_in: "You must be logged in to access this page"
     must_be_logged_out: "You must be logged out to access this page"

@@ -388,6 +388,7 @@ pt:
     new: "Criando %{model}"
     login: "Aceso"
   messages:
+    contracts_with_id_was_updated_successfully: 'Contratos com id %{ids} foi atualizado com sucesso'
     access_denied: "Acesso denegado"
     must_be_logged_in: "Deve ter iniciado sessão para acessar esta página"
     must_be_logged_out: "Não deve ter iniciado sessão para acessar esta página"

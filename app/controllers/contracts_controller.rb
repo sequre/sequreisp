@@ -147,6 +147,7 @@ class ContractsController < ApplicationController
   def massive_update
     unless params[:massive_setting].empty?
       errors = []
+      applied = []
       @contracts.each do |contract|
         contract.client = Client,find_by_name(params[:massive_setting][:client_name]) if params[:massive_setting][:client_name].present?
         contract.plan_id = params[:massive_setting][:plan] if params[:massive_setting][:plan].present?
@@ -155,9 +156,13 @@ class ContractsController < ApplicationController
         contract.detail = params[:massive_setting][:detail] if params[:massive_setting][:detail].present?
         contract.cpe = params[:massive_setting][:cpe] if params[:massive_setting][:cpe].present?
         contract.node = params[:massive_setting][:node] if params[:massive_setting][:node].present?
-        errors << "#{Contract.human_name} id #{contract.id}: #{contract.errors.full_messages.to_sentence}" if not contract.save
+        if contract.save
+          applied << contract.id
+        else
+          errors << "#{Contract.human_name} id #{contract.id}: #{contract.errors.full_messages.to_sentence}"
+        end
       end
-      flash[:notice] = t 'controllers.successfully_updated' if errors.empty?
+      flash[:notice] = t('messages.contracts_with_id_was_updated_successfully', {:ids => applied.join(", ")}) if not applied.empty?
       flash[:error] = errors.join(",") if not errors.empty?
     else
       flash[:warning] = t('error_messages.not_selected_any_options')
