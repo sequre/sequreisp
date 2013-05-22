@@ -486,3 +486,5 @@ pt:
       seconds: "segundos"
   notifications:
     changes_to_be_applied_notice: "Aviso: Tem sido realizadas mudanças na configuração que aínda não foram aplicadas."
+  error_messages:
+    not_selected_any_options: 'Não selecionou nenhum opções'

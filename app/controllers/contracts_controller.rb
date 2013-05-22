@@ -121,6 +121,42 @@ class ContractsController < ApplicationController
     end
   end
 
+  def massive_setting
+    errors = []
+    delete_params_blank_in_massive_setting
+    if params[:contracts_ids].present? and not params[:massive_setting].empty?
+      @contracts = Contract.find(params[:contracts_ids])
+      @contracts.each do |contract|
+        contract.client = Client,find_by_name(params[:massive_setting][:client_name]) if params[:massive_setting][:client_name].present?
+        contract.plan_id = params[:massive_setting][:plan] if params[:massive_setting][:plan].present?
+        contract.state = params[:massive_setting][:state] if params[:massive_setting][:state].present?
+        contract.ceil_dfl_percent = params[:massive_setting][:ceil_dfl_percent] if params[:massive_setting][:ceil_dfl_percent].present?
+        contract.detail = params[:massive_setting][:detail] if params[:massive_setting][:detail].present?
+        contract.cpe = params[:massive_setting][:cpe] if params[:massive_setting][:cpe].present?
+        contract.node = params[:massive_setting][:node] if params[:massive_setting][:node].present?
+
+        unless contract.save
+          errors << "#{Contract.human_name} id #{contract.id}: #{contract.errors.full_messages.to_sentence}"
+        end
+      end
+
+      flash[:notice] = t 'controllers.successfully_updated' if errors.empty?
+
+      unless errors.blank?
+        flash[:error] = errors.join(",")
+      end
+
+      redirect_back_from_edit_or_to(contracts_path)
+
+    else
+      errors << t('error_messages.not_selected_any_options') if params[:massive_setting].empty?
+      errors << t('error_messages.not_selected_contracts') if not params[:contracts_ids].present?
+      flash[:warning] = errors.join(", ")
+      redirect_back_from_edit_or_to(contracts_path)
+    end
+
+  end
+
   def instant
     @contract = object
     respond_to do |format|

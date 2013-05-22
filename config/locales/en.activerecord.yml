@@ -497,3 +497,5 @@ en:
     go_back: 'Go back to this version'
     successfully_reverted: 'Changes were applied successfully'
     error_on_reversion: 'There was an error when trying to go back to previus version'
+  error_messages:
+    not_selected_any_options: 'No selected any options'

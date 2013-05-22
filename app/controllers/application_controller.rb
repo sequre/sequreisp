@@ -124,4 +124,12 @@ class ApplicationController < ActionController::Base
         redirect_to :root
       end
   end
+
+  def delete_params_blank_in_massive_setting
+    params[:massive_setting].each_pair do |key, value|
+      if value.blank?
+        params[:massive_setting].delete(key)
+      end
+    end
+  end
 end

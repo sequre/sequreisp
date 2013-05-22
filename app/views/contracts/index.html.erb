@@ -13,9 +13,17 @@
   .forwarded_port {
     font-size: 85%;
   }
+  #form_massive_setting ul li select {
+    width: 120px;
+  }
+  #form_massive_setting ul li {
+    margin-left: 11px;
+    float: left;
+  }
 </style>
 <script type="text/javascript">
   $(function(){
+      initMoreToggle('#massive_setting', '#form_massive_setting', 'toggle_form_massive_setting');
     initMoreToggle('#search_more', '#search_advanced', 'toggle_contracts_search_advanced');
     $('#search_client_name_like').autocomplete({
       delay: 200,
@@ -37,13 +45,24 @@
       },
       minLength: 2
     })
+    $('input#select_all').change(function(){
+      $('input[name="contracts_ids[]"]').attr("checked", $(this).attr("checked"));
+    });
+    $('#massive_setting_client_name').autocomplete({
+      delay: 200,
+      source: '<%= names_clients_path %>',
+      //FIXME change callback is not working in 1.8.12 hakcing select instead
+      select: function(event, ui) {
+        $(this).val(ui.item.value);
+        $(this).closest('form');
+      },
+      minLength: 2
+    })
   })
 </script>
 <% content_for :title, t('menu.contracts') %>
 <% heading (t 'menu.contracts') %>
 <% render_new_button_for :contract %>
-
-
 
 <%= render :partial => "shared/empty_submenu" %>
 <%= render :partial => "search" %>
@@ -55,6 +74,67 @@
 </ul>
 <div style="clear: both"></div>
 <% end %>
+
+<div style="clear: both"></div>
+
+<ul style="padding: 15px 0 25px 0">
+  <li class="left" style="margin-left: 11px">
+    <a id="massive_setting" ><%= I18n.t('buttons.form_massive_setting') %></a>
+  </li>
+</ul>
+<div style="clear: both"></div>
+<div id="form_massive_setting">
+<% semantic_form_for 'massive_setting', :url => massive_setting_contracts_path, :method => :put do |f| %>
+  <ul class='foo'>
+    <li>
+      <%= f.input :client_name,
+                  :label => t('activerecord.attributes.client.name'),
+                  :required => false %>
+    </li>
+    <li>
+      <%= f.input :plan,
+                  :collection => Hash[Plan.all.map{|plan|[plan.name, plan.id]}],
+                  :include_blank => true,
+                  :label => t('activerecord.attributes.contract.plan'),
+                  :required => false %>
+    </li>
+    <li>
+      <%= f.input :state,
+                  :collection => Contract.aasm_states_for_select,
+                  :include_blank => true,
+                  :required => false,
+                  :label => t('activerecord.attributes.contract.state') %>
+    </li>
+    <li>
+      <%= f.input :ceil_dfl_percent,
+                  :as => :select,
+                  :collection => (30..100).step(10).to_a,
+                  :label => t('activerecord.attributes.contract.ceil_dfl_percent'),
+                  :include_blank => true,
+                  :required => false,
+                  :wrapper_html => { :class => "left" } %>
+    </li>
+    <li>
+      <%= f.input :detail,
+                  :label => t('activerecord.attributes.contract.detail'),
+                  :required => false  %>
+    </li>
+    <li>
+      <%= f.input :cpe,
+                  :label => t('activerecord.attributes.contract.cpe'),
+                  :required => false  %>
+    </li>
+    <li>
+      <%= f.input :node,
+                  :label => t('activerecord.attributes.contract.node'),
+                  :required => false  %>
+    </li>
+    <div style="clear: both"></div>
+    <li style="float: right">
+      <%= f.submit t('buttons.massive_setting') %>
+    </li>
+</div>
+
 <div class="separador"></div>
 
 <div class="main">
@@ -62,6 +142,7 @@
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
+        <th><%= check_box_tag :select_all %></th>
         <th><%= order @search, :by => :client_name , :as => client_name_plus_external_client_number_and_detail_cpe_node_label %></th>
         <th><%= order @search, :by => :plan_id, :as => t('activerecord.attributes.contract.plan')  %></th>
         <th><%= order @search, :by => :ip, :ascend_scope => "ascend_by_ip_custom", :descend_scope => "descend_by_ip_custom", :as => t('activerecord.attributes.contract.ip') %></th>
@@ -75,10 +156,10 @@
         <th></th>
         <% end %>
       </tr>
-
       <% @contracts.each_with_index do |contract,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
+          <td><%= check_box_tag "contracts_ids[]", contract.id %><td>
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
             <%= link_to Graph.new(:element => contract).img("day", "small"), graph_contract_path(contract) %>
@@ -114,3 +195,4 @@
   </table>
   <%= will_paginate @contracts %>
 </div>
+<% end %>
