@@ -331,6 +331,8 @@ pt:
     context_help:
       help: "Ajuda"
       close: "Fechar"
+    massive_setting: 'Atualizar selecionados'
+    massive_destroy: 'Destruir selecionados'
   backup:
     backup_db_legend: "Cópia de resguardo (base de dados)"
     backup_full_legend: "Cópia de resguardo completa (aplicativo e base de datos)"

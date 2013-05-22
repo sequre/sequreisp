@@ -121,11 +121,32 @@ class ContractsController < ApplicationController
     end
   end
 
-  def massive_setting
-    errors = []
-    delete_params_blank_in_massive_setting
-    if params[:contracts_ids].present? and not params[:massive_setting].empty?
+  def massive
+    if params[:contracts_ids].present?
       @contracts = Contract.find(params[:contracts_ids])
+      if params.has_key? :massive_update
+        delete_params_blank_in_massive_setting
+        massive_update
+      elsif params.has_key? :massive_destroy
+        massive_destroy
+      end
+    else
+      flash[:warning] = t('error_messages.not_selected_contracts')
+    end
+    redirect_back_from_edit_or_to(contracts_path)
+  end
+
+  def massive_destroy
+    if @contracts.map(&:destroy)
+      flash[:notice] = t 'controllers.successfully_deleted'
+    else
+      flash[:error] = t 'controllers.unsuccessfully_deleted'
+    end
+  end
+
+  def massive_update
+    unless params[:massive_setting].empty?
+      errors = []
       @contracts.each do |contract|
         contract.client = Client,find_by_name(params[:massive_setting][:client_name]) if params[:massive_setting][:client_name].present?
         contract.plan_id = params[:massive_setting][:plan] if params[:massive_setting][:plan].present?
@@ -134,27 +155,13 @@ class ContractsController < ApplicationController
         contract.detail = params[:massive_setting][:detail] if params[:massive_setting][:detail].present?
         contract.cpe = params[:massive_setting][:cpe] if params[:massive_setting][:cpe].present?
         contract.node = params[:massive_setting][:node] if params[:massive_setting][:node].present?
-
-        unless contract.save
-          errors << "#{Contract.human_name} id #{contract.id}: #{contract.errors.full_messages.to_sentence}"
-        end
+        errors << "#{Contract.human_name} id #{contract.id}: #{contract.errors.full_messages.to_sentence}" if not contract.save
       end
-
       flash[:notice] = t 'controllers.successfully_updated' if errors.empty?
-
-      unless errors.blank?
-        flash[:error] = errors.join(",")
-      end
-
-      redirect_back_from_edit_or_to(contracts_path)
-
+      flash[:error] = errors.join(",") if not errors.empty?
     else
-      errors << t('error_messages.not_selected_any_options') if params[:massive_setting].empty?
-      errors << t('error_messages.not_selected_contracts') if not params[:contracts_ids].present?
-      flash[:warning] = errors.join(", ")
-      redirect_back_from_edit_or_to(contracts_path)
+      flash[:warning] = t('error_messages.not_selected_any_options')
     end
-
   end
 
   def instant

@@ -84,8 +84,8 @@
 </ul>
 <div style="clear: both"></div>
 <div id="form_massive_setting">
-<% semantic_form_for 'massive_setting', :url => massive_setting_contracts_path, :method => :put do |f| %>
-  <ul class='foo'>
+<% semantic_form_for 'massive_setting', :url => massive_contracts_path, :method => :put do |f| %>
+  <ul class='massive_contracts'>
     <li>
       <%= f.input :client_name,
                   :label => t('activerecord.attributes.client.name'),
@@ -131,7 +131,10 @@
     </li>
     <div style="clear: both"></div>
     <li style="float: right">
-      <%= f.submit t('buttons.massive_setting') %>
+      <%= f.submit t('buttons.massive_setting'),
+                   :name  => "massive_update"  %>
+      <%= f.submit t('buttons.massive_destroy'),
+                   :name => "massive_destroy" %>
     </li>
 </div>
 
@@ -159,7 +162,7 @@
       <% @contracts.each_with_index do |contract,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
-          <td><%= check_box_tag "contracts_ids[]", contract.id %><td>
+          <td><%= check_box_tag "contracts_ids[]", contract.id %></td>
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
             <%= link_to Graph.new(:element => contract).img("day", "small"), graph_contract_path(contract) %>

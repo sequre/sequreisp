@@ -334,6 +334,8 @@ en:
       help: "Help"
       close: "Close"
     get_arping_mac_address: "Get MAC Address"
+    massive_setting: 'update selected'
+    massive_destroy: 'destroy selected'
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"
