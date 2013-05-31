@@ -122,6 +122,7 @@ en:
         created_at: "Created at"
         taxpayer_identification_number: 'Taxpayer identificacion number'
       plan:
+        id: 'Id'
         name: "Name"
         provider_group: "Providers Group"
         rate_down: "Min. Download [kbps]"

@@ -119,6 +119,7 @@ pt:
         created_at: "Data de cadastro"
         taxpayer_identification_number: 'Número Identificación contribuinte'
       plan:
+        id: 'Id'
         name: "Nombre"
         provider_group: "Grupo de fornecedores"
         rate_down: "Mín. baixada [kbps]"
