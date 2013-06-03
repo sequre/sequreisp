@@ -118,6 +118,7 @@ pt:
         balance: "Saldo"
         created_at: "Data de cadastro"
         taxpayer_identification_number: 'Número Identificación contribuinte'
+        national_identification_number: 'Número de identificação nacional'
       plan:
         name: "Nombre"
         provider_group: "Grupo de fornecedores"
