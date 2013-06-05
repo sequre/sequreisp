@@ -188,6 +188,12 @@ class Contract < ActiveRecord::Base
   include OverflowCheck
   before_save :check_integer_overflow
   before_create :bind_klass
+  before_update :clean_proxy_arp_provider_proxy_arp_interface, :if => "proxy_arp_changed? and proxy_arp == false"
+
+  def clean_proxy_arp_provider_proxy_arp_interface
+    self.proxy_arp_interface = nil
+    self.proxy_arp_provider = nil
+  end
 
   alias :real_klass :klass
   def klass
