@@ -70,7 +70,11 @@
     <tbody>
       <tr class="odd">
         <th><%= order @search, :by => :name , :as => t('activerecord.attributes.client.name') %></th>
-        <th><%= order @search, :by => :external_client_number , :as => t('activerecord.attributes.client.external_client_number') %></th>
+        <% if Configuration.first.use_external_number_client %>
+          <th><%= t('activerecord.attributes.client.external_client_number') %></th>
+        <% else %>
+          <th><%= order @search, :by => :id , :as => t('activerecord.attributes.client.external_client_number') %></th>
+        <% end %>
         <th><%= order @search, :by => :email , :as => t('activerecord.attributes.client.email') %></th>
         <th><%= t('activerecord.attributes.client.phone') + '/' + t('activerecord.attributes.client.phone_mobile') %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
