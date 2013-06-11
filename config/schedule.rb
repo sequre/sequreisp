@@ -15,3 +15,7 @@ end
 every 1.day, :at => '3:30 am' do
   runner 'Contract.each{ |contract| contract.create_traffic_for_this_period if contract.current_traffic.nil? }', :output => "log/cron_log.log"
 end
+
+every 1.day, :at => '3:30 am' do
+  runner 'Contract.each{ |contract| contract.create_traffic_for_this_period if contract.current_traffic.nil? }', :output => "log/cron_log.log"
+end
