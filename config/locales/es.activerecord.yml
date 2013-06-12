@@ -73,6 +73,9 @@ es:
       provider_group:
         one: "Grupo de proveedores"
         other: "Grupos de proveedores"
+      traffic:
+        one: 'Trafico de datos'
+        other: 'Traficos de datos'
       user:
         one: "Usuario"
         other: "Usuarios"
@@ -80,6 +83,14 @@ es:
       name: "Nombre"
       ip: "Dirección IP"
       state: "Estado"
+      traffic:
+        id: 'Id'
+        contract_id: 'Id contrato'
+        from_date: 'Desde'
+        to_date: 'Hasta'
+        data_count: 'Conteo de datos'
+        data_total: 'Datos totales'
+        data_total_extra: 'Datos extra totales'
       contract:
         id: "ID"
         plan: "Plan"
@@ -368,6 +379,9 @@ es:
     last_week: "Última semana"
     last_month: "Último mes"
     last_year: "Último año"
+    data_traffic: 'Trafico de datos'
+    data: 'Datos'
+    traffic: 'Trafico'
   about:
     version: "Versión SequreISP"
     url: "Actualizaciones, módulos y soporte disponible en"

@@ -621,6 +621,17 @@ class Contract < ActiveRecord::Base
     end
   end
 
+  def data_count_for_last_year
+    dates = []
+    datas = []
+    _traffics = Traffic.for_contract(self.id).for_date(Date.new(Date.today.year, Date.today.month, Configuration.first.default_invoicing_day) - 12.month)
+    _traffics.each do |traffic|
+      dates << traffic.from_date.strftime("%m-%Y")
+      datas << traffic.data_count
+    end
+    [dates, datas]
+  end
+
   private
 
   def period_for_traffic_if_day_today_is_less_than_invoicing_day(attr)
