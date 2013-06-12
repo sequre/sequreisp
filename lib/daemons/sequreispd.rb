@@ -109,29 +109,35 @@ end
 
 tcounter = Thread.new do
 
-  time_last = (Time.now - 1.minute).min
-  while Time.now.min > time_last
-    hash = {}
-    # IO.popen('iptables-save -t mangle -c | /bin/grep "^\[.*:.*\] -A sq.* -s .* -j .*$"', "r") do |io|
-    IO.popen('grep "^\[.*:.*\] -A sq.* -s .* -j .*$" /home/gabriel/iptab.txt', "r") do |io|
-      io.each do |line|
-        rule = line.split(" ")
-        ip = IP.new(rule[4])
-        rule[4] = ip.pfxlen == 32 ? ip.to_addr : rule[4]
-        hash[rule[4]] = rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
+  time_last = (Time.now - 1.minute)
+  while true
+    if Time.now > time_last
+      hash = {}
+
+      if SequreispConfig::CONFIG["demo"]
+        Contract.all.each do |contract|
+          hash[contract.ip] = rand(1844674)
+        end
+      else
+        # IO.popen('iptables-save -t mangle -c | /bin/grep "^\[.*:.*\] -A sq.* -s .* -j .*$"', "r") do |io|
+        IO.popen('grep "^\[.*:.*\] -A sq.* -s .* -j .*$" /home/gabriel/iptab.txt', "r") do |io|
+          io.each do |line|
+            rule = line.split(" ")
+            ip = IP.new(rule[4])
+            rule[4] = ip.pfxlen == 32 ? ip.to_addr : rule[4]
+            hash[rule[4]] = rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
+          end
+        end
       end
-    end
-
-    ActiveRecord::Base.transaction do
-      hash.each do |key, value|
-        Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = #{value} where contracts.ip = '#{key}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
+      ActiveRecord::Base.transaction do
+        hash.each do |key, value|
+          Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{value} where contracts.ip = '#{key}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
+        end
       end
+      system "iptables -t mangle -Z" unless SequreispConfig::CONFIG["demo"]
+      time_last = Time.now
     end
-
-    system "iptables -t mangle -Z"
-
-    time_last = Time.now.min
-    sleep(25)
+    sleep(1)
   end
 
 end
