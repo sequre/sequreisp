@@ -431,6 +431,7 @@ pt:
     successfully_created: "Criação bem-sucedida"
     successfully_deleted: "Registro eliminado com sucesso"
     unsuccessfully_deleted: "Registro não pode ser eliminado"
+    unsuccessfully_created:  "Registro não pode ser criado"
     the_user_is_logged: 'O usuário está logado'
   mailing:
   validations:

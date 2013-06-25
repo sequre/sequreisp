@@ -434,6 +434,7 @@ es:
     successfully_created: "Creación exitosa"
     successfully_deleted: "Se ha eliminado el registro con éxito"
     unsuccessfully_deleted: "No se ha podido elminar el registro"
+    unsuccessfully_created:  "No se ha podido crear el registro"
     the_user_is_logged: 'El usuario esta logueado'
   mailing:
   validations:

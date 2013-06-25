@@ -434,6 +434,7 @@ en:
     successfully_created: "Create operation successful"
     successfully_deleted: "Record successfuly deleted"
     unsuccessfully_deleted: "Record could not be deleted"
+    unsuccessfully_created:  "Record could not be created"
     the_user_is_logged: "The user is logged"
   mailing:
   validations:
