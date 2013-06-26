@@ -296,7 +296,7 @@ def gen_iptables
       f.puts ":avoid_nat_triangle - [0:0]"
       f.puts "-A PREROUTING -j avoid_nat_triangle"
       ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
-        do_port_forwardings_avoid_nat_triangle f, fp
+        do_port_forwardings_avoid_nat_triangle fp, f
       end
 
       # sino marko por cliente segun el ProviderGroup al que pertenezca
@@ -514,7 +514,7 @@ def gen_iptables
       # attribute: forwarded_ports
       #   forward de ports por Provider
       ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
-        do_port_forwardings f, fp
+        do_port_forwardings fp, f
       end
 
       # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
@@ -631,19 +631,21 @@ def gen_iptables
   end
 end
 
-def do_port_forwardings(f, fp, batch=true)
-  prefix = batch ? "" : "iptables -t nat "
+def do_port_forwardings(fp, f=nil)
+  commands = []
   unless fp.provider.ip.blank? or fp.contract.nil?
-    f.puts prefix + "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.tcp
-    f.puts prefix + "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.udp
+    commands << "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.tcp
+    commands << "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.udp
   end
+  f ? f.puts(commands) : exec_context_commands("do_port_forwardings", commands.map{|c| "iptables -t nat " + c })
 end
-def do_port_forwardings_avoid_nat_triangle(f, fp, batch=true)
-  prefix = batch ? "" : "iptables -t mangle "
+def do_port_forwardings_avoid_nat_triangle(fp, f=nil)
+  commands = []
   unless fp.provider.ip.blank?
-    f.puts prefix + "-A avoid_nat_triangle -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.tcp
-    f.puts prefix + "-A avoid_nat_triangle -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.udp
+    commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.tcp
+    commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.udp
   end
+  f ? f.puts(commands) : exec_context_commands("do_port_forwardings_avoid_nat_triangle", commands.map{|c| "iptables -t mangle " + c })
 end
 
 def gen_ip_ru
@@ -668,57 +670,60 @@ def gen_ip_ru
   end
 end
 
-def update_fallback_route(f, batch=true, force=false)
-  prefix = batch ? "" : "ip " 
+def update_fallback_route(f=nil, force=false)
+  commands = []
   #tabla default (fallback de todos los enlaces)
 	currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
   if (currentroute != Provider.fallback_default_route) or force
     if Provider.fallback_default_route != ""
       #TODO por ahora solo cambio si hay ruta, sino no toco x las dudas
-      f.puts prefix + "ro re table default #{Provider.fallback_default_route}" 
+      commands << "ro re table default #{Provider.fallback_default_route}"
     end
     #TODO loguear? el cambio de estado en una bitactora
   end
+  f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c })
 end
 
-def update_provider_group_route(f, pg, batch=true, force=false)
-  prefix = batch ? "" : "ip " 
+def update_provider_group_route(pg, f=nil, force=false)
+  commands = []
   currentroute=`ip -oneline ro li table #{pg.table} | grep default`.gsub("\\\t","  ").strip
   if (currentroute != pg.default_route) or force
     if pg.default_route == ""
-      f.puts prefix + "ro del table #{pg.table} default"
+      commands << "ro del table #{pg.table} default"
     else
-      f.puts prefix + "ro re table #{pg.table} #{pg.default_route}" 
+      commands << "ro re table #{pg.table} #{pg.default_route}" 
     end
     #TODO loguear el cambio de estado en una bitactora
   end
+  f ? f.puts(commands) : exec_context_commands("update_provider_group_route #{pg.id}", commands.map{|c| "ip " + c })
 end
 
-def update_provider_route(f, p, batch=true, force=false)
-  prefix = batch ? "" : "ip " 
+def update_provider_route(p, f=nil, force=false)
+  commands = []
   currentroute=`ip -oneline ro li table #{p.table} | grep default`.gsub("\\\t","  ").strip
   default_route = p.online ? p.default_route : ""
   if (currentroute != default_route) or force
     if default_route == ""
-      f.puts prefix + "ro del table #{p.table} default"
+      commands << prefix + "ro del table #{p.table} default"
     else
-      f.puts prefix + "ro re table #{p.table} #{p.default_route}" 
+      commands << prefix + "ro re table #{p.table} #{p.default_route}" 
     end
     #TODO loguear el cambio de estado en una bitactora
   end
+  f ? f.puts(commands) : exec_context_commands("update_provider_route #{p.id}", commands.map{|c| "ip " + c })
 end
 
 def gen_ip_ro
   begin
-    File.open(IP_RO_FILE, "w") do |f| 
+    File.open(IP_RO_FILE, "w") do |f|
       Provider.enabled.ready.with_klass_and_interface.each do |p|
-        update_provider_route f, p, true, true
+        update_provider_route p, f, true
       end
-      ProviderGroup.enabled.each do |pg| 
-        update_provider_group_route f, pg, true, true
+      ProviderGroup.enabled.each do |pg|
+        update_provider_group_route pg, f, true
       end
-      update_fallback_route f, true, true
-    end 
+      update_fallback_route f, true
+    end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
   end
@@ -925,68 +930,52 @@ def setup_proxy_arp
   exec_context_commands "setup_proxy_arp", commands
 end
 
-def do_provider_up(p)
-  begin
-    File.open(PROVIDER_UP_FILE_PREFIX + p.interface.name, 'w') do |f|
-      f.puts "#!/bin/bash"
-      f.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
-      f.puts "ip rule add from #{p.network} table #{p.table} prio 100"
-      f.puts "ip rule add from #{p.ip}/32 table #{p.check_link_table} prio 90"
-      #pongo solo la ruta en check_link, si esta todo ok, el chequeador despues la pone para el balanceo
-      f.puts "ip ro re table #{p.check_link_table} #{p.default_route}"
+def do_provider_up
+  commands = []
+  commands << "ip rule add from #{p.network} table #{p.table} prio 100"
+  commands << "ip rule add from #{p.ip}/32 table #{p.check_link_table} prio 90"
+  #pongo solo la ruta en check_link, si esta todo ok, el chequeador despues la pone para el balanceo
+  commands << "ip ro re table #{p.check_link_table} #{p.default_route}"
 
-      # Direct route in case of force /32bit netmask
-      # delete this on do_provider_down is not necesary because routes disapears after interface goes down
-      if p.dhcp_force_32_netmask
-        f.puts "ip ro re #{p.gateway} dev #{p.link_interface} table #{p.check_link_table}"
-        f.puts "ip ro re #{p.gateway} dev #{p.link_interface} table #{p.table}"
-      end
-
-      ForwardedPort.all(:conditions => { :provider_id => p.id }, :include => [ :contract, :provider ]).each do |fp|
-        do_port_forwardings f, fp, false
-        do_port_forwardings_avoid_nat_triangle f, fp, false
-      end
-      # if we have aditional ips...
-      p.addresses.each do |a|
-        f.puts "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
-        f.puts "ip route re #{a.network} dev #{p.link_interface}"
-        #ips << "#{a.ruby_ip.to_s}"
-      end
-      if p.kind == "adsl"
-        f.puts "tc qdisc del dev #{p.link_interface} root"
-        f.puts "tc qdisc del dev #{p.link_interface} ingress"
-        f.puts "tc -b #{TC_FILE_PREFIX + p.link_interface}"
-      end
-      f.chmod 0755
-    end
-  rescue => e
-    Rails.logger.error "ERROR in lib/sequreisp.rb::do_provider_up e=>#{e.inspect}"
+  # Direct route in case of force /32bit netmask
+  # delete this on do_provider_down is not necesary because routes disapears after interface goes down
+  if p.dhcp_force_32_netmask
+    commands << "ip ro re #{p.gateway} dev #{p.link_interface} table #{p.check_link_table}"
+    commands << "ip ro re #{p.gateway} dev #{p.link_interface} table #{p.table}"
   end
 
-  system "#{PROVIDER_UP_FILE_PREFIX + p.interface.name}"
+  ForwardedPort.all(:conditions => { :provider_id => p.id }, :include => [ :contract, :provider ]).each do |fp|
+    do_port_forwardings fp
+    do_port_forwardings_avoid_nat_triangle fp
+  end
+  # if we have aditional ips...
+  p.addresses.each do |a|
+    commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
+    commands << "ip route re #{a.network} dev #{p.link_interface}"
+    #ips << "#{a.ruby_ip.to_s}"
+  end
+  if p.kind == "adsl"
+    commands << "tc qdisc del dev #{p.link_interface} root"
+    commands << "tc qdisc del dev #{p.link_interface} ingress"
+    commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
+  end
+  exec_context_commands "do_provider_up #{p.id}", commands
 end
 
 def do_provider_down(p)
-  begin
-    File.open(PROVIDER_DOWN_FILE_PREFIX + p.interface.name, 'w') do |f|
-      f.puts "#!/bin/bash"
-      f.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
-      f.puts "ip rule del from #{p.network} table #{p.table} prio 100"
-      f.puts "ip rule del from #{p.ip}/32 table #{p.check_link_table} prio 90"
-      p.online = false
-      p.ip = p.netmask = p.gateway = nil
-      p.save(false)
-      update_provider_route f, p, false
-      update_provider_group_route f, p.provider_group, false
-      update_fallback_route f, false
-      f.chmod 0755
-    end
-  rescue => e
-    Rails.logger.error "ERROR in lib/sequreisp.rb::do_provider_down e=>#{e.inspect}"
-  end
+  commands = []
+  commands << "ip rule del from #{p.network} table #{p.table} prio 100"
+  commands << "ip rule del from #{p.ip}/32 table #{p.check_link_table} prio 90"
+  p.online = false
+  p.ip = p.netmask = p.gateway = nil
+  p.save(false)
+  update_provider_route p
+  update_provider_group_route p.provider_group
+  update_fallback_route
 
-  system "#{PROVIDER_DOWN_FILE_PREFIX + p.interface.name}"
+  exec_context_commands "do_provider_down #{p.id}", commands
 end
+
 def check_physical_links
   changes = false
   readme = []
@@ -1056,28 +1045,16 @@ def check_links
     end
   end
 
-  begin
-    File.open(CHECK_LINKS_FILE, "w") do |f| 
-      f.puts("#!/bin/bash")
-      f.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
-      Provider.with_klass_and_interface.each do |p|
-        setup_provider_interface(f,p) if not p.online?
-        update_provider_route f, p, false
-      end
-      ProviderGroup.enabled.each do |pg|
-        update_provider_group_route f, pg, false
-      end
-      update_fallback_route f, false
-      f.chmod 0755
-    end
-  rescue => e
-    Rails.logger.error "ERROR in lib/sequreisp.rb::check_links(CHECK_LINKS_FILE) e=>#{e.inspect}"
+  Provider.with_klass_and_interface.each do |p|
+    setup_provider_interface p if not p.online?
+    update_provider_route p
   end
-  f = File.open("#{CHECK_LINKS_FILE}", "r")
-  system "#{CHECK_LINKS_FILE} 2>&1 >#{CHECK_LINKS_LOG}" if f.readlines.length > 2
-  f.close
+  ProviderGroup.enabled.each do |pg|
+    update_provider_group_route pg
+  end
+  update_fallback_route
+  exec_context_commands
   begin
-
     if send_notification_mail and Configuration.deliver_notifications
       AppMailer.deliver_check_links_email
     end
