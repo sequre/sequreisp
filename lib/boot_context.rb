@@ -56,7 +56,7 @@ class BootCommand
       self.pid = pid
       self.stdout = stdout.read.strip
       self.stderr = stderr.read.strip
-    end.exit_status
+    end.exitstatus
     self.time = (Time.now - start).round(2)
   end
 
