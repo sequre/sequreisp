@@ -140,9 +140,6 @@ while($running) do
     Rails.logger.debug "sequreispd: #{Time.now.to_s} backup_restore"
     backup_restore
   end
-  # I'm not shure if this is no longer needed
-  # at first it arp fixed entries seems to expire after a while
-  system "#{ARP_FILE}"
 
   sleep tsleep
 end
