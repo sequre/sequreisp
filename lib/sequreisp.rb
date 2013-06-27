@@ -1053,7 +1053,6 @@ def check_links
     update_provider_group_route pg
   end
   update_fallback_route
-  exec_context_commands
   begin
     if send_notification_mail and Configuration.deliver_notifications
       AppMailer.deliver_check_links_email
