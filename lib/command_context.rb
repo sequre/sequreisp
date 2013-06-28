@@ -1,8 +1,8 @@
-class BootContext
+class CommandContext
   require 'sequreisp_constants'
   attr_accessor :commands
   attr_accessor :name
-  @@boot_logger = Logger.new File.join Rails.root, "log/boot.log"
+  @@command_logger = Logger.new File.join Rails.root, "log/command.log"
   @@run = true
 
   def self.run= _run
@@ -15,26 +15,17 @@ class BootContext
     #commands = _commands.to_a if _commands.is_a? String
 
     commands.each do |command|
-      @commands << BootCommand.new(command)
+      @commands << Command.new(command)
     end
   end
 
-  def exec_commands
-    #begin
-      puts name
-      f = File.open BOOT_FILE, "a+"
-      #@@boot_logger.info "begin context: #{name}"
-      commands.each do |c|
-        c.exec if @@run
-        @@boot_logger.info "#{Time.now}, #{name}, #{c.to_log}"
-        f.puts c.command
-      end
-      @@boot_logger.info "#{Time.now}, #{name}, status: #{status}"
-    #rescue => e
-    #  Rails.logger.error "ERROR in lib/sequreisp.rb::exec_commands e=>#{e.inspect}"
-    #ensure
-      f.close if f
-    #end
+  def exec_commands(f=nil)
+    commands.each do |c|
+      c.exec if @@run
+      @@command_logger.info "#{Time.now}, #{name}, #{c.to_log}"
+      f.puts c.command if f
+    end
+    @@command_logger.info "#{Time.now}, #{name}, status: #{status}"
     status
   end
 
@@ -42,8 +33,19 @@ class BootContext
     commands.collect(&:status).sum == 0
   end
 end
-
-class BootCommand
+class BootCommandContext < CommandContext
+  def exec_commands
+    begin
+      f = File.open BOOT_FILE, "a+"
+      super f
+    rescue
+      Rails.logger.error "ERROR in lib/sequreisp.rb::exec_commands e=>#{e.inspect}"
+    ensure
+      f.close if f
+    end
+  end
+end
+class Command
   attr_accessor :stdout, :stderr, :pid, :command, :time
   attr_accessor_with_default :status, 0
   def initialize command

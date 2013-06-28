@@ -1073,7 +1073,7 @@ def setup_queued_commands
 end
 
 def exec_context_commands context_name, commands
-  BootContext.new(context_name, commands).exec_commands
+  BootCommandContext.new(context_name, commands).exec_commands
 end
 
 def setup_nf_modules
@@ -1160,7 +1160,7 @@ def setup_iptables
   ]
 end
 def boot(run=true)
-  BootContext.run = run
+  BootCommandContext.run = run
   create_dirs_if_not_present if Rails.env.development?
   Configuration.do_reload
   #begin
