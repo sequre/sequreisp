@@ -301,6 +301,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
+    general_configuration: "General Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
     avoid_proxy_hosts: "Avoid Proxy Hosts"
     iproutes: "Static routes"
