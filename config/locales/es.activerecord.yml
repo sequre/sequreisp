@@ -337,6 +337,7 @@ es:
     get_arping_mac_address: "Obtener MAC Address"
     massive_setting: 'Actulizar selección'
     massive_destroy: 'Destruir selección'
+    form_massive_setting: 'Actualización masiva'
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"

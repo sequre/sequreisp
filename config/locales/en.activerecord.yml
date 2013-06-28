@@ -337,6 +337,7 @@ en:
     get_arping_mac_address: "Get MAC Address"
     massive_setting: 'update selected'
     massive_destroy: 'destroy selected'
+    form_massive_setting: 'Massive update'
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"

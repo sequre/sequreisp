@@ -334,6 +334,7 @@ pt:
       close: "Fechar"
     massive_setting: 'Atualizar selecionados'
     massive_destroy: 'Destruir selecionados'
+    form_massive_setting: 'Massiva  atualização'
   backup:
     backup_db_legend: "Cópia de resguardo (base de dados)"
     backup_full_legend: "Cópia de resguardo completa (aplicativo e base de datos)"
