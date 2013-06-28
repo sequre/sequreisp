@@ -51,6 +51,8 @@ class Interface < ActiveRecord::Base
   after_update :queue_update_commands
   after_destroy :queue_destroy_commands
 
+  named_scope :only_lan, :conditions => { :kind => "lan" }
+
   def name_cannot_be_changed
     errors.add(:name, I18n.t('validations.interface.name_cannot_be_changed')) if not new_record? and name_changed?
   end

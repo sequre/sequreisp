@@ -120,6 +120,7 @@ pt:
         taxpayer_identification_number: 'Número Identificación contribuinte'
         national_identification_number: 'Número de identificação nacional'
       plan:
+        id: 'Id'
         name: "Nombre"
         provider_group: "Grupo de fornecedores"
         rate_down: "Mín. baixada [kbps]"

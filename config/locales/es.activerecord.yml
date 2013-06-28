@@ -123,6 +123,7 @@ es:
         taxpayer_identification_number: 'Numero de identificación tributaria'
         national_identification_number: 'DNI'
       plan:
+        id: 'Id'
         name: "Nombre"
         provider_group: "Grupo de proveedores"
         rate_down: "Mín. bajada [kbps]"

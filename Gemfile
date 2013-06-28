@@ -33,6 +33,7 @@ end
 group :development do
   gem 'ruby-debug'
   gem 'annotate'
+  gem 'wirble'
 end
 
 group :test do
