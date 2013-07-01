@@ -123,9 +123,8 @@ tcounter = Thread.new do
         IO.popen('iptables-save -t mangle -c | /bin/grep "^\[.*:.*\] -A sq.* -s .* -j .*$"', "r") do |io|
           io.each do |line|
             rule = line.split(" ")
-            ip = IP.new(rule[4])
-            rule[4] = ip.pfxlen == 32 ? ip.to_addr : rule[4]
-            hash[rule[4]] = rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
+            ip = IP.new(rule[4]).to_s
+            hash[ip] = rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
           end
         end
       end
