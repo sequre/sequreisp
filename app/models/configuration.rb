@@ -122,4 +122,8 @@ class Configuration < ActiveRecord::Base
   def use_global_prios_strategy
     ActiveSupport::StringInquirer.new read_attribute(:use_global_prios_strategy)
   end
+
+  def day_of_the_beginning_of_the_period
+    1
+  end
 end
