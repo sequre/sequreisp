@@ -196,9 +196,9 @@ class Contract < ActiveRecord::Base
 
   def create_traffic_for_this_period
     attr = { :data_total => plan.traffic_accounting_data,
-             :from_date => Date.new(Date.today.year, Date.today.month, Configuration.first.default_invoicing_day),
-             :to_date => Date.new(Date.today.year, Date.today.month, Configuration.first.default_invoicing_day) - 1.day + 1.month }
-    period_for_traffic_if_day_today_is_less_than_invoicing_day(attr)
+             :from_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period),
+             :to_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 1.day + 1.month }
+    period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
     traffics.create(attr)
   end
 
@@ -624,7 +624,7 @@ class Contract < ActiveRecord::Base
   def data_count_for_last_year
     dates = []
     datas = []
-    _traffics = Traffic.for_contract(self.id).for_date(Date.new(Date.today.year, Date.today.month, Configuration.first.default_invoicing_day) - 12.month)
+    _traffics = Traffic.for_contract(self.id).for_date(Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 12.month)
     _traffics.each do |traffic|
       dates << traffic.from_date.strftime("%m-%Y")
       datas << traffic.data_count
@@ -634,10 +634,10 @@ class Contract < ActiveRecord::Base
 
   private
 
-  def period_for_traffic_if_day_today_is_less_than_invoicing_day(attr)
-    if Date.today.day < Configuration.first.default_invoicing_day
-      attr[:from_date] = Date.new(Date.today.year, Date.today.month, Configuration.first.default_invoicing_day) - 1.month
-      attr[:to_date] = Date.new(Date.today.year, Date.today.month, Configuration.first.default_invoicing_day) - 1.day
+  def period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
+    if Date.today.day < Configuration.first.day_of_the_beginning_of_the_period
+      attr[:from_date] = Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 1.month
+      attr[:to_date] = Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 1.day
     end
   end
 
