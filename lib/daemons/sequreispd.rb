@@ -111,7 +111,7 @@ tcounter = Thread.new do
 
   time_last = (Time.now - 1.minute)
   while true
-    if Time.now > time_last
+    if (Time.now - time_last) >= 1.minute
       hash = {}
 
       if SequreispConfig::CONFIG["demo"]
