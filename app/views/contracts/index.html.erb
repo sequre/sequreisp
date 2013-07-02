@@ -154,10 +154,7 @@
         <th><%= order @search, :by => :state, :as => t('activerecord.attributes.contract.state') %></th>
         <th><%= t('activerecord.attributes.traffic.data_count') %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
-        <% if current_user.may_update_contracts? or current_user.may_index_contracts? %>
-        <th></th>
-        <% end %>
-        <% if current_user.may_destroy_contract?(Contract.new) %>
+        <% if current_user.may_update_contracts? or current_user.may_index_contracts? or current_user.may_destroy_contract?(Contract.new)%>
         <th></th>
         <% end %>
       </tr>
@@ -186,15 +183,21 @@
           </td>
           <td><%= contract.forwarded_ports.collect{|fp| "<span class=\"forwarded_port\">#{fp.to_s}</span><br/>"} %></td>
           <td><%=h contract.state.human %></td>
-          <td><%= number_to_human_size(contract.current_traffic.data_count) %></td>
+          <td><%= number_to_human_size(contract.current_traffic.data_count) rescue 0%></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => contract} %>
-          <% if current_user.may_update_contract?(contract) %>
-            <td><%= link_to t('buttons.edit'), edit_contract_path(contract) %></td>
+          <% if current_user.may_update_contract?(contract) or current_user.may_destroy_contract?(contract) %>
+            <td>
+              <% if current_user.may_update_contract?(contract) %>
+                <%= link_to t('buttons.edit'), edit_contract_path(contract) %>
+              <% end %>
+              <% if current_user.may_destroy_contract?(contract) %>
+                <br/>
+                <br/>
+                <%= link_to t('buttons.delete'), contract, :confirm => t('messages.confirm'), :method => :delete %>
+              <% end %>
+            </td>
           <% elsif current_user.may_show_contract?(contract) %>
             <td><%= link_to t('buttons.show'), contract_path(contract) %></td>
-          <% end %>
-          <% if current_user.may_destroy_contract?(contract) %>
-          <td><%= link_to t('buttons.delete'), contract, :confirm => t('messages.confirm'), :method => :delete %></td>
           <% end %>
         </tr>
       <% end %>
