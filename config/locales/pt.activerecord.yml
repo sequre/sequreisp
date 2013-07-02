@@ -309,6 +309,7 @@ pt:
     interfaces: "Interfaces"
     users: "Usuários"
     configuration: "Configuração"
+    general_configuration: "configuração geral"
     avoid_balancing_hosts: "Sites sim balanceamento"
     avoid_proxy_hosts: "Sites sim proxy"
     iproutes: "Rotas estáticas"

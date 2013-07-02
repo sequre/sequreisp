@@ -312,6 +312,7 @@ es:
     interfaces: "Interfaces"
     users: "Usuarios"
     configuration: "Configuración"
+    general_configuration: "Configuración general"
     avoid_balancing_hosts: "Sitos sin balanceo"
     avoid_proxy_hosts: "Sitos sin proxy"
     iproutes: "Rutas estáticas"
