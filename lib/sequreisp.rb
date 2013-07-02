@@ -16,6 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'sequreisp_constants'
+require 'command_context'
 
 def create_dirs_if_not_present
   [BASE_SCRIPTS, DHCPD_DIR, PPP_DIR, DEPLOY_DIR, "#{PPP_DIR}/ip-up.d", "#{PPP_DIR}/ip-down.d", "#{DHCPD_DIR}/dhclient-enter-hooks.d",  "#{DHCPD_DIR}/dhclient-exit-hooks.d", "#{PPP_DIR}/peers"].each do |dir|
@@ -196,7 +197,7 @@ def gen_tc
     end
   end
 
-  # htb tree down (en las ifaces lan) 
+  # htb tree down (en las ifaces lan)
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
     commands << "tc qdisc del dev #{iface} root"
@@ -288,7 +289,7 @@ def gen_iptables
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
         f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark"
-        f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT" 
+        f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT"
       end
       # tabla para evitar triangulo de nat
       # como arriba ya hice ACCEPT de lo que entra por los
@@ -315,7 +316,7 @@ def gen_iptables
                  c.plan.provider_group.mark_hex
               end
         f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
-        f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT" 
+        f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT"
       end
       # CONNMARK OUTPUT
       # Evito balanceo para los hosts configurados
@@ -342,7 +343,7 @@ def gen_iptables
             f.puts "-A OUTPUT -s #{pg.proxy_bind_ip} -j MARK --set-mark 0x#{pg.mark_hex}/0x00ff0000"
           end
         end
-      end 
+      end
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
       Provider.enabled.with_klass_and_interface.each do |p|
@@ -354,16 +355,16 @@ def gen_iptables
       end
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
       f.puts "-A POSTROUTING -m mark --mark 0x00000000/0x00ff0000 -j sequreisp_connmark"
-      
+
       if Configuration.transparent_proxy and Configuration.transparent_proxy_zph_enabled
         f.puts "-A POSTROUTING -p tcp --sport 3128 -m tos --tos 0x10 -j ACCEPT"
       end
 
       f.puts ":sequreisp.down - [0:0]"
       f.puts ":sequreisp.up - [0:0]"
-      
+
       #speed-up MARKo solo si no estaba a restore'ada x CONNMARK
-      mark_if="-m mark --mark 0x0/0xffff" 
+      mark_if="-m mark --mark 0x0/0xffff"
       Interface.all(:conditions => { :kind => "lan" }).each do |interface|
         f.puts "-A POSTROUTING #{mark_if} -o #{interface.name} -j sequreisp.down"
       end
@@ -492,7 +493,7 @@ def gen_iptables
       #---------#
       # /MANGLE #
       #---------#
-      
+
       #-----#
       # NAT #
       #-----#
@@ -519,7 +520,7 @@ def gen_iptables
 
       # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
       # Avoids tproxy to server ip's
-      Interface.all(:conditions => "kind = 'lan'").each do |i| 
+      Interface.all(:conditions => "kind = 'lan'").each do |i|
         i.addresses.each do |a|
           f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
         end
@@ -650,7 +651,7 @@ end
 
 def gen_ip_ru
   begin
-    File.open(IP_RU_FILE, "w") do |f| 
+    File.open(IP_RU_FILE, "w") do |f|
       f.puts "rule flush"
       f.puts "rule add prio 1 lookup main"
       ProviderGroup.enabled.with_klass.each do |pg|
@@ -664,7 +665,7 @@ def gen_ip_ru
         f.puts "rule add from #{p.ip}/32 table #{p.check_link_table} prio 90" if p.ip and not p.ip.empty?
       end
       f.puts "rule add prio 32767 from all lookup default"
-    end 
+    end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
   end
@@ -673,7 +674,7 @@ end
 def update_fallback_route(f=nil, force=false)
   commands = []
   #tabla default (fallback de todos los enlaces)
-	currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
+  currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
   if (currentroute != Provider.fallback_default_route) or force
     if Provider.fallback_default_route != ""
       #TODO por ahora solo cambio si hay ruta, sino no toco x las dudas
@@ -691,7 +692,7 @@ def update_provider_group_route(pg, f=nil, force=false)
     if pg.default_route == ""
       commands << "ro del table #{pg.table} default"
     else
-      commands << "ro re table #{pg.table} #{pg.default_route}" 
+      commands << "ro re table #{pg.table} #{pg.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
@@ -706,7 +707,7 @@ def update_provider_route(p, f=nil, force=false)
     if default_route == ""
       commands << prefix + "ro del table #{p.table} default"
     else
-      commands << prefix + "ro re table #{p.table} #{p.default_route}" 
+      commands << prefix + "ro re table #{p.table} #{p.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
@@ -731,8 +732,8 @@ end
 
 def setup_dynamic_providers_hooks
   begin
-    File.open("#{PPP_DIR}/ip-up.d/1sequreisp", 'w') do |f| 
-      f.puts "#!/bin/sh" 
+    File.open("#{PPP_DIR}/ip-up.d/1sequreisp", 'w') do |f|
+      f.puts "#!/bin/sh"
       f.puts "#{DEPLOY_DIR}/script/runner -e production #{DEPLOY_DIR}/bin/sequreisp_up_down_provider.rb up $PPP_IPPARAM $PPP_LOCAL 255.255.255.255 $PPP_REMOTE"
       f.chmod(0755)
     end
@@ -741,8 +742,8 @@ def setup_dynamic_providers_hooks
   end
 
   begin
-    File.open("#{PPP_DIR}/ip-down.d/1sequreisp", 'w') do |f| 
-      f.puts "#!/bin/sh" 
+    File.open("#{PPP_DIR}/ip-down.d/1sequreisp", 'w') do |f|
+      f.puts "#!/bin/sh"
       f.puts "#{DEPLOY_DIR}/script/runner -e production #{DEPLOY_DIR}/bin/sequreisp_up_down_provider.rb down $PPP_IPPARAM"
       f.chmod(0755)
     end
@@ -751,8 +752,8 @@ def setup_dynamic_providers_hooks
   end
 
   begin
-    File.open("#{DHCPD_DIR}/dhclient-enter-hooks.d/1sequreisp", 'w') do |f| 
-      f.puts "#!/bin/sh" 
+    File.open("#{DHCPD_DIR}/dhclient-enter-hooks.d/1sequreisp", 'w') do |f|
+      f.puts "#!/bin/sh"
       f.puts "gateway=$new_routers"
       f.puts "unset new_routers"
       f.puts "unset new_domain_name"
@@ -768,7 +769,7 @@ def setup_dynamic_providers_hooks
   end
 
   begin
-    File.open("#{DHCPD_DIR}/dhclient-exit-hooks.d/1sequreisp", 'w') do |f| 
+    File.open("#{DHCPD_DIR}/dhclient-exit-hooks.d/1sequreisp", 'w') do |f|
       f.puts 'if [ "$reason" != BOUND ] && [ "$reason" != RENEW ] && [ "$reason" != REBIND ] && [ "$reason" != REBOOT ] ;then'
       f.puts "  return"
       f.puts "fi"
@@ -829,10 +830,10 @@ def setup_provider_interface p
   when "static"
     #current_ips = `ip address show dev #{p.link_interface} 2>/dev/null`.scan(/inet ([\d.\/]+) /).flatten.collect { |ip| (IP.new ip).to_s }
     #ips = []
-    commands << "ip address add #{p.ip}/#{p.netmask} dev #{p.link_interface}" 
+    commands << "ip address add #{p.ip}/#{p.netmask} dev #{p.link_interface}"
     #ips << "#{p.ruby_ip.to_s}"
     p.addresses.each do |a|
-      commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}" 
+      commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
       commands << "ip route re #{a.network} dev #{p.link_interface} src #{a.ip}"
       #ips << "#{a.ruby_ip.to_s}"
     end
@@ -1021,9 +1022,9 @@ def check_links
   providers.each do |p|
     #puts "#{p.id} #{readme[p.id].first}"
     online = threads[p.id]['online']
-    p.online = online 
+    p.online = online
     #TODO loguear el cambio de estado en una bitactora
-    
+
     if !online and !p.notification_flag and p.offline_time > Configuration.notification_timeframe
       p.notification_flag = true
       send_notification_mail = true
@@ -1086,7 +1087,7 @@ def setup_interfaces
   Interface.all(:conditions => "vlan = 0").each do |i|
     commands << "ip link set dev #{i.name} up"
   end
-  Interface.all(:conditions => "kind = 'lan'").each do |i| 
+  Interface.all(:conditions => "kind = 'lan'").each do |i|
     #current_ips = `ip address show dev #{i.name} 2>/dev/null`.scan(/inet ([\d.\/]+) /).flatten.collect { |ip| (IP.new ip).to_s }
     #ips = []
     if i.vlan?
@@ -1095,7 +1096,7 @@ def setup_interfaces
     end
     commands << "ip link set dev #{i.name} up"
     i.addresses.each do |a|
-      commands << "ip address add #{a.ip}/#{a.netmask} dev #{i.name}" 
+      commands << "ip address add #{a.ip}/#{a.netmask} dev #{i.name}"
       commands << "ip route re #{a.network} dev #{i.name} src #{a.ip}"
       #ips << "#{a.ruby_ip.to_s}"
     end
@@ -1132,7 +1133,7 @@ def setup_tc
     commands << "tc -b #{TC_FILE_PREFIX + interface.name}"
   end
   Provider.enabled.with_klass_and_interface.each do |p|
-    #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada 
+    #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada
     commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
   end
   exec_context_commands "setup_tc", commands
@@ -1201,6 +1202,3 @@ def boot(run=true)
   #  Rails.logger.error "ERROR in lib/sequreisp.rb::boot e=>#{e.inspect}"
   #end
 end
-
-
-
