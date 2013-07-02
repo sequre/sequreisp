@@ -632,21 +632,21 @@ def gen_iptables
   end
 end
 
-def do_port_forwardings(fp, f=nil)
+def do_port_forwardings(fp, f=nil, boot=true)
   commands = []
   unless fp.provider.ip.blank? or fp.contract.nil?
     commands << "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.tcp
     commands << "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.udp
   end
-  f ? f.puts(commands) : exec_context_commands("do_port_forwardings", commands.map{|c| "iptables -t nat " + c })
+  f ? f.puts(commands) : exec_context_commands("do_port_forwardings", commands.map{|c| "iptables -t nat " + c }, boot)
 end
-def do_port_forwardings_avoid_nat_triangle(fp, f=nil)
+def do_port_forwardings_avoid_nat_triangle(fp, f=nil, boot=true)
   commands = []
   unless fp.provider.ip.blank?
     commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.tcp
     commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.udp
   end
-  f ? f.puts(commands) : exec_context_commands("do_port_forwardings_avoid_nat_triangle", commands.map{|c| "iptables -t mangle " + c })
+  f ? f.puts(commands) : exec_context_commands("do_port_forwardings_avoid_nat_triangle", commands.map{|c| "iptables -t mangle " + c }, boot)
 end
 
 def gen_ip_ru
@@ -671,7 +671,7 @@ def gen_ip_ru
   end
 end
 
-def update_fallback_route(f=nil, force=false)
+def update_fallback_route(f=nil, force=false, boot=true)
   commands = []
   #tabla default (fallback de todos los enlaces)
   currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
@@ -682,10 +682,10 @@ def update_fallback_route(f=nil, force=false)
     end
     #TODO loguear? el cambio de estado en una bitactora
   end
-  f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c })
+  f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot)
 end
 
-def update_provider_group_route(pg, f=nil, force=false)
+def update_provider_group_route pg, f=nil, force=false, boot=true
   commands = []
   currentroute=`ip -oneline ro li table #{pg.table} | grep default`.gsub("\\\t","  ").strip
   if (currentroute != pg.default_route) or force
@@ -696,10 +696,10 @@ def update_provider_group_route(pg, f=nil, force=false)
     end
     #TODO loguear el cambio de estado en una bitactora
   end
-  f ? f.puts(commands) : exec_context_commands("update_provider_group_route #{pg.id}", commands.map{|c| "ip " + c })
+  f ? f.puts(commands) : exec_context_commands("update_provider_group_route #{pg.id}", commands.map{|c| "ip " + c }, boot)
 end
 
-def update_provider_route(p, f=nil, force=false)
+def update_provider_route p, f=nil, force=false, boot=true
   commands = []
   currentroute=`ip -oneline ro li table #{p.table} | grep default`.gsub("\\\t","  ").strip
   default_route = p.online ? p.default_route : ""
@@ -711,7 +711,7 @@ def update_provider_route(p, f=nil, force=false)
     end
     #TODO loguear el cambio de estado en una bitactora
   end
-  f ? f.puts(commands) : exec_context_commands("update_provider_route #{p.id}", commands.map{|c| "ip " + c })
+  f ? f.puts(commands) : exec_context_commands("update_provider_route #{p.id}", commands.map{|c| "ip " + c }, boot)
 end
 
 def gen_ip_ro
@@ -780,7 +780,7 @@ def setup_dynamic_providers_hooks
   end
 end
 
-def setup_provider_interface p
+def setup_provider_interface p, boot=true
   commands = []
   if p.interface.vlan?
     #commands << "vconfig rem #{p.interface.name}"
@@ -845,7 +845,7 @@ def setup_provider_interface p
     commands << "ip route re table #{p.check_link_table} #{p.gateway} dev #{p.link_interface}"
     commands << "ip route re table #{p.check_link_table} #{p.default_route}"
   end
-  exec_context_commands "setup_provider_interface #{p.id}", commands
+  exec_context_commands "setup_provider_interface #{p.id}", commands, boot
 end
 def setup_clock
   tz_path = "/usr/share/zoneinfo/"
@@ -946,8 +946,8 @@ def do_provider_up
   end
 
   ForwardedPort.all(:conditions => { :provider_id => p.id }, :include => [ :contract, :provider ]).each do |fp|
-    do_port_forwardings fp
-    do_port_forwardings_avoid_nat_triangle fp
+    do_port_forwardings fp, nil, false
+    do_port_forwardings_avoid_nat_triangle fp, nil, false
   end
   # if we have aditional ips...
   p.addresses.each do |a|
@@ -960,7 +960,7 @@ def do_provider_up
     commands << "tc qdisc del dev #{p.link_interface} ingress"
     commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
   end
-  exec_context_commands "do_provider_up #{p.id}", commands
+  exec_context_commands "do_provider_up #{p.id}", commands, false
 end
 
 def do_provider_down(p)
@@ -970,11 +970,11 @@ def do_provider_down(p)
   p.online = false
   p.ip = p.netmask = p.gateway = nil
   p.save(false)
-  update_provider_route p
-  update_provider_group_route p.provider_group
-  update_fallback_route
+  update_provider_route p, nil, false, false
+  update_provider_group_route p.provider_group, nil, false, false
+  update_fallback_route nil, false, false
 
-  exec_context_commands "do_provider_down #{p.id}", commands
+  exec_context_commands "do_provider_down #{p.id}", commands, false
 end
 
 def check_physical_links
@@ -1045,15 +1045,15 @@ def check_links
       system "/usr/bin/pkill -f 'dhclient.#{p.interface.name}'"
     end
   end
-
+  
   Provider.with_klass_and_interface.each do |p|
-    setup_provider_interface p if not p.online?
-    update_provider_route p
+    setup_provider_interface p, false if not p.online?
+    update_provider_route p, nil, false, false
   end
   ProviderGroup.enabled.each do |pg|
-    update_provider_group_route pg
+    update_provider_group_route pg, nil, false, false
   end
-  update_fallback_route
+  update_fallback_route false
   begin
     if send_notification_mail and Configuration.deliver_notifications
       AppMailer.deliver_check_links_email
@@ -1073,8 +1073,12 @@ def setup_queued_commands
   exec_context_commands "queued_commands", commands
 end
 
-def exec_context_commands context_name, commands
-  BootCommandContext.new(context_name, commands).exec_commands
+def exec_context_commands context_name, commands, boot=true
+  if boot
+    BootCommandContext.new(context_name, commands).exec_commands
+  else
+    CommandContext.new(context_name, commands).exec_commands
+  end
 end
 
 def setup_nf_modules
