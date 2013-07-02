@@ -108,7 +108,6 @@ def backup_restore
 end
 
 tcounter = Thread.new do
-
   time_last = (Time.now - 1.minute)
   while true
     if (Time.now - time_last) >= 1.minute
@@ -140,9 +139,9 @@ tcounter = Thread.new do
       system "iptables -t mangle -Z" unless SequreispConfig::CONFIG["demo"]
       time_last = Time.now
     end
-    sleep(1)
+    break unless $running
+    sleep 1
   end
-
 end
 
 #esto va como param a method
