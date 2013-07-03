@@ -111,17 +111,18 @@ tcounter = Thread.new do
   time_last = (Time.now - 1.minute)
   while true
     if (Time.now - time_last) >= 1.minute
-      hash = {}
 
       begin
+        hash = {}
         if SequreispConfig::CONFIG["demo"]
           Contract.all.each do |contract|
             hash[contract.ip] = rand(1844674)
           end
         else
+          conf = Configuration.first
           # IO.popen('grep "^\[.*:.*\] -A sq.* -s .* -j .*$" /home/gabriel/iptab.txt', "r") do |io|
           ips = Contract.all.collect(&:ip)
-          chain_prefix = Configuration.iptables_tree_optimization_enabled ? "sq" : "sequreisp"
+          chain_prefix = conf.iptables_tree_optimization_enabled ? "sq" : "sequreisp"
           # WARN! dobule escape for bracket seems mandatory \\[
           command = "iptables-save -t mangle -c | /bin/grep \"^\\[.*:.*\\] -A #{chain_prefix}.* -[sd] .* -j .*$\""
           IO.popen( command , "r") do |io|
@@ -131,6 +132,22 @@ tcounter = Thread.new do
               if ips.include? ip
                 hash[ip] = 0 if hash[ip].nil?
                 hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
+              end
+            end
+          end
+          if conf.transparent_proxy and conf.transparent_proxy_n_to_m
+            proxy_bind_ips_hash = Contract.all.each_with_object({}) do |c,h| h[c.proxy_bind_ip] = c.ip end
+            IO.popen("iptables-save -t mangle -c | /bin/grep \"^\\[.*:.*\\] -A OUTPUT -s .* -j .*$\"" , "r") do |io|
+              io.each do |line|
+                rule = line.split(" ")
+                proxy_bind_ip = IP.new(rule[4]).to_s
+                ip = proxy_bind_ips_hash[proxy_bind_ip]
+                if ips.include? ip
+                  hash[ip] = 0 if hash[ip].nil?
+                  #Rails.logger.debug "Before Traffic: #{ip} => #{hash[ip]}"
+                  hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
+                  #Rails.logger.debug "After Traffic: #{ip} => #{hash[ip]}"
+                end
               end
             end
           end
