@@ -113,31 +113,44 @@ tcounter = Thread.new do
     if (Time.now - time_last) >= 1.minute
       hash = {}
 
-      if SequreispConfig::CONFIG["demo"]
-        Contract.all.each do |contract|
-          hash[contract.ip] = rand(1844674)
-        end
-      else
-        # IO.popen('grep "^\[.*:.*\] -A sq.* -s .* -j .*$" /home/gabriel/iptab.txt', "r") do |io|
-        IO.popen('iptables-save -t mangle -c | /bin/grep "^\[.*:.*\] -A sq.* -s .* -j .*$"', "r") do |io|
-          io.each do |line|
-            rule = line.split(" ")
-            ip = IP.new(rule[4]).to_s
-            hash[ip] = rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
+      begin
+        if SequreispConfig::CONFIG["demo"]
+          Contract.all.each do |contract|
+            hash[contract.ip] = rand(1844674)
+          end
+        else
+          # IO.popen('grep "^\[.*:.*\] -A sq.* -s .* -j .*$" /home/gabriel/iptab.txt', "r") do |io|
+          ips = Contract.all.collect(&:ip)
+          chain_prefix = Configuration.iptables_tree_optimization_enabled ? "sq" : "sequreisp"
+          # WARN! dobule escape for bracket seems mandatory \\[
+          command = "iptables-save -t mangle -c | /bin/grep \"^\\[.*:.*\\] -A #{chain_prefix}.* -[sd] .* -j .*$\""
+          IO.popen( command , "r") do |io|
+            io.each do |line|
+              rule = line.split(" ")
+              ip = IP.new(rule[4]).to_s
+              if ips.include? ip
+                hash[ip] = 0 if hash[ip].nil?
+                hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
+              end
+            end
           end
         end
-      end
-      ActiveRecord::Base.transaction do
-        #create current traffic for new period
-        Contract.all.each{ |contract| contract.create_traffic_for_this_period if contract.current_traffic.nil? }
-        #update the data for each traffic
-        hash.each do |key, value|
-          Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{value} where contracts.ip = '#{key}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
-          DaemonHook.data_counting({:ip => key})
+        ActiveRecord::Base.transaction do
+          #create current traffic for new period
+          Contract.all.each do |c|
+            c.create_traffic_for_this_period if c.current_traffic.nil?
+            #update the data for each traffic
+            Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{hash[c.ip]} where contracts.ip = '#{c.ip}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
+            DaemonHook.data_counting({:ip => c.ip})
+            #Rails.logger.debug "Traffic: #{c.ip} => #{hash[c.ip]}"
+          end
         end
+      rescue => e
+        Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
+      ensure
+        time_last = Time.now
+        system "iptables -t mangle -Z" unless SequreispConfig::CONFIG["demo"]
       end
-      system "iptables -t mangle -Z" unless SequreispConfig::CONFIG["demo"]
-      time_last = Time.now
     end
     break unless $running
     sleep 1
