@@ -136,7 +136,7 @@ tcounter = Thread.new do
             end
           end
           if conf.transparent_proxy and conf.transparent_proxy_n_to_m
-            proxy_bind_ips_hash = Contract.all.each_with_object({}) do |c,h| h[c.proxy_bind_ip] = c.ip end
+            proxy_bind_ips_hash = Contract.all(:include => :klass).each_with_object({}) do |c,h| h[c.proxy_bind_ip] = c.ip end
             IO.popen("iptables-save -t mangle -c | /bin/grep \"^\\[.*:.*\\] -A OUTPUT -s .* -j .*$\"" , "r") do |io|
               io.each do |line|
                 rule = line.split(" ")
@@ -154,7 +154,7 @@ tcounter = Thread.new do
         end
         ActiveRecord::Base.transaction do
           #create current traffic for new period
-          Contract.all.each do |c|
+          Contract.all(:include => :current_traffic).each do |c|
             c.create_traffic_for_this_period if c.current_traffic.nil?
             #update the data for each traffic
             Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{hash[c.ip]} where contracts.ip = '#{c.ip}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
