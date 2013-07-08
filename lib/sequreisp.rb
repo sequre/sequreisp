@@ -1053,7 +1053,7 @@ def check_links
   ProviderGroup.enabled.each do |pg|
     update_provider_group_route pg, nil, false, false
   end
-  update_fallback_route false
+  update_fallback_route nil, false, false
   begin
     if send_notification_mail and Configuration.deliver_notifications
       AppMailer.deliver_check_links_email
