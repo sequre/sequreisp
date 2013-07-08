@@ -705,9 +705,9 @@ def update_provider_route p, f=nil, force=false, boot=true
   default_route = p.online ? p.default_route : ""
   if (currentroute != default_route) or force
     if default_route == ""
-      commands << prefix + "ro del table #{p.table} default"
+      commands << "ro del table #{p.table} default"
     else
-      commands << prefix + "ro re table #{p.table} #{p.default_route}"
+      commands << "ro re table #{p.table} #{p.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
