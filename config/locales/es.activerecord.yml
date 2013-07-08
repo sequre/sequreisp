@@ -73,6 +73,9 @@ es:
       provider_group:
         one: "Grupo de proveedores"
         other: "Grupos de proveedores"
+      traffic:
+        one: 'Trafico de datos'
+        other: 'Traficos de datos'
       user:
         one: "Usuario"
         other: "Usuarios"
@@ -80,6 +83,14 @@ es:
       name: "Nombre"
       ip: "Dirección IP"
       state: "Estado"
+      traffic:
+        id: 'Id'
+        contract_id: 'Id contrato'
+        from_date: 'Desde'
+        to_date: 'Hasta'
+        data_count: 'Conteo de datos'
+        data_total: 'Datos totales'
+        data_total_extra: 'Datos extra totales'
       contract:
         id: "ID"
         plan: "Plan"
@@ -301,6 +312,7 @@ es:
     interfaces: "Interfaces"
     users: "Usuarios"
     configuration: "Configuración"
+    general_configuration: "Configuración general"
     avoid_balancing_hosts: "Sitos sin balanceo"
     avoid_proxy_hosts: "Sitos sin proxy"
     iproutes: "Rutas estáticas"
@@ -337,6 +349,7 @@ es:
     get_arping_mac_address: "Obtener MAC Address"
     massive_setting: 'Actulizar selección'
     massive_destroy: 'Destruir selección'
+    form_massive_setting: 'Actualización masiva'
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"
@@ -368,6 +381,9 @@ es:
     last_week: "Última semana"
     last_month: "Último mes"
     last_year: "Último año"
+    data_traffic: 'Trafico de datos'
+    data: 'Datos'
+    traffic: 'Trafico'
   about:
     version: "Versión SequreISP"
     url: "Actualizaciones, módulos y soporte disponible en"
@@ -420,6 +436,7 @@ es:
     successfully_created: "Creación exitosa"
     successfully_deleted: "Se ha eliminado el registro con éxito"
     unsuccessfully_deleted: "No se ha podido elminar el registro"
+    unsuccessfully_created:  "No se ha podido crear el registro"
     the_user_is_logged: 'El usuario esta logueado'
   mailing:
   validations:

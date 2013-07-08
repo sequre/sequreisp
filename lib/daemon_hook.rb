@@ -18,7 +18,9 @@
 module DaemonHook
 
   def self.run options
-    
+  end
+
+  def self.data_counting options
   end
 
 end

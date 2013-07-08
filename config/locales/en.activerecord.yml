@@ -73,6 +73,9 @@ en:
       provider_group:
         one: "Provider Group"
         other: "Provider Groups"
+      traffic:
+        one: 'Data traffic'
+        other: 'Data traffics'
       user:
         one: "User"
         other: "Users"
@@ -80,6 +83,14 @@ en:
       name: "Name"
       ip: "IP Address"
       state: "State"
+      traffic:
+        id: 'Id'
+        contract_id: 'Id contract'
+        from_date: 'From'
+        to_date: 'To'
+        data_count: 'Data count'
+        data_total: 'Data total'
+        data_total_extra: 'Data total extra'
       contract:
         id: "ID"
         plan: "Plan"
@@ -301,6 +312,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
+    general_configuration: "General Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
     avoid_proxy_hosts: "Avoid Proxy Hosts"
     iproutes: "Static routes"
@@ -337,6 +349,7 @@ en:
     get_arping_mac_address: "Get MAC Address"
     massive_setting: 'update selected'
     massive_destroy: 'destroy selected'
+    form_massive_setting: 'Massive update'
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"
@@ -368,6 +381,9 @@ en:
     last_week: "Last week"
     last_month: "Last month"
     last_year: "Last year"
+    data_traffic: 'Data traffic'
+    data: 'Data'
+    traffic: 'Traffic'
   about:
     version: "SequreISP version"
     url: "Upgrades, plugins and support available at"
@@ -420,6 +436,7 @@ en:
     successfully_created: "Create operation successful"
     successfully_deleted: "Record successfuly deleted"
     unsuccessfully_deleted: "Record could not be deleted"
+    unsuccessfully_created:  "Record could not be created"
     the_user_is_logged: "The user is logged"
   mailing:
   validations:
