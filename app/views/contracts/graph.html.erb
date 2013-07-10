@@ -6,6 +6,48 @@
   $(document).ready(function() {
     chart_rate = new_chart_rate(<%= Time.zone.utc_offset %>);
     chart_latency = new_chart_latency(<%= Time.zone.utc_offset %>);
+
+
+<% result = @graph.element.data_count_for_last_year %>
+$('#foo').highcharts({
+            chart: {
+                type: 'column'
+            },
+            colors: ['#00aa00'],
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: <%=  result[0].to_json %>
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: <%= t('graph.data').to_json %>
+                }
+            },
+            tooltip: {
+                headerFormat:
+            '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat:
+            '<tr><td style="color:{series.color};padding:0">{series.name}: </td>'
+            + '<td style="padding:0"><b>{point.y} bytes</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            plotOptions: {
+                column: {
+                    pointPadding: 0.2,
+                    borderWidth: 0
+                }
+            },
+            series: [{
+                name: <%= t('graph.traffic').to_json %>,
+                data: <%=  result[1].to_json %>
+            }]
+        });
+
   });
   function get_data(){
     $.get('<%= instant_contract_path %>',null,function(data){
@@ -73,6 +115,11 @@
   <br/>
   <h2><%=t 'graph.instant' %></h2>
   <div id="instant" style="width: 747px; height: 247px"></div>
+  <br/>
+  <br/>
+  <br/>
+  <h2><%=t 'graph.data_traffic' %></h2>
+  <div id="foo" style="width: 747px; height: 247px"></div>
   <br/>
   <br/>
   <br/>

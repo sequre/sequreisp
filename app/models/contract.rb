@@ -35,6 +35,9 @@ class Contract < ActiveRecord::Base
   belongs_to :proxy_arp_interface, :class_name => 'Interface', :conditions => "kind = 'lan'"
   belongs_to :proxy_arp_provider, :class_name => 'Provider'
   belongs_to :unique_provider, :class_name => 'Provider'
+  has_one :current_traffic, :class_name => 'Traffic', :conditions => ["from_date <= ? and to_date >= ?", Date.today, Date.today]
+  has_many :traffics, :dependent => :destroy
+
 
   named_scope :enabled, :conditions => { :state => "enabled" }
   named_scope :not_disabled, :conditions => "state != 'disabled'"
@@ -189,6 +192,15 @@ class Contract < ActiveRecord::Base
   before_save :check_integer_overflow
   before_create :bind_klass
   before_update :clean_proxy_arp_provider_proxy_arp_interface, :if => "proxy_arp_changed? and proxy_arp == false"
+  after_save :create_traffic_for_this_period,  :if => "current_traffic.nil?"
+
+  def create_traffic_for_this_period
+    attr = { :data_total => plan.traffic_accounting_data,
+             :from_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period),
+             :to_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 1.day + 1.month }
+    period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
+    traffics.create(attr)
+  end
 
   def clean_proxy_arp_provider_proxy_arp_interface
     self.proxy_arp_interface = nil
@@ -608,4 +620,25 @@ class Contract < ActiveRecord::Base
       end
     end
   end
+
+  def data_count_for_last_year
+    dates = []
+    datas = []
+    _traffics = Traffic.for_contract(self.id).for_date(Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 12.month)
+    _traffics.each do |traffic|
+      dates << traffic.from_date.strftime("%m-%Y")
+      datas << traffic.data_count
+    end
+    [dates, datas]
+  end
+
+  private
+
+  def period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
+    if Date.today.day < Configuration.first.day_of_the_beginning_of_the_period
+      attr[:from_date] = Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 1.month
+      attr[:to_date] = Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 1.day
+    end
+  end
+
 end

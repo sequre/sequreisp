@@ -70,6 +70,9 @@ pt:
       provider_group:
         one: "Grupo de Fornecedores"
         other: "Grupos de Fornecedores"
+      traffic:
+        one: 'tráfego de dados'
+        other: 'dados tráfegos'
       user:
         one: "Usuário"
         other: "Usuários"
@@ -77,6 +80,14 @@ pt:
       name: "Nombre"
       ip: "Endereço IP"
       state: "Estado"
+      traffic:
+        id: 'Id'
+        contract_id: 'Id Contrato'
+        from_date: 'A partir da'
+        to_date: 'Até à'
+        data_count: 'Contagem de dados'
+        data_total: 'Total dos dados'
+        data_total_extra: 'Data total extra'
       contract:
         id: "ID"
         plan: "Plano"
@@ -366,6 +377,9 @@ pt:
     last_week: "Última semana"
     last_month: "Último mês"
     last_year: "Último ano"
+    data_traffic: 'tráfegos de dados'
+    data: 'Dados'
+    traffic: 'Tráfego'
   about:
     version: "Versão SequreISP"
     url: "Atualizações, módulos e suporte em"
@@ -418,6 +432,7 @@ pt:
     successfully_created: "Criação bem-sucedida"
     successfully_deleted: "Registro eliminado com sucesso"
     unsuccessfully_deleted: "Registro não pode ser eliminado"
+    unsuccessfully_created:  "Registro não pode ser criado"
     the_user_is_logged: 'O usuário está logado'
   mailing:
   validations:
