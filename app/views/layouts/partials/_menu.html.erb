@@ -48,14 +48,16 @@ ul li a:hover {
       <% end %>
 
       <% if current_user.may_index_providers? %>
-        <li><%= link_to t('menu.providers'), providers_path %>
+        <li><a href="#"><%= t('menu.providers') %></a>
           <ul class="submenu">
-            <li><%= link_to t('menu.providers'), providers_path %></li>
+            <% if current_user.may_index_providers? %>
+              <li><%= link_to t('menu.providers'), providers_path %></li>
+            <% end %>
             <% if current_user.may_index_provider_groups? %>
-            <li><%= link_to t('menu.provider_groups'), provider_groups_path %></li>
+              <li><%= link_to t('menu.provider_groups'), provider_groups_path %></li>
             <% end %>
             <% if current_user.may_index_interfaces? %>
-            <li><%= link_to t('menu.interfaces'), interfaces_path %></li>
+              <li><%= link_to t('menu.interfaces'), interfaces_path %></li>
             <% end %>
           </ul>
         </li>
@@ -65,9 +67,11 @@ ul li a:hover {
         <li><%= link_to t('menu.dashboard'), dashboard_path %></li>
       <% end %>
       <% if current_user.may_index_configuration? %>
-        <li><%= link_to t('menu.configuration'), configurations_path %>
+        <li><a href="#"><%= t('menu.configuration') %></a>
           <ul class="submenu">
-        <li><%= link_to t('menu.configuration'), configurations_path %></li>
+            <% if current_user.may_index_configuration? %>
+              <li><%= link_to t('menu.general_configuration'), configurations_path %></li>
+            <% end %>
             <% if current_user.may_index_users? %>
             <li><%= link_to t('menu.users'), users_path %></li>
             <% end %>

@@ -195,8 +195,7 @@ class Contract < ActiveRecord::Base
   after_save :create_traffic_for_this_period,  :if => "current_traffic.nil?"
 
   def create_traffic_for_this_period
-    attr = { :data_total => plan.traffic_accounting_data,
-             :from_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period),
+    attr = { :from_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period),
              :to_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 1.day + 1.month }
     period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
     traffics.create(attr)

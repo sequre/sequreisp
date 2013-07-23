@@ -313,6 +313,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
+    general_configuration: "General Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
     avoid_proxy_hosts: "Avoid Proxy Hosts"
     iproutes: "Static routes"
@@ -349,6 +350,7 @@ en:
     get_arping_mac_address: "Get MAC Address"
     massive_setting: 'update selected'
     massive_destroy: 'destroy selected'
+    form_massive_setting: 'Massive update'
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"
