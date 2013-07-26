@@ -81,6 +81,9 @@ ul li a:hover {
             <% if current_user.may_index_avoid_proxy_hosts? %>
             <li><%= link_to t('menu.avoid_proxy_hosts'), avoid_proxy_hosts_path %></li>
             <% end %>
+            <% if current_user.may_index_always_allowed_sites?%>
+            <li><%= link_to t('menu.always_allowed_sites'), always_allowed_sites_path %></li>
+            <% end %>
             <% if current_user.may_index_iproutes? %>
             <li><%= link_to t('menu.iproutes'), iproutes_path %></li>
             <% end %>

@@ -1,0 +1,16 @@
+<div id="main">
+  <% semantic_form_for @always_allowed_site do |form| %>
+    <%= error_messages @always_allowed_site %>
+    <% form.inputs do %>
+      <%= form.input :name, :wrapper_html => { :class => "left" }  %>
+      <%= form.input :detail, :wrapper_html => { :class => "left" }  %>
+      <div style="clear: both"></div>
+      <%= form_extensions form %>
+    <% end %>
+    <% if current_user.may_create_always_allowed_site? %>
+      <% form.buttons do %>
+        <%= form.commit_button @commit_text, :button_html => {:disable_with => t('buttons.please_wait')} %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

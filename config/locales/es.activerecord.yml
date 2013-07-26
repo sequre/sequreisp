@@ -79,6 +79,9 @@ es:
       user:
         one: "Usuario"
         other: "Usuarios"
+      always_allowed_site:
+        one: 'Sitio permitido'
+        other: 'Sitios permitidos'
     attributes:
       name: "Nombre"
       ip: "Dirección IP"
@@ -259,6 +262,10 @@ es:
         detail: "Detalle"
       search:
         not_paged: "No Paginar"
+      always_allowed_site:
+        id: 'Id'
+        name: 'Ip o nombre de sitio'
+        detail: 'Detail'
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -322,6 +329,7 @@ es:
     modules: "Módulos"
     about: "Acerca de"
     audits: "Auditorías"
+    always_allowed_sites: "Sitios permitidos"
   buttons:
     login: "Entrar"
     edit: "Editar"
