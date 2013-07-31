@@ -196,7 +196,7 @@ class Contract < ActiveRecord::Base
 
   def create_traffic_for_this_period
     attr = { :from_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period),
-             :to_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 1.day + 1.month }
+             :to_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) + 1.month - 1.day}
     period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
     traffics.create(attr)
   end
