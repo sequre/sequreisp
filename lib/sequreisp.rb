@@ -631,14 +631,13 @@ def gen_iptables
       BootHook.run :hook => :filter_before_all, :iptables_script => f
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
-      f.puts "-I INPUT -i lo -j ACCEPT"
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
       f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       Provider.enabled.with_klass_and_interface.each do |p|
-        unless p.allow_dns_queries
-          f.puts "-I INPUT -i #{p.link_interface} -p udp --dport 53 -j DROP"
-          f.puts "-I INPUT -i #{p.link_interface} -p tcp --dport 53 -j DROP"
+        if p.allow_dns_queries
+          f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
         end
         f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
       end
