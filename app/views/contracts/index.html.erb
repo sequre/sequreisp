@@ -183,7 +183,7 @@
           </td>
           <td><%= contract.forwarded_ports.collect{|fp| "<span class=\"forwarded_port\">#{fp.to_s}</span><br/>"} %></td>
           <td><%=h contract.state.human %></td>
-          <td><%= number_to_human_size(contract.current_traffic.data_count) rescue 0%></td>
+          <td><%= show_traffic(contract) rescue 0%></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => contract} %>
           <% if current_user.may_update_contract?(contract) or current_user.may_destroy_contract?(contract) %>
             <td>
