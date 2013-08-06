@@ -26,7 +26,8 @@ module AuditsHelper
       else
         val = value
       end
-      html << "<li><b>#{type.constantize.send :human_attribute_name, key}:</b> #{val}</li>"
+      human_attribute_name = type.constantize.send :human_attribute_name, key rescue key
+      html << "<li><b>#{human_attribute_name}:</b> #{val}</li>"
     end
     html << "</ul>"
     html
@@ -35,7 +36,7 @@ module AuditsHelper
   def link_to_auditable(audit)
     a = nil
 
-    a = audit.auditable.respond_to?('auditable_model_to_show') ? audit.auditable.auditable_model_to_show : audit.auditable
+    a = audit.auditable.respond_to?('auditable_model_to_show') ? audit.auditable.auditable_model_to_show : audit.auditable rescue nil
 
     if a.nil?
       'N/A'

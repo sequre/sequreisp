@@ -605,10 +605,19 @@ def gen_iptables
       f.puts "*filter"
       BootHook.run :hook => :filter_before_all, :iptables_script => f
       f.puts ":sequreisp-enabled - [0:0]"
+      f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
       f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
+      Interface.all(:conditions => "kind = 'lan'").each do |i|
+        f.puts "-A INPUT -i #{i.name} -p udp --dport 53 -j ACCEPT"
+        f.puts "-A INPUT -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+      end
       Provider.enabled.with_klass_and_interface.each do |p|
+        if p.allow_dns_queries
+          f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
+        end
         f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
       end
 

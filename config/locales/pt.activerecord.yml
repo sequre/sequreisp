@@ -173,6 +173,7 @@ pt:
         shape_rate_down_on_ingress: "Controlar que no se ultrapassem o limites de largo de banda de baixada deste fornecedor"
         interface_id: "Interface"
         avoid_nat_addresses: "Endereços IP para o qual se deseja evitar NAT"
+        allow_dns_queries: "Permitir consultas DNS externas"
       forwarded_port:
         provider: "Fornecedor"
         public_port: "Porta pública"
