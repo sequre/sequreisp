@@ -296,28 +296,10 @@ def gen_iptables
       # providers, esto solo impacta si la iface de entrada no es WAN
       f.puts ":avoid_nat_triangle - [0:0]"
       f.puts "-A PREROUTING -j avoid_nat_triangle"
-      ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
-        do_port_forwardings_avoid_nat_triangle fp, f
-      end
 
-      # sino marko por cliente segun el ProviderGroup al que pertenezca
-      Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ]).each do |c|
-        if !c.public_address.nil?
-          #evito triangulo de NAT si tiene full DNAT
-          f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
-        end
-
-        mark = if not c.public_address.nil?
-                 c.public_address.addressable.mark_hex
-               elsif not c.unique_provider.nil?
-                 # marko los contratos que salen por un único provider
-                 c.unique_provider.mark_hex
-               else
-                 c.plan.provider_group.mark_hex
-              end
-        f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
-        f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT"
-      end
+      # placeholder para marks por proveedor
+      f.puts ":contract_pg_marks - [0:0]"
+      f.puts "-A PREROUTING -j contract_pg_marks"
       # CONNMARK OUTPUT
       # Evito balanceo para los hosts configurados
       f.puts "-A OUTPUT -j avoid_balancing"
@@ -639,6 +621,31 @@ def gen_iptables
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_iptables e=>#{e.inspect}"
   end
+end
+
+def do_contract_iptables_up contract
+   ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
+     do_port_forwardings_avoid_nat_triangle fp, f
+   end
+   # sino marko por cliente segun el ProviderGroup al que pertenezca
+   Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ]).each do |c|
+     if !c.public_address.nil?
+       #evito triangulo de NAT si tiene full DNAT
+       f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
+     end
+
+     mark = if not c.public_address.nil?
+              c.public_address.addressable.mark_hex
+            elsif not c.unique_provider.nil?
+              # marko los contratos que salen por un único provider
+              c.unique_provider.mark_hex
+            else
+              c.plan.provider_group.mark_hex
+           end
+     f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
+     f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT"
+   end
+
 end
 
 def do_port_forwardings(fp, f=nil, boot=true)
