@@ -157,7 +157,9 @@ tcounter = Thread.new do
           Contract.all(:include => :current_traffic).each do |c|
             c.create_traffic_for_this_period if c.current_traffic.nil?
             #update the data for each traffic
-            Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{hash[c.ip]} where contracts.ip = '#{c.ip}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
+            if hash[c.ip].present? #no read if contract.state == disabled
+              Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{hash[c.ip]} where contracts.ip = '#{c.ip}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
+            end
             DaemonHook.data_counting({:ip => c.ip})
             #Rails.logger.debug "Traffic: #{c.ip} => #{hash[c.ip]}"
           end
@@ -207,9 +209,6 @@ while($running) do
     Rails.logger.debug "sequreispd: #{Time.now.to_s} backup_restore"
     backup_restore
   end
-  # I'm not shure if this is no longer needed
-  # at first it arp fixed entries seems to expire after a while
-  system "#{ARP_FILE}"
 
   sleep tsleep
 end

@@ -28,7 +28,10 @@ class AuditsController < ApplicationController
 
     @models = Audit.all(:select => "DISTINCT auditable_type", :order => "auditable_type ASC")\
                         .map(&:auditable_type)\
-                        .map{|m| [m.constantize.human_name, m]}
+                        .map do |m|
+                          human_name = m.constantize.human_name rescue m
+                          [human_name, m]
+                        end
   end
 
   def go_back

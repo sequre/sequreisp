@@ -176,6 +176,7 @@ en:
         shape_rate_down_on_ingress: "Check that download rate limits are not exceeded for this provider"
         interface_id: "Interface"
         avoid_nat_addresses: "IP addresses/ranges that will skip NAT"
+        allow_dns_queries: "Allow external DNS queries"
       forwarded_port:
         provider: "Provider"
         public_port: "Public port"
