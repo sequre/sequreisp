@@ -11,7 +11,7 @@
 </script>
 <% end %>
 <div id="main">
-<% semantic_form_for @client do |form| %>
+<% semantic_form_for @client, :html => { :multipart => true } do |form| %>
   <%= error_messages @client%>
   <% form.inputs do %>
     <%= form.input :name, :wrapper_html => { :class => "left" } %>
