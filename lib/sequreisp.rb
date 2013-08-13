@@ -533,6 +533,14 @@ def gen_iptables
         end
       end
 
+      f.puts ":sequreisp-accepted-sites - [0:0]"
+      f.puts "-A PREROUTING -j sequreisp-accepted-sites"
+      AlwaysAllowedSite.all.each do |site|
+        site.ip_addresses.each do |ip|
+          f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} --dport 80 -j ACCEPT"
+        end
+      end
+
       BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
 
       # Evito pasar por el proxy para los hosts configurados
@@ -603,6 +611,13 @@ def gen_iptables
       # FILTER  #
       #---------#
       f.puts "*filter"
+      f.puts ":sequreisp-allowedsites - [0:0]"
+      f.puts "-A FORWARD -j sequreisp-allowedsites"
+      AlwaysAllowedSite.all.each do |site|
+        site.ip_addresses.each do |ip|
+          f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} --dport 80 -j ACCEPT"
+        end
+      end
       BootHook.run :hook => :filter_before_all, :iptables_script => f
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
@@ -1054,7 +1069,7 @@ def check_links
       system "/usr/bin/pkill -f 'dhclient.#{p.interface.name}'"
     end
   end
-  
+
   Provider.with_klass_and_interface.each do |p|
     setup_provider_interface p, false if not p.online?
     update_provider_route p, nil, false, false
