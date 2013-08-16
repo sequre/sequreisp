@@ -132,7 +132,7 @@ es:
         balance: "Saldo"
         created_at: "Fecha de alta"
         taxpayer_identification_number: 'Numero de identificación tributaria'
-        national_identification_number: 'DNI'
+        national_identification_number: 'Número de identificación personal'
       plan:
         id: 'Id'
         name: "Nombre"
