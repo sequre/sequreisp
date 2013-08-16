@@ -349,7 +349,7 @@ es:
       help: "Ayuda"
       close: "Cerrar"
     get_arping_mac_address: "Obtener MAC Address"
-    massive_setting: 'Actulizar selección'
+    massive_setting: 'Actualizar selección'
     massive_destroy: 'Destruir selección'
     form_massive_setting: 'Actualización masiva'
   backup:
