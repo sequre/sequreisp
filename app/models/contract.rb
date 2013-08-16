@@ -552,6 +552,14 @@ class Contract < ActiveRecord::Base
     end
   end
 
+  def mangle_chain_down
+    mangle_chain "down"
+  end
+
+  def mangle_chain_up
+    mangle_chain "up"
+  end
+
   def auditable_name
     "#{self.class.human_name}: #{client.name} (#{ip})"
   end
@@ -631,6 +639,19 @@ class Contract < ActiveRecord::Base
     [dates, datas]
   end
 
+  def navigation_mark
+    if c.public_address
+      c.public_address.addressable.mark_hex
+    elsif c.unique_provider
+      c.unique_provider.mark_hex
+    else
+      c.plan.provider_group.mark_hex
+    end
+  end
+
+  def filter_by_mac_address?
+    Configuration.filter_by_mac_address and mac_address.present?
+  end
   private
 
   def period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
