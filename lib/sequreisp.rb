@@ -551,6 +551,9 @@ def parent_for_ip ip
   end
 end
 
+def remove_contract_mangle_chain c, tree, f
+  raise "TODO: Escribir este método!!!"
+end
 def build_per_contract_mangle_chains c, tree, f
   if not tree.has_key?(c.ip)
     f.puts ":sq.#{c.ip} - [0:0]"
@@ -595,22 +598,27 @@ def build_per_contract_mangle_chains c, tree, f
   end
 end
 
-def do_contract_iptables_up c, tree, f
+def do_contract_iptables_up c, tree, f, remove=false
+  ipt_command = remove ? "-D" : "-Ä"
   f.puts "*mangle"
     #marko por cliente segun el ProviderGroup al que pertenezca
-    f.puts "-A contract_pg_marks -s #{c.ip} -j MARK --set-mark 0x#{c.navigation_mark}/0x00ff0000"
-    f.puts "-A contract_pg_marks -s #{c.ip} -j ACCEPT"
+    f.puts "#{ipt_command} contract_pg_marks -s #{c.ip} -j MARK --set-mark 0x#{c.navigation_mark}/0x00ff0000"
+    f.puts "#{ipt_command} contract_pg_marks -s #{c.ip} -j ACCEPT"
     if c.public_address
       #evito triangulo de NAT si tiene full DNAT
-      f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
+      f.puts "#{ipt_command} avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
     end
     if c.transparent_proxy? and Configuration.transparent_proxy_n_to_m
-      f.puts "-A proxy_bind_ip_marks -s #{c.proxy_bind_ip} -j MARK --set-mark 0x#{c.navigation_mark}/0x00ff0000"
+      f.puts "#{ipt_command} proxy_bind_ip_marks -s #{c.proxy_bind_ip} -j MARK --set-mark 0x#{c.navigation_mark}/0x00ff0000"
     end
-    build_per_contract_mangle_chains c, tree, f
+    if remove
+      remove_contract_mangle_chain c, tree, f
+    else
+      build_per_contract_mangle_chains c, tree, f
+    end
     if Configuration.use_global_prios
       mark = "0x#{c.mark_hex}/0x0000ffff"
-      f.puts "-A #{c.mangle_chain} -j MARK --set-mark #{mark}"
+      f.puts "#{ipt_command} #{c.mangle_chain} -j MARK --set-mark #{mark}"
     else
       mark_if="-m mark --mark 0x0/0xffff"
       mark_burst = "0x0000/0x0000ffff"
@@ -630,25 +638,25 @@ def do_contract_iptables_up c, tree, f
       do_prio_ports_iptables :ports => (Configuration.default_udp_prio_ports_array + c.udp_prio_ports_array).uniq,
                              :proto => "udp", :file => f, :chain => c.mangle_chain, :mark_if => mark_if, :mark => mark_prio2
       # prio3 (catch_all)
-      f.puts "-A #{c.mangle_chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
+      f.puts "#{ipt_command} #{c.mangle_chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
 
       # long downloads/uploads limit
       if c.plan.long_download_max != 0
-        f.puts "-A #{c.mangle_chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+        f.puts "#{ipt_command} #{c.mangle_chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
       end
       if c.plan.long_upload_max != 0
-        f.puts "-A #{c.mangle_chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+        f.puts "#{ipt_command} #{c.mangle_chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
       end
       # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
       if c.plan.burst_down != 0
-        f.puts "-A #{c.mangle_chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+        f.puts "#{ipt_command} #{c.mangle_chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
       end
       if c.plan.burst_up != 0
-        f.puts "-A #{c.mangle_chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+        f.puts "#{ipt_command} #{c.mangle_chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
       end
       # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
-      # f.puts "-A #{c.mangle_chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
-      f.puts "-A #{c.mangle_chain} -j ACCEPT"
+      # f.puts "#{ipt_command} #{c.mangle_chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
+      f.puts "#{ipt_command} #{c.mangle_chain} -j ACCEPT"
     end
   f.puts "COMMIT" #end mangle
 
@@ -681,21 +689,37 @@ def do_contract_iptables_up c, tree, f
 
 end
 
-def do_port_forwardings(fp, f=nil, boot=true)
+
+def port_forwardings(fp, f=nil, boot=true, remove=false)
+  ipt_command = remove ? "-D" : "-A"
   commands = []
   unless fp.provider.ip.blank? or fp.contract.nil?
-    commands << "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.tcp
-    commands << "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.udp
+    commands << "#{ipt_command} PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.tcp
+    commands << "#{ipt_command} -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.udp
   end
   f ? f.puts(commands) : exec_context_commands("do_port_forwardings", commands.map{|c| "iptables -t nat " + c }, boot)
 end
-def do_port_forwardings_avoid_nat_triangle(fp, f=nil, boot=true)
+def do_port_forwardings(fp, f=nil, boot=true)
+  port_forwardings fp, f, boot
+end
+def undo_port_forwardings(fp, f=nil, boot=true)
+  port_forwardings fp, f, boot, true
+end
+
+def port_forwardings_avoid_nat_triangle(fp, f=nil, boot=true, remove=false)
+  ipt_command = remove ? "-D" : "-A"
   commands = []
   unless fp.provider.ip.blank?
-    commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.tcp
-    commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.udp
+    commands << "#{ipt_command} avoid_nat_triangle -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.tcp
+    commands << "#{ipt_command} avoid_nat_triangle -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.udp
   end
   f ? f.puts(commands) : exec_context_commands("do_port_forwardings_avoid_nat_triangle", commands.map{|c| "iptables -t mangle " + c }, boot)
+end
+def do_port_forwardings_avoid_nat_triangle(fp, f=nil, boot=true)
+  port_forwardings_avoid_nat_triangle fp, f, boot
+end
+def undo_port_forwardings_avoid_nat_triangle(fp, f=nil, boot=true)
+  port_forwardings_avoid_nat_triangle fp, f, boot, true
 end
 
 def gen_ip_ru
