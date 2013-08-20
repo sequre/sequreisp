@@ -540,24 +540,8 @@ class Contract < ActiveRecord::Base
     end
   end
 
-  def mangle_chain(prefix)
-    if Configuration.iptables_tree_optimization_enabled?
-      suffix = netmask_suffix
-      value = 28
-      value -= 4 while suffix < value and value > 16
-      _ip = IP.new("#{ip.gsub(/\/.*/, "")}/#{value}").network.to_s
-      "sq.#{prefix}.#{_ip}"
-    else
-      "sequreisp.#{prefix}"
-    end
-  end
-
-  def mangle_chain_down
-    mangle_chain "down"
-  end
-
-  def mangle_chain_up
-    mangle_chain "up"
+  def mangle_chain
+    "sq.#{ip}"
   end
 
   def auditable_name
