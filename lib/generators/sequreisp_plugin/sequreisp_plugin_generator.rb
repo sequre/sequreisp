@@ -26,6 +26,8 @@ class SequreispPluginGenerator < Rails::Generator::NamedBase
       m.directory("vendor/plugins/sequreisp_#{name.downcase}/app/controllers")
       m.directory("vendor/plugins/sequreisp_#{name.downcase}/app/models")
       m.directory("vendor/plugins/sequreisp_#{name.downcase}/app/views")
+      m.directory("vendor/plugins/sequreisp_#{name.downcase}/app/views/layouts")
+      m.file('layout.rb', "vendor/plugins/sequreisp_#{name.downcase}/app/views/layouts/#{name.downcase}.html.erb")
 
       m.directory("vendor/plugins/sequreisp_#{name.downcase}/config")
       m.template('routes.rb', "vendor/plugins/sequreisp_#{name.downcase}/config/routes.rb")
