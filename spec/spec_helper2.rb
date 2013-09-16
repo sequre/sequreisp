@@ -6,8 +6,10 @@ require 'spec/autorun'
 require 'spec/rails'
 
 require 'capybara/rails'
+require 'database_cleaner'
 require 'faker'
 require 'factory_girl'
+
 
 # Uncomment the next line to use webrat's matchers
 #require 'webrat/integrations/rspec-rails'
@@ -20,16 +22,30 @@ Spec::Runner.configure do |config|
   # If you're not using ActiveRecord you should remove these
   # lines, delete config/database.yml and disable :active_record
   # in your config/boot.rb
-  config.use_transactional_fixtures = true   #false replicated database
+  config.use_transactional_fixtures = false   #false replicated database 
   config.use_instantiated_fixtures  = false
   config.fixture_path = RAILS_ROOT + '/spec/fixtures/'
+
+
+  config.before(:suite) do 
+
+    DatabaseCleaner.strategy = :truncation , { :except => %w[users configurations] }
+    DatabaseCleaner.clean
+
+ end
+
   config.include Capybara 
+
+
   config.before(:each) do
+
     provider_klasses = (10..100).map { |i| ProviderKlass.new( :number =>  i) }
     ProviderKlass.import provider_klasses, :optimize=>true
+
     klasses = (4..100).step(4).map {|i| Klass.new( :number =>  i) }
     Klass.import klasses, :optimize=>true
   end
+
   # == Fixtures
   #
   # You can declare fixtures for each example_group like this:
@@ -61,4 +77,6 @@ Spec::Runner.configure do |config|
   # == Notes
   #
   # For more information take a look at Spec::Runner::Configuration and Spec::Runner
+
+
 end
