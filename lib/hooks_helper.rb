@@ -38,7 +38,7 @@ module HooksHelper
   end
 
   def plugins_table_columns_values object
-    {}
+    []
   end
 
   def show_traffic(contract)
