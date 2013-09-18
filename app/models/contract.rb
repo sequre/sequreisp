@@ -192,13 +192,15 @@ class Contract < ActiveRecord::Base
   before_save :check_integer_overflow
   before_create :bind_klass
   before_update :clean_proxy_arp_provider_proxy_arp_interface, :if => "proxy_arp_changed? and proxy_arp == false"
-  after_save :create_traffic_for_this_period,  :if => "current_traffic.nil?"
+  after_save :create_traffic_for_this_period
 
   def create_traffic_for_this_period
-    attr = { :from_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period),
-             :to_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) + 1.month - 1.day}
-    period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
-    traffics.create(attr)
+    if self.current_traffic.nil?
+      attr = { :from_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period),
+               :to_date => Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) + 1.month - 1.day}
+      period_for_traffic_if_day_today_is_less_than_day_of_the_beginning_of_the_period(attr)
+      traffics.create(attr)
+    end
   end
 
   def clean_proxy_arp_provider_proxy_arp_interface
