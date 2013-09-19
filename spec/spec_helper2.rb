@@ -29,7 +29,7 @@ Spec::Runner.configure do |config|
 
   config.before(:suite) do 
 
-    DatabaseCleaner.strategy = :truncation , { :except => %w[users configurations] }
+    DatabaseCleaner.strategy = :truncation , { :except => %w[users configurations kind_invoices] }
     DatabaseCleaner.clean
 
  end
