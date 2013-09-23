@@ -29,6 +29,10 @@ module HooksHelper
     ""
   end
 
+  def view_extensions
+    ""
+  end
+
   def search_extensions(form)
     @__search_extensions = {}
   end
