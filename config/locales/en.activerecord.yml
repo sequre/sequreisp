@@ -55,6 +55,9 @@ en:
       contract:
         one: "Contract"
         other: "Contracts"
+      disk:
+        one: "Disk"
+        other: "Disks"
       forwarded_port:
         one: "Redirected port"
         other: "Redirected ports"
@@ -133,6 +136,11 @@ en:
         created_at: "Created at"
         taxpayer_identification_number: 'Taxpayer identificacion number'
         national_identification_number: 'National identification number'
+      disk:
+        id: "ID"
+        name: "Name"
+        capacity: "Capacity"
+        system: "System"
       plan:
         id: 'Id'
         name: "Name"
@@ -314,6 +322,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
+    cache: "Cache"
     general_configuration: "General Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
     avoid_proxy_hosts: "Avoid Proxy Hosts"

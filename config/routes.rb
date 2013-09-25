@@ -25,6 +25,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :plans
 
+  map.resources :disks
+
   map.resource :user_session
 
   map.resource :about

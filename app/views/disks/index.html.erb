@@ -1,0 +1,28 @@
+
+<% content_for :title, t('activerecord.models.disk.other')%>
+<% heading t('activerecord.models.disk.other') %>
+<%= render :partial => "shared/empty_submenu" %>
+<div class="main">
+  <%= page_entries_info @disks %>
+<table>
+  <tr>
+    <th><%= t('activerecord.attributes.disk.name') %></th>
+    <th><%= t('activerecord.attributes.disk.capacity') %></th>
+    <th><%= t('activerecord.attributes.disk.system') %></th>
+    <th></th>
+  </tr>
+
+  <% @disks.each_with_index do |disk, i| %>
+
+  <tr>
+    <td><%= disk.name %></td>
+    <td><%= disk.capacity %></td>
+    <td><%= disk.system %></td>
+    <% if current_user.may_update_disk?(disk) %>
+    <td><%= link_to t('buttons.edit'), edit_disk_path(disk) %> </td>
+    <%end%>
+  </tr>
+  <% end%>
+</table>
+<%= will_paginate @disks %>
+</div>

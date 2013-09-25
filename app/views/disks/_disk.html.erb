@@ -1,0 +1,30 @@
+<style type="text/css">
+  {
+    width: 400px;
+  }
+</style>
+<% unless current_user.may_update_disk?(@disk) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @disk, :html => { :multipart => true } do |form| %>
+  <%= error_messages @disk%>
+  <% form.inputs do %>
+    <%= form.input :name, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
+    <%= form.input :capacity, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
+    <%= form.input :system, :wrapper_html => { :class => "left" } %>
+    <%= form_extensions form %>
+  <% end %>
+  <% if current_user.may_update_disk?(@disk)%>
+    <% form.buttons do %>
+      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+    <% end %>
+  <% end %>
+<% end %>
+</div>

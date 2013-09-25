@@ -52,6 +52,9 @@ pt:
       contract:
         one: "Contrato"
         other: "Contratos"
+      disk:
+        one: "Disco"
+        other: "Discos"
       forwarded_port:
         one: "Portas redirecionadas"
         other: "Portas redirecionadas"
@@ -130,6 +133,11 @@ pt:
         created_at: "Data de cadastro"
         taxpayer_identification_number: 'Número Identificación contribuinte'
         national_identification_number: 'Número de identificação nacional'
+      disk:
+        id: "ID"
+        name: "Nome"
+        capacity: "Capacidade"
+        system: "Sistema"
       plan:
         id: 'Id'
         name: "Nombre"
@@ -311,6 +319,7 @@ pt:
     interfaces: "Interfaces"
     users: "Usuários"
     configuration: "Configuração"
+    cache: "Cache"
     general_configuration: "configuração geral"
     avoid_balancing_hosts: "Sites sim balanceamento"
     avoid_proxy_hosts: "Sites sim proxy"
