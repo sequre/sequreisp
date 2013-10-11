@@ -1,0 +1,49 @@
+<% content_for :javascript do %>
+  <script type='text/javascript'>
+    $(function() {
+      $('input#select_all').change(function(){
+        $('input[name="liberate_disks_ids[]"]').attr("checked", $(this).attr("checked"));
+      });
+    });
+  </script>
+<% end %>
+
+<% content_for :title, t('buttons.cache_disks')%>
+<% heading t('buttons.cache_disks') %>
+
+<%= render :partial => "submenu_disks" %>
+
+<div class="main">
+  <%= page_entries_info @disks %>
+
+  <% form_tag(liberate_disks_path, :method => :put) do |f| %>
+
+  <%= submit_tag t('buttons.liberate_disks') %>
+
+  <table>
+    <thead>
+      <tr>
+        <th><%= check_box_tag :select_all  %></th>
+        <th><%= t('activerecord.attributes.disk.serial') %></th>
+        <th><%= t('activerecord.attributes.disk.name') %></th>
+        <th><%= t('activerecord.attributes.disk.capacity') %></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @disks.each_with_index do |disk, i| %>
+        <tr>
+          <td><%= check_box_tag "liberate_disks_ids[]", disk.id %></td>
+          <td><%= disk.serial %></td>
+          <td><b><%= disk.name %></b> (<%= disk.raid %>)</td>
+          <td><%= disk.capacity %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% end %>
+
+  <%= will_paginate @disks %>
+
+</div>

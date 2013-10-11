@@ -3,7 +3,8 @@ class CreateDisks < ActiveRecord::Migration
     create_table :disks do |t|
       t.string :name
       t.string :capacity
-      t.boolean :system
+      t.boolean :system, :default => false
+      t.boolean :cache, :default => false
 
       t.timestamps
     end

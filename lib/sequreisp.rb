@@ -223,7 +223,7 @@ def gen_tc(f)
     end
   end
 
-  # htb tree down (en las ifaces lan) 
+  # htb tree down (en las ifaces lan)
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
     f.puts "tc qdisc del dev #{iface} root"
@@ -314,7 +314,7 @@ def gen_iptables
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
         f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark"
-        f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT" 
+        f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT"
       end
       # tabla para evitar triangulo de nat
       # como arriba ya hice ACCEPT de lo que entra por los
@@ -341,7 +341,7 @@ def gen_iptables
                  c.plan.provider_group.mark_hex
               end
         f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
-        f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT" 
+        f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT"
       end
       # CONNMARK OUTPUT
       # Evito balanceo para los hosts configurados
@@ -368,7 +368,7 @@ def gen_iptables
             f.puts "-A OUTPUT -s #{pg.proxy_bind_ip} -j MARK --set-mark 0x#{pg.mark_hex}/0x00ff0000"
           end
         end
-      end 
+      end
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
       Provider.enabled.with_klass_and_interface.each do |p|
@@ -380,16 +380,16 @@ def gen_iptables
       end
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
       f.puts "-A POSTROUTING -m mark --mark 0x00000000/0x00ff0000 -j sequreisp_connmark"
-      
+
       if Configuration.transparent_proxy and Configuration.transparent_proxy_zph_enabled
         f.puts "-A POSTROUTING -p tcp --sport 3128 -m tos --tos 0x10 -j ACCEPT"
       end
 
       f.puts ":sequreisp.down - [0:0]"
       f.puts ":sequreisp.up - [0:0]"
-      
+
       #speed-up MARKo solo si no estaba a restore'ada x CONNMARK
-      mark_if="-m mark --mark 0x0/0xffff" 
+      mark_if="-m mark --mark 0x0/0xffff"
       Interface.all(:conditions => { :kind => "lan" }).each do |interface|
         f.puts "-A POSTROUTING #{mark_if} -o #{interface.name} -j sequreisp.down"
       end
@@ -518,7 +518,7 @@ def gen_iptables
       #---------#
       # /MANGLE #
       #---------#
-      
+
       #-----#
       # NAT #
       #-----#
@@ -545,7 +545,7 @@ def gen_iptables
 
       # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
       # Avoids tproxy to server ip's
-      Interface.all(:conditions => "kind = 'lan'").each do |i| 
+      Interface.all(:conditions => "kind = 'lan'").each do |i|
         i.addresses.each do |a|
           f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
         end
@@ -683,7 +683,7 @@ end
 
 def gen_ip_ru
   begin
-    File.open(IP_RU_FILE, "w") do |f| 
+    File.open(IP_RU_FILE, "w") do |f|
       f.puts "rule flush"
       f.puts "rule add prio 1 lookup main"
       ProviderGroup.enabled.with_klass.each do |pg|
@@ -697,47 +697,47 @@ def gen_ip_ru
         f.puts "rule add from #{p.ip}/32 table #{p.check_link_table} prio 90" if p.ip and not p.ip.empty?
       end
       f.puts "rule add prio 32767 from all lookup default"
-    end 
+    end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
   end
 end
 
 def update_fallback_route(f, batch=true, force=false)
-  prefix = batch ? "" : "ip " 
+  prefix = batch ? "" : "ip "
   #tabla default (fallback de todos los enlaces)
-	currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
+  currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
   if (currentroute != Provider.fallback_default_route) or force
     if Provider.fallback_default_route != ""
       #TODO por ahora solo cambio si hay ruta, sino no toco x las dudas
-      f.puts prefix + "ro re table default #{Provider.fallback_default_route}" 
+      f.puts prefix + "ro re table default #{Provider.fallback_default_route}"
     end
     #TODO loguear? el cambio de estado en una bitactora
   end
 end
 
 def update_provider_group_route(f, pg, batch=true, force=false)
-  prefix = batch ? "" : "ip " 
+  prefix = batch ? "" : "ip "
   currentroute=`ip -oneline ro li table #{pg.table} | grep default`.gsub("\\\t","  ").strip
   if (currentroute != pg.default_route) or force
     if pg.default_route == ""
       f.puts prefix + "ro del table #{pg.table} default"
     else
-      f.puts prefix + "ro re table #{pg.table} #{pg.default_route}" 
+      f.puts prefix + "ro re table #{pg.table} #{pg.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
 end
 
 def update_provider_route(f, p, batch=true, force=false)
-  prefix = batch ? "" : "ip " 
+  prefix = batch ? "" : "ip "
   currentroute=`ip -oneline ro li table #{p.table} | grep default`.gsub("\\\t","  ").strip
   default_route = p.online ? p.default_route : ""
   if (currentroute != default_route) or force
     if default_route == ""
       f.puts prefix + "ro del table #{p.table} default"
     else
-      f.puts prefix + "ro re table #{p.table} #{p.default_route}" 
+      f.puts prefix + "ro re table #{p.table} #{p.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
@@ -745,15 +745,15 @@ end
 
 def gen_ip_ro
   begin
-    File.open(IP_RO_FILE, "w") do |f| 
+    File.open(IP_RO_FILE, "w") do |f|
       Provider.enabled.ready.with_klass_and_interface.each do |p|
         update_provider_route f, p, true, true
       end
-      ProviderGroup.enabled.each do |pg| 
+      ProviderGroup.enabled.each do |pg|
         update_provider_group_route f, pg, true, true
       end
       update_fallback_route f, true, true
-    end 
+    end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
   end
@@ -761,8 +761,8 @@ end
 
 def setup_dynamic_providers_hooks
   begin
-    File.open("#{PPP_DIR}/ip-up.d/1sequreisp", 'w') do |f| 
-      f.puts "#!/bin/sh" 
+    File.open("#{PPP_DIR}/ip-up.d/1sequreisp", 'w') do |f|
+      f.puts "#!/bin/sh"
       f.puts "#{DEPLOY_DIR}/script/runner -e production #{DEPLOY_DIR}/bin/sequreisp_up_down_provider.rb up $PPP_IPPARAM $PPP_LOCAL 255.255.255.255 $PPP_REMOTE"
       f.chmod(0755)
     end
@@ -771,8 +771,8 @@ def setup_dynamic_providers_hooks
   end
 
   begin
-    File.open("#{PPP_DIR}/ip-down.d/1sequreisp", 'w') do |f| 
-      f.puts "#!/bin/sh" 
+    File.open("#{PPP_DIR}/ip-down.d/1sequreisp", 'w') do |f|
+      f.puts "#!/bin/sh"
       f.puts "#{DEPLOY_DIR}/script/runner -e production #{DEPLOY_DIR}/bin/sequreisp_up_down_provider.rb down $PPP_IPPARAM"
       f.chmod(0755)
     end
@@ -781,8 +781,8 @@ def setup_dynamic_providers_hooks
   end
 
   begin
-    File.open("#{DHCPD_DIR}/dhclient-enter-hooks.d/1sequreisp", 'w') do |f| 
-      f.puts "#!/bin/sh" 
+    File.open("#{DHCPD_DIR}/dhclient-enter-hooks.d/1sequreisp", 'w') do |f|
+      f.puts "#!/bin/sh"
       f.puts "gateway=$new_routers"
       f.puts "unset new_routers"
       f.puts "unset new_domain_name"
@@ -798,7 +798,7 @@ def setup_dynamic_providers_hooks
   end
 
   begin
-    File.open("#{DHCPD_DIR}/dhclient-exit-hooks.d/1sequreisp", 'w') do |f| 
+    File.open("#{DHCPD_DIR}/dhclient-exit-hooks.d/1sequreisp", 'w') do |f|
       f.puts 'if [ "$reason" != BOUND ] && [ "$reason" != RENEW ] && [ "$reason" != REBIND ] && [ "$reason" != REBOOT ] ;then'
       f.puts "  return"
       f.puts "fi"
@@ -859,10 +859,10 @@ def setup_provider_interface(f, p)
   when "static"
     #current_ips = `ip address show dev #{p.link_interface} 2>/dev/null`.scan(/inet ([\d.\/]+) /).flatten.collect { |ip| (IP.new ip).to_s }
     #ips = []
-    f.puts "ip address add #{p.ip}/#{p.netmask} dev #{p.link_interface}" 
+    f.puts "ip address add #{p.ip}/#{p.netmask} dev #{p.link_interface}"
     #ips << "#{p.ruby_ip.to_s}"
     p.addresses.each do |a|
-      f.puts "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}" 
+      f.puts "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
       f.puts "ip route re #{a.network} dev #{p.link_interface} src #{a.ip}"
       #ips << "#{a.ruby_ip.to_s}"
     end
@@ -1061,9 +1061,9 @@ def check_links
   providers.each do |p|
     #puts "#{p.id} #{readme[p.id].first}"
     online = threads[p.id]['online']
-    p.online = online 
+    p.online = online
     #TODO loguear el cambio de estado en una bitactora
-    
+
     if !online and !p.notification_flag and p.offline_time > Configuration.notification_timeframe
       p.notification_flag = true
       send_notification_mail = true
@@ -1086,7 +1086,7 @@ def check_links
   end
 
   begin
-    File.open(CHECK_LINKS_FILE, "w") do |f| 
+    File.open(CHECK_LINKS_FILE, "w") do |f|
       f.puts("#!/bin/bash")
       f.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
       Provider.with_klass_and_interface.each do |p|
@@ -1133,6 +1133,131 @@ def setup_queued_commands
   end
 end
 
+
+def config_system_disks
+  system_md = "/dev/md0"
+  system_disk = "/dev/sda"
+  mdstat_system = Disk.used_for_system[:devices]
+  mdstat_system.delete(system_disk)
+  Disk.system.each do |disk|
+    if mdstat_system.include?(disk.name)
+      mdstat_system.delete(disk.name)
+      if disk.raid != system_md
+        # QUITAR DEL RAID1 de sistema
+        puts("mdadm --fail #{system_md} #{disk.name}1")
+        puts("mdadm --remove #{system_md} #{disk.name}1")
+        puts("mdadm --zero-superblock #{disk.name}1")
+      end
+    end
+  end
+  puts("pongo todos los discos de sistema con raid = #{system_md}")
+  Disk.connection.update_sql "update disks set disks.raid = '#{system_md}' where disks.system = true"
+  mdstat_system.each do |dev|
+    puts("mdadm --fail #{system_md} #{dev}1")
+    puts("mdadm --remove #{system_md} #{dev}1")
+  end
+end
+
+def config_cache_disks(f, run)
+  cache_md = "/dev/md1"
+  write_script = false
+  cache_disks = Disk.cache
+
+  #umount disk cache
+  cache_disks.each do |disk|
+    name = disk.name.split("/")
+    puts "sed -e '/\\/dev\\/#{name.last}/d' /etc/fstab"
+    puts "umount /dev/#{name.last}"
+  end
+
+  puts "umount #{cache_md}"
+
+  mdstat_cache = Disk.used_for_cache[:devices]
+  if mdstat_cache.present? #YA EXISTE UN RAID
+    cache_disks.each do |disk|
+      if mdstat_cache.include?(disk.name)
+        mdstat_cache.delete(disk.name)
+        if disk.raid != cache_md
+          puts("mdadm --fail #{cache_md} #{disk.name}1")
+          puts("mdadm --remove #{cache_md} #{disk.name}1")
+          puts("dd if=/dev/zero of=#{disk.name} count=1024 bs=1024")
+          # puts "dd if=/dev/zero of=#{disk.name} bs=512 count=1"
+          puts "(echo n; echo p; echo 1; echo ; echo ; echo t; echo fd; echo w) | fdisk #{disk.name}"
+          puts("mdadm --add #{cache_md} #{disk.name}1")
+        end
+      else #añadir al raid
+        puts("dd if=/dev/zero of=#{disk.name} count=1024 bs=1024")
+        # puts "dd if=/dev/zero of=#{disk.name} bs=512 count=1"
+        puts "(echo n; echo p; echo 1; echo ; echo ; echo t; echo fd; echo w) | fdisk #{disk.name}"
+        puts("mdadm --add #{cache_md} #{disk.name}1")
+      end
+    end
+    puts("pongo todos los discos de cache con raid = #{cache_md}")
+    Disk.connection.update_sql "update disks set disks.raid = '#{cache_md}' where disks.cache = true"
+    #lo que quedo hay que sacarlo del RAID, ya que o se libero un disco o se saco
+    mdstat_cache.each do |dev|
+      puts("mdadm --fail #{cache_md} #{dev}1")
+      puts("mdadm --remove #{cache_md} #{dev}1")
+    end
+    puts "(echo 'y') | sudo mkfs.reiserfs -f #{cache_md}"
+  else #NO HAY RAID
+    # Garantizo que la opción raid este en nil para todos los discos de cache
+    # disk.connection.update_sql "update disks set disks.raid = NULL where disks.cache = true"
+    write_script = true
+    cache_disks.each do |disk|
+      # dalete partition table
+      # puts("dd if=/dev/zero of=#{disk.name} count=1024 bs=1024")
+      puts "dd if=/dev/zero of=#{disk.name} bs=512 count=1"
+      # echo new_partition, echo primary, echo partition_number; echo sector_first; echo sector_last; echo partition_type; echo linux_raid_autodetect; echo write
+      puts "(echo n; echo p; echo 1; echo ; echo ; echo t; echo fd; echo w) | fdisk #{disk.name}"
+    end
+
+    puts "mdadm --create #{cache_md} --level 0 --raid-devices #{cache_disks.size} #{cache_disks.collect(&:name).join(" ")}"
+    puts("pongo todo los raid en = #{cache_md}")
+    Disk.connection.update_sql "update disks set disks.raid = '#{cache_md}' where disks.cache = true"
+    puts "(echo 'y') | sudo mkfs.reiserfs -f #{cache_md}"
+    puts "mdadm --detail --scan >> /etc/mdadm/mdadm.conf"
+    puts "sed -i 's/metadata=00.90/ /g' /etc/mdadm/mdadm.conf"
+    puts "rm -rf /mnt/cache"
+    puts "mkdir /mnt/cache"
+    puts "echo '#{cache_md} /mnt/cache reiserfs defaults,notail,noatime 0 1' >> /etc/fstab"
+    puts "mkdir /mnt/cache/squid"
+    puts "chown proxy.proxy -R /mnt/cache/squid"
+    puts "rm -rf /var/spool/squid"
+    puts "ln -s /mnt/cache/squid /var/spool"
+  end
+
+  if cache_disks.present?
+    puts "mount #{cache_md}"
+
+    # Necesito la capacidad del md1
+    capacity_webcache_mb = 0
+
+    # Obtengo el espacio del RAID0
+    # IO.popen("fdisk -l | grep 'Disk #{cache_md}'", "r") do |io|
+    IO.popen("cat disks | grep #{cache_md}", "r") do |io|
+      io.each do |line|
+        capacity_webcache_mb = line.chomp.split(" ")[4].to_i
+      end
+    end
+
+    #Convert Byte to MB
+    capacity_webcache_mb = capacity_webcache_mb / (1024 * 1024) #MEGABYTE
+
+    BootHook.run :hook => :mount_disk, :run => run, :boot_script => f, :write_script => write_script, :capacity_webcache => :capacity_webcache_mb, :bdg => binding
+
+    # si el 30 porciento supera los 300 GB, fuerzo para cache  300 GB == 307200 MB
+    capacity_webcache_mb =  capacity_webcache_mb >= 307200 ? 307200 : capacity_webcache_mb
+
+    puts "sed '/cache_dir ufs \/var\/spool\/squid/ ccache_dir ufs \/var\/spool\/squid #{capacity_webcache_mb.to_i} 16 256/g'"
+
+    conf = Configuration.first
+    conf.transparent_proxy = true
+    conf.transparent_proxy_n_to_m = true
+    conf.save
+  end
+end
+
 def boot(run=true)
   create_dirs_if_not_present if Rails.env.development?
   Configuration.do_reload
@@ -1149,12 +1274,12 @@ def boot(run=true)
         f.puts "modprobe #{m}"
       end
       setup_clock f
-      setup_proc f 
-      setup_proxy f 
+      setup_proc f
+      setup_proxy f
       Interface.all(:conditions => "vlan = 0").each do |i|
         f.puts "ip link set dev #{i.name} up"
       end
-      Interface.all(:conditions => "kind = 'lan'").each do |i| 
+      Interface.all(:conditions => "kind = 'lan'").each do |i|
         #current_ips = `ip address show dev #{i.name} 2>/dev/null`.scan(/inet ([\d.\/]+) /).flatten.collect { |ip| (IP.new ip).to_s }
         #ips = []
         if i.vlan?
@@ -1163,7 +1288,7 @@ def boot(run=true)
         end
         f.puts "ip link set dev #{i.name} up"
         i.addresses.each do |a|
-          f.puts "ip address add #{a.ip}/#{a.netmask} dev #{i.name}" 
+          f.puts "ip address add #{a.ip}/#{a.netmask} dev #{i.name}"
           f.puts "ip route re #{a.network} dev #{i.name} src #{a.ip}"
           #ips << "#{a.ruby_ip.to_s}"
         end
@@ -1179,10 +1304,10 @@ def boot(run=true)
       Provider.with_klass_and_interface.each do |p|
         setup_provider_interface f,p
       end
-      File.open(ARP_FILE, "w") do |arp| 
+      File.open(ARP_FILE, "w") do |arp|
         arp.puts "#!/bin/bash"
         arp.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
-        setup_proxy_arp f,arp 
+        setup_proxy_arp f,arp
         arp.chmod 0755
       end
       f.puts "#{ARP_FILE}"
@@ -1207,7 +1332,7 @@ def boot(run=true)
       gen_ip_ro
       f.puts "ip -batch #{IP_RU_FILE}"
       f.puts "ip -batch #{IP_RO_FILE}"
-    
+
       f.puts "tc -b #{TC_FILE_PREFIX + IFB_UP}"
       f.puts "tc -b #{TC_FILE_PREFIX + IFB_DOWN}"
       f.puts "tc -b #{TC_FILE_PREFIX + IFB_INGRESS}"
@@ -1215,9 +1340,31 @@ def boot(run=true)
         f.puts "tc -b #{TC_FILE_PREFIX + interface.name}"
       end
       Provider.enabled.with_klass_and_interface.each do |p|
-        #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada 
-        f.puts "tc -b #{TC_FILE_PREFIX + p.link_interface}" 
+        #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada
+        f.puts "tc -b #{TC_FILE_PREFIX + p.link_interface}"
       end
+
+      # clean fstab for any disk free
+      Disk.free.each do |disk|
+        name = disk.name.split("/")
+        puts "sed -e '/\\/dev\\/#{name.last}/d' /etc/fstab"
+        puts "umount /dev/#{name.last}"
+      end
+      puts("pongo todos los atributos raid de los discos libres en nil")
+      Disk.connection.update_sql "update disks set disks.raid = NULL where disks.system = false and disks.cache = false"
+
+      conf = Configuration.first
+      config_system_disks #Es para liberar los discos que hay en RAID1 para el sistema
+      # if conf.mount_cache
+      # conf.mount_cache = false
+      conf.transparent_proxy = false
+      conf.transparent_proxy_n_to_m = false
+      conf.save
+      #   /etc/init.d/squid stop
+      #   Service stop hook
+      #   BootHook.run :hook => :service_stop, :run => run, :boot_script => f
+      config_cache_disks(f, run)
+      # end
 
       #General configuration hook
       BootHook.run :hook => :general, :run => run, :boot_script => f
@@ -1238,6 +1385,3 @@ def boot(run=true)
     Rails.logger.error "ERROR in lib/sequreisp.rb::boot e=>#{e.inspect}"
   end
 end
-
-
-

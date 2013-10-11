@@ -138,6 +138,7 @@ es:
         national_identification_number: 'Número de identificación personal'
       disk:
         id: "iD"
+        serial: "Num de serie"
         name: "Nombre"
         capacity: "Capacidad"
         system: "Sistema"
@@ -361,6 +362,12 @@ es:
     massive_setting: 'Actualizar selección'
     massive_destroy: 'Destruir selección'
     form_massive_setting: 'Actualización masiva'
+    system_disks: 'Discos sistema'
+    cache_disks: 'Discos cache'
+    free_disks: 'Discos libres'
+    scan_disks: 'Detectar nuevos discos'
+    liberate_disks: 'Liberar discos'
+    assign_disks_to_cache: 'Asignar discos para cache'
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"
