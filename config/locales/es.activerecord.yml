@@ -141,7 +141,9 @@ es:
         serial: "Num de serie"
         name: "Nombre"
         capacity: "Capacidad"
+        type: "Tipo"
         system: "Sistema"
+        cache: "Cache"
       plan:
         id: 'Id'
         name: "Nombre"
@@ -362,12 +364,12 @@ es:
     massive_setting: 'Actualizar selección'
     massive_destroy: 'Destruir selección'
     form_massive_setting: 'Actualización masiva'
-    system_disks: 'Discos sistema'
-    cache_disks: 'Discos cache'
-    free_disks: 'Discos libres'
+    system_disks: 'Sistema'
+    cache_disks: 'Cache'
+    free_disks: 'Libres'
     scan_disks: 'Detectar nuevos discos'
     liberate_disks: 'Liberar discos'
-    assign_disks_to_cache: 'Asignar discos para cache'
+    assign_disks_to_cache: 'Asignar a cache'
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"

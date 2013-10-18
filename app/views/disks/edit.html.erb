@@ -1,9 +1,0 @@
-<% content_for :title, t('actions.edit', :model => Disk.human_name) %>
-<% heading t('actions.edit', :model => Disk.human_name)%>
-
-<ul class="nav" style="float:right">
-  <%= render :partial => "shared/submenu_items"%>
-</ul>
-<div style="clear: both"></div>
-
-<%= render @disk %>

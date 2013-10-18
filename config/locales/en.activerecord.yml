@@ -141,7 +141,9 @@ en:
         serial: "Serial number"
         name: "Name"
         capacity: "Capacity"
+        type: "Type"
         system: "System"
+        cache: "Cache"
       plan:
         id: 'Id'
         name: "Name"
@@ -362,12 +364,12 @@ en:
     massive_setting: 'update selected'
     massive_destroy: 'destroy selected'
     form_massive_setting: 'Massive update'
-    system_disks: 'System disks'
-    cache_disks: 'Cache disks'
-    free_disks: 'Free disks'
+    system_disks: 'System'
+    cache_disks: 'Cache'
+    free_disks: 'Free'
     scan_disks: 'Scan disks'
     liberate_disks: 'Liberate disks'
-    assign_disks_to_cache: 'Assign disks to cache'
+    assign_disks_to_cache: 'Assign to cache'
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"

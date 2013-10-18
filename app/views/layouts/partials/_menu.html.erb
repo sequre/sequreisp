@@ -95,7 +95,7 @@ ul li a:hover.no_pointer {
         </li>
       <% end %>
       <% if current_user.may_index_disks?%>
-      <li><%= link_to t('menu.cache'), system_disks_path %></li>
+      <li><%= link_to t('menu.cache'), disks_path %></li>
       <%end %>
       <% if current_user.may_index_backup? %>
         <li><%= link_to t('menu.backups'), backup_path %></li>
