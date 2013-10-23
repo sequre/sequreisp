@@ -31,6 +31,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resource :dashboard, :collection => { :cpu => :get , :services => :get, :load_average => :get, :reboot => :get, :halt => :get }
 
+  map.resources :always_allowed_sites
+
   map.backup '/backup', :controller => 'backup', :action => 'index'
   map.login '/login', :controller => 'user_sessions', :action => 'new'
   map.logout '/logout', :controller => 'user_sessions', :action => 'destroy'

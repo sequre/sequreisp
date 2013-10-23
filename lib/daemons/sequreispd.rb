@@ -160,7 +160,7 @@ tcounter = Thread.new do
             if hash[c.ip].present? #no read if contract.state == disabled
               Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{hash[c.ip]} where contracts.ip = '#{c.ip}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
             end
-            DaemonHook.data_counting({:ip => c.ip})
+            DaemonHook.data_counting({:contract => c})
             #Rails.logger.debug "Traffic: #{c.ip} => #{hash[c.ip]}"
           end
         end

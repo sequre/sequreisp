@@ -1,0 +1,33 @@
+pt:
+  plugin:
+    <%= name.downcase %>:
+
+  menu:
+    <%= name.downcase %>:
+
+#   submenu:
+
+#   buttons:
+
+#   activerecord:
+#     shared:
+
+#     models:
+
+#     attributes:
+
+#   messages:
+
+#     labels:
+#       models:
+
+#     hints:
+#       models:
+
+#     errors:
+#       models:
+
+#   formtastic:
+#     hints:
+
+#     fieldsets:
