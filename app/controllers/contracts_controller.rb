@@ -156,6 +156,7 @@ class ContractsController < ApplicationController
         contract.detail = params[:massive_setting][:detail] if params[:massive_setting][:detail].present?
         contract.cpe = params[:massive_setting][:cpe] if params[:massive_setting][:cpe].present?
         contract.node = params[:massive_setting][:node] if params[:massive_setting][:node].present?
+        contract = add_more_attributes contract, params
         if contract.save
           applied << contract.id
         else
@@ -167,6 +168,11 @@ class ContractsController < ApplicationController
     else
       flash[:warning] = t('error_messages.not_selected_any_options')
     end
+  end
+
+  # mothod for plugins patches
+  def add_more_attributes contract, params
+    contract
   end
 
   def instant
