@@ -44,4 +44,8 @@ module HooksHelper
   def plugins_header_extensions
     ""
   end
+
+  def massive_settings_form_extensions(form)
+    ""
+  end
 end
