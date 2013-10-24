@@ -44,6 +44,10 @@ class DisksController < ApplicationController
     count_destroy = Disk.destroy_disks(collect_disks - scan_disks.map{|b| b[1][:serial]})
     count_create = Disk.create_or_change_disks(scan_disks)
 
+    conf = Configuration.first
+    conf.mount_cache = false
+    conf.save
+
     if count_destroy > 0  or count_create > 0
       flash[:notice] = I18n.t('messages.disk.scan_success')
     else

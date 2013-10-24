@@ -2,10 +2,12 @@
   <script type='text/javascript'>
     $(function() {
       $('input#select_liberate').change(function(){
-        $('input[name="liberate_disks_ids[]"]').attr("checked", $(this).attr("checked"));
+        $('input[name="liberate_disks_ids[]"]').attr("checked",
+        $(this).attr("checked"));
       });
       $('input#select_assign').change(function(){
-        $('input[name="assign_disks_ids[]"]').attr("checked", $(this).attr("checked"));
+        $('input[name="assign_disks_ids[]"]').attr("checked",
+        $(this).attr("checked"));
       });
     });
   </script>
@@ -35,7 +37,7 @@
             <th><%= t('activerecord.attributes.disk.serial') %></th>
             <th><%= t('activerecord.attributes.disk.name') %></th>
             <th><%= t('activerecord.attributes.disk.capacity') %></th>
-        </tr>
+          </tr>
         </thead>
         <tbody>
           <% @free_disks.each_with_index do |disk, i| %>
@@ -52,45 +54,45 @@
   </div>
 <% end %>
 
+<h1>Discos Asignados</h1>
 <div class="main">
   <% form_tag(liberate_disks_path, :method => :put) do |f| %>
-  <%= submit_tag t('buttons.liberate_disks') %>
-  <table>
-    <thead>
-      <tr>
-        <th><%= check_box_tag :select_liberate  %></th>
-        <th><%= t('activerecord.attributes.disk.serial') %></th>
-        <th><%= t('activerecord.attributes.disk.name') %></th>
-        <th><%= t('activerecord.attributes.disk.capacity') %></th>
-        <th><b><%= t('activerecord.attributes.disk.type') %></b></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% unless @system_disks.empty? %>
-      <% @system_disks.each_with_index do |disk, i| %>
-      <tr>
-        <td><%= check_box_tag("liberate_disks_ids[]", disk.id)  unless
-                disk.name == "/dev/sda"  %></td>
-        <td><%= disk.serial %></td>
-        <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
-        <td><%= disk.capacity %></td>
-        <td><b><%= t('activerecord.attributes.disk.system') %></b></td>
-      </tr>
-      <% end %>
-      <% end %>
-      <% unless @cache_disks.empty? %>
-      <% @cache_disks.each_with_index do |disk, i| %>
-      <tr>
-        <td><%= check_box_tag "liberate_disks_ids[]", disk.id %></td>
-        <td><%= disk.serial %></td>
-        <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
-        <td><%= disk.capacity %></td>
-        <td><b><%= t('activerecord.attributes.disk.cache') %></b></td>
-      </tr>
-      <% end %>
-      <% end %>
-      <%= view_extensions %>
-    </tbody>
-  </table>
+    <%= submit_tag t('buttons.liberate_disks') %>
+    <table>
+      <thead>
+        <tr>
+          <th><%= check_box_tag :select_liberate  %></th>
+          <th><%= t('activerecord.attributes.disk.serial') %></th>
+          <th><%= t('activerecord.attributes.disk.name') %></th>
+          <th><%= t('activerecord.attributes.disk.capacity') %></th>
+          <th><b><%= t('activerecord.attributes.disk.type') %></b></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% unless @system_disks.empty? %>
+          <% @system_disks.each_with_index do |disk, i| %>
+            <tr>
+              <td><%= check_box_tag("liberate_disks_ids[]", disk.id)  unless disk.name == "/dev/sda"  %></td>
+              <td><%= disk.serial %></td>
+              <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
+              <td><%= disk.capacity %></td>
+              <td><b><%= t('activerecord.attributes.disk.system') %></b></td>
+            </tr>
+          <% end %>
+        <% end %>
+        <% unless @cache_disks.empty? %>
+          <% @cache_disks.each_with_index do |disk, i| %>
+            <tr>
+              <td><%= check_box_tag "liberate_disks_ids[]", disk.id %></td>
+              <td><%= disk.serial %></td>
+              <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
+              <td><%= disk.capacity %></td>
+              <td><b><%= t('activerecord.attributes.disk.cache') %></b></td>
+            </tr>
+          <% end %>
+        <% end %>
+        <%= view_extensions %>
+      </tbody>
+    </table>
   <% end %>
 </div>

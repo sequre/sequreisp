@@ -897,11 +897,24 @@ def setup_proxy(f)
   squid_file_off = squid_file + '.disabled'
   if Configuration.transparent_proxy
     f.puts "[ -f #{squid_file_off} ] && mv #{squid_file_off} #{squid_file}"
+
     #relodearlo si ya está corriendo, arrancarlo sino
     f.puts 'if [[ -n "$(pidof squid)" ]] ; then  squid -k reconfigure ; else service squid start ; fi'
     # dummy iface con ips para q cada cliente salga por su grupo
     f.puts "modprobe dummy"
     f.puts "ip link set dummy0 up"
+
+    f.puts("service squid stop")
+    umount_disks(f)
+    conf = Configuration.first
+    if conf.mount_cache
+      cache_dirs = config_cache_disks(f)
+      f.puts("squid -z")
+      conf.mount_cache = false
+      conf.save
+    end
+    f.puts("service squid start")
+
     begin
       File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid|
         if Configuration.transparent_proxy_n_to_m
@@ -1138,7 +1151,22 @@ def disk_partition(f, disk)
   # puts "dd if=/dev/zero of=#{disk.name} bs=512 count=1"
   f.puts "(echo n; echo p; echo 1; echo ; echo ; echo w) | fdisk #{disk.name}"
   disk.partitioned = true
-  # disk.save
+  disk.save
+end
+
+def umount_disks(f)
+  # Umount al except md0 and systems disks
+  sistem_disk = Disk.used_for_system
+  sistem_disk[:devices] << sistem_disk[:raid]
+  IO.popen("mount | grep '/dev/sd'", "r") do |io|
+    io.each do |line|
+      dev = line.split(' ').first.split("/").last
+      if not dev.include?("sda") or not dev.include?("md0")
+        f.puts "umount /dev/#{dev}"
+      end
+      f.puts("sed -i '/\\/dev\\/#{dev}/d' /etc/fstab")
+    end
+  end
 end
 
 def disable_raid(f, mdstat)
@@ -1149,7 +1177,7 @@ def disable_raid(f, mdstat)
       f.puts("mdadm --zero-superblock #{dev}1")
       disk = Disk.find_by_name(dev)
       disk.raid = nil
-      disk.save if disk.changed?
+      disk.saveif disk.changed?
     end
     f.puts("sed -i '/#{mdstat[:raid]}/d' /proc/mdstat")
   end
@@ -1160,76 +1188,64 @@ def config_system_disks(f)
   system_disk = "/dev/sda"
   mdstat_system = Disk.used_for_system[:devices]
   mdstat_system.delete(system_disk)
-  Disk.system.each do |disk|
+  Disk.all.each do |disk|
     if mdstat_system.include?(disk.name)
       mdstat_system.delete(disk.name)
-      if disk.raid != system_md
+      if not disk.system
         # QUITAR DEL RAID1 de sistema
         f.puts("mdadm --fail #{system_md} #{disk.name}1")
         f.puts("mdadm --remove #{system_md} #{disk.name}1")
         f.puts("mdadm --zero-superblock #{disk.name}1")
+        disk_name = disk.name.split("/").last
+        f.puts("sed -i '/\\/dev\\/#{disk_name}2/d'")
       end
     end
   end
-  puts("pongo todos los discos de sistema con raid = #{system_md}")
-  Disk.connection.update_sql "update disks set disks.raid = '#{system_md}' where disks.system = true"
+  Disk.connection.update_sql "update disks set disks.raid = '#{system_md}' where disks.system \
+= true"
   mdstat_system.each do |dev|
     f.puts("mdadm --fail #{system_md} #{dev}1")
     f.puts("mdadm --remove #{system_md} #{dev}1")
+    dev = dev.split("/").last
+    f.puts("sed -i '/\\/dev\\/#{dev}2/d'")
   end
 end
 
-def config_cache_disks(f, run)
+def config_cache_disks(f)
   cache_disks = Disk.cache
   capacitys = {}
+  cache_dirs = []
 
   disable_raid(f, Disk.used_for_cache)
-
-  # Desmonto todo lo que no sea sda (disco del sistema)
-  IO.popen("mount | grep '/dev/sd'", "r") do |io|
-    io.each do |line|
-      unless line.include?("sda")
-        f.puts "umount #{line.split(' ').first}"
-      end
-    end
-  end
 
   cache_disks.each do |disk|
     # Particiono y formateo por si es un disco nuevo.
     disk_partition(f, disk) unless disk.partitioned
-    f.puts "(echo 'y') | sudo mkfs.ext4 -f #{disk.name}1"
+    # f.puts "(echo 'y') | sudo mkfs.ext4 -f #{disk.name}1"
+    f.puts "mkfs.ext4 #{disk.name}1"
     mounting_point = "/mnt/sequreisp#{disk.name}/squid"
     f.puts "mkdir -p #{mounting_point}"
-    f.puts "echo '#{disk.name} #{mounting_point} ext4 defaults,notail,noatime 0 1' >> /etc/fstab"
-    f.puts "mount #{disk.name}"
+    f.puts "echo '#{disk.name}1 #{mounting_point} ext4 defaults 0 1' >> /etc/fstab"
+    f.puts "mount #{disk.name}1"
     f.puts "chown proxy.proxy -R #{mounting_point}"
     IO.popen("fdisk -l | grep 'Disk #{disk.name}'", "r") do |io|
-    #IO.popen("cat disks | grep #{disk.name}", "r") do |io|
-      io.each do |line|
-        capacitys[disk.name] = line.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
-      end
+      #IO.popen("cat disks | grep #{disk.name}", "r") do |io|
+      capacitys[disk.name] = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
     end
   end
 
-  #BORRAR TODOS LOS CACHE_DIR EN SQUID_CONF
-  puts("sed -i '/cache_dir aufs \\/mnt\\/sequreisp/d' #{SEQUREISP_SQUID_CONF}")
-  if cache_disks.empty?
-    f.puts "sed -i 's/#cache_dir ufs \\/var\\/spool\\/squid*/cache_dir ufs \\/var\\/spool\\/squid 30000 16 256/' /etc/squid/squid.conf"
+  if cache_disks.count == 0
+    cache_dirs << "cache_dir aufs /var/spool/squid 30000 16 256"
   else
     total_capacity = capacitys.values.sum
-    total_squid = total_capacity > 307200 ? 307200 : total_capacity
-    f.puts "sed -i 's/cache_dir ufs \\/var\\/spool\\/squid*/#cache_dir ufs \\/var\\/spool\\/squid 30000 16 256/' /etc/squid/squid.conf"
-    begin
-      File.open(SEQUREISP_SQUID_CONF, "a") do |fsquid|
-        capacitys.each do |key, value|
-          fsquid.puts("cache_dir aufs /mnt/sequreisp#{key}/squid #{(value * total_squid / total_capacity).to_i} 16 256")
-        end
-      end
-    rescue => e
-      Rails.logger.error "ERROR in lib/sequreisp.rb::config_cache_disks e=>#{e.inspect}"
+    total_squid = total_capacity > 300000 ? 300000 : total_capacity
+    f.puts "sed -i '/cache_dir ufs \/var\/spool\/squid 30000 16 256/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
+    capacitys.each do |key, value|
+      #f.puts("echo 'cache_dir aufs /mnt/sequreisp#{key}/squid #{(value * total_squid / total_capacity).to_i} 16 256'")
+      cache_dirs << "cache_dir aufs /mnt/sequreisp#{key}/squid #{(value * total_squid / total_capacity).to_i} 16 256"
     end
   end
-  BootHook.run :hook => :mount_disk, :run => run, :boot_script => f
+  cache_dirs
 end
 
 
@@ -1250,6 +1266,7 @@ def boot(run=true)
       end
       setup_clock f
       setup_proc f
+      #config_system_disks(f) #Es para liberar los discos que hay en RAID1 para el sistema
       setup_proxy f
       Interface.all(:conditions => "vlan = 0").each do |i|
         f.puts "ip link set dev #{i.name} up"

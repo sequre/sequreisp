@@ -25,8 +25,8 @@ class Disk < ActiveRecord::Base
 
     system_disks = used_for_system
     cache_disks = used_for_cache
-    IO.popen('sudo lshw -C disk | grep "logical name: /dev/*\| serial: \| size:"', "r") do |io|
-    #IO.popen('cat disklshw | /bin/grep "logical name: /dev/*\| serial: \| size:"', "r") do |io|
+    IO.popen('sudo /usr/bin/lshw -C disk | grep "logical name: /dev/*\| serial: \| size:"', "r") do |io|
+      #IO.popen('cat disklshw | /bin/grep "logical name: /dev/*\| serial: \| size:"', "r") do |io|
       io.each do |line|
         which_raid = nil
         if line.include?("logical name:")
@@ -36,8 +36,8 @@ class Disk < ActiveRecord::Base
           which_raid = system_disks[:raid] if is_system
           which_raid = cache_disks[:raid] if is_cache
           is_free = is_system or is_cache ? false : true
-          hash = {:name => logical_name, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid}
-          scan_for_other_uses(hash)
+          hash = #{:name => logical_name, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid}
+            scan_for_other_uses(hash)
           disks[logical_name] = hash
         elsif line.include?("serial:")
           disks[logical_name][:serial] = line.chomp.strip.split(" ").last
@@ -53,9 +53,9 @@ class Disk < ActiveRecord::Base
   end
 
   def self.used_for_system
-    hash = {:raid => "/dev/md0", :devices => []}
-    IO.popen("cat /proc/mdstat | grep md0", "r") do |io|
-    #IO.popen("cat mdstat | grep md0", "r") do |io|
+    hash = #{:raid => "/dev/md0", :devices => []}
+      IO.popen("cat /proc/mdstat | grep md0", "r") do |io|
+      #IO.popen("cat mdstat | grep md0", "r") do |io|
       io.each do |line|
         _system_disks = line.chomp.split(" ")
         _system_disks[4.._system_disks.count].each do |disk|
@@ -68,20 +68,30 @@ class Disk < ActiveRecord::Base
   end
 
   def self.used_for_cache
-    self.disk_usage("/mnt/cache/web")
+    hash = {:raid => nil, :devices => []}
+    devs = self.disk_usage("/mnt/sequreisp/dev")
+    if devs[:devices].empty?
+      devs = self.disk_usage("/mnt/cache")
+      devs = self.disk_usage("/mnt/cache/web") if devs[:devices].empty?
+    else
+      devs[:devices].each do |dev|
+        hash[:devices] << dev if File.directory?("/mnt/sequreisp#{dev}/squid")
+      end
+    end
+    hash[:raid] = devs[:raid]
+    hash
   end
 
   def self.disk_usage(command)
     hash = {:raid => nil, :devices => []}
-
-    IO.popen("mount | grep '#{command} '", "r") do |io|
-    #IO.popen("cat command_mount | grep '#{command} '", "r") do |io|
+    IO.popen("mount | grep '#{command}'", "r") do |io|
+      #IO.popen("cat command_mount | grep '#{command} '", "r") do |io|
       io.each do |line|
         device = line.chomp.split(" ").first
         if device.include?("md")
           hash[:raid] = device
-          # IO.popen("cat /proc/mdstat | grep #{device.split("/").last}", "r") do |io|
-          IO.popen("cat mdstat | grep #{device.split("/").last}", "r") do |io|
+          IO.popen("cat /proc/mdstat | grep #{device.split("/").last}", "r") do |io|
+            # IO.popen("cat mdstat | grep #{device.split("/").last}", "r") do |io|
             io.each do |line|
               _cache_disks = line.chomp.split(" ")
               _cache_disks[4.._cache_disks.count].each do |disk|
@@ -111,12 +121,12 @@ class Disk < ActiveRecord::Base
     hash_disks.each_value do |disk|
       _disk = Disk.find_by_serial(disk[:serial])
       if _disk.present?
-        _disk.raid = disk[:raid]
+        _disk.serial = disk[:serial]
         _disk.capacity = disk[:capacity]
+        _disk.raid = disk[:raid]
         _disk.free = disk[:free]
         _disk.system = disk[:system]
         _disk.cache = disk[:cache]
-        _disk.serial = disk[:serial]
         if _disk.changed?
           _disk.save
           count += 1
