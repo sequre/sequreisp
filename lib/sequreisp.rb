@@ -1022,7 +1022,7 @@ def check_physical_links
   writeme = []
   pid = []
   Interface.all(:conditions => "vlan = 0").each do |i|
-    physical_link = `ip link show dev #{i.name} 2>/dev/null`.scan(/state (\w+) /).flatten[0] == "UP" || `mii-tool #{i.name} 2>/dev/null`.scan(/link ok/).flatten[0] == "link ok" || `ethtool #{i.name} 2>/dev/null`.scan(/Link detected: yes/).flatten[0] == "Link detected: yes"
+    physical_link = i.current_physical_link
     if i.physical_link != physical_link
       changes = true
       i.physical_link = physical_link

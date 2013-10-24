@@ -61,7 +61,10 @@
           <td><%= interface.kind %></td>
           <td><%=h interface.vlan_id %></td>
           <td><%= interface.addresses.collect{ |a| a.ip}.join("<br/>") %></td>
-          <td <%= interface.physical_link ? 'class="enable_color"' : 'class="disable_color"' %>><%=h interface.status %></td>
+          <td <%= interface.current_physical_link ? 'class="enable_color"' : 'class="disable_color"' %>>
+            <%=h interface.status %><br/>
+            <%=h interface.speed %>
+          </td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => interface} %>
           <% if current_user.may_update_interface?(interface) %>
             <td><%= link_to t('buttons.edit'), edit_interface_path(interface) %></td>
