@@ -37,7 +37,7 @@ class Plan < ActiveRecord::Base
 
   def remaining_rate_down
     if not new_record?
-      if rate_down_changed? or provider_group_id_changed?
+      if rate_down_changed? or (provider_group_id_changed? and provider_group_id.present?)
         remaining_rate_down = if provider_group_id_changed?
           ProviderGroup.find(provider_group_id).remaining_rate_down
         else
@@ -52,7 +52,7 @@ class Plan < ActiveRecord::Base
 
   def remaining_rate_up
     if not new_record?
-      if rate_up_changed? or provider_group_id_changed?
+      if rate_up_changed? or (provider_group_id_changed? and provider_group_id.present?)
         remaining_rate_up = if provider_group_id_changed?
           ProviderGroup.find(provider_group_id).remaining_rate_up
         else
