@@ -215,6 +215,9 @@ es:
         iptables_tree_optimization_enabled: "Optimizar reglas de iptables (usar sólo en versión de 64 bits)"
         apply_changes_automatically: "Aplicar cambios automáticamente"
         apply_changes_automatically_hour: "Hora de aplicación de los cambios automáticos"
+        web_interface_listen_on_80: "Escuchar peticiones de la interfaz web en puerto 80"
+        web_interface_listen_on_443: "Escuchar peticiones de la interfaz web en puerto 443(HTTPS)"
+        web_interface_listen_on_8080: "Escuchar peticiones de la interfaz web en puerto 8080"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -465,6 +468,7 @@ es:
       unique_provider_does_not_belongs_to_plan: "El proveedor asignado no pertenece al plan seleccionado"
     configuration:
       notification_email_invalid: "Dirección de e-mail inválida"
+      web_interface_listen_at_least_on_one_port: "Al menos se debe seleccionar un puerto para la interfaz web"
     plan:
       not_enough_down_bandwidth_in_this_plan: "No hay suficiente ancho de banda de bajada para asignar este plan"
       not_enough_down_bandwidth: "No hay suficiente ancho de banda de bajada"

@@ -57,6 +57,9 @@ class Configuration < ActiveRecord::Base
       end
       errors.add("notification_email", I18n.t('validations.configuration.notification_email_invalid')) if invalid
     end
+    unless web_interface_listen_on_80 or web_interface_listen_on_443 or web_interface_listen_on_8080
+      errors.add("web_interface_listen_on_8080", I18n.t("validations.configuration.web_interface_listen_at_least_on_one_port"))
+    end
   end
 
   private_class_method :new, :create, :destroy, :destroy_all, :delete, :delete_all

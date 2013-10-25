@@ -634,6 +634,15 @@ def gen_iptables
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
       f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
+      if Configuration.web_interface_listen_on_80
+        f.puts "-A INPUT -p tcp --dport 80 -j ACCEPT"
+      end
+      if Configuration.web_interface_listen_on_443
+        f.puts "-A INPUT -p tcp --dport 443 -j ACCEPT"
+      end
+      if Configuration.web_interface_listen_on_8080
+        f.puts "-A INPUT -p tcp --dport 8080 -j ACCEPT"
+      end
       Interface.all(:conditions => "kind = 'lan'").each do |i|
         f.puts "-A INPUT -i #{i.name} -p udp --dport 53 -j ACCEPT"
         f.puts "-A INPUT -i #{i.name} -p tcp --dport 53 -j ACCEPT"

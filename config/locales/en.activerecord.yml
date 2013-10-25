@@ -215,6 +215,9 @@ en:
         iptables_tree_optimization_enabled: "Optimize iptables rules (use only on 64 bits version)"
         apply_changes_automatically: "Apply changes automatically"
         apply_changes_automatically_hour: "Time for automatic application of changes"
+        web_interface_listen_on_80: "Accept web interface requests on port 80"
+        web_interface_listen_on_443: "Accept web interface requests on port 443"
+        web_interface_listen_on_8080: "Accept web interface requests on port 8080"
       user:
         name: "Name"
         email: "User email address"
@@ -465,6 +468,7 @@ en:
       unique_provider_does_not_belongs_to_plan: "The assigned provider does not belong to the selected plan"
     configuration:
       notification_email_invalid: "Invalid email address"
+      web_interface_listen_at_least_on_one_port: "At least one port must be enabled for web interface requests"
     plan:
       not_enough_down_bandwidth_in_this_plan: "There's not enough download bandwidth to assign this plan"
       not_enough_down_bandwidth: "There's not enough download bandwidth"
