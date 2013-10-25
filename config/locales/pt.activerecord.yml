@@ -321,6 +321,8 @@ pt:
     modules: "Módulos"
     about: "Acerca de"
     audits: "Auditorias"
+    help: "Ajudar"
+    guides: "Guias SequireISP"
   buttons:
     login: "Ingressar"
     edit: "Editar"
