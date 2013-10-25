@@ -451,6 +451,11 @@ es:
       reboot_error: "Ocurrió un error, el servidor no será reiniciado"
       halt: "El servidor se apagara en breve"
       halt_error: "Ocurrió un error, el servidor no se apagará"
+    disk:
+      scan_success: "Lectura exitosa"
+      liberate: "Discos liberados exitosamente"
+      not_liberate: "Discos no liberados"
+      empty_selection: "No se ha seleccionado ningun disco"
   controllers:
     successfully_updated: "Actualización de datos exitosa"
     successfully_created: "Creación exitosa"

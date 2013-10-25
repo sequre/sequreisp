@@ -451,6 +451,11 @@ en:
       reboot_error: "An error occurred, the server will not be rebooted"
       halt: "The server will halt shortly"
       halt_error: "An error occurred, the server will not be halted"
+    disk:
+      scan_success: "Scan success"
+      liberate: "Liberate success"
+      not_liberate: "Liberate fail"
+      empty_selection: "Empty selection"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"

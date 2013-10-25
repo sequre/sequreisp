@@ -10,13 +10,17 @@ class Disk < ActiveRecord::Base
   named_scope :in_raid, :conditions => ["disks.raid IS NOT NULL AND disks.system = FALSE AND disks.cache = TRUE"]
 
   after_update :activate_mount_cache, :if => "self.cache_changed?"
-  before_destroy :activate_mount_cache, :if => "self.cache_changed?"
-  # before_destroy :desactive_raid HACERRRRR
+  before_update :clean_cache, :if => "self.free_changed? and self.free"
+  before_destroy :activate_mount_cache, :if => "self.cache"
 
   def activate_mount_cache
     conf = Configuration.first
     conf.mount_cache = true
     conf.save
+  end
+
+  def clean_cache
+    self.clean_partition = true
   end
 
   def self.scan
@@ -36,7 +40,7 @@ class Disk < ActiveRecord::Base
           which_raid = system_disks[:raid] if is_system
           which_raid = cache_disks[:raid] if is_cache
           is_free = is_system or is_cache ? false : true
-          hash = #{:name => logical_name, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid}
+          hash = {:name => logical_name, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid}
             scan_for_other_uses(hash)
           disks[logical_name] = hash
         elsif line.include?("serial:")
@@ -53,7 +57,7 @@ class Disk < ActiveRecord::Base
   end
 
   def self.used_for_system
-    hash = #{:raid => "/dev/md0", :devices => []}
+    hash = {:raid => "/dev/md0", :devices => []}
       IO.popen("cat /proc/mdstat | grep md0", "r") do |io|
       #IO.popen("cat mdstat | grep md0", "r") do |io|
       io.each do |line|

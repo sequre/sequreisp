@@ -448,6 +448,11 @@ pt:
       reboot_error: "Ocorreu um erro, o servidor não será reiniciado"
       halt: "O servidor será desligado em breve"
       halt_error: "Ocorreu um erro, o servidor não será desligado"
+    disk:
+      scan_success: "Digitalização com êxito"
+      liberate: "Discos lançados com sucesso"
+      not_liberate: "Erro em álbuns liberando"
+      empty_selection: "Não selecionou nenhum disco"
   controllers:
     successfully_updated: "Atualização de dados bem-sucedida"
     successfully_created: "Criação bem-sucedida"
