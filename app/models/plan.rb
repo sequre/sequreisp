@@ -75,10 +75,10 @@ class Plan < ActiveRecord::Base
     contracts.count * multiplier
   end
   def burst_down_to_bytes
-    burst_down * 1024
+    (burst_down / 8) * 1024
   end
   def burst_up_to_bytes
-    burst_up * 1024
+    (burst_up / 8) * 1024
   end
   def long_download_max_to_bytes
     long_download_max * 1024
