@@ -593,7 +593,7 @@ class Contract < ActiveRecord::Base
         I18n.t('activerecord.attributes.contract.ip'),
         #I18n.t('activerecord.attributes.contract.forwarded_ports'),
         I18n.t('activerecord.attributes.contract.state')
-      ]
+      ] + plugins_columns
 
       # data rows
       _contracts.each do |c|
@@ -617,9 +617,17 @@ class Contract < ActiveRecord::Base
           c.ip,
           #c.forwarded_ports.collect{ |fp| "[#{fp.provider.name}]#{fp.public_port}=>#{fp.private_port}" }.join("|"),
           c.state
-        ]
+        ] + plugins_rows(c)
       end
     end
+  end
+
+  def self.plugins_columns
+    []
+  end
+
+  def self.plugins_rows contract
+    []
   end
 
   def data_count_for_last_year
