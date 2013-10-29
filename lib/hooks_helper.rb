@@ -40,4 +40,8 @@ module HooksHelper
   def plugins_table_columns_values object
     {}
   end
+
+  def plugins_header_extensions
+    ""
+  end
 end

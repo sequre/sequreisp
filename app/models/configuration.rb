@@ -17,6 +17,7 @@
 
 class Configuration < ActiveRecord::Base
   ACCEPTED_LOCALES = ["es","en","pt"]
+  GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
   def self.acts_as_audited_except
     [:daemon_reload]
   end
