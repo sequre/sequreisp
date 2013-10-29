@@ -125,7 +125,7 @@ en:
         name: "First name and surname"
         email: "Email address"
         phone: "Phone number"
-        phone_mobile: "Celphone number"
+        phone_mobile: "Mobile phone number"
         address: "Address"
         details: "Observations"
         external_client_number: "Client Number"
