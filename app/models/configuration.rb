@@ -31,7 +31,8 @@ class Configuration < ActiveRecord::Base
                :transparent_proxy_windows_update_hack,
                :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
                :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
-               :iptables_tree_optimization_enabled
+               :iptables_tree_optimization_enabled,
+               :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
