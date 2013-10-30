@@ -154,6 +154,6 @@ class Interface < ActiveRecord::Base
     `ethtool #{name} 2>/dev/null`.match("Speed: \(.*\)")[1] rescue "-"
   end
   def current_physical_link
-    `ip link show dev #{name} 2>/dev/null`.scan(/state (\w+) /).flatten[0] == "UP" || `mii-tool #{name} 2>/dev/null`.scan(/link ok/).flatten[0] == "link ok" || `ethtool #{name} 2>/dev/null`.scan(/Link detected: yes/).flatten[0] == "Link detected: yes"
+    `ip link show dev #{name} 2>/dev/null`.scan(/state (\w+) /).flatten[0] == "UP" || `sudo mii-tool #{name} 2>/dev/null`.scan(/link ok/).flatten[0] == "link ok" || `sudo ethtool #{name} 2>/dev/null`.scan(/Link detected: yes/).flatten[0] == "Link detected: yes"
   end
 end
