@@ -454,6 +454,8 @@ es:
     disk:
       scan_success: "Se han detectado nuevos discos"
       scan_fail: "No se han detectado nuevos discos"
+      assign_for_cache: "Discos asignados a cache"
+      not_assign_for_cache: "Los discos no pueden asignarse a cache"
       liberate: "Discos liberados exitosamente"
       not_liberate: "Discos no liberados"
       empty_selection: "No se ha seleccionado ningun disco"
