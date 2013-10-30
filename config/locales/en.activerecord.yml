@@ -325,7 +325,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
-    cache: "Cache"
+    disk_management: "Disk management"
     general_configuration: "General Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
     avoid_proxy_hosts: "Avoid Proxy Hosts"
@@ -452,7 +452,8 @@ en:
       halt: "The server will halt shortly"
       halt_error: "An error occurred, the server will not be halted"
     disk:
-      scan_success: "Scan success"
+      scan_success: "New disks have been detected"
+      scan_fail: "No new disks have been detected"
       liberate: "Liberate success"
       not_liberate: "Liberate fail"
       empty_selection: "Empty selection"

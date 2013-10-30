@@ -1,9 +1,11 @@
 class DisksController < ApplicationController
+  before_filter :require_user
+  permissions :disks
 
   def index
     @free_disks = Disk.free
     @system_disks = Disk.find(:all, :conditions => {:system => true})
-    @cache_disks = Disk.find(:all, :conditions => {:cache => true, :videocache => false})
+    @cache_disks = Disk.find(:all, :conditions => {:cache => true, :free => false})
     hook_other_uses
     respond_to do |format|
       format.html # index.html.erb
@@ -26,8 +28,8 @@ class DisksController < ApplicationController
       end
     else
       flash[:warning] = I18n.t('messages.disk.empty_selection')
-      redirect_to disks_path
     end
+    redirect_to disks_path
   end
 
   def assign_for
@@ -44,32 +46,25 @@ class DisksController < ApplicationController
   end
 
   def scan
-    count_create = 0
-    count_destroy = 0
+    count = 0
 
-    scan_disks = Disk.scan
-    collect_disks = Disk.all.collect(&:serial)
+    Disk.destroy_all
 
-    count_destroy = Disk.destroy_disks(collect_disks - scan_disks.map{|b| b[1][:serial]})
-    count_create = Disk.create_or_change_disks(scan_disks)
-
-    conf = Configuration.first
-    conf.mount_cache = false
-    conf.save
-
-    if count_destroy > 0  or count_create > 0
-      flash[:notice] = I18n.t('messages.disk.scan_success')
+    Disk.scan.each_value do |disk|
+      count += 1
+      Disk.create(disk)
     end
+
+    if count > 0
+      flash[:notice] = I18n.t('messages.disk.scan_success')
+    else
+      flash[:warning] = I18n.t('messages.disk.scan_fail')
+    end
+
     redirect_to disks_path
   end
 
   private
-
-  def hook_assign_for
-  end
-
-  def hook_other_uses
-  end
 
   def assign_for_cache
     count = 0
@@ -83,6 +78,12 @@ class DisksController < ApplicationController
       flash[:warning] = I18n.t('messages.disk.not_assign_for_cache')
     end
     redirect_to disks_path
+  end
+
+  def hook_assign_for
+  end
+
+  def hook_other_uses
   end
 
 end

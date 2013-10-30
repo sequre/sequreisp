@@ -322,7 +322,7 @@ pt:
     interfaces: "Interfaces"
     users: "Usuários"
     configuration: "Configuração"
-    cache: "Cache"
+    disk_management: "Gerenciamento de disco"
     general_configuration: "configuração geral"
     avoid_balancing_hosts: "Sites sim balanceamento"
     avoid_proxy_hosts: "Sites sim proxy"
@@ -449,7 +449,8 @@ pt:
       halt: "O servidor será desligado em breve"
       halt_error: "Ocorreu um erro, o servidor não será desligado"
     disk:
-      scan_success: "Digitalização com êxito"
+      scan_success: "Detectaram-se novos discos"
+      scan_fail: "Não se detectaram novos discos"
       liberate: "Discos lançados com sucesso"
       not_liberate: "Erro em álbuns liberando"
       empty_selection: "Não selecionou nenhum disco"

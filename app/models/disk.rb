@@ -1,7 +1,7 @@
 class Disk < ActiveRecord::Base
 
   include ModelsWatcher
-  watch_fields :cache
+  watch_fields :cache, :free
   watch_on_destroy
 
   named_scope :system, :conditions => {:system => true}
@@ -9,9 +9,8 @@ class Disk < ActiveRecord::Base
   named_scope :free, :conditions => {:free => true}
   named_scope :in_raid, :conditions => ["disks.raid IS NOT NULL AND disks.system = FALSE AND disks.cache = TRUE"]
 
-  after_update :activate_mount_cache, :if => "self.cache_changed?"
   before_update :clean_cache, :if => "self.free_changed? and self.free"
-  before_destroy :activate_mount_cache, :if => "self.cache"
+  after_update :activate_mount_cache, :if => "self.cache_changed? or (self.cache and self.free_changed? and self.free)"
 
   def activate_mount_cache
     conf = Configuration.first
@@ -30,7 +29,6 @@ class Disk < ActiveRecord::Base
     system_disks = used_for_system
     cache_disks = used_for_cache
     IO.popen('sudo /usr/bin/lshw -C disk | grep "logical name: /dev/*\| serial: \| size:"', "r") do |io|
-      #IO.popen('cat disklshw | /bin/grep "logical name: /dev/*\| serial: \| size:"', "r") do |io|
       io.each do |line|
         which_raid = nil
         if line.include?("logical name:")
@@ -40,7 +38,8 @@ class Disk < ActiveRecord::Base
           which_raid = system_disks[:raid] if is_system
           which_raid = cache_disks[:raid] if is_cache
           is_free = is_system or is_cache ? false : true
-          hash = {:name => logical_name, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid}
+          partitioned =  is_free ? false : true
+          hash = {:name => logical_name, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid, :partitioned => partitioned, :clean_partition => is_free}
             scan_for_other_uses(hash)
           disks[logical_name] = hash
         elsif line.include?("serial:")
@@ -59,7 +58,6 @@ class Disk < ActiveRecord::Base
   def self.used_for_system
     hash = {:raid => "/dev/md0", :devices => []}
       IO.popen("cat /proc/mdstat | grep md0", "r") do |io|
-      #IO.popen("cat mdstat | grep md0", "r") do |io|
       io.each do |line|
         _system_disks = line.chomp.split(" ")
         _system_disks[4.._system_disks.count].each do |disk|
@@ -77,6 +75,7 @@ class Disk < ActiveRecord::Base
     if devs[:devices].empty?
       devs = self.disk_usage("/mnt/cache")
       devs = self.disk_usage("/mnt/cache/web") if devs[:devices].empty?
+      hash[:devices] = devs[:devices]
     else
       devs[:devices].each do |dev|
         hash[:devices] << dev if File.directory?("/mnt/sequreisp#{dev}/squid")
@@ -89,13 +88,11 @@ class Disk < ActiveRecord::Base
   def self.disk_usage(command)
     hash = {:raid => nil, :devices => []}
     IO.popen("mount | grep '#{command}'", "r") do |io|
-      #IO.popen("cat command_mount | grep '#{command} '", "r") do |io|
       io.each do |line|
         device = line.chomp.split(" ").first
         if device.include?("md")
           hash[:raid] = device
           IO.popen("cat /proc/mdstat | grep #{device.split("/").last}", "r") do |io|
-            # IO.popen("cat mdstat | grep #{device.split("/").last}", "r") do |io|
             io.each do |line|
               _cache_disks = line.chomp.split(" ")
               _cache_disks[4.._cache_disks.count].each do |disk|
@@ -109,38 +106,6 @@ class Disk < ActiveRecord::Base
       end
     end
     hash
-  end
-
-  def self.destroy_disks device_serials
-    count = 0
-    device_serials.each do |serial|
-      disk = Disk.find_by_serial(serial).destroy
-      count += 1
-    end
-    count
-  end
-
-  def self.create_or_change_disks hash_disks
-    count = 0
-    hash_disks.each_value do |disk|
-      _disk = Disk.find_by_serial(disk[:serial])
-      if _disk.present?
-        _disk.serial = disk[:serial]
-        _disk.capacity = disk[:capacity]
-        _disk.raid = disk[:raid]
-        _disk.free = disk[:free]
-        _disk.system = disk[:system]
-        _disk.cache = disk[:cache]
-        if _disk.changed?
-          _disk.save
-          count += 1
-        end
-      else
-        Disk.create disk
-        count += 1
-      end
-    end
-    count
   end
 
   def assigned_for(attr)
