@@ -44,4 +44,12 @@ module HooksHelper
   def plugins_table_columns_values object
     {}
   end
+
+  def plugins_header_extensions
+    ""
+  end
+
+  def massive_settings_form_extensions(form)
+    ""
+  end
 end
