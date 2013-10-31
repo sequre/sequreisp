@@ -955,7 +955,7 @@ def umount_disk(f, dev)
   #   io.each do |line|
   #     dev = line.split(' ').first.split("/").last
   #     if not dev.include?("sda") or not dev.include?("md0")
-  f.puts("umount #{dev}1")
+  f.puts("umount -l #{dev}1")
   # end
   f.puts("sed -i '/\\/dev\\/#{dev.split("/").last}1/d' /etc/fstab")
   #   end
@@ -971,7 +971,9 @@ def config_cache_disks(f)
 
   if conf.mount_cache
     f.puts("service squid stop")
-    disable_raid(f, Disk.used_for_cache)
+    f.puts("pidof squid")
+    f.puts("if [ $? -eq 0 ]; then pkill -9 squid; fi")
+    #disable_raid(f, Disk.used_for_cache)
     cache_disks.each do |disk|
       mounting_point = "/mnt/sequreisp#{disk.name}"
       if disk.free
@@ -1003,12 +1005,15 @@ def config_cache_disks(f)
   f.puts "sed -i '/cache_dir ufs \/var\/spool\/squid / c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
 
   if cache_disks.empty?
+    f.puts("mkdir -p /var/spool/squid")
+    f.puts("chown proxy.proxy -R /var/spool/squid")
     IO.popen("fdisk -l | grep 'Disk /dev/sda'", "r") do |io|
       value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
       value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
       cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
     end
   else
+    f.puts("rm -rf /var/spool/squid")
     cache_disks.each do |disk|
       IO.popen("fdisk -l | grep 'Disk #{disk.name}'", "r") do |io|
         capacitys[disk.name] = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
