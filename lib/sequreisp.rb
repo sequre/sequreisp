@@ -1013,7 +1013,7 @@ def config_cache_disks(f)
       cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
     end
   else
-    f.puts("rm -rf /var/spool/squid")
+    f.puts("rm -rf /var/spool/squid &")
     cache_disks.each do |disk|
       IO.popen("fdisk -l | grep 'Disk #{disk.name}'", "r") do |io|
         capacitys[disk.name] = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
