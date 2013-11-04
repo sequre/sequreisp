@@ -37,7 +37,7 @@ class Plan < ActiveRecord::Base
 
   def remaining_rate_down
     if not new_record?
-      if rate_down_changed? or provider_group_id_changed?
+      if rate_down_changed? or (provider_group_id_changed? and provider_group_id.present?)
         remaining_rate_down = if provider_group_id_changed?
           ProviderGroup.find(provider_group_id).remaining_rate_down
         else
@@ -52,7 +52,7 @@ class Plan < ActiveRecord::Base
 
   def remaining_rate_up
     if not new_record?
-      if rate_up_changed? or provider_group_id_changed?
+      if rate_up_changed? or (provider_group_id_changed? and provider_group_id.present?)
         remaining_rate_up = if provider_group_id_changed?
           ProviderGroup.find(provider_group_id).remaining_rate_up
         else
@@ -75,10 +75,10 @@ class Plan < ActiveRecord::Base
     contracts.count * multiplier
   end
   def burst_down_to_bytes
-    burst_down * 1024
+    (burst_down / 8) * 1024
   end
   def burst_up_to_bytes
-    burst_up * 1024
+    (burst_up / 8) * 1024
   end
   def long_download_max_to_bytes
     long_download_max * 1024

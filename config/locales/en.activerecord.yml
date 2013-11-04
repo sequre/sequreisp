@@ -55,6 +55,9 @@ en:
       contract:
         one: "Contract"
         other: "Contracts"
+      disk:
+        one: "Disk"
+        other: "Disks"
       forwarded_port:
         one: "Redirected port"
         other: "Redirected ports"
@@ -128,7 +131,7 @@ en:
         name: "First name and surname"
         email: "Email address"
         phone: "Phone number"
-        phone_mobile: "Celphone number"
+        phone_mobile: "Mobile phone number"
         address: "Address"
         details: "Observations"
         external_client_number: "Client Number"
@@ -136,6 +139,14 @@ en:
         created_at: "Created at"
         taxpayer_identification_number: 'Taxpayer identificacion number'
         national_identification_number: 'National identification number'
+      disk:
+        id: "ID"
+        serial: "Serial number"
+        name: "Name"
+        capacity: "Capacity"
+        type: "Type"
+        system: "System"
+        cache: "Cache"
       plan:
         id: 'Id'
         name: "Name"
@@ -144,8 +155,8 @@ en:
         ceil_down: "Máx. Download [kbps]"
         rate_up: "Mín. Upload [kbps]"
         ceil_up: "Máx. Upload [kbps]"
-        burst_down: "Download Burst [kbytes]"
-        burst_up: "Upload Burst [kbytes]"
+        burst_down: "Download Burst [kbits]"
+        burst_up: "Upload Burst [kbits]"
         long_download_max: "Large downloads limit [kbytes]"
         long_upload_max: "Large uploads limit [kbytes]"
         transparent_proxy: "Transparent Proxy"
@@ -218,6 +229,9 @@ en:
         iptables_tree_optimization_enabled: "Optimize iptables rules (use only on 64 bits version)"
         apply_changes_automatically: "Apply changes automatically"
         apply_changes_automatically_hour: "Time for automatic application of changes"
+        web_interface_listen_on_80: "Accept web interface requests on port 80"
+        web_interface_listen_on_443: "Accept web interface requests on port 443"
+        web_interface_listen_on_8080: "Accept web interface requests on port 8080"
       user:
         name: "Name"
         email: "User email address"
@@ -321,6 +335,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
+    disk_management: "Disk management"
     general_configuration: "General Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
     avoid_proxy_hosts: "Avoid Proxy Hosts"
@@ -332,6 +347,8 @@ en:
     about: "About"
     audits: "Audits"
     always_allowed_sites: "Always allowed sites"
+    help: "Help"
+    guides: "SequireISP guides"
   buttons:
     login: "Login"
     edit: "Edit"
@@ -360,6 +377,12 @@ en:
     massive_setting: 'update selected'
     massive_destroy: 'destroy selected'
     form_massive_setting: 'Massive update'
+    system_disks: 'System'
+    cache_disks: 'Cache'
+    free_disks: 'Free'
+    scan_disks: 'Scan disks'
+    liberate_disks: 'Liberate disks'
+    assign_disks_to_cache: 'Assign to cache'
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"
@@ -441,6 +464,14 @@ en:
       reboot_error: "An error occurred, the server will not be rebooted"
       halt: "The server will halt shortly"
       halt_error: "An error occurred, the server will not be halted"
+    disk:
+      scan_success: "New disks have been detected"
+      scan_fail: "No new disks have been detected"
+      assign_for_cache: "Disks assigned for cache"
+      not_assign_for_cache: "Disks not assigned for cache"
+      liberate: "Liberate success"
+      not_liberate: "Liberate fail"
+      empty_selection: "Empty selection"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
@@ -473,6 +504,7 @@ en:
       unique_provider_does_not_belongs_to_plan: "The assigned provider does not belong to the selected plan"
     configuration:
       notification_email_invalid: "Invalid email address"
+      web_interface_listen_at_least_on_one_port: "At least one port must be enabled for web interface requests"
     plan:
       not_enough_down_bandwidth_in_this_plan: "There's not enough download bandwidth to assign this plan"
       not_enough_down_bandwidth: "There's not enough download bandwidth"

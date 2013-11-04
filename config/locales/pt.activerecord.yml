@@ -52,6 +52,9 @@ pt:
       contract:
         one: "Contrato"
         other: "Contratos"
+      disk:
+        one: "Disco"
+        other: "Discos"
       forwarded_port:
         one: "Portas redirecionadas"
         other: "Portas redirecionadas"
@@ -133,6 +136,14 @@ pt:
         created_at: "Data de cadastro"
         taxpayer_identification_number: 'Número Identificación contribuinte'
         national_identification_number: 'Número de identificação nacional'
+      disk:
+        id: "ID"
+        serial: "Número de série"
+        name: "Nome"
+        capacity: "Capacidade"
+        type: "Tipo"
+        system: "Sistema"
+        cache: "Cache"
       plan:
         id: 'Id'
         name: "Nombre"
@@ -141,8 +152,8 @@ pt:
         ceil_down: "Máx. baixada [kbps]"
         rate_up: "Mín. subida [kbps]"
         ceil_up: "Máx. subida [kbps]"
-        burst_down: "Rajada de baixada [kbytes]"
-        burst_up: "Rajada de subida [kbytes]"
+        burst_down: "Rajada de baixada [kbits]"
+        burst_up: "Rajada de subida [kbits]"
         long_download_max: "Limite para descargas grandes [kbytes]"
         long_upload_max: "Limite para cargas grandes [kbytes]"
         transparent_proxy: "Proxy transparente"
@@ -215,6 +226,9 @@ pt:
         iptables_tree_optimization_enabled: "Optimizar regras de iptables (usar só em versão de 64 bits)"
         apply_changes_automatically: "Aplicar câmbios automáticamente"
         apply_changes_automatically_hour: "Hora de aplicação dos câmbios automáticos"
+        web_interface_listen_on_80: "Aceitar pedidos de interface web na porta 80"
+        web_interface_listen_on_443: "Aceitar pedidos de interface web na porta 80 443"
+        web_interface_listen_on_8080: "Aceitar pedidos de interface web na porta 8080"
       user:
         name: "Nome"
         email: "E-mail do usuário"
@@ -318,6 +332,7 @@ pt:
     interfaces: "Interfaces"
     users: "Usuários"
     configuration: "Configuração"
+    disk_management: "Gerenciamento de disco"
     general_configuration: "configuração geral"
     avoid_balancing_hosts: "Sites sim balanceamento"
     avoid_proxy_hosts: "Sites sim proxy"
@@ -329,6 +344,8 @@ pt:
     about: "Acerca de"
     audits: "Auditorias"
     always_allowed_sites: "Sites permitidos"
+    help: "Ajudar"
+    guides: "Guias SequireISP"
   buttons:
     login: "Ingressar"
     edit: "Editar"
@@ -357,6 +374,12 @@ pt:
     massive_setting: 'Atualizar selecionados'
     massive_destroy: 'Destruir selecionados'
     form_massive_setting: 'Massiva  atualização'
+    system_disks: 'Sistema'
+    cache_disks: 'Cache'
+    free_disks: 'Livres'
+    scan_disks: 'Detectar novos discos'
+    liberate_disks: 'Libertar disks'
+    assign_disks_to_cache: 'Atribuir a cache'
   backup:
     backup_db_legend: "Cópia de resguardo (base de dados)"
     backup_full_legend: "Cópia de resguardo completa (aplicativo e base de datos)"
@@ -438,6 +461,14 @@ pt:
       reboot_error: "Ocorreu um erro, o servidor não será reiniciado"
       halt: "O servidor será desligado em breve"
       halt_error: "Ocorreu um erro, o servidor não será desligado"
+    disk:
+      scan_success: "Detectaram-se novos discos"
+      scan_fail: "Não se detectaram novos discos"
+      assign_for_cache: "Discos designados para o cache"
+      not_assign_for_cache: "Discos não atribuído para o cache"
+      liberate: "Discos lançados com sucesso"
+      not_liberate: "Erro em álbuns liberando"
+      empty_selection: "Não selecionou nenhum disco"
   controllers:
     successfully_updated: "Atualização de dados bem-sucedida"
     successfully_created: "Criação bem-sucedida"
@@ -470,6 +501,7 @@ pt:
       unique_provider_does_not_belongs_to_plan: "O fornecedor atribuído não pertence ao plano escolhido"
     configuration:
       notification_email_invalid: "Endereço de e-mail inválido"
+      web_interface_listen_at_least_on_one_port: "Pelo menos uma porta deve estar habilitado para pedidos de interface web"
     plan:
       not_enough_down_bandwidth_in_this_plan: "Não há suficiente largo de banda de baixada para atribuir este plano"
       not_enough_down_bandwidth: "Não há suficiente largo de banda de baixada"

@@ -29,6 +29,10 @@ module HooksHelper
     ""
   end
 
+  def view_extensions
+    ""
+  end
+
   def search_extensions(form)
     @__search_extensions = {}
   end
@@ -43,6 +47,14 @@ module HooksHelper
 
   def show_traffic(contract)
     "#{number_to_human_size(contract.current_traffic.data_count)}"
+  end
+
+  def massive_settings_form_extensions(form)
+    ""
+  end
+
+  def plugins_header_extensions
+    ""
   end
 
   def massive_settings_form_extensions(form)
