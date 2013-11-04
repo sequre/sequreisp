@@ -56,16 +56,21 @@ class Disk < ActiveRecord::Base
   end
 
   def self.used_for_system
-    hash = {:raid => "/dev/md0", :devices => []}
+    hash = {:raid => nil, :devices => []}
+    devs = self.disk_usage("on / ")
+    if devs.first.include?("md0")
+      hash[:raid] = "/dev/md0"
       IO.popen("cat /proc/mdstat | grep md0", "r") do |io|
-      io.each do |line|
-        _system_disks = line.chomp.split(" ")
-        _system_disks[4.._system_disks.count].each do |disk|
-          hash[:devices] << "/dev/#{disk[0..2]}"
+        io.each do |line|
+          _system_disks = line.chomp.split(" ")
+          _system_disks[4.._system_disks.count].each do |disk|
+            hash[:devices] << "/dev/#{disk[0..2]}"
+          end
         end
       end
+    else
+      hash[:devices] = devs
     end
-    hash[:raid] = nil if hash[:devices].empty?
     hash
   end
 
