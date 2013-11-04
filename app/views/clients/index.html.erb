@@ -84,6 +84,7 @@
         <% if current_user.may_destroy_client?(Client.new) %>
         <th></th>
         <% end %>
+        <th></th>
       </tr>
 
       <% @clients.each_with_index do |client,i| %>
@@ -102,6 +103,7 @@
           <% if current_user.may_destroy_client?(client) %>
           <td><%= link_to t('buttons.delete'), client, :confirm => t('messages.confirm'), :method => :delete %></td>
           <% end %>
+          <td><%= client.created_at %></td>
         </tr>
       <% end %>
     </tbody>

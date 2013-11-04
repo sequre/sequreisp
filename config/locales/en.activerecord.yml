@@ -55,6 +55,9 @@ en:
       contract:
         one: "Contract"
         other: "Contracts"
+      disk:
+        one: "Disk"
+        other: "Disks"
       forwarded_port:
         one: "Redirected port"
         other: "Redirected ports"
@@ -136,6 +139,14 @@ en:
         created_at: "Created at"
         taxpayer_identification_number: 'Taxpayer identificacion number'
         national_identification_number: 'National identification number'
+      disk:
+        id: "ID"
+        serial: "Serial number"
+        name: "Name"
+        capacity: "Capacity"
+        type: "Type"
+        system: "System"
+        cache: "Cache"
       plan:
         id: 'Id'
         name: "Name"
@@ -324,6 +335,7 @@ en:
     interfaces: "Interfaces"
     users: "Users"
     configuration: "Configuration"
+    disk_management: "Disk management"
     general_configuration: "General Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
     avoid_proxy_hosts: "Avoid Proxy Hosts"
@@ -365,6 +377,12 @@ en:
     massive_setting: 'update selected'
     massive_destroy: 'destroy selected'
     form_massive_setting: 'Massive update'
+    system_disks: 'System'
+    cache_disks: 'Cache'
+    free_disks: 'Free'
+    scan_disks: 'Scan disks'
+    liberate_disks: 'Liberate disks'
+    assign_disks_to_cache: 'Assign to cache'
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"
@@ -446,6 +464,14 @@ en:
       reboot_error: "An error occurred, the server will not be rebooted"
       halt: "The server will halt shortly"
       halt_error: "An error occurred, the server will not be halted"
+    disk:
+      scan_success: "New disks have been detected"
+      scan_fail: "No new disks have been detected"
+      assign_for_cache: "Disks assigned for cache"
+      not_assign_for_cache: "Disks not assigned for cache"
+      liberate: "Liberate success"
+      not_liberate: "Liberate fail"
+      empty_selection: "Empty selection"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"

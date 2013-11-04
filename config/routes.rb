@@ -25,6 +25,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :plans
 
+  map.resources :disks, :collection => { :scan => :get, :liberate => :put, :assign_for => :put}
+
   map.resource :user_session
 
   map.resource :about

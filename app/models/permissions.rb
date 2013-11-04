@@ -49,6 +49,19 @@ class Permissions < Aegis::Permissions
     allow :technical, :technical_readonly, :administrative, :administrative_readonly
   end
 
+  resources :disks do
+    writing do
+      allow :administrative, :technical
+    end
+    reading do
+      allow :administrative, :technical, :administrative_readonly, :technical_readonly
+    end
+  end
+
+  action :scan, :liberate, :assign_for do
+      allow :technical, :technical_readonly, :administrative, :administrative_readonly
+    end
+
   resources :providers, :provider_groups, :interfaces do
     writing do
       allow :technical

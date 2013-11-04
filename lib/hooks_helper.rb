@@ -49,7 +49,15 @@ module HooksHelper
     "#{number_to_human_size(contract.current_traffic.data_count)}"
   end
 
+  def massive_settings_form_extensions(form)
+    ""
+  end
+
   def plugins_header_extensions
+    ""
+  end
+
+  def massive_settings_form_extensions(form)
     ""
   end
 end

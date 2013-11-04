@@ -52,6 +52,9 @@ pt:
       contract:
         one: "Contrato"
         other: "Contratos"
+      disk:
+        one: "Disco"
+        other: "Discos"
       forwarded_port:
         one: "Portas redirecionadas"
         other: "Portas redirecionadas"
@@ -133,6 +136,14 @@ pt:
         created_at: "Data de cadastro"
         taxpayer_identification_number: 'Número Identificación contribuinte'
         national_identification_number: 'Número de identificação nacional'
+      disk:
+        id: "ID"
+        serial: "Número de série"
+        name: "Nome"
+        capacity: "Capacidade"
+        type: "Tipo"
+        system: "Sistema"
+        cache: "Cache"
       plan:
         id: 'Id'
         name: "Nombre"
@@ -321,6 +332,7 @@ pt:
     interfaces: "Interfaces"
     users: "Usuários"
     configuration: "Configuração"
+    disk_management: "Gerenciamento de disco"
     general_configuration: "configuração geral"
     avoid_balancing_hosts: "Sites sim balanceamento"
     avoid_proxy_hosts: "Sites sim proxy"
@@ -362,6 +374,12 @@ pt:
     massive_setting: 'Atualizar selecionados'
     massive_destroy: 'Destruir selecionados'
     form_massive_setting: 'Massiva  atualização'
+    system_disks: 'Sistema'
+    cache_disks: 'Cache'
+    free_disks: 'Livres'
+    scan_disks: 'Detectar novos discos'
+    liberate_disks: 'Libertar disks'
+    assign_disks_to_cache: 'Atribuir a cache'
   backup:
     backup_db_legend: "Cópia de resguardo (base de dados)"
     backup_full_legend: "Cópia de resguardo completa (aplicativo e base de datos)"
@@ -443,6 +461,14 @@ pt:
       reboot_error: "Ocorreu um erro, o servidor não será reiniciado"
       halt: "O servidor será desligado em breve"
       halt_error: "Ocorreu um erro, o servidor não será desligado"
+    disk:
+      scan_success: "Detectaram-se novos discos"
+      scan_fail: "Não se detectaram novos discos"
+      assign_for_cache: "Discos designados para o cache"
+      not_assign_for_cache: "Discos não atribuído para o cache"
+      liberate: "Discos lançados com sucesso"
+      not_liberate: "Erro em álbuns liberando"
+      empty_selection: "Não selecionou nenhum disco"
   controllers:
     successfully_updated: "Atualização de dados bem-sucedida"
     successfully_created: "Criação bem-sucedida"

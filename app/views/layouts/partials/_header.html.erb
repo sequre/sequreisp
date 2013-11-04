@@ -1,6 +1,6 @@
 <div id="header">
+  <%= plugins_header_extensions %>
   <% if current_user %>
     <%= link_to "#{current_user.name} (Logout)", logout_path, :class => "logout" %>
   <% end %>
-  <%= plugins_header_extensions %>
 </div>

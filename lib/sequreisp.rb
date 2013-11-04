@@ -754,9 +754,9 @@ def gen_ip_ro
         update_provider_route p, f, true
       end
       ProviderGroup.enabled.each do |pg|
-        update_provider_group_route pg, f, true
+        update_provider_group_route f, pg, true, true
       end
-      update_fallback_route f, true
+      update_fallback_route f, true, true
     end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
@@ -898,6 +898,142 @@ def setup_proc
     "echo #{Configuration.gc_thresh3} > /proc/sys/net/ipv4/neigh/default/gc_thresh3"
     ]
 end
+
+def disk_partition(f, disk)
+  f.puts("dd if=/dev/zero of=#{disk.name} count=1024 bs=1024")
+  f.puts "(echo n; echo p; echo 1; echo ; echo ; echo w) | fdisk #{disk.name}"
+  disk.partitioned = true
+  disk.save
+end
+
+def disable_raid(f, mdstat)
+  if mdstat[:raid].present?
+    mdstat[:devices].each do |dev|
+      f.puts("mdadm --fail #{mdstat[:raid]} #{dev}1")
+      f.puts("mdadm --remove #{mdstat[:raid]} #{dev}1")
+      disk = Disk.find_by_name(dev)
+      if disk.present? and disk.raid.present?
+        f.puts("mdadm --zero-superblock #{dev}1")
+        disk.raid = nil
+        disk.save if disk.changed?
+      end
+    end
+    f.puts("sed -i '/#{mdstat[:raid]}/d' /proc/mdstat")
+  end
+end
+
+def config_system_disks(f)
+  system_md = "/dev/md0"
+  system_disk = "/dev/sda"
+  mdstat_system = Disk.used_for_system[:devices]
+  mdstat_system.delete(system_disk)
+  Disk.all.each do |disk|
+    if mdstat_system.include?(disk.name)
+      mdstat_system.delete(disk.name)
+      if not disk.system
+        f.puts("mdadm --fail #{system_md} #{disk.name}1")
+        f.puts("mdadm --remove #{system_md} #{disk.name}1")
+        f.puts("mdadm --zero-superblock #{disk.name}1")
+        disk_name = disk.name.split("/").last
+        f.puts("sed -i '/\\/dev\\/#{disk_name}2/d' /etc/fstab")
+      end
+    end
+  end
+  Disk.connection.update_sql "update disks set disks.raid = '#{system_md}' where disks.system = true"
+  mdstat_system.each do |dev|
+    f.puts("mdadm --fail #{system_md} #{dev}1")
+    f.puts("mdadm --remove #{system_md} #{dev}1")
+    dev = dev.split("/").last
+    f.puts("sed -i '/\\/dev\\/#{dev}2/d' /etc/fstab")
+  end
+end
+
+def mount_disk(f, dev, mounting_point)
+  f.puts "echo '#{dev}1 #{mounting_point} ext4 defaults 0 1' >> /etc/fstab"
+  f.puts "mount #{dev}1"
+end
+
+def umount_disk(f, dev)
+  # Umount al except md0 and systems disks
+  # sistem_disk = Disk.used_for_system
+  # sistem_disk[:devices] << sistem_disk[:raid]
+  # IO.popen("mount | grep '/dev/sd'", "r") do |io|
+  #   io.each do |line|
+  #     dev = line.split(' ').first.split("/").last
+  #     if not dev.include?("sda") or not dev.include?("md0")
+  f.puts("umount -l #{dev}1")
+  # end
+  f.puts("sed -i '/\\/dev\\/#{dev.split("/").last}1/d' /etc/fstab")
+  #   end
+  # end
+end
+
+def config_cache_disks(f)
+  cache_disks = Disk.cache
+  max_value_squid = 307200
+  capacitys = {}
+  cache_dirs = []
+  conf = Configuration.first
+
+  if conf.mount_cache
+    f.puts("service squid stop")
+    f.puts("pidof squid")
+    f.puts("if [ $? -eq 0 ]; then pkill -9 squid; fi")
+    #disable_raid(f, Disk.used_for_cache)
+    cache_disks.each do |disk|
+      mounting_point = "/mnt/sequreisp#{disk.name}"
+      if disk.free
+        umount_disk(f, disk.name)
+        disk.assigned_for([:free])
+      else
+        IO.popen("mount | grep '#{disk.name}'", "r") do |io|
+          umount_disk(f, disk.name) if not io.first.nil?
+        end
+        disk_partition(f, disk) unless disk.partitioned
+        if disk.clean_partition
+          f.puts "mkfs.ext4 #{disk.name}1"
+          disk.clean_partition = false
+          disk.save
+        end
+        f.puts "mkdir -p #{mounting_point}"
+        mount_disk(f, disk.name, mounting_point)
+        f.puts "mkdir -p #{mounting_point}/squid"
+        f.puts "chown proxy.proxy -R #{mounting_point}/squid"
+      end
+    end
+    f.puts("squid -z")
+    f.puts("service squid start")
+    conf.mount_cache = false
+    conf.save
+  end
+
+  cache_disks = Disk.cache
+  f.puts "sed -i '/cache_dir ufs \/var\/spool\/squid / c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
+
+  if cache_disks.empty?
+    f.puts("mkdir -p /var/spool/squid")
+    f.puts("chown proxy.proxy -R /var/spool/squid")
+    IO.popen("fdisk -l | grep 'Disk /dev/sda'", "r") do |io|
+      value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
+      value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
+      cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
+    end
+  else
+    f.puts("rm -rf /var/spool/squid &")
+    cache_disks.each do |disk|
+      IO.popen("fdisk -l | grep 'Disk #{disk.name}'", "r") do |io|
+        capacitys[disk.name] = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
+      end
+    end
+    total_capacity = capacitys.values.sum
+    capacitys.each do |key, value|
+      value_for_cache_dir =  total_capacity > max_value_squid ? (value * max_value_squid / total_capacity) : value
+      cache_dirs << "cache_dir aufs /mnt/sequreisp#{key}/squid #{value_for_cache_dir.to_i} 16 256"
+    end
+  end
+  cache_dirs
+end
+
 def setup_proxy
   squid_file = '/etc/init/squid.conf'
   squid_file_off = squid_file + '.disabled'
@@ -909,6 +1045,9 @@ def setup_proxy
     # dummy iface con ips para q cada cliente salga por su grupo
     commands << "modprobe dummy"
     commands << "ip link set dummy0 up"
+
+    cache_dirs = config_cache_disks(f)
+
     begin
       File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid|
         if Configuration.transparent_proxy_n_to_m
@@ -928,6 +1067,9 @@ def setup_proxy
             fsquid.puts "tcp_outgoing_address #{pg.proxy_bind_ip} pg_#{pg.klass.number}"
             commands << "ip address add #{pg.proxy_bind_ip} dev dummy0"
           end
+        end
+        cache_dirs.each do |cache_dir|
+          fsquid.puts(cache_dir)
         end
         #TODO Option disabled for all clients
         #if Configuration.transparent_proxy_windows_update_hack
@@ -1197,18 +1339,12 @@ def setup_iptables
     "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
   ]
 end
+
 def boot(run=true)
   BootCommandContext.run = run
   create_dirs_if_not_present if Rails.env.development?
   Configuration.do_reload
   #begin
-    #Initilize an empty boot file
-    File.open(BOOT_FILE, "w") do |f|
-      f.puts "#!/bin/bash"
-      f.puts("PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games")
-      f.puts "#set -x"
-      f.chmod 0755
-    end
     exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}"
 
     setup_queued_commands
