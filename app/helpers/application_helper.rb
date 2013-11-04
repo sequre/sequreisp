@@ -65,4 +65,8 @@ module ApplicationHelper
     end
   end
 
+  def sequreisp_guides_url
+    Configuration::GUIDES_URL + (I18n.locale == :en ? "/en" : "")
+  end
+
 end

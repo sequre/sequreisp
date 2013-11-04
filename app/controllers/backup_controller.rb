@@ -49,12 +49,7 @@ class BackupController < ApplicationController
     else
       require 'sequreisp_about'
       backup_path = save_uploaded_file(backup)
-      backup_version = File.basename(backup_path).match(/sequreisp_(.*)_backup/)[1] rescue nil
-      if backup_version.nil? or ::SequreISP::Version.new(backup_version) != ::SequreISP::Version.new
-        File.delete(backup_path)
-        flash[:error] = t 'backup.notice.different_version', { :version => ::SequreISP::Version.to_s }
-        redirect_to :back
-      else
+      if Backup.is_compatible_with_this_version?(backup_path)
         if Backup.new.restore_full(backup_path, @reboot)
           flash[:notice] = t 'backup.notice.success_full'
         else
@@ -62,6 +57,10 @@ class BackupController < ApplicationController
         end
         File.delete(backup_path)
         redirect_to :root
+      else
+        File.delete(backup_path)
+        flash[:error] = t 'backup.notice.different_version', { :version => ::SequreISP::Version.to_s }
+        redirect_to :back
       end
     end
   end

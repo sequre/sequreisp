@@ -117,7 +117,12 @@ ul li a:hover.no_pointer {
       <% end %>
 
       <% if current_user.may_show_about? %>
-        <li><%= link_to t('menu.about'), about_path, :class => 'last' %></li>
+        <li><a id="plugins_button" class="no_pointer last" href="javascript:void(null)"> <%=t 'menu.help' %></a>
+          <ul class="submenu" style="width:150px;">
+            <li><%= link_to t('menu.about'), about_path %></li>
+            <li><%= link_to t('menu.guides'), sequreisp_guides_url %></li>
+          </ul>
+        </li>
       <% end %>
     </ul>
   </div>

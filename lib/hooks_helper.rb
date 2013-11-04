@@ -48,4 +48,8 @@ module HooksHelper
   def show_traffic(contract)
     "#{number_to_human_size(contract.current_traffic.data_count)}"
   end
+
+  def plugins_header_extensions
+    ""
+  end
 end

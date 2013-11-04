@@ -141,8 +141,8 @@ pt:
         ceil_down: "Máx. baixada [kbps]"
         rate_up: "Mín. subida [kbps]"
         ceil_up: "Máx. subida [kbps]"
-        burst_down: "Rajada de baixada [kbytes]"
-        burst_up: "Rajada de subida [kbytes]"
+        burst_down: "Rajada de baixada [kbits]"
+        burst_up: "Rajada de subida [kbits]"
         long_download_max: "Limite para descargas grandes [kbytes]"
         long_upload_max: "Limite para cargas grandes [kbytes]"
         transparent_proxy: "Proxy transparente"
@@ -215,6 +215,9 @@ pt:
         iptables_tree_optimization_enabled: "Optimizar regras de iptables (usar só em versão de 64 bits)"
         apply_changes_automatically: "Aplicar câmbios automáticamente"
         apply_changes_automatically_hour: "Hora de aplicação dos câmbios automáticos"
+        web_interface_listen_on_80: "Aceitar pedidos de interface web na porta 80"
+        web_interface_listen_on_443: "Aceitar pedidos de interface web na porta 80 443"
+        web_interface_listen_on_8080: "Aceitar pedidos de interface web na porta 8080"
       user:
         name: "Nome"
         email: "E-mail do usuário"
@@ -329,6 +332,8 @@ pt:
     about: "Acerca de"
     audits: "Auditorias"
     always_allowed_sites: "Sites permitidos"
+    help: "Ajudar"
+    guides: "Guias SequireISP"
   buttons:
     login: "Ingressar"
     edit: "Editar"
@@ -470,6 +475,7 @@ pt:
       unique_provider_does_not_belongs_to_plan: "O fornecedor atribuído não pertence ao plano escolhido"
     configuration:
       notification_email_invalid: "Endereço de e-mail inválido"
+      web_interface_listen_at_least_on_one_port: "Pelo menos uma porta deve estar habilitado para pedidos de interface web"
     plan:
       not_enough_down_bandwidth_in_this_plan: "Não há suficiente largo de banda de baixada para atribuir este plano"
       not_enough_down_bandwidth: "Não há suficiente largo de banda de baixada"

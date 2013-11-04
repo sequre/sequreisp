@@ -624,6 +624,15 @@ def gen_iptables
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
       f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
+      if Configuration.web_interface_listen_on_80
+        f.puts "-A INPUT -p tcp --dport 80 -j ACCEPT"
+      end
+      if Configuration.web_interface_listen_on_443
+        f.puts "-A INPUT -p tcp --dport 443 -j ACCEPT"
+      end
+      if Configuration.web_interface_listen_on_8080
+        f.puts "-A INPUT -p tcp --dport 8080 -j ACCEPT"
+      end
       Interface.all(:conditions => "kind = 'lan'").each do |i|
         f.puts "-A INPUT -i #{i.name} -p udp --dport 53 -j ACCEPT"
         f.puts "-A INPUT -i #{i.name} -p tcp --dport 53 -j ACCEPT"
@@ -1007,7 +1016,7 @@ def check_physical_links
   writeme = []
   pid = []
   Interface.all(:conditions => "vlan = 0").each do |i|
-    physical_link = `ip link show dev #{i.name} 2>/dev/null`.scan(/state (\w+) /).flatten[0] == "UP" || `mii-tool #{i.name} 2>/dev/null`.scan(/link ok/).flatten[0] == "link ok" || `ethtool #{i.name} 2>/dev/null`.scan(/Link detected: yes/).flatten[0] == "Link detected: yes"
+    physical_link = i.current_physical_link
     if i.physical_link != physical_link
       changes = true
       i.physical_link = physical_link

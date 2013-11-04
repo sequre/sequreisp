@@ -17,6 +17,7 @@
 
 class Configuration < ActiveRecord::Base
   ACCEPTED_LOCALES = ["es","en","pt"]
+  GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
   def self.acts_as_audited_except
     [:daemon_reload]
   end
@@ -30,7 +31,8 @@ class Configuration < ActiveRecord::Base
                :transparent_proxy_windows_update_hack,
                :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
                :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
-               :iptables_tree_optimization_enabled
+               :iptables_tree_optimization_enabled,
+               :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
@@ -56,6 +58,9 @@ class Configuration < ActiveRecord::Base
         invalid ||= ((ne =~ /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i) == nil)
       end
       errors.add("notification_email", I18n.t('validations.configuration.notification_email_invalid')) if invalid
+    end
+    unless web_interface_listen_on_80 or web_interface_listen_on_443 or web_interface_listen_on_8080
+      errors.add("web_interface_listen_on_8080", I18n.t("validations.configuration.web_interface_listen_at_least_on_one_port"))
     end
   end
 
