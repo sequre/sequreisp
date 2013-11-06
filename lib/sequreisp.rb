@@ -1011,15 +1011,19 @@ def config_cache_disks(f)
   end
 
   cache_disks = Disk.cache
-  f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
+  raid_0 = Disk.raid_is("/dev/md1").present?
+
+  f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf" if not raid_0
 
   if cache_disks.empty?
-    f.puts("mkdir -p /var/spool/squid")
-    f.puts("chown proxy.proxy -R /var/spool/squid")
-    IO.popen("fdisk -l | grep 'Disk /dev/sda'", "r") do |io|
-      value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
-      value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
-      cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
+    if not raid_0
+      f.puts("mkdir -p /var/spool/squid")
+      f.puts("chown proxy.proxy -R /var/spool/squid")
+      IO.popen("fdisk -l | grep 'Disk /dev/sda'", "r") do |io|
+        value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
+        value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
+        cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
+      end
     end
   else
     f.puts("rm -rf /var/spool/squid &")

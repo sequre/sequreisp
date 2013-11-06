@@ -51,7 +51,7 @@ def check_squid
   max_swap_size=500*1024*1024
   # swap_files = `find /var/spool/squid | grep 'swap.state$'`.split
   swap_files = `grep "^cache_dir*" /etc/squid/squid.conf`.split("\n")
-  swap_files = `grep "^cache_dir*" /etc/squid/sequreisp.squid.conf`.split("\n") if swap_file.empty?
+  swap_files = `grep "^cache_dir*" /etc/squid/sequreisp.squid.conf`.split("\n") if swap_files.empty?
   # swap_file= "/var/spool/squid/swap.state"
   unless swap_files.empty?
     swap_files.each do |line|
