@@ -1011,12 +1011,10 @@ def config_cache_disks(f)
   end
 
   cache_disks = Disk.cache
-  raid_0 = Disk.raid_is("/dev/md1").present?
 
-  f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf" if not raid_0
-
-  if cache_disks.empty?
-    if not raid_0
+  if not cache_disks.collect(&:raid).compact.present?
+    f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
+    if cache_disks.empty?
       f.puts("mkdir -p /var/spool/squid")
       f.puts("chown proxy.proxy -R /var/spool/squid")
       IO.popen("fdisk -l | grep 'Disk /dev/sda'", "r") do |io|
@@ -1024,18 +1022,18 @@ def config_cache_disks(f)
         value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
         cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
       end
-    end
-  else
-    f.puts("rm -rf /var/spool/squid &")
-    cache_disks.each do |disk|
-      IO.popen("fdisk -l | grep 'Disk #{disk.name}'", "r") do |io|
-        capacitys[disk.name] = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
+    else
+      f.puts("rm -rf /var/spool/squid &")
+      cache_disks.each do |disk|
+        IO.popen("fdisk -l | grep 'Disk #{disk.name}'", "r") do |io|
+          capacitys[disk.name] = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
+        end
       end
-    end
-    total_capacity = capacitys.values.sum
-    capacitys.each do |key, value|
-      value_for_cache_dir =  total_capacity > max_value_squid ? (value * max_value_squid / total_capacity) : value
-      cache_dirs << "cache_dir aufs /mnt/sequreisp#{key}/squid #{value_for_cache_dir.to_i} 16 256"
+      total_capacity = capacitys.values.sum
+      capacitys.each do |key, value|
+        value_for_cache_dir =  total_capacity > max_value_squid ? (value * max_value_squid / total_capacity) : value
+        cache_dirs << "cache_dir aufs /mnt/sequreisp#{key}/squid #{value_for_cache_dir.to_i} 16 256"
+      end
     end
   end
   cache_dirs

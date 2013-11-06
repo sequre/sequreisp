@@ -26,7 +26,7 @@
   <h1>Discos Libres</h1>
   <div class="main">
     <% form_tag(assign_for_disks_path, :method => :put) do |f| %>
-      <% if Disk.raid_is("/dev/md1").count == 0 %>
+      <% if Disk.cache_in_raid.count == 0 %>
         <%= submit_tag t('buttons.assign_disks_to_cache'), :name => :cache, :id => "foo" %>
         <%= form_extensions f %>
       <% end %>
