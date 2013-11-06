@@ -1002,7 +1002,7 @@ def config_cache_disks(f)
   end
 
   cache_disks = Disk.cache
-  f.puts "sed -i '/cache_dir ufs \/var\/spool\/squid / c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
+  f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
 
   if cache_disks.empty?
     f.puts("mkdir -p /var/spool/squid")

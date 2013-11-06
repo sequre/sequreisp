@@ -8,6 +8,7 @@ class Disk < ActiveRecord::Base
   named_scope :cache, :conditions => {:cache => true}
   named_scope :free, :conditions => {:free => true}
   named_scope :in_raid, :conditions => ["disks.raid IS NOT NULL AND disks.system = FALSE AND disks.cache = TRUE"]
+  named_scope :raid_is, lambda {|raid| { :conditions => ["disks.raid = ?", raid]} }
 
   before_update :clean_cache, :if => "self.free_changed? and self.free"
   after_update :activate_mount_cache, :if => "self.cache_changed? or (self.cache and self.free_changed? and self.free)"
@@ -22,36 +23,67 @@ class Disk < ActiveRecord::Base
     self.clean_partition = true
   end
 
+  # def self.scan
+  #   disks = {}
+  #   logical_name = ""
+
+  #   system_disks = used_for_system
+  #   cache_disks = used_for_cache
+  #   IO.popen('sudo /usr/bin/lshw -C disk | grep "logical name: /dev/sd[a-z]\| serial: \| size:"', "r") do |io|
+  #     io.each do |line|
+  #       which_raid = nil
+  #       if line.include?("logical name:")
+  #         logical_name = line.chomp.strip.split(" ").last
+  #         is_system = system_disks[:devices].include?(logical_name) ? true : false
+  #         is_cache = cache_disks[:devices].include?(logical_name) ? true : false
+  #         which_raid = system_disks[:raid] if is_system
+  #         which_raid = cache_disks[:raid] if is_cache
+  #         is_free = is_system or is_cache ? false : true
+  #         partitioned =  is_free ? false : true
+  #         hash = {:name => logical_name, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid, :partitioned => partitioned, :clean_partition => is_free}
+  #           scan_for_other_uses(hash)
+  #         disks[logical_name] = hash
+  #       elsif line.include?("serial:")
+  #         disks[logical_name][:serial] = line.chomp.strip.split(" ").last
+  #       elsif line.include?("size:")
+  #         disks[logical_name][:capacity] = ((line.chomp.strip.split(" ").last).delete("(")).delete(")")
+  #       end
+  #     end
+  #   end
+  #   disks
+  # end
+
   def self.scan
     disks = {}
-    logical_name = ""
-
+    aux =`sudo /usr/bin/lshw -C disk`.strip.split("*-")
     system_disks = used_for_system
     cache_disks = used_for_cache
-    IO.popen('sudo /usr/bin/lshw -C disk | grep "logical name: /dev/*\| serial: \| size:"', "r") do |io|
-      io.each do |line|
-        which_raid = nil
-        if line.include?("logical name:")
-          logical_name = line.chomp.strip.split(" ").last
-          is_system = system_disks[:devices].include?(logical_name) ? true : false
-          is_cache = cache_disks[:devices].include?(logical_name) ? true : false
-          which_raid = system_disks[:raid] if is_system
-          which_raid = cache_disks[:raid] if is_cache
-          is_free = is_system or is_cache ? false : true
-          partitioned =  is_free ? false : true
-          hash = {:name => logical_name, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid, :partitioned => partitioned, :clean_partition => is_free}
-            scan_for_other_uses(hash)
-          disks[logical_name] = hash
-        elsif line.include?("serial:")
-          disks[logical_name][:serial] = line.chomp.strip.split(" ").last
-        elsif line.include?("size:")
-          disks[logical_name][:capacity] = ((line.chomp.strip.split(" ").last).delete("(")).delete(")")
+    
+    aux.each do |disk|
+      if disk.include?("disk")
+        name = ""
+        capacity = ""
+        serial = ""
+        attributes = disk.split("  ")
+        attributes.each do |attr|
+          name = attr.chomp.split(":").last.strip if attr.include?("logical name")
+          capacity = attr.chomp.split(":").last.split(" ").last.strip if attr.include?("size:")
+          serial = attr.chomp.split(":").last.strip if attr.include?("serial")          
         end
+        is_system = system_disks[:devices].include?(name) ? true : false
+        is_cache = cache_disks[:devices].include?(name) ? true : false
+        which_raid = system_disks[:raid] if is_system
+        which_raid = cache_disks[:raid] if is_cache
+        is_free = is_system or is_cache ? false : true
+        partitioned =  is_free ? false : true
+        hash = {:name => name, :capacity => capacity, :serial => serial, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid, :partitioned => partitioned, :clean_partition => is_free}
+        scan_for_other_uses(hash)
+        disks[name] = hash
       end
     end
     disks
   end
-
+  
   def self.scan_for_other_uses(hash)
   end
 
