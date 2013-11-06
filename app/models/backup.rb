@@ -140,5 +140,9 @@ class Backup
       Rails.logger.warn "Downgrading to a version without backup_restore or backup_reboot, need to respawn or reboot by hand"
     end
   end
+  def self.is_compatible_with_this_version?(path)
+    backup_version = File.basename(path).match(/sequreisp_(.*)_backup/)[1] rescue nil
+    backup_version.present? and ::SequreISP::Version.new(backup_version) == ::SequreISP::Version.new
+  end
 end
 

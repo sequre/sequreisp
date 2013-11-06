@@ -131,10 +131,10 @@ class Interface < ActiveRecord::Base
     self.vlan? ? vlan_interface.physical_link : read_attribute(:physical_link)
   end
   def status
-    self.physical_link ? "up" : "down"
+    self.current_physical_link ? "up" : "down"
   end
   def status_class
-    self.physical_link ? "online" : "offline"
+    self.current_physical_link ? "online" : "offline"
   end
   def auditable_name
     "#{self.class.human_name}: #{name}"
@@ -149,5 +149,11 @@ class Interface < ActiveRecord::Base
   end
   def vlan_interface_collection
     new_record? ? Interface.find(:all, :conditions => ["vlan = 0"]) : Interface.find(:all, :conditions => ["vlan = 0 and id != ?", id])
+  end
+  def speed
+    `sudo ethtool #{name} 2>/dev/null`.match("Speed: \(.*\)")[1] rescue "-"
+  end
+  def current_physical_link
+    `ip link show dev #{name} 2>/dev/null`.scan(/state (\w+) /).flatten[0] == "UP" || `sudo mii-tool #{name} 2>/dev/null`.scan(/link ok/).flatten[0] == "link ok" || `sudo ethtool #{name} 2>/dev/null`.scan(/Link detected: yes/).flatten[0] == "Link detected: yes"
   end
 end
