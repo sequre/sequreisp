@@ -40,8 +40,7 @@
         <tbody>
           <% @free_disks.each_with_index do |disk, i| %>
             <tr>
-              <td><%= check_box_tag("assign_disks_ids[]", disk.id)
-              if Disk.cache_in_raid.count == 0 %></td>
+              <td><%= check_box_tag("assign_disks_ids[]", disk.id) if Disk.cache_in_raid.count == 0 %></td>
               <td><%= disk.serial %></td>
               <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
               <td><%= disk.capacity %></td>
