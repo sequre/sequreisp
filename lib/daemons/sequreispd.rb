@@ -233,21 +233,24 @@ tcounter = Thread.new do
         ActiveRecord::Base.transaction do
           #create current traffic for new period
           file = File.join DEPLOY_DIR, "log/data_counting.log"
+          contract_count = Contract.count
           File.open(file, "a") do |f|
             Contract.all(:include => :current_traffic).each do |c|
-              if c.current_traffic.nil?
-                c.create_traffic_for_this_period
+              traffic_current = c.current_traffic
+              if traffic_current.nil?
+                traffic_current = c.create_traffic_for_this_period
                 #update the data for each traffic
-                c.reload
+                #c.reload
               end
               if hash[c.ip].present? and hash[c.ip] != 0#no read if contract.state == disabled
-                traffic = c.current_traffic
-                tmp = traffic.data_count
-                traffic.data_count += hash[c.ip]
-                traffic.save
+                tmp = traffic_current.data_count
+                traffic_current.data_count += hash[c.ip]
+                traffic_current.save
                 # Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{hash[c.ip]} where contracts.ip = '#{c.ip}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
-                c.current_traffic.reload
-                f.puts "#{Time.now} - #{c.ip} - #{c.current_traffic.id} | Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
+                c.reload
+                if (hash[c.ip] >= 7864320) or (c.current_traffic.data_count - tmp >= 7864320) or ((c.current_traffic.data_count - hash[c.ip]) != tmp)
+                  f.puts "#{Time.now} - #{c.ip} - #{c.current_traffic.id} | Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
+                end
               end
               DaemonHook.data_counting(:ip => c.ip)
               #Rails.logger.debug "Traffic: #{c.ip} => #{hash[c.ip]}"
