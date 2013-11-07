@@ -73,18 +73,19 @@ class Disk < ActiveRecord::Base
         end
         is_system = system_disks[:devices].include?(name) ? true : false
         is_cache = cache_disks[:devices].include?(name) ? true : false
-        which_raid = system_disks[:raid] if is_system
-        which_raid = cache_disks[:raid] if is_cache
+        #which_raid = system_disks[:raid] if is_system
+        #which_raid = cache_disks[:raid] if is_cache
         is_free = is_system or is_cache ? false : true
         partitioned =  is_free ? false : true
-        hash = {:name => name, :capacity => capacity, :serial => serial, :system => is_system, :cache => is_cache, :free => is_free, :raid => which_raid, :partitioned => partitioned, :clean_partition => is_free}
+        hash = {:name => name, :capacity => capacity, :serial => serial, :system => is_system, :cache => is_cache, :free => is_free, :partitioned => partitioned, :clean_partition => is_free}
         scan_for_other_uses(hash)
+        hash[:raid] = `cat /proc/mdstat | grep "#{hash[:name].split('/').last}"`.chomp.split.first
         disks[name] = hash
       end
     end
     disks
   end
-  
+
   def self.scan_for_other_uses(hash)
   end
 
