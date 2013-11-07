@@ -464,6 +464,7 @@ es:
       liberate: "Discos liberados exitosamente"
       not_liberate: "Discos no liberados"
       empty_selection: "No se ha seleccionado ningun disco"
+      when_apply_change: "El proceso de asignación de discos puede demorar alrededor de 15-20 min, favor de ser paciente a la hora de aplicar cambios."
   controllers:
     successfully_updated: "Actualización de datos exitosa"
     successfully_created: "Creación exitosa"

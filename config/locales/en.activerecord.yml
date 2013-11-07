@@ -464,6 +464,7 @@ en:
       liberate: "Liberate success"
       not_liberate: "Liberate fail"
       empty_selection: "Empty selection"
+      when_apply_change: "The disk allocation process should take about 15-20 minutes, please be patient when applying changes."
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"

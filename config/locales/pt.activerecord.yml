@@ -461,6 +461,7 @@ pt:
       liberate: "Discos lançados com sucesso"
       not_liberate: "Erro em álbuns liberando"
       empty_selection: "Não selecionou nenhum disco"
+      when_apply_change: "O processo de alocação de disco deve levar cerca de 15-20 minutos, por favor, seja paciente quando aplicar as alterações."
   controllers:
     successfully_updated: "Atualização de dados bem-sucedida"
     successfully_created: "Criação bem-sucedida"
