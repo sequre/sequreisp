@@ -188,7 +188,6 @@ tcounter = Thread.new do
   time_last = (Time.now - 1.minute)
   while true
     if (Time.now - time_last) >= 1.minute
-
       begin
         hash = {}
         if SequreispConfig::CONFIG["demo"]
@@ -265,9 +264,9 @@ tcounter = Thread.new do
         system "iptables -t mangle -Z" unless SequreispConfig::CONFIG["demo"]
       end
     end
+    break unless $running
+    sleep 1
   end
-  break unless $running
-  sleep 1
 end
 
 #esto va como param a method
