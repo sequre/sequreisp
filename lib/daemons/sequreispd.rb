@@ -246,10 +246,11 @@ tcounter = Thread.new do
                 tmp = traffic_current.data_count
                 traffic_current.data_count += hash[c.ip]
                 traffic_current.save
-                # Traffic.connection.update_sql "update traffics left join contracts on contracts.id = traffics.contract_id set traffics.data_count = traffics.data_count + #{hash[c.ip]} where contracts.ip = '#{c.ip}' and traffics.from_date <= '#{Date.today.strftime("%Y-%m-%d")}' and traffics.to_date >= '#{Date.today.strftime("%Y-%m-%d")}'"
-                c.reload
-                if (hash[c.ip] >= 7864320) or (c.current_traffic.data_count - tmp >= 7864320) or ((c.current_traffic.data_count - hash[c.ip]) != tmp)
-                  f.puts "#{Time.now} - #{c.ip} - #{c.current_traffic.id} | Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
+                if contract_count <= 300
+                  c.reload
+                  if (hash[c.ip] >= 7864320) or (c.current_traffic.data_count - tmp >= 7864320) or ((c.current_traffic.data_count - hash[c.ip]) != tmp)
+                    f.puts "#{Time.now} - #{c.ip} - #{c.current_traffic.id} | Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
+                  end
                 end
               end
               DaemonHook.data_counting(:ip => c.ip)
