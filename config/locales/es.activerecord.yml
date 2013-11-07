@@ -457,6 +457,9 @@ es:
       halt: "El servidor se apagara en breve"
       halt_error: "Ocurrió un error, el servidor no se apagará"
     disk:
+      important: "Importante"
+      free: "Discos libres"
+      assigned: "Discos Asignados"
       scan_success: "Se han detectado nuevos discos"
       scan_fail: "No se han detectado nuevos discos"
       assign_for_cache: "Discos asignados a cache"

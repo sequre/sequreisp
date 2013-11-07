@@ -454,6 +454,9 @@ pt:
       halt: "O servidor será desligado em breve"
       halt_error: "Ocorreu um erro, o servidor não será desligado"
     disk:
+      important: "Importante"
+      free: "Discos livres"
+      assigned: "Discos designados"
       scan_success: "Detectaram-se novos discos"
       scan_fail: "Não se detectaram novos discos"
       assign_for_cache: "Discos designados para o cache"
