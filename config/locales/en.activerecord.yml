@@ -457,6 +457,9 @@ en:
       halt: "The server will halt shortly"
       halt_error: "An error occurred, the server will not be halted"
     disk:
+      important: "Important"
+      free: "Free disk"
+      assigned: "Assigned disk"
       scan_success: "New disks have been detected"
       scan_fail: "No new disks have been detected"
       assign_for_cache: "Disks assigned for cache"

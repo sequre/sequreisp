@@ -24,7 +24,7 @@
 
   <div class="main_avisos">
     <div class="contact_info">
-      <h2 class="error">Importante</h2>
+      <h2 class="error"><%= t'messages.disk.important' %></h2>
       <%= t'messages.disk.when_apply_change' %>
     </div>
   </div>
@@ -33,7 +33,7 @@
 <div style="clear: both"></div>
 
 <% unless @free_disks.empty? %>
-  <h1>Discos Libres</h1>
+  <h1><%= t'messages.disk.free' %></h1>
   <div class="main">
     <% form_tag(assign_for_disks_path, :method => :put) do |f| %>
       <%= submit_tag t('buttons.assign_disks_to_cache'), :name => :cache, :id => "foo" %>
@@ -62,7 +62,7 @@
   </div>
 <% end %>
 
-<h1>Discos Asignados</h1>
+<h1><%= t'messages.disk.assigned' %></h1>
 <div class="main">
   <% form_tag(liberate_disks_path, :method => :put) do |f| %>
     <%= submit_tag t('buttons.liberate_disks') %>
