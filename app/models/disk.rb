@@ -10,20 +10,20 @@ class Disk < ActiveRecord::Base
   named_scope :in_raid, :conditions => ["disks.raid IS NOT NULL AND disks.system = FALSE AND disks.cache = TRUE"]
   named_scope :raid_is, lambda {|raid| { :conditions => ["disks.raid = ?", raid]} }
   named_scope :cache_in_raid, :conditions => ["disks.raid != 'md0' and disks.raid != 'NULL'"]
-
   before_update :clean_cache, :if => "self.free_changed? and self.free"
-  after_update :apply_change_in_disks_cache, :if => "self.cache_changed? or (self.cache and self.free_changed? and self.free)"
 
-  def apply_change_in_disks_cache
-    conf = Configuration.first
-    conf.new_disk_for_cache_added = true
-    conf.save
+  def self.prepared_for string
+    all.select do |d|
+      d.prepare_disk_for.match(/^cache/)
+    end
   end
 
   def clean_cache
     self.clean_partition = true
   end
-
+  def is_mounted?
+    system("mount | grep '#{name}' &>/dev/null")
+  end
   def self.scan
     disks = {}
     aux =`sudo /usr/bin/lshw -C disk`.strip.split("*-")
@@ -61,6 +61,10 @@ class Disk < ActiveRecord::Base
 
   def self.used_for_system
     self.disk_usage("on / ")
+  end
+
+  def is_system_disk?
+    system "mount | grep '#{name}.*on / '"
   end
 
   def self.used_for_cache
@@ -103,13 +107,10 @@ class Disk < ActiveRecord::Base
   end
 
   def assigned_for(attr)
-    if self.name != "/dev/sda"
-      self.raid   = attr.include?(:raid) ? true : nil
-      self.free   = attr.include?(:free) ? true : false
-      self.system = attr.include?(:system) ? true : false
-      self.cache  = attr.include?(:cache) ? true : false
-      self.save
-    end
+    self.free   = attr.include?(:free) ? true : false
+    self.system = attr.include?(:system) ? true : false
+    self.cache  = attr.include?(:cache) ? true : false
+    self.save
   end
 
 end

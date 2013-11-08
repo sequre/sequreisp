@@ -144,6 +144,7 @@ es:
         type: "Tipo"
         system: "Sistema"
         cache: "Cache"
+        prepare_disk_for: "Asignar disco a"
       plan:
         id: 'Id'
         name: "Nombre"

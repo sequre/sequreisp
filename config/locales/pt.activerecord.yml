@@ -141,6 +141,7 @@ pt:
         type: "Tipo"
         system: "Sistema"
         cache: "Cache"
+        prepare_disk_for: "Atribuir a"
       plan:
         id: 'Id'
         name: "Nombre"

@@ -17,8 +17,7 @@ class DisksController < ApplicationController
     if params[:liberate_disks_ids].present?
       count = 0
       Disk.find(params[:liberate_disks_ids]).each do |disk|
-        disk.free = true
-        disk.save
+        disk.assigned_for([:free])
         count += 1
       end
       if count > 0
@@ -69,7 +68,8 @@ class DisksController < ApplicationController
   def assign_for_cache
     count = 0
     Disk.find(params[:assign_disks_ids]).each do |disk|
-      disk.assigned_for([:cache])
+      disk.prepare_disk_for = "cache"
+      disk.save
       count += 1
     end
     if count > 0

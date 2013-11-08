@@ -905,8 +905,7 @@ end
 def disk_partition(f, disk)
   f.puts("dd if=/dev/zero of=#{disk.name} count=1024 bs=1024")
   f.puts "(echo n; echo p; echo 1; echo ; echo ; echo w) | fdisk #{disk.name}"
-  disk.partitioned = true
-  disk.save
+  f.puts "mkfs.ext4 #{disk.name}1"
 end
 
 def disable_raid(f, mdstat)
@@ -972,57 +971,44 @@ def umount_disk(f, dev)
 end
 
 def config_cache_disks(f)
-  cache_disks = Disk.cache
-  max_value_squid = 307200
-  capacitys = {}
-  cache_dirs = []
   conf = Configuration.first
-
-  if conf.new_disk_for_cache_added?
+  Disk.prepared_for("cache").each do |disk|
     f.puts("service squid stop")
     f.puts("pidof squid")
     f.puts("if [ $? -eq 0 ]; then pkill -9 squid; fi")
-    #disable_raid(f, Disk.used_for_cache)
-    cache_disks.each do |disk|
-      
-      mounting_point = "/mnt/sequreisp#{disk.name}"
-      if disk.free
-        umount_disk(f, disk.name)
-        disk.cache = false
-        disk.save
-        #disk.assigned_for([:free])
+    mounting_point = "/mnt/sequreisp#{disk.name}"
+    umount_disk(f, disk.name) if system("mount | grep '#{disk.name}' &>/dev/null")
+    disk_partition(f, disk)
+    f.puts "mkdir -p #{mounting_point}"
+    mount_disk(f, disk.name, mounting_point)
+    f.puts "mkdir -p #{mounting_point}/squid"
+    f.puts "chown proxy.proxy -R #{mounting_point}/squid"
+
+    if disk.is_mounted?
+      if disk.prepare_disk_for == "cache_and_videocache"
+        disk.prepare_disk_for = "videocache"
       else
-        # IO.popen("mount | grep '#{disk.name}'", "r") do |io|
-        #   umount_disk(f, disk.name) if not io.first.nil?
-        # end
-        umount_disk(f, disk.name) if system("mount | grep '#{disk.name}' &>/dev/null")
-        
-        disk_partition(f, disk) unless disk.partitioned
-        if disk.clean_partition
-          f.puts "mkfs.ext4 #{disk.name}1"
-          disk.clean_partition = false
-          disk.save
-        end
-        f.puts "mkdir -p #{mounting_point}"
-        mount_disk(f, disk.name, mounting_point)
-        f.puts "mkdir -p #{mounting_point}/squid"
-        f.puts "chown proxy.proxy -R #{mounting_point}/squid"
+        disk.prepare_disk_for = nil
       end
+      disk.assigned_for [:cache]
+    else
+      disk.prepare_disk_for = nil
     end
     f.puts("squid -z")
-    f.puts("service squid start")
-    conf.new_disk_for_cache_added = false
-    conf.save
   end
 
-  cache_disks = Disk.cache
+  max_value_squid = 307200
+  cache_disks = Disk.cache.select(&:is_mounted?)
+  cache_dirs = []
+  capacitys = {}
 
   if not cache_disks.collect(&:raid).compact.present?
     f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
     if cache_disks.empty?
       f.puts("mkdir -p /var/spool/squid")
       f.puts("chown proxy.proxy -R /var/spool/squid")
-      IO.popen("fdisk -l | grep 'Disk /dev/sda'", "r") do |io|
+      system_disk = `mount | grep "on / " | awk '{print $1}'`
+      IO.popen("fdisk -l | grep 'Disk #{system_disk}'", "r") do |io|
         value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
         value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
         cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
@@ -1041,6 +1027,7 @@ def config_cache_disks(f)
       end
     end
   end
+  f.puts("service squid start") if conf.transparent_proxy
   cache_dirs
 end
 
