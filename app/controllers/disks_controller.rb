@@ -4,7 +4,7 @@ class DisksController < ApplicationController
 
   def index
     @free_disks = Disk.free
-    @system_disks = Disk.find(:all, :conditions => {:system => true})
+    @system_disks = Disk.find(:all, :conditions => {:system => true, :free => false})
     @cache_disks = Disk.find(:all, :conditions => {:cache => true, :free => false})
     hook_other_uses
     respond_to do |format|

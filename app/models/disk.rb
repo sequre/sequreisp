@@ -9,14 +9,14 @@ class Disk < ActiveRecord::Base
   named_scope :free, :conditions => {:free => true}
   named_scope :in_raid, :conditions => ["disks.raid IS NOT NULL AND disks.system = FALSE AND disks.cache = TRUE"]
   named_scope :raid_is, lambda {|raid| { :conditions => ["disks.raid = ?", raid]} }
-  named_scope :cache_in_raid, :conditions => ["disks.raid != 'md0'and disks.raid != 'NULL'"]
+  named_scope :cache_in_raid, :conditions => ["disks.raid != 'md0' and disks.raid != 'NULL'"]
 
   before_update :clean_cache, :if => "self.free_changed? and self.free"
-  after_update :activate_mount_cache, :if => "self.cache_changed? or (self.cache and self.free_changed? and self.free)"
+  after_update :apply_change_in_disks_cache, :if => "self.cache_changed? or (self.cache and self.free_changed? and self.free)"
 
-  def activate_mount_cache
+  def apply_change_in_disks_cache
     conf = Configuration.first
-    conf.mount_cache = true
+    conf.new_disk_for_cache_added = true
     conf.save
   end
 

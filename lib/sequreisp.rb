@@ -978,20 +978,25 @@ def config_cache_disks(f)
   cache_dirs = []
   conf = Configuration.first
 
-  if conf.mount_cache
+  if conf.new_disk_for_cache_added?
     f.puts("service squid stop")
     f.puts("pidof squid")
     f.puts("if [ $? -eq 0 ]; then pkill -9 squid; fi")
     #disable_raid(f, Disk.used_for_cache)
     cache_disks.each do |disk|
+      
       mounting_point = "/mnt/sequreisp#{disk.name}"
       if disk.free
         umount_disk(f, disk.name)
-        disk.assigned_for([:free])
+        disk.cache = false
+        disk.save
+        #disk.assigned_for([:free])
       else
-        IO.popen("mount | grep '#{disk.name}'", "r") do |io|
-          umount_disk(f, disk.name) if not io.first.nil?
-        end
+        # IO.popen("mount | grep '#{disk.name}'", "r") do |io|
+        #   umount_disk(f, disk.name) if not io.first.nil?
+        # end
+        umount_disk(f, disk.name) if system("mount | grep '#{disk.name}' &>/dev/null")
+        
         disk_partition(f, disk) unless disk.partitioned
         if disk.clean_partition
           f.puts "mkfs.ext4 #{disk.name}1"
@@ -1006,7 +1011,7 @@ def config_cache_disks(f)
     end
     f.puts("squid -z")
     f.puts("service squid start")
-    conf.mount_cache = false
+    conf.new_disk_for_cache_added = false
     conf.save
   end
 
@@ -1042,6 +1047,9 @@ end
 def setup_proxy(f)
   squid_file = '/etc/init/squid.conf'
   squid_file_off = squid_file + '.disabled'
+
+  cache_dirs = config_cache_disks(f)
+
   if Configuration.transparent_proxy
     f.puts "[ -f #{squid_file_off} ] && mv #{squid_file_off} #{squid_file}"
 
@@ -1050,8 +1058,6 @@ def setup_proxy(f)
     # dummy iface con ips para q cada cliente salga por su grupo
     f.puts "modprobe dummy"
     f.puts "ip link set dummy0 up"
-
-    cache_dirs = config_cache_disks(f)
 
     begin
       File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid|
