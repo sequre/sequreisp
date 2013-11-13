@@ -68,7 +68,7 @@ class DisksController < ApplicationController
   def assign_for_cache
     count = 0
     Disk.find(params[:assign_disks_ids]).each do |disk|
-      disk.prepare_disk_for = "cache"
+      disk.prepare_disk_for_cache = true
       disk.save
       count += 1
     end
