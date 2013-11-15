@@ -42,4 +42,17 @@ end
 
 Factory.define :interface do |f|
   f.sequence(:name) { |n| 'eth' + n.to_s }
+  f.kind 'wan'
 end
+
+Factory.define :invoicing_contract, :parent => :contract do |f|
+  f.association :plan, :factory => :invoicing_plan
+  f.dont_create_initial_invoice true
+end
+
+Factory.define :invoicing_plan, :parent => :plan do |f|
+  f.invoicing_enabled true
+  f.price 100
+  f.reconnection_fee 10
+end
+

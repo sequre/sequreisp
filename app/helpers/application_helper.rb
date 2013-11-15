@@ -29,18 +29,6 @@ module ApplicationHelper
     end
   end
 
-  # Returns the values of each column for the row corresponding to object
-  # in the order corresponding to the headers returned by plugin_table_columns
-  def ordered_plugins_table_values object
-    headers = plugins_table_columns
-    cells = plugins_table_columns_values object
-    ret = []
-    headers.each do |th|
-      ret << cells[th]
-    end
-    ret
-  end
-
   def link_to_remove_fields(name, f)
     f.hidden_field(:_destroy) + link_to_function(name, "remove_fields(this)")
   end

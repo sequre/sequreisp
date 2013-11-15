@@ -55,9 +55,6 @@ es:
       contract:
         one: "Contrato"
         other: "Contratos"
-      disk:
-        one: "Disco"
-        other: "Discos"
       forwarded_port:
         one: "Puerto redireccionado"
         other: "Puertos redireccionados"
@@ -82,6 +79,9 @@ es:
       user:
         one: "Usuario"
         other: "Usuarios"
+      always_allowed_site:
+        one: 'Sitio permitido'
+        other: 'Sitios permitidos'
     attributes:
       name: "Nombre"
       ip: "Dirección IP"
@@ -136,14 +136,6 @@ es:
         created_at: "Fecha de alta"
         taxpayer_identification_number: 'Numero de identificación tributaria'
         national_identification_number: 'Número de identificación personal'
-      disk:
-        id: "iD"
-        serial: "Num de serie"
-        name: "Nombre"
-        capacity: "Capacidad"
-        type: "Tipo"
-        system: "Sistema"
-        cache: "Cache"
       plan:
         id: 'Id'
         name: "Nombre"
@@ -152,8 +144,8 @@ es:
         ceil_down: "Máx. bajada [kbps]"
         rate_up: "Mín. subida [kbps]"
         ceil_up: "Máx. subida [kbps]"
-        burst_down: "Ráfaga de bajada [kbits]"
-        burst_up: "Ráfaga de subida [kbits]"
+        burst_down: "Ráfaga de bajada [kbytes]"
+        burst_up: "Ráfaga de subida [kbytes]"
         long_download_max: "Límite para descargas grandes [kbytes]"
         long_upload_max: "Límite para cargas grandes [kbytes]"
         transparent_proxy: "Proxy transparente"
@@ -226,9 +218,6 @@ es:
         iptables_tree_optimization_enabled: "Optimizar reglas de iptables (usar sólo en versión de 64 bits)"
         apply_changes_automatically: "Aplicar cambios automáticamente"
         apply_changes_automatically_hour: "Hora de aplicación de los cambios automáticos"
-        web_interface_listen_on_80: "Escuchar peticiones de la interfaz web en puerto 80"
-        web_interface_listen_on_443: "Escuchar peticiones de la interfaz web en puerto 443(HTTPS)"
-        web_interface_listen_on_8080: "Escuchar peticiones de la interfaz web en puerto 8080"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -275,6 +264,10 @@ es:
         detail: "Detalle"
       search:
         not_paged: "No Paginar"
+      always_allowed_site:
+        id: 'Id'
+        name: 'Ip o nombre de sitio'
+        detail: 'Detail'
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -328,7 +321,6 @@ es:
     interfaces: "Interfaces"
     users: "Usuarios"
     configuration: "Configuración"
-    disk_management: "Administración de discos"
     general_configuration: "Configuración general"
     avoid_balancing_hosts: "Sitos sin balanceo"
     avoid_proxy_hosts: "Sitos sin proxy"
@@ -339,8 +331,7 @@ es:
     modules: "Módulos"
     about: "Acerca de"
     audits: "Auditorías"
-    help: "Ayuda"
-    guides: "Guías de SequreISP"
+    always_allowed_sites: "Sitios permitidos"
   buttons:
     login: "Entrar"
     edit: "Editar"
@@ -369,12 +360,6 @@ es:
     massive_setting: 'Actualizar selección'
     massive_destroy: 'Destruir selección'
     form_massive_setting: 'Actualización masiva'
-    system_disks: 'Sistema'
-    cache_disks: 'Cache'
-    free_disks: 'Libres'
-    scan_disks: 'Detectar nuevos discos'
-    liberate_disks: 'Liberar discos'
-    assign_disks_to_cache: 'Asignar a cache'
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"
@@ -456,18 +441,6 @@ es:
       reboot_error: "Ocurrió un error, el servidor no será reiniciado"
       halt: "El servidor se apagara en breve"
       halt_error: "Ocurrió un error, el servidor no se apagará"
-    disk:
-      important: "Importante"
-      free: "Discos libres"
-      assigned: "Discos Asignados"
-      scan_success: "Se han detectado nuevos discos"
-      scan_fail: "No se han detectado nuevos discos"
-      assign_for_cache: "Discos asignados a cache"
-      not_assign_for_cache: "Los discos no pueden asignarse a cache"
-      liberate: "Discos liberados exitosamente"
-      not_liberate: "Discos no liberados"
-      empty_selection: "No se ha seleccionado ningun disco"
-      when_apply_change: "El proceso de asignación de discos puede demorar alrededor de 15-20 min, es normal que se presente un aumento en la carga del sistema (load average)"
   controllers:
     successfully_updated: "Actualización de datos exitosa"
     successfully_created: "Creación exitosa"
@@ -500,7 +473,6 @@ es:
       unique_provider_does_not_belongs_to_plan: "El proveedor asignado no pertenece al plan seleccionado"
     configuration:
       notification_email_invalid: "Dirección de e-mail inválida"
-      web_interface_listen_at_least_on_one_port: "Al menos se debe seleccionar un puerto para la interfaz web"
     plan:
       not_enough_down_bandwidth_in_this_plan: "No hay suficiente ancho de banda de bajada para asignar este plan"
       not_enough_down_bandwidth: "No hay suficiente ancho de banda de bajada"

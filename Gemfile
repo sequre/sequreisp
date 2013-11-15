@@ -6,6 +6,7 @@ gem 'mysql'
 gem 'formtastic', '~>1.2'
 gem 'authlogic', '=2.1.6'
 gem 'rubyist-aasm', '=2.1.1', :require => 'aasm'
+gem 'ttilley-aasm'
 gem 'searchlogic', '~> 2.5.0'
 gem 'will_paginate', '~>2.3'
 gem 'rrd-ffi', '~>0.2', :require => 'rrd'
@@ -19,11 +20,17 @@ gem 'acts_as_audited', '~>1.1'
 gem 'whenever', '~>0.6'
 gem 'RedCloth'
 gem "context_help"
+gem 'open4'
 
 group :development, :test do
   gem 'faker'
   gem 'rspec-rails', '1.3.3'
   gem 'guard-rspec'
+  
+  gem 'database_cleaner' ,'1.0.1'
+  gem 'capybara', '0.3.9' # dependence rspec >= 1.2.9
+  gem 'selenium-webdriver'
+
   group :linux do
     gem 'rb-inotify'
     gem 'libnotify'
