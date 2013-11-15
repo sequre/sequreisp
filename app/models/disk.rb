@@ -31,7 +31,7 @@ class Disk < ActiveRecord::Base
         attributes.each do |attr|
           name = attr.chomp.split(":").last.strip if attr.include?("logical name")
           capacity = attr.chomp.split(":").last.split(" ").last.strip if attr.include?("size:")
-          serial = attr.chomp.split(":").last.strip if attr.include?("serial")          
+          serial = attr.chomp.split(":").last.strip if attr.include?("serial")
         end
         is_system = system_disks[:devices].include?(name) ? true : false
         is_cache = cache_disks[:devices].include?(name) ? true : false
@@ -40,7 +40,7 @@ class Disk < ActiveRecord::Base
         is_free = is_system or is_cache ? false : true
         partitioned =  is_free ? false : true
         hash = {:name => name, :capacity => capacity, :serial => serial, :system => is_system, :cache => is_cache, :free => is_free, :partitioned => partitioned, :clean_partition => is_free}
-        scan_for_other_uses(hash)
+  #      scan_for_other_uses(hash)
         hash[:raid] = `cat /proc/mdstat | grep "#{hash[:name].split('/').last}"`.chomp.split.first
         disks[name] = hash
       end
@@ -48,15 +48,69 @@ class Disk < ActiveRecord::Base
     disks
   end
 
-  def self.scan_for_other_uses(hash)
+  def self.scaan
+    command_disks = `sudo /usr/bin/lshw -C disk`.strip.split("*-")
+    command_disks.each do |c_disk|
+      if c_disk.include?("disk")
+        attributes = c_disk.split("  ")
+        attributes.each do |attr|
+          name = attr.chomp.split(":").last.strip if attr.include?("logical name")
+          capacity = attr.chomp.split(":").last.split(" ").last.strip if attr.include?("size:")
+          # serial = attr.chomp.split(":").last.strip if attr.include?("serial")
+          if name.present?
+            disk = Disk.create(:name => name, :capacity => capacity)
+            disk.raid = disk.which_raid
+            disk.is_used_for
+            disk.save
+          end
+        end
+      end
+    end
+  end
+
+  def is_used_for
+    if is_system_disk?
+      system = true
+      free = false
+    end
+    if is_cache_disk?
+      cache = true
+      free = false
+    end
+    free = true if free.nil?
+  end
+
+  def which_raid
+    `cat /proc/mdstat | grep "#{self.logical_name}"`.split(" ").first
+  end
+
+  def is_system_disk?
+    # system "mount | grep '#{raid.nil? ? name : raid}.*on / '"
+    `mount | grep '#{raid.nil? ? name : raid}.*on / '`.present?
+  end
+
+  def is_cache_disk?
+    is_cache = false
+    #if configuration.first.transparent_proxy
+      cache_dirs = `grep "^cache_dir*" /etc/squid/squid.conf`.split("\n")
+      cache_dirs = `grep "^cache_dir*" /etc/squid/sequreisp.squid.conf`.split("\n") if cache_dirs.empty?
+      cache_dirs.each do |cache_dir|
+        dir = cache_dir.split(' ')[2]
+        link = `readlink "#{dir}"`.chomp
+        if link.present?
+          dir = link
+          dir = dir.split("/squid").first
+          is_cache = true if `mount | grep "#{dir}"`.include?("#{raid.nil? ? name : raid}")
+          # else
+          # is_cache = true if system
+        end
+      end
+    #end
+    is_cache
   end
 
   def self.used_for_system
     self.disk_usage("on / ")
-  end
-
-  def is_system_disk?
-    system "mount | grep '#{name}.*on / '"
   end
 
   def self.used_for_cache
@@ -103,6 +157,10 @@ class Disk < ActiveRecord::Base
     self.system = attr.include?(:system) ? true : false
     self.cache  = attr.include?(:cache) ? true : false
     self.save
+  end
+
+  def logical_name
+    name.split("/").last
   end
 
   def name_with_partition
