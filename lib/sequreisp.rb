@@ -1001,7 +1001,7 @@ def config_cache_disks(f)
         f.puts "mkdir -p #{mounting_point}"
         mount_disk(f, disk.name, mounting_point)
         f.puts "mkdir -p #{mounting_point}/squid"
-        f.puts "chown proxy.proxy -R #{mounting_point}/squid"
+        f.puts "chown proxy.proxy -R #{mounting_point}/squid" if `ls -l #{mounting_point}/squid`.chomp.split[2] != "proxy"
       end
     end
     f.puts("squid -z")
@@ -1016,14 +1016,14 @@ def config_cache_disks(f)
     f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
     if cache_disks.empty?
       f.puts("mkdir -p /var/spool/squid")
-      f.puts("chown proxy.proxy -R /var/spool/squid")
-      IO.popen("fdisk -l | grep 'Disk /dev/sda'", "r") do |io|
+      f.puts "chown proxy.proxy -R /var/spool/squid" if `ls -l /var/spool/squid`.chomp.split[2] != "proxy"
+      IO.popen("fdisk -l | grep 'Disk #{Disk.system.first.name}'", "r") do |io|
         value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
         value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
         cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
       end
     else
-      f.puts("rm -rf /var/spool/squid &")
+      #f.puts("rm -rf /var/spool/squid &")
       cache_disks.each do |disk|
         IO.popen("fdisk -l | grep 'Disk #{disk.name}'", "r") do |io|
           capacitys[disk.name] = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
@@ -1034,6 +1034,12 @@ def config_cache_disks(f)
         value_for_cache_dir =  total_capacity > max_value_squid ? (value * max_value_squid / total_capacity) : value
         cache_dirs << "cache_dir aufs /mnt/sequreisp#{key}/squid #{value_for_cache_dir.to_i} 16 256"
       end
+    end
+  else
+    if system("ls /mnt/cache")
+      f.puts("mkdir -p /mnt/cache/squid")
+      f.puts "chown proxy.proxy -R /var/spool/squid" if `ls -l /var/spool/squid`.chomp.split[2] != "proxy"
+      f.puts("ln -s /mnt/cache/squid /var/spool")
     end
   end
   cache_dirs
