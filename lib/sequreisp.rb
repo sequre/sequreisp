@@ -1013,11 +1013,14 @@ def config_cache_disks(f)
   cache_disks = Disk.cache
 
   if not cache_disks.collect(&:raid).compact.present?
+    # do we have a system disk?
+    system_disk = Disk.system.first rescue nil
+    if system_disk
     f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
     if cache_disks.empty?
       f.puts("mkdir -p /var/spool/squid")
       f.puts "chown proxy.proxy -R /var/spool/squid" if `ls -l /var/spool/squid`.chomp.split[2] != "proxy"
-      IO.popen("fdisk -l | grep 'Disk #{Disk.system.first.name}'", "r") do |io|
+      IO.popen("fdisk -l | grep 'Disk #{system_disk.name}'", "r") do |io|
         value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
         value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
         cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
@@ -1034,6 +1037,7 @@ def config_cache_disks(f)
         value_for_cache_dir =  total_capacity > max_value_squid ? (value * max_value_squid / total_capacity) : value
         cache_dirs << "cache_dir aufs /mnt/sequreisp#{key}/squid #{value_for_cache_dir.to_i} 16 256"
       end
+    end
     end
   else
     if system("ls /mnt/cache")
