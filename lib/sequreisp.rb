@@ -1012,11 +1012,11 @@ def config_cache_disks(f)
 
   cache_disks = Disk.cache
 
+  f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
   if not cache_disks.collect(&:raid).compact.present?
     # do we have a system disk?
     system_disk = Disk.system.first rescue nil
     if system_disk
-    f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
     if cache_disks.empty?
       f.puts("unlink /var/spool/squid")
       f.puts("mkdir -p /var/spool/squid")
@@ -1318,7 +1318,7 @@ def boot(run=true)
       setup_clock f
       setup_proc f
       if Disk.count == 0
-        Disk.scan.each do |disk|
+        Disk.scan.each_value do |disk|
           Disk.create(disk)
         end
       end
