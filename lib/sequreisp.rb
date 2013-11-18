@@ -1001,7 +1001,7 @@ def config_cache_disks(f)
         f.puts "mkdir -p #{mounting_point}"
         mount_disk(f, disk.name, mounting_point)
         f.puts "mkdir -p #{mounting_point}/squid"
-        f.puts "chown proxy.proxy -R #{mounting_point}/squid" if `ls -l #{mounting_point}/squid`.chomp.split[2] != "proxy"
+        f.puts "chown proxy.proxy -R #{mounting_point}/squid" if `ls -l #{mounting_point} | grep squid`.chomp.split[2] != "proxy"
       end
     end
     f.puts("squid -z")
@@ -1019,7 +1019,7 @@ def config_cache_disks(f)
     f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
     if cache_disks.empty?
       f.puts("mkdir -p /var/spool/squid")
-      f.puts "chown proxy.proxy -R /var/spool/squid" if `ls -l /var/spool/squid`.chomp.split[2] != "proxy"
+      f.puts "chown proxy.proxy -R /var/spool/squid" if `ls -l /var/spool | grep squid`.chomp.split[2] != "proxy"
       IO.popen("fdisk -l | grep 'Disk #{system_disk.name}'", "r") do |io|
         value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
         value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
@@ -1042,7 +1042,7 @@ def config_cache_disks(f)
   else
     if system("ls /mnt/cache")
       f.puts("mkdir -p /mnt/cache/squid")
-      f.puts "chown proxy.proxy -R /var/spool/squid" if `ls -l /var/spool/squid`.chomp.split[2] != "proxy"
+      f.puts "chown proxy.proxy -R /mnt/cache/squid" if `ls -l /mnt/cache | grep squid`.chomp.split[2] != "proxy"
       f.puts("ln -s /mnt/cache/squid /var/spool")
     end
   end
@@ -1315,6 +1315,11 @@ def boot(run=true)
       end
       setup_clock f
       setup_proc f
+      if Disk.count == 0
+        Disk.scan.each do |disk|
+          Disk.create(disk)
+        end
+      end
       setup_proxy f
       Interface.all(:conditions => "vlan = 0").each do |i|
         f.puts "ip link set dev #{i.name} up"
