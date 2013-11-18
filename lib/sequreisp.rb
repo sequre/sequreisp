@@ -1018,6 +1018,7 @@ def config_cache_disks(f)
     if system_disk
     f.puts "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
     if cache_disks.empty?
+      f.puts("unlink /var/spool/squid")
       f.puts("mkdir -p /var/spool/squid")
       f.puts "chown proxy.proxy -R /var/spool/squid" if `ls -l /var/spool | grep squid`.chomp.split[2] != "proxy"
       IO.popen("fdisk -l | grep 'Disk #{system_disk.name}'", "r") do |io|
@@ -1044,6 +1045,7 @@ def config_cache_disks(f)
       f.puts("mkdir -p /mnt/cache/squid")
       f.puts "chown proxy.proxy -R /mnt/cache/squid" if `ls -l /mnt/cache | grep squid`.chomp.split[2] != "proxy"
       f.puts("ln -s /mnt/cache/squid /var/spool")
+      cache_dirs << "cache_dir aufs /var/spool/squid 30000 16 256"
     end
   end
   cache_dirs
