@@ -29,7 +29,7 @@ class Disk < ActiveRecord::Base
     aux =`sudo /usr/bin/lshw -C disk`.strip.split("*-")
     system_disks = used_for_system
     cache_disks = used_for_cache
-    
+
     aux.each do |disk|
       if disk.include?("disk")
         name = ""
@@ -39,13 +39,13 @@ class Disk < ActiveRecord::Base
         attributes.each do |attr|
           name = attr.chomp.split(":").last.strip if attr.include?("logical name")
           capacity = attr.chomp.split(":").last.split(" ").last.strip if attr.include?("size:")
-          serial = attr.chomp.split(":").last.strip if attr.include?("serial")          
+          serial = attr.chomp.split(":").last.strip if attr.include?("serial")
         end
         is_system = system_disks[:devices].include?(name) ? true : false
         is_cache = cache_disks[:devices].include?(name) ? true : false
         #which_raid = system_disks[:raid] if is_system
         #which_raid = cache_disks[:raid] if is_cache
-        is_free = is_system or is_cache ? false : true
+        is_free = (is_system or is_cache) ? false : true
         partitioned =  is_free ? false : true
         hash = {:name => name, :capacity => capacity, :serial => serial, :system => is_system, :cache => is_cache, :free => is_free, :partitioned => partitioned, :clean_partition => is_free}
         scan_for_other_uses(hash)
