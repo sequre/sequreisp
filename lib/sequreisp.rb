@@ -947,9 +947,11 @@ end
 
 def config_cache_disks
   conf = Configuration.first
+  system_disk = Disk.system.first
   disks_to_prepare = Disk.prepared_for_cache
 
   if not disks_to_prepare.empty?
+    system "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j ACCEPT"  if conf.transparent_proxy
     system "service squid stop"
     system "if (pidof squid); then pkill -9 squid; fi"
   end
@@ -966,10 +968,30 @@ def config_cache_disks
     end
   end
 
-  if not disks_to_prepare.empty?
-    system "squid -z"
-    system "service squid start" if conf.transparent_proxy
+  if disks_to_prepare.empty?
+    if not system_disk.cache
+      system_disk.do_prepare_disk_for_cache
+      system_disk.cache = true
+      system "squid -z" # ESTO NO SE PUEDE HACER POR QUE AUN NO ESTAN ESCRITOS LOS CACHE_DIR
+    end
+  else
+    sytem_disk.cache = false
+    system "squid -z" # ESTO NO SE PUEDE HACER POR QUE AUN NO ESTAN ESCRITOS LOS CACHE_DIR
   end
+  system_disk.save
+
+  if conf.transparent_proxy
+    system "service squid start" # ESTO NO SE PUEDE HACER POR QUE AUN NO ESTAN ESCRITOS LOS CACHE_DIR
+    system "/sbin/iptables -t nat -D PREROUTING -p tcp --dport 80 -j ACCEPT"
+  end
+
+  # if not disks_to_prepare.empty?
+  #   system "squid -z"
+  #   if conf.transparent_proxy
+  #     system "/sbin/iptables -t nat -D PREROUTING -p tcp --dport 80 -j ACCEPT"
+  #     system "service squid start"
+  #   end
+  # end
 end
 
 def setup_proxy(f)
