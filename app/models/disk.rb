@@ -1,35 +1,56 @@
 class Disk < ActiveRecord::Base
 
+  MAX_SQUID_TOTAL_SIZE = 300*1024 #300GB
+  MAX_SQUID_ON_SYSTEM_DISK_SIZE = 50 * 1024 #50GB
+
   include ModelsWatcher
-  watch_fields :cache, :free
+  watch_fields :prepare_disk_for_cache, :only_on_true => true
   watch_on_destroy
 
   named_scope :system, :conditions => {:system => true}
   named_scope :cache, :conditions => {:cache => true}
   named_scope :free, :conditions => {:free => true}
-  named_scope :in_raid, :conditions => ["disks.raid IS NOT NULL AND disks.system = FALSE AND disks.cache = TRUE"]
-  named_scope :raid_is, lambda {|raid| { :conditions => ["disks.raid = ?", raid]} }
-  named_scope :cache_in_raid, :conditions => ["disks.raid != 'md0' and disks.raid != 'NULL'"]
-  named_scope :prepared_for_cache, :conditions => 'prepare_disk_for_cache = 1'
-#  before_update :clean_cache, :if => "self.free_changed? and self.free"
+  named_scope :prepared_for_cache, :conditions => {:prepare_disk_for_cache => true}
+  named_scope :assigned, :conditions => {:free => false}
 
-  def self.new_scan
+  #rewrite in videocache plugin
+  def assigned_to
+    _assigned_to = []
+    _assigned_to << I18n.t('activerecord.attributes.disk.system') if system?
+    _assigned_to << I18n.t('activerecord.attributes.disk.cache') if cache?
+    _assigned_to.join(" & ")
+  end
+
+  def self.scan
+    result = {:new_disks => 0, :changed_disks => 0, :deleted_disks => 0}
     devices = `lsscsi | grep disk`.split("\n").collect{ |x| x.split(" ").last }
+
     devices.each do |dev|
       disk = Disk.find_by_name(dev)
       disk = Disk.new if disk.nil?
-
       disk.name = dev
       disk.raid = disk.which_raid
-      disk.capacity = `fdisk -l | grep #{disk.name}:`.split(" ")[4]
+      disk.capacity = `sudo /sbin/fdisk -l | grep #{disk.name}:`.split(" ")[4]
       disk.serial = `sudo /sbin/blkid #{disk.name_with_partition}`.chomp.split[1].split("=")[1].delete("\"") rescue nil
       if disk.new_record?
         disk.is_used_for
+        result[:new_disks] += 1
       else
-        disk.assigned_for([:free]) if disk.serial_changed?
+        if disk.serial_changed?
+          disk.assigned_for([:free])
+          result[:changed_disks] += 1
+        end
       end
       disk.save
     end
+
+    #ANY DISK DELETED?
+    deleted_disks = Disk.all - Disk.find_all_by_name(devices)
+    if deleted_disks.present?
+      result[:deleted_disks] = deleted_disks.size
+      deleted_disks.each{ |disk| disk.destroy }
+    end
+    result
   end
 
   def is_used_for
@@ -43,8 +64,7 @@ class Disk < ActiveRecord::Base
   end
 
   def is_system_disk?
-    # system "mount | grep '#{raid.nil? ? name : raid}.*on / '"
-     `mount | grep '#{raid.nil? ? name : raid}.*on / '`.present?
+    Kernel.system "mount | grep '#{raid.nil? ? name : raid}.*on / '"
   end
 
   #rewrite in videocache plugin
@@ -58,7 +78,8 @@ class Disk < ActiveRecord::Base
     cache_dirs = `grep "^cache_dir*" /etc/squid/sequreisp.squid.conf`.split("\n") if cache_dirs.empty?
     cache_dirs.each do |cache_dir|
       dir = cache_dir.split(' ')[2]
-      is_cache = true if `df -P #{dir} | grep '/dev'`.split(" ").first.include?("#{raid.nil? ? name : raid}") rescue false
+      is_cache = `df -P #{dir} | grep '/dev'`.split(" ").first.include?("#{raid.nil? ? name : raid}") rescue false
+      break if is_cache
     end
     is_cache
   end
@@ -79,10 +100,6 @@ class Disk < ActiveRecord::Base
 
   def name_with_partition
     "#{name}1"
-  end
-
-  def partition_name_or_raid_name
-    raid.nil? ? "#{name}1" : "/dev/#{raid}"
   end
 
   def mounting_point
@@ -128,9 +145,6 @@ class Disk < ActiveRecord::Base
     all(:conditions => 'raid is not NULL and system = 0').count == 0
   end
 
-  MAX_SQUID_TOTAL_SIZE = 300*1024 #300GB
-  MAX_SQUID_ON_SYSTEM_DISK_SIZE = 50 * 1024 #50GB
-
   def self.cache_dir_lines
     lines = []
     system "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
@@ -148,128 +162,4 @@ class Disk < ActiveRecord::Base
     lines
   end
 
-  # def self.used_for_system
-  #   self.disk_usage("on / ")
-  # end
-
-  # def self.used_for_cache
-  #   hash = {:raid => nil, :devices => []}
-  #   devs = self.disk_usage("/mnt/sequreisp/dev")
-  #   if devs[:devices].empty?
-  #     devs = self.disk_usage("/mnt/cache")
-  #     devs = self.disk_usage("/mnt/cache/web") if devs[:devices].empty?
-  #     hash[:devices] = devs[:devices]
-  #   else
-  #     devs[:devices].each do |dev|
-  #       hash[:devices] << dev if File.directory?("/mnt/sequreisp#{dev}/squid")
-  #     end
-  #   end
-  #   hash[:raid] = devs[:raid]
-  #   hash
-  # end
-
-  # def self.disk_usage(command)
-  #   hash = {:raid => nil, :devices => []}
-  #   IO.popen("mount | grep '#{command}'", "r") do |io|
-  #     io.each do |line|
-  #       device = line.chomp.split(" ").first
-  #       if device.include?("md")
-  #         hash[:raid] = device
-  #         IO.popen("cat /proc/mdstat | grep #{device.split("/").last}", "r") do |io|
-  #           io.each do |line|
-  #             _cache_disks = line.chomp.split(" ")
-  #             _cache_disks[4.._cache_disks.count].each do |disk|
-  #               hash[:devices] << "/dev/#{disk[0..2]}"
-  #             end
-  #           end
-  #         end
-  #       else
-  #         hash[:devices] << device.delete(device.last)
-  #       end
-  #     end
-  #   end
-  #   hash
-  # end
-
-# def self.scan
-  #   disks = {}
-  #   aux =`sudo /usr/bin/lshw -C disk`.strip.split("*-")
-  #   system_disks = used_for_system
-  #   cache_disks = used_for_cache
-
-  #   aux.each do |disk|
-  #     if disk.include?("disk")
-  #       name = ""
-  #       capacity = ""
-  #       serial = ""
-  #       attributes = disk.split("  ")
-  #       attributes.each do |attr|
-  #         name = attr.chomp.split(":").last.strip if attr.include?("logical name")
-  #         capacity = attr.chomp.split(":").last.split(" ").last.strip if attr.include?("size:")
-  #         serial = attr.chomp.split(":").last.strip if attr.include?("serial")
-  #       end
-  #       is_system = system_disks[:devices].include?(name) ? true : false
-  #       is_cache = cache_disks[:devices].include?(name) ? true : false
-  #       #which_raid = system_disks[:raid] if is_system
-  #       #which_raid = cache_disks[:raid] if is_cache
-  #       is_free = is_system or is_cache ? false : true
-  #       partitioned =  is_free ? false : true
-  #       hash = {:name => name, :capacity => capacity, :serial => serial, :system => is_system, :cache => is_cache, :free => is_free, :partitioned => partitioned, :clean_partition => is_free}
-  # #      scan_for_other_uses(hash)
-  #       hash[:raid] = `cat /proc/mdstat | grep "#{hash[:name].split('/').last}"`.chomp.split.first
-  #       disks[name] = hash
-  #     end
-  #   end
-  #   disks
-  # end
-
-  # def self.scaan
-  #   command_disks = `sudo /usr/bin/lshw -C disk`.strip.split("*-")
-  #   command_disks.each do |c_disk|
-  #     name = ""
-  #     capacity = ""
-  #     if c_disk.include?("disk")
-  #       attributes = c_disk.split("  ")
-  #       attributes.each do |attr|
-  #         name = attr.chomp.split(":").last.strip if attr.include?("logical name")
-  #         capacity = attr.chomp.split(":").last.split(" ").last.strip.delete("()") if attr.include?("size:")
-  #       end
-  #       if name.present?
-  #         disk = Disk.find_by_name(name)
-  #         disk = Disk.create(:name => name, :capacity => capacity) if disk.nil?
-  #         disk.raid = disk.which_raid
-  #         disk.is_used_for
-  #         disk.serial = `sudo /sbin/blkid #{disk.partition_name_or_raid_name}`.chomp.split[1].split("=")[1].delete("\"")
-  #         disk.save
-  #       end
-  #     end
-  #   end
-  # end
-
-  # def self.cache_dir_lines
-  #   lines = []
-  #   if Disk.not_custom_raids_present?
-  #     # NO RAIDS, whe take CONTROL
-  #     system "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
-
-  #     cache_disks = Disk.cache
-  #     if cache_disks.empty?
-  #       #disk = Disk.system.first
-  #       #disk.do_prepare_disk_for_cache
-  #       # disco sistema: hasta 30% y un tope de 50 GB
-  #       value_for_cache_dir = disk.partition_capacity > MAX_SQUID_ON_SYSTEM_DISK_SIZE ? MAX_SQUID_ON_SYSTEM_DISK_SIZE : disk.partition_capacity
-  #       lines << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
-  #     else
-  #       #system "rm -rf /var/spool/squid &"
-  #       # total_capacity = cache_disks.collect{|c| c.capacity.to_i}.sum / 1024 / 1024
-  #       total_capacity = cache_disks.collect{|c| c.partition_capacity.to_i}.sum
-  #       cache_disks.each do |disk|
-  #         # disco aparte: hasta 30% proporcional al disco hasta un tope de 300GB TOTAL
-  #         value_for_cache_dir =  total_capacity > MAX_SQUID_TOTAL_SIZE ? (disk.partition_capacity * MAX_SQUID_TOTAL_SIZE / total_capacity) : disk.partition_capacity
-  #         lines << "cache_dir aufs #{disk.mounting_point}/squid #{value_for_cache_dir.to_i} 16 256"
-  #       end
-  #     end
-  #   end
-  #   lines
-  # end
 end
