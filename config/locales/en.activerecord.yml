@@ -147,6 +147,7 @@ en:
         type: "Type"
         system: "System"
         cache: "Cache"
+        prepare_disk_for: "Assign to"
       plan:
         id: 'Id'
         name: "Name"

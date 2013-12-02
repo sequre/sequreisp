@@ -4,9 +4,8 @@ class DisksController < ApplicationController
 
   def index
     @free_disks = Disk.free
-    @system_disks = Disk.find(:all, :conditions => {:system => true})
-    @cache_disks = Disk.find(:all, :conditions => {:cache => true, :free => false})
-    hook_other_uses
+    @assigned_disks = Disk.assigned
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @disks}
@@ -17,7 +16,7 @@ class DisksController < ApplicationController
     if params[:liberate_disks_ids].present?
       count = 0
       Disk.find(params[:liberate_disks_ids]).each do |disk|
-        disk.free = true
+        disk.assigned_for([:free])
         disk.save
         count += 1
       end
@@ -46,20 +45,14 @@ class DisksController < ApplicationController
   end
 
   def scan
-    count = 0
+    flashes = []
+    result = Disk.scan
 
-    Disk.destroy_all
+    flashes << I18n.t('messages.disk.new_disks_detected', :disk_count => result[:new_disks]) if result[:new_disks] > 0
+    flashes << I18n.t('messages.disk.changed_in_disks_detected', :disk_count => result[:changed_disks]) if result[:changed_disks] > 0
+    flashes << I18n.t('messages.disk.deleted_disks_detected', :disk_count => result[:deleted_disks]) if result[:deleted_disks] > 0
 
-    Disk.scan.each_value do |disk|
-      count += 1
-      Disk.create(disk)
-    end
-
-    if count > 0
-      flash[:notice] = I18n.t('messages.disk.scan_success')
-    else
-      flash[:warning] = I18n.t('messages.disk.scan_fail')
-    end
+    flashes.present? ? flash[:notice] = flashes.join("  ") : flash[:warning] = I18n.t('messages.disk.scan_fail')
 
     redirect_to disks_path
   end
@@ -69,7 +62,8 @@ class DisksController < ApplicationController
   def assign_for_cache
     count = 0
     Disk.find(params[:assign_disks_ids]).each do |disk|
-      disk.assigned_for([:cache])
+      disk.prepare_disk_for_cache = true
+      disk.save
       count += 1
     end
     if count > 0
@@ -81,9 +75,6 @@ class DisksController < ApplicationController
   end
 
   def hook_assign_for
-  end
-
-  def hook_other_uses
   end
 
 end

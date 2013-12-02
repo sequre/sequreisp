@@ -22,8 +22,8 @@ class Disk < ActiveRecord::Base
   end
 
   def self.scan
-    result = #{:new_disks => 0, :changed_disks => 0, :deleted_disks => 0}
-      devices = `lsscsi | grep disk`.split("\n").collect{ |x| x.split(" ").last }
+    result = {:new_disks => 0, :changed_disks => 0, :deleted_disks => 0}
+    devices = `lsscsi | grep disk`.split("\n").collect{ |x| x.split(" ").last }
 
     devices.each do |dev|
       disk = Disk.find_by_name(dev)
