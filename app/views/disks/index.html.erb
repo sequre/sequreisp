@@ -22,12 +22,23 @@
 
 <div style="clear: both"></div>
 
+  <div class="main_avisos">
+    <div class="contact_info">
+      <h2 class="error"><%= t'messages.disk.important' %></h2>
+      <%= t'messages.disk.when_apply_change' %>
+    </div>
+  </div>
+
+
+<div style="clear: both"></div>
+
 <% unless @free_disks.empty? %>
-  <h1>Discos Libres</h1>
+  <h1><%= t'messages.disk.free' %></h1>
   <div class="main">
-    <% form_tag(assign_for_disks_path, :method => :put) do |f| %>
-      <%= submit_tag t('buttons.assign_disks_to_cache'), :name => :cache, :id => "foo" %>
-      <%= form_extensions f %>
+    <% form_tag(assign_for_disks_path, :method => :put) do %>
+      <%= submit_tag t('buttons.assign_disks_to_cache'), :name => :cache, :id
+      => "foo" %>
+      <%= form_extensions nil %>
       <table>
         <thead>
           <tr>
@@ -35,15 +46,19 @@
             <th><%= t('activerecord.attributes.disk.serial') %></th>
             <th><%= t('activerecord.attributes.disk.name') %></th>
             <th><%= t('activerecord.attributes.disk.capacity') %></th>
+            <th><%= t('activerecord.attributes.disk.prepare_disk_for') %></th>
           </tr>
         </thead>
         <tbody>
           <% @free_disks.each_with_index do |disk, i| %>
             <tr>
-              <td><%= check_box_tag "assign_disks_ids[]", disk.id %></td>
+              <td><%= check_box_tag("assign_disks_ids[]", disk.id) if
+              Disk.not_custom_raids_present? %></td>
               <td><%= disk.serial %></td>
-              <td><b><%= disk.name %></b></td>
-              <td><%= disk.capacity %></td>
+              <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not
+              disk.raid.nil? %></em></td>
+              <td><%= number_to_human_size(disk.capacity.to_i) %></td>
+              <td><%= disk.prepare_disk_for %></td>
             </tr>
           <% end %>
         </tbody>
@@ -52,9 +67,9 @@
   </div>
 <% end %>
 
-<h1>Discos Asignados</h1>
+<h1><%= t'messages.disk.assigned' %></h1>
 <div class="main">
-  <% form_tag(liberate_disks_path, :method => :put) do |f| %>
+  <% form_tag(liberate_disks_path, :method => :put) do %>
     <%= submit_tag t('buttons.liberate_disks') %>
     <table>
       <thead>
@@ -67,31 +82,21 @@
         </tr>
       </thead>
       <tbody>
-        <% unless @system_disks.empty? %>
-          <% @system_disks.each_with_index do |disk, i| %>
+        <% unless @assigned_disks.empty? %>
+          <% @assigned_disks.each_with_index do |disk, i| %>
             <tr>
-              <td></td>
+              <td><%= check_box_tag("liberate_disks_ids[]", disk.id) if not
+              disk.system? and disk.raid.nil? %></td>
               <td><%= disk.serial %></td>
               <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not
               disk.raid.nil? %></em></td>
               <td><%= disk.capacity %></td>
-              <td><b><%= t('activerecord.attributes.disk.system') %></b></td>
+              <td><b><%= disk.assigned_to %></b></td>
             </tr>
           <% end %>
         <% end %>
-        <% unless @cache_disks.empty? %>
-          <% @cache_disks.each_with_index do |disk, i| %>
-            <tr>
-              <td><%= check_box_tag("liberate_disks_ids[]", disk.id) if disk.raid.nil? %></td>
-              <td><%= disk.serial %></td>
-              <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
-              <td><%= disk.capacity %></td>
-              <td><b><%= t('activerecord.attributes.disk.cache') %></b></td>
-            </tr>
-          <% end %>
-        <% end %>
-        <%= view_extensions %>
       </tbody>
     </table>
   <% end %>
 </div>
+'

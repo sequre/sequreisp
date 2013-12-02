@@ -899,13 +899,6 @@ def setup_proc
     ]
 end
 
-def disk_partition(f, disk)
-  f.puts("dd if=/dev/zero of=#{disk.name} count=1024 bs=1024")
-  f.puts "(echo n; echo p; echo 1; echo ; echo ; echo w) | fdisk #{disk.name}"
-  disk.partitioned = true
-  disk.save
-end
-
 def disable_raid(f, mdstat)
   if mdstat[:raid].present?
     mdstat[:devices].each do |dev|
@@ -948,96 +941,51 @@ def config_system_disks(f)
   end
 end
 
-def mount_disk(f, dev, mounting_point)
-  f.puts "echo '#{dev}1 #{mounting_point} ext4 defaults 0 1' >> /etc/fstab"
-  f.puts "mount #{dev}1"
-end
-
-def umount_disk(f, dev)
-  # Umount al except md0 and systems disks
-  # sistem_disk = Disk.used_for_system
-  # sistem_disk[:devices] << sistem_disk[:raid]
-  # IO.popen("mount | grep '/dev/sd'", "r") do |io|
-  #   io.each do |line|
-  #     dev = line.split(' ').first.split("/").last
-  #     if not dev.include?("sda") or not dev.include?("md0")
-  f.puts("umount -l #{dev}1")
-  # end
-  f.puts("sed -i '/\\/dev\\/#{dev.split("/").last}1/d' /etc/fstab")
-  #   end
-  # end
-end
-
-def config_cache_disks(f)
-  cache_disks = Disk.cache
-  max_value_squid = 307200
-  capacitys = {}
-  cache_dirs = []
+def config_cache_disks
+  commands = []
   conf = Configuration.first
+  system_disk = Disk.system.first
+  disks_to_prepare = Disk.prepared_for_cache
+  use_system_disk_for_cache = (Disk.cache.count == 0 and disks_to_prepare.empty?)
+  restart_squid = false
 
-  if conf.mount_cache
-    f.puts("service squid stop")
-    f.puts("pidof squid")
-    f.puts("if [ $? -eq 0 ]; then pkill -9 squid; fi")
-    #disable_raid(f, Disk.used_for_cache)
-    cache_disks.each do |disk|
-      mounting_point = "/mnt/sequreisp#{disk.name}"
-      if disk.free
-        umount_disk(f, disk.name)
-        disk.assigned_for([:free])
-      else
-        IO.popen("mount | grep '#{disk.name}'", "r") do |io|
-          umount_disk(f, disk.name) if not io.first.nil?
-        end
-        disk_partition(f, disk) unless disk.partitioned
-        if disk.clean_partition
-          f.puts "mkfs.ext4 #{disk.name}1"
-          disk.clean_partition = false
-          disk.save
-        end
-        f.puts "mkdir -p #{mounting_point}"
-        mount_disk(f, disk.name, mounting_point)
-        f.puts "mkdir -p #{mounting_point}/squid"
-        f.puts "chown proxy.proxy -R #{mounting_point}/squid"
-      end
-    end
-    f.puts("squid -z")
-    f.puts("service squid start")
-    conf.mount_cache = false
-    conf.save
+  if conf.transparent_proxy and (disks_to_prepare.present? or use_system_disk_for_cache)
+    commands << "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j ACCEPT"
+    commands << "service squid stop"
+    commands << "if (pidof squid); then pkill -9 squid; fi"
+    restart_squid = true
   end
 
-  cache_disks = Disk.cache
-  f.puts "sed -i '/cache_dir ufs \/var\/spool\/squid / c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
-
-  if cache_disks.empty?
-    f.puts("mkdir -p /var/spool/squid")
-    f.puts("chown proxy.proxy -R /var/spool/squid")
-    IO.popen("fdisk -l | grep 'Disk /dev/sda'", "r") do |io|
-      value_for_cache_dir = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) #MEGABYTE
-      value_for_cache_dir = value_for_cache_dir * 0.20 > 51200 ? 51200 : value_for_cache_dir
-      cache_dirs << "cache_dir aufs /var/spool/squid #{value_for_cache_dir.to_i} 16 256"
-    end
-  else
-    f.puts("rm -rf /var/spool/squid &")
-    cache_disks.each do |disk|
-      IO.popen("fdisk -l | grep 'Disk #{disk.name}'", "r") do |io|
-        capacitys[disk.name] = io.first.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
+  disks_to_prepare.each do |disk|
+    disk.umount_and_remove_from_fstab if disk.mounted?
+    if disk.format
+      if disk.mount_and_add_to_fstab
+        disk.do_prepare_disk_for_cache
+        disk.prepare_disk_for_cache = false
+        disk.cache = true
+        disk.save
       end
     end
-    total_capacity = capacitys.values.sum
-    capacitys.each do |key, value|
-      value_for_cache_dir =  total_capacity > max_value_squid ? (value * max_value_squid / total_capacity) : value
-      cache_dirs << "cache_dir aufs /mnt/sequreisp#{key}/squid #{value_for_cache_dir.to_i} 16 256"
-    end
   end
-  cache_dirs
+
+  if use_system_disk_for_cache
+    system_disk.do_prepare_disk_for_cache
+    system_disk.cache = true
+  end
+
+  sytem_disk.cache = false if disks_to_prepare.present? and sytem_disk.cache?
+  system_disk.save if system_disk.changed?
+
+  restart_squid
 end
 
 def setup_proxy
   squid_file = '/etc/init/squid.conf'
   squid_file_off = squid_file + '.disabled'
   commands = []
+
+  restart_squid = config_cache_disks
+
   if Configuration.transparent_proxy
     commands << "[ -f #{squid_file_off} ] && mv #{squid_file_off} #{squid_file}"
     #relodearlo si ya está corriendo, arrancarlo sino
@@ -1045,8 +993,6 @@ def setup_proxy
     # dummy iface con ips para q cada cliente salga por su grupo
     commands << "modprobe dummy"
     commands << "ip link set dummy0 up"
-
-    cache_dirs = config_cache_disks(f)
 
     begin
       File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid|
@@ -1068,7 +1014,7 @@ def setup_proxy
             commands << "ip address add #{pg.proxy_bind_ip} dev dummy0"
           end
         end
-        cache_dirs.each do |cache_dir|
+        Disk.cache_dir_lines.each do |cache_dir|
           fsquid.puts(cache_dir)
         end
         #TODO Option disabled for all clients
@@ -1081,6 +1027,11 @@ def setup_proxy
       end
     rescue => e
       Rails.logger.error "ERROR in lib/sequreisp.rb::setup_proxy e=>#{e.inspect}"
+    end
+    if restart_squid
+      commands << "squid -z"
+      commands << "service squid start"
+      commands << "/sbin/iptables -t nat -D PREROUTING -p tcp --dport 80 -j ACCEPT"
     end
   else
     commands << "service squid stop"
