@@ -13,6 +13,11 @@ class Disk < ActiveRecord::Base
   named_scope :prepared_for_cache, :conditions => {:prepare_disk_for_cache => true}
   named_scope :assigned, :conditions => {:free => false}
 
+  def prepare_disk_for
+    _prepare_for = []
+    _prepare_for << I18n.t('activerecord.attributes.disk.cache') if self.cache?
+  end
+
   #rewrite in videocache plugin
   def assigned_to
     _assigned_to = []
@@ -85,7 +90,7 @@ class Disk < ActiveRecord::Base
   end
 
   def is_mounted?
-    system("mount | grep '#{name}' &>/dev/null")
+    Kernel.system "mount | grep '#{name}' &>/dev/null"
   end
 
   def assigned_for(attr)
@@ -106,39 +111,51 @@ class Disk < ActiveRecord::Base
     system? ? "/var/spool" : "/mnt/sequreisp#{name}"
   end
 
+  # Save the new Partition UUID
+  def rewrite_serial
+    self.serial = `sudo /sbin/blkid #{name_with_partition}`.chomp.split[1].split("=")[1].delete("\"") rescue nil
+    self.save
+  end
+
   def mount_and_add_to_fstab
+    commands = []
     fstab_line = "#{name_with_partition} #{mounting_point} ext4 defaults 0 1"
-    if system "grep '#{name_with_partition}' /etc/fstab"
-      system "sed -i 's/^#{name_with_partition}.*/#{fstab_line}' /etc/fstab"
+    if Kernel.system "grep '#{name_with_partition}' /etc/fstab"
+      commands << "sed -i 's/^#{name_with_partition}.*/#{fstab_line}' /etc/fstab"
     else
-      system "echo #{fstab_line} >> /etc/fstab"
+      commands << "echo #{fstab_line} >> /etc/fstab"
     end
-    system "mkdir -p #{mounting_point}"
-    system "mount #{name_with_partition}"
+    commands << "mkdir -p #{mounting_point}"
+    commands << "mount #{name_with_partition}"
   end
 
   def umount_and_remove_from_fstab
-    system "sed -i '@#{name_with_partition}@d' /etc/fstab"
-    system "umount -l #{name_with_partition}"
+     [ "sed -i '@#{name_with_partition}@d' /etc/fstab",
+       "umount -l #{name_with_partition}" ]
   end
 
   def format
-    system "dd if=/dev/zero of=#{name} count=1024 bs=1024"
-    system "(echo n; echo p; echo 1; echo ; echo ; echo w) | fdisk #{name}"
-    system "mkfs.ext4 #{name_with_partition}"
-    # Save the new Partition UUID
-    serial = `sudo /sbin/blkid #{name_with_partition}`.chomp.split[1].split("=")[1].delete("\"") rescue nil
-    save
+    [ "dd if=/dev/zero of=#{name} count=1024 bs=1024",
+      "(echo n; echo p; echo 1; echo ; echo ; echo w) | fdisk #{name}",
+      "mkfs.ext4 #{name_with_partition}" ]
   end
 
   def do_prepare_disk_for_cache
-    system "mkdir -p #{mounting_point}/squid"
-    system "chown proxy.proxy -R #{mounting_point}/squid" if `ls -l #{mounting_point} | grep squid`.chomp.split[2] != "proxy"
+    commands = []
+    commands << "mkdir -p #{mounting_point}/squid"
+    commands << "chown proxy.proxy -R #{mounting_point}/squid" if `ls -l #{mounting_point} | grep squid`.chomp.split[2] != "proxy"
   end
 
   def partition_capacity
     dev = raid.present? ? "/dev/#{raid}" : name
-    @_capacity ||= `sudo /sbin/fdisk -l | grep 'Disk #{dev}'`.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
+    `sudo /sbin/fdisk -l | grep 'Disk #{dev}'`.chomp.split(" ")[4].to_i / (1024 * 1024) * 0.30 #MEGABYTE
+  end
+
+  def removed_from_raid
+    if not system?
+      Kernel.system "mdadm --fail /dev/#{raid} #{name_with_partition}"
+      Kernel.system "mdadm --remove /dev/#{raid} #{name_with_partition}"
+    end
   end
 
   def self.not_custom_raids_present?
@@ -147,7 +164,6 @@ class Disk < ActiveRecord::Base
 
   def self.cache_dir_lines
     lines = []
-    system "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
     if Disk.not_custom_raids_present?
       cache_disks = Disk.cache
       total_capacity = cache_disks.collect{|c| c.partition_capacity.to_i}.sum

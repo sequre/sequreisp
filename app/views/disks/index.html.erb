@@ -2,7 +2,7 @@
   <script type='text/javascript'>
     $(function() {
       $('input#select_liberate').change(function(){
-        $('input[name="liberate_disks_ids[]"]').attr("checked",
+        $('input[name="assigned_disks_ids[]"]').attr("checked",
         $(this).attr("checked"));
       });
       $('input#select_assign').change(function(){
@@ -35,8 +35,9 @@
 <% unless @free_disks.empty? %>
   <h1><%= t'messages.disk.free' %></h1>
   <div class="main">
-    <% form_tag(assign_for_disks_path, :method => :put) do %>
-      <%= submit_tag t('buttons.assign_disks_to_cache'), :name => :cache, :id => "foo" %>
+    <% form_tag(free_assign_for_disks_path, :method => :put) do %>
+      <%= submit_tag t('buttons.liberate_disks'), :name => :liberate %>
+      <%= submit_tag t('buttons.assign_disks_to_cache'), :name => :cache %>
       <%= form_extensions nil %>
       <table>
         <thead>
@@ -55,7 +56,7 @@
               <td><%= disk.serial %></td>
               <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
               <td><%= number_to_human_size(disk.capacity.to_i) %></td>
-              <td><%= disk.prepare_disk_for %></td>
+              <td><b><%= disk.prepare_disk_for %></b></td>
             </tr>
           <% end %>
         </tbody>
@@ -66,8 +67,9 @@
 
 <h1><%= t'messages.disk.assigned' %></h1>
 <div class="main">
-  <% form_tag(liberate_disks_path, :method => :put) do %>
-    <%= submit_tag t('buttons.liberate_disks') %>
+  <% form_tag(assigned_assign_for_disks_path, :method => :put) do %>
+    <%= submit_tag t('buttons.liberate_disks'), :name => :liberate %>
+    <%= submit_tag t('buttons.clean_disks'), :name => :clean %>
     <table>
       <thead>
         <tr>
@@ -82,7 +84,7 @@
         <% unless @assigned_disks.empty? %>
           <% @assigned_disks.each_with_index do |disk, i| %>
             <tr>
-              <td><%= check_box_tag("liberate_disks_ids[]", disk.id) if not disk.system? and disk.raid.nil? %></td>
+              <td><%= check_box_tag("assigned_disks_ids[]", disk.id) if not disk.system? and disk.raid.nil? %></td>
               <td><%= disk.serial %></td>
               <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
               <td><%= disk.capacity %></td>

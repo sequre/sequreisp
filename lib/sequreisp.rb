@@ -899,84 +899,43 @@ def setup_proc
     ]
 end
 
-def disable_raid(f, mdstat)
-  if mdstat[:raid].present?
-    mdstat[:devices].each do |dev|
-      f.puts("mdadm --fail #{mdstat[:raid]} #{dev}1")
-      f.puts("mdadm --remove #{mdstat[:raid]} #{dev}1")
-      disk = Disk.find_by_name(dev)
-      if disk.present? and disk.raid.present?
-        f.puts("mdadm --zero-superblock #{dev}1")
-        disk.raid = nil
-        disk.save if disk.changed?
-      end
-    end
-    f.puts("sed -i '/#{mdstat[:raid]}/d' /proc/mdstat")
-  end
-end
-
-def config_system_disks(f)
-  system_md = "/dev/md0"
-  system_disk = "/dev/sda"
-  mdstat_system = Disk.used_for_system[:devices]
-  mdstat_system.delete(system_disk)
-  Disk.all.each do |disk|
-    if mdstat_system.include?(disk.name)
-      mdstat_system.delete(disk.name)
-      if not disk.system
-        f.puts("mdadm --fail #{system_md} #{disk.name}1")
-        f.puts("mdadm --remove #{system_md} #{disk.name}1")
-        f.puts("mdadm --zero-superblock #{disk.name}1")
-        disk_name = disk.name.split("/").last
-        f.puts("sed -i '/\\/dev\\/#{disk_name}2/d' /etc/fstab")
-      end
-    end
-  end
-  Disk.connection.update_sql "update disks set disks.raid = '#{system_md}' where disks.system = true"
-  mdstat_system.each do |dev|
-    f.puts("mdadm --fail #{system_md} #{dev}1")
-    f.puts("mdadm --remove #{system_md} #{dev}1")
-    dev = dev.split("/").last
-    f.puts("sed -i '/\\/dev\\/#{dev}2/d' /etc/fstab")
-  end
-end
-
 def config_cache_disks
-  commands = []
   conf = Configuration.first
   system_disk = Disk.system.first
   disks_to_prepare = Disk.prepared_for_cache
   use_system_disk_for_cache = (Disk.cache.count == 0 and disks_to_prepare.empty?)
-  restart_squid = false
+  @create_directorys_for_squid = false
 
   if conf.transparent_proxy and (disks_to_prepare.present? or use_system_disk_for_cache)
-    commands << "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j ACCEPT"
-    commands << "service squid stop"
-    commands << "if (pidof squid); then pkill -9 squid; fi"
-    restart_squid = true
+    exec_context_commands("stop_squid_and_add_client_redirection",
+                          ["/sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j ACCEPT",
+                           "service squid stop",
+                           "if (pidof squid); then pkill -9 squid; fi"])
+    @create_directorys_for_squid = true
   end
 
   disks_to_prepare.each do |disk|
-    disk.umount_and_remove_from_fstab if disk.mounted?
-    if disk.format
-      if disk.mount_and_add_to_fstab
-        disk.do_prepare_disk_for_cache
-        disk.prepare_disk_for_cache = false
-        disk.cache = true
-        disk.save
+    exec_context_commands("umount_and_remove_from_fstab_extra_disk", disk.umount_and_remove_from_fstab) if disk.mounted?
+    if exec_context_commands("format_extra_disk", disk.format)
+      disk.rewrite_serial
+      if exec_context_commands("mount_and_add_to_fstab_extra_disk", disk.mount_and_add_to_fstab)
+        if exec_context_commands("do_prepare_extra_disk_for_cache", disk.do_prepare_disk_for_cache)
+          disk.prepare_disk_for_cache = false
+          disk.assigned_for([:cache])
+        end
       end
+      disk.save if disk.changed?
     end
   end
 
+  # When no extra disks for cache
   if use_system_disk_for_cache
-    system_disk.do_prepare_disk_for_cache
+    exec_context_commands("do_prepare_system_disk_for_cache", system_disk.do_prepare_disk_for_cache)
     system_disk.cache = true
   end
 
-  sytem_disk.cache = false if disks_to_prepare.present? and sytem_disk.cache?
+  system_disk.cache = false if (disks_to_prepare.present? and sytem_disk.cache?)
   system_disk.save if system_disk.changed?
-
-  restart_squid
 end
 
 def setup_proxy
@@ -984,12 +943,14 @@ def setup_proxy
   squid_file_off = squid_file + '.disabled'
   commands = []
 
-  restart_squid = config_cache_disks
-
   if Configuration.transparent_proxy
     commands << "[ -f #{squid_file_off} ] && mv #{squid_file_off} #{squid_file}"
+    commands << "squid -z" if @create_directorys_for_squid
     #relodearlo si ya está corriendo, arrancarlo sino
     commands << 'if [[ -n "$(pidof squid)" ]] ; then  squid -k reconfigure ; else service squid start ; fi'
+    commands << "/sbin/iptables -t nat -D PREROUTING -p tcp --dport 80 -j ACCEPT" if @create_directorys_for_squid
+    #Write cache_dir in sequreisp_squid.conf
+    commands << "sed -i '/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256' /etc/squid/squid.conf"
     # dummy iface con ips para q cada cliente salga por su grupo
     commands << "modprobe dummy"
     commands << "ip link set dummy0 up"
@@ -1027,11 +988,6 @@ def setup_proxy
       end
     rescue => e
       Rails.logger.error "ERROR in lib/sequreisp.rb::setup_proxy e=>#{e.inspect}"
-    end
-    if restart_squid
-      commands << "squid -z"
-      commands << "service squid start"
-      commands << "/sbin/iptables -t nat -D PREROUTING -p tcp --dport 80 -j ACCEPT"
     end
   else
     commands << "service squid stop"
@@ -1301,6 +1257,7 @@ def boot(run=true)
     setup_queued_commands
     setup_clock
     setup_proc
+    config_cache_disks
     setup_proxy
     setup_nf_modules
     setup_interfaces
