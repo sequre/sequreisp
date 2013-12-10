@@ -1,5 +1,6 @@
 class Disk < ActiveRecord::Base
 
+  acts_as_audited
   include ModelsWatcher
   watch_fields :cache, :free
   watch_on_destroy
@@ -110,6 +111,10 @@ class Disk < ActiveRecord::Base
       self.cache  = attr.include?(:cache) ? true : false
       self.save
     end
+  end
+
+  def auditable_name
+    "#{self.class.human_name}: #{name}"
   end
 
 end
