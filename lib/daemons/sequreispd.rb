@@ -216,7 +216,8 @@ tcounter = Thread.new do
               if ips.include? ip
                 hash[ip] = 0 if hash[ip].nil?
                 hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
-                hash_log_iptables[ip] = line
+                hash_log_iptables[ip] = [] if hash_log_iptables[ip].nil?
+                hash_log_iptables[ip] << line
               end
             end
           end
@@ -232,7 +233,8 @@ tcounter = Thread.new do
                   #Rails.logger.debug "Before Traffic: #{ip} => #{hash[ip]}"
                   hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
                   #Rails.logger.debug "After Traffic: #{ip} => #{hash[ip]}"
-                  hash_log_iptables_proxy[ip] = line
+                  hash_log_iptables_proxy[ip] = [] if hash_log_iptables_proxy[ip].nil?
+                  hash_log_iptables_proxy[ip] << line
                 end
               end
             end
