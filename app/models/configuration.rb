@@ -43,6 +43,7 @@ class Configuration < ActiveRecord::Base
 
   validates_numericality_of :notification_timeframe, :only_integer => true, :greater_than_or_equal_to => 0
   validates_numericality_of :transparent_proxy_max_load_average, :only_integer => true, :greater_than => 0, :less_than => 30
+  validates_numericality_of :logged_in_timeout, :only_integer => true, :greater_than_or_equal_to => 0
   validates_presence_of :apply_changes_automatically_hour, :if => :apply_changes_automatically?
 
   include PriosCheck
