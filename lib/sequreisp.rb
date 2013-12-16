@@ -289,6 +289,12 @@ def gen_iptables
       # MANGLE #
       #--------#
       f.puts "*mangle"
+
+      #Chain for unlimitd bandwidth traffic, jump here if you need it
+      f.puts ":unlimited_bandwidth - [0:0]"
+      f.puts "-A unlimited_bandwidth -j MARK --set-mark 0x0/0xffffff"
+      f.puts "-A unlimited_bandwidth -j ACCEPT"
+
       if Configuration.clamp_mss_to_pmtu
         f.puts "-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
         f.puts "-A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
@@ -387,6 +393,9 @@ def gen_iptables
 
       f.puts ":sequreisp.down - [0:0]"
       f.puts ":sequreisp.up - [0:0]"
+
+      # apache traffic without restrictions for web interface and videocache
+      f.puts "-A sequreisp.down -m owner --uid-owner www-data -j unlimited_bandwidth"
 
       #speed-up MARKo solo si no estaba a restore'ada x CONNMARK
       mark_if="-m mark --mark 0x0/0xffff"
