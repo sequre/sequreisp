@@ -1,5 +1,6 @@
 class Disk < ActiveRecord::Base
 
+  acts_as_audited
   include ModelsWatcher
   watch_fields :cache, :free
   watch_on_destroy
@@ -103,13 +104,15 @@ class Disk < ActiveRecord::Base
   end
 
   def assigned_for(attr)
-    if self.name != "/dev/sda"
-      self.raid   = attr.include?(:raid) ? true : nil
-      self.free   = attr.include?(:free) ? true : false
-      self.system = attr.include?(:system) ? true : false
-      self.cache  = attr.include?(:cache) ? true : false
-      self.save
-    end
+    self.raid   = attr.include?(:raid) ? true : nil
+    self.free   = attr.include?(:free) ? true : false
+    self.system = attr.include?(:system) ? true : false
+    self.cache  = attr.include?(:cache) ? true : false
+    self.save
+  end
+
+  def auditable_name
+    "#{self.class.human_name}: #{name}"
   end
 
 end
