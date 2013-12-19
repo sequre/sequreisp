@@ -37,7 +37,7 @@ module ModelsWatcher
       options = fields.extract_options!
       fields.each do |field|
         rules = ["self.#{field}_changed?"]
-        rules << "self.#{field}?" if options[:only_on_true]
+        rules << "self.#{field}?" if options.has_key?(:only_on_true)
         if eval(rules.join(" and "))
           update_changes_to_apply
           break

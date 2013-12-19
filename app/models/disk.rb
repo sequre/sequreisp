@@ -1,10 +1,12 @@
 class Disk < ActiveRecord::Base
+  acts_as_audited
 
   MAX_SQUID_TOTAL_SIZE = 300*1024 #300GB
   MAX_SQUID_ON_SYSTEM_DISK_SIZE = 50 * 1024 #50GB
 
   include ModelsWatcher
   watch_fields :prepare_disk_for_cache, :only_on_true => true
+  watch_fields :free, :only_on_true => true
   watch_on_destroy
 
   named_scope :system, :conditions => {:system => true}
@@ -42,7 +44,7 @@ class Disk < ActiveRecord::Base
         result[:new_disks] += 1
       else
         if disk.serial_changed?
-          disk.assigned_for([:free])
+          disk.assigned_for([:free]) if not disk.is_system_disk?
           result[:changed_disks] += 1
         end
       end
@@ -121,7 +123,7 @@ class Disk < ActiveRecord::Base
     commands = []
     fstab_line = "#{name_with_partition} #{mounting_point} ext4 defaults 0 1"
     if Kernel.system "grep '#{name_with_partition}' /etc/fstab"
-      commands << "sed -i 's/^#{name_with_partition}.*/#{fstab_line}' /etc/fstab"
+      commands << "sed -i \"s@^#{name_with_partition}.*@#{fstab_line}@\" /etc/fstab"
     else
       commands << "echo #{fstab_line} >> /etc/fstab"
     end
@@ -129,9 +131,10 @@ class Disk < ActiveRecord::Base
     commands << "mount #{name_with_partition}"
   end
 
+
   def umount_and_remove_from_fstab
-     [ "sed -i '@#{name_with_partition}@d' /etc/fstab",
-       "umount -l #{name_with_partition}" ]
+    [ "sed -i \"\\@#{name_with_partition}@d\" /etc/fstab",
+      "umount -l #{name_with_partition}" ]
   end
 
   def format
@@ -144,6 +147,7 @@ class Disk < ActiveRecord::Base
     commands = []
     commands << "mkdir -p #{mounting_point}/squid"
     commands << "chown proxy.proxy -R #{mounting_point}/squid" if `ls -l #{mounting_point} | grep squid`.chomp.split[2] != "proxy"
+    commands
   end
 
   def partition_capacity
@@ -176,6 +180,10 @@ class Disk < ActiveRecord::Base
       lines << "cache_dir aufs /var/spool/squid 30000 16 256"
     end
     lines
+  end
+
+  def auditable_name
+    "#{self.class.human_name}: #{name}"
   end
 
 end

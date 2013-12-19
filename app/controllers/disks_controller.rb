@@ -3,6 +3,7 @@ class DisksController < ApplicationController
   permissions :disks
 
   def index
+    Disk.scan if (Disk.count == 0)
     @free_disks = Disk.free
     @assigned_disks = Disk.assigned
 
@@ -72,9 +73,9 @@ class DisksController < ApplicationController
       hook_free_assign_for_liberate(disk)
       if disk.changed?
         disk.save
-        flashes[:notice] << "el disco #{disk.name} se ha liberado"
+        flashes[:notice] << I18n.t('messages.disk.disks_liberate', :disk_name => disk.name)
       else
-        flashes[:warning] << "el disco #{disk.name} ya esta liberado"
+        flashes[:warning] << I18n.t('messages.disk.the_disc_is_already_liberate', :disk_name => disk.name)
       end
     end
   end
@@ -84,9 +85,9 @@ class DisksController < ApplicationController
       disk.prepare_disk_for_cache = true
       if disk.changed?
         disk.save
-        flashes[:notice] << "el disco #{disk.name} se ha asignado a cache"
+        flashes[:notice] << I18n.t('messages.disk.prepare_disks_for_cache', :disk_name => disk.name)
       else
-        flashes[:warning] << "el disco #{disk.name} ya esta asignado a cache"
+        flashes[:warning] << I18n.t('messages.disk.the_disc_is_already_prepare', :disk_name => disk.name)
       end
     end
   end
@@ -98,16 +99,10 @@ class DisksController < ApplicationController
   end
 
   def assigned_assign_for_liberate(flashes)
-    count = 0
     Disk.find(params[:assigned_disks_ids]).each do |disk|
       disk.assigned_for([:free])
       disk.save
-      count += 1
-    end
-    if count > 0
-      flashes[:notice] << I18n.t('messages.disk.liberate')
-    else
-      flashes[:warning] << I18n.t('messages.disk.not_liberate')
+      flashes[:notice] << I18n.t('messages.disk.disks_liberate', :disk_name => disk.name)
     end
   end
 
@@ -117,9 +112,9 @@ class DisksController < ApplicationController
         disk.prepare_disk_for_cache = true if disk.cache?
         hook_assigned_assign_for_clean_cache(disk)
         disk.save
-        flashes[:notice] << "Se limpiara el cache del disco #{disk.name}"
+        flashes[:notice] << I18n.t('messages.disk.will_clear_the_disk_cache', :disk_name => disk.name)
       else
-        flashes[:error] << "No puede borrarse el cache del disco #{disk.name}"
+        flashes[:error] << I18n.t('messages.disk.fail_clear_the_disk_cache', :disk_name => disk.name)
       end
     end
   end

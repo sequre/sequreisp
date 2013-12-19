@@ -34,6 +34,10 @@ class CommandContext
   end
 end
 class BootCommandContext < CommandContext
+  def self.clear_boot_file
+    File.open(BOOT_FILE, 'w') {|file| file.truncate(0) }
+  end
+
   def exec_commands
     begin
       f = File.open BOOT_FILE, "a+"
@@ -66,4 +70,3 @@ class Command
     "command: #{command}, status: #{status}, time: #{time}, stdout: #{stdout}, stderr: #{stderr}, pid: #{pid}"
   end
 end
-

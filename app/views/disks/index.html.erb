@@ -13,8 +13,8 @@
   </script>
 <% end %>
 
-<% content_for :title, t('buttons.cache_disks')%>
-<% heading t('buttons.cache_disks') %>
+<% content_for :title, t('buttons.disks_management')%>
+<% heading t('buttons.disks_management') %>
 
 <ul class="nav" style="float:right">
   <li> <%= link_to t('buttons.scan_disks'), scan_disks_path %> </li>
@@ -56,7 +56,8 @@
               <td><%= disk.serial %></td>
               <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
               <td><%= number_to_human_size(disk.capacity.to_i) %></td>
-              <td><b><%= disk.prepare_disk_for %></b></td>
+              <td><b><%= "<span style='color:
+              green;'>#{disk.prepare_disk_for}</span>" if disk.prepare_disk_for %></b></td>
             </tr>
           <% end %>
         </tbody>
@@ -69,7 +70,7 @@
 <div class="main">
   <% form_tag(assigned_assign_for_disks_path, :method => :put) do %>
     <%= submit_tag t('buttons.liberate_disks'), :name => :liberate %>
-    <%= submit_tag t('buttons.clean_disks'), :name => :clean %>
+    <%= submit_tag t('buttons.clear_disks'), :name => :clean %>
     <table>
       <thead>
         <tr>
@@ -78,6 +79,7 @@
           <th><%= t('activerecord.attributes.disk.name') %></th>
           <th><%= t('activerecord.attributes.disk.capacity') %></th>
           <th><b><%= t('activerecord.attributes.disk.type') %></b></th>
+          <th><%= t('buttons.clear_disks') %></th>
         </tr>
       </thead>
       <tbody>
@@ -87,8 +89,10 @@
               <td><%= check_box_tag("assigned_disks_ids[]", disk.id) if not disk.system? and disk.raid.nil? %></td>
               <td><%= disk.serial %></td>
               <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
-              <td><%= disk.capacity %></td>
+              <td><%= number_to_human_size(disk.capacity.to_i) %></td>
               <td><b><%= disk.assigned_to %></b></td>
+              <td><b><%= disk.prepare_disk_for.present? ? "<span style='color:
+              green;'>#{t('selects.afirmative')}</span>" : t("selects.negative") %></b></td>
             </tr>
           <% end %>
         <% end %>

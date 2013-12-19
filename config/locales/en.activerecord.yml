@@ -148,6 +148,7 @@ en:
         system: "System"
         cache: "Cache"
         prepare_disk_for: "Assign to"
+        prepare_disk_for_cache: "Prepare disk for cache"
       plan:
         id: 'Id'
         name: "Name"
@@ -379,11 +380,12 @@ en:
     massive_destroy: 'destroy selected'
     form_massive_setting: 'Massive update'
     system_disks: 'System'
-    cache_disks: 'Cache'
+    disks_management: 'Disk management'
     free_disks: 'Free'
     scan_disks: 'Scan disks'
     liberate_disks: 'Liberate disks'
     assign_disks_to_cache: 'Assign to cache'
+    clear_disks: 'Clean cache'
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"
@@ -472,13 +474,16 @@ en:
       new_disks_detected: "%{disk_count} new disks have been detected"
       changed_in_disks_detected: "%{disk_count} disks changed"
       deleted_disks_detected: "%{disk_count} disks deleted"
+      disks_liberate: "The disk %{disk_name} is liberate"
+      the_disc_is_already_liberate: "The disk %{disk_name} is already liberate"
+      prepare_disks_for_cache: "The disk %{disk_name} is prepare for cache"
+      the_disc_is_already_prepare: "The %{disk_name} is already prepare"
+      will_clear_the_disk_cache: "Will clear the %{disk_name} cache"
+      fail_clear_the_disk_cache: "Fail clear the %{disk_name} cache"
       scan_fail: "No new disks have been detected"
-      assign_for_cache: "Disks assigned for cache"
-      not_assign_for_cache: "Disks not assignedfor cache"
-      liberate: "Liberate success"
-      not_liberate: "Liberate fail"
       empty_selection: "Empty selection"
       when_apply_change: "The disk allocation process should take about 15-20 minutes; is normal an increase in load average"
+
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
