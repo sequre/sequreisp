@@ -204,11 +204,7 @@ tcounter = Thread.new do
                 end
               end
               DaemonHook.data_counting(:contract => c)
-              #Rails.logger.debug "Traffic: #{c.ip} => #{hash[c.ip]}"
             end
-            #DaemonHook.data_counting({:contract => c})
-            #Rails.logger.debug "Traffic: #{c.ip} => #{hash[c.ip]}"
-
           end
         end
       rescue => e
