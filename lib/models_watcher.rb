@@ -33,7 +33,9 @@ module ModelsWatcher
     fields_group = self.class.instance_eval do @__watched_fields end
     # I need to do this again, if i don't call watch_fields, fields is nil at this point
     fields_group ||= []
-    fields_group.each do |fields|
+    array_fields = []
+    fields_group.each {|fields| array_fields << fields.dup }
+    array_fields.each do |fields|
       options = fields.extract_options!
       fields.each do |field|
         rules = ["self.#{field}_changed?"]
