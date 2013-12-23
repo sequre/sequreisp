@@ -341,6 +341,7 @@ es:
     audits: "Auditorías"
     help: "Ayuda"
     guides: "Guías de SequreISP"
+    support: "Soporte"
   buttons:
     login: "Entrar"
     edit: "Editar"
@@ -412,6 +413,7 @@ es:
   about:
     version: "Versión SequreISP"
     url: "Actualizaciones, módulos y soporte disponible en"
+    website_url: "Sitio web"
   dashboard:
     services: "Servicios"
     cpu: "Uso de CPU"

@@ -341,6 +341,7 @@ en:
     audits: "Audits"
     help: "Help"
     guides: "SequireISP guides"
+    support: "Support"
   buttons:
     login: "Login"
     edit: "Edit"
@@ -412,6 +413,7 @@ en:
   about:
     version: "SequreISP version"
     url: "Upgrades, plugins and support available at"
+    website_url: "Website"
   dashboard:
     services: "Services"
     cpu: "CPU usage"
