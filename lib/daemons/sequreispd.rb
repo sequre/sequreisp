@@ -148,7 +148,7 @@ tcounter = Thread.new do
               ip = IP.new(rule[4]).to_s
               if ips.include? ip
                 hash[ip] = 0 if hash[ip].nil?
-                hash[i1p] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
+                hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
                 hash_log_iptables[ip] = [] if hash_log_iptables[ip].nil?
                 hash_log_iptables[ip] << line
               end
