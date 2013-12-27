@@ -82,6 +82,9 @@ en:
       user:
         one: "User"
         other: "Users"
+      always_allowed_site:
+        one: 'Allowed site'
+        other: 'Allowed sites'
     attributes:
       name: "Name"
       ip: "IP Address"
@@ -275,6 +278,10 @@ en:
         detail: "Detail"
       search:
         not_paged: "Not Paged"
+      always_allowed_site:
+        id: 'Id'
+        name: 'Ip or site name'
+        detail: 'Detail'
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
@@ -339,6 +346,7 @@ en:
     modules: "Plugins"
     about: "About"
     audits: "Audits"
+    always_allowed_sites: "Always allowed sites"
     help: "Help"
     guides: "SequireISP guides"
   buttons:

@@ -79,6 +79,9 @@ pt:
       user:
         one: "Usuário"
         other: "Usuários"
+      always_allowed_site:
+        one: 'Site permitido'
+        other: 'Sites permitidos'
     attributes:
       name: "Nombre"
       ip: "Endereço IP"
@@ -272,6 +275,10 @@ pt:
         detail: "Detalhe"
       search:
         not_paged: "não paginado"
+      always_allowed_site:
+        id: 'Id'
+        name: 'IP ou o nome do site'
+        detail: 'Detalhe'
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"
@@ -336,6 +343,7 @@ pt:
     modules: "Módulos"
     about: "Acerca de"
     audits: "Auditorias"
+    always_allowed_sites: "Sites permitidos"
     help: "Ajudar"
     guides: "Guias SequireISP"
   buttons:

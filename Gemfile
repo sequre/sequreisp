@@ -19,6 +19,7 @@ gem 'acts_as_audited', '~>1.1'
 gem 'whenever', '~>0.6'
 gem 'RedCloth'
 gem "context_help"
+gem 'open4'
 
 group :development, :test do
   gem 'faker'

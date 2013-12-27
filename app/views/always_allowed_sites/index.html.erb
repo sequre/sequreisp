@@ -1,0 +1,47 @@
+<% content_for :title, t('activerecord.models.always_allowed_site.other') %>
+<% heading t('menu.always_allowed_sites') %>
+<% if current_user.may_create_always_allowed_site? %>
+  <% render_new_button_for :always_allowed_site %>
+<% end %>
+
+<div class="separador"></div>
+
+<div class="main">
+  <div clas="page_info">
+    <%= page_entries_info @allowed_sites %>
+  </div>
+
+  <%= will_paginate @allowed_sites %>
+  <table cellspacing="0" cellpadding="0">
+    <thead>
+      <tr>
+        <th><%= t('activerecord.attributes.always_allowed_site.id') %></th>
+        <th><%= t('activerecord.attributes.always_allowed_site.name') %></th>
+        <th><%= t('activerecord.attributes.always_allowed_site.detail') %></th>
+        <% if current_user.may_update_always_allowed_site?(AlwaysAllowedSite.new) %>
+          <th></th>
+        <% end %>
+        <% if current_user.may_update_always_allowed_site?(AlwaysAllowedSite.new) %>
+          <th></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% @allowed_sites.each_with_index do |site, i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%= site.id %></td>
+          <td><%= "#{site.name} (#{site.ip_addresses.join(' - ')})" %></td>
+          <td><%= site.detail %></td>
+          <% if current_user.may_update_always_allowed_site?(site) %>
+            <td><%= link_to t('buttons.edit'), edit_always_allowed_site_path(site) %></td>
+          <% end %>
+          <% if current_user.may_update_always_allowed_site?(site) %>
+            <td><%= link_to t('buttons.delete'), site, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @allowed_sites %>
+</div>
