@@ -144,6 +144,8 @@ pt:
         type: "Tipo"
         system: "Sistema"
         cache: "Cache"
+        prepare_disk_for: "Atribuir a"
+        prepare_disk_for_cache: "Atribuir a cache de disco"
       plan:
         id: 'Id'
         name: "Nombre"
@@ -375,11 +377,12 @@ pt:
     massive_destroy: 'Destruir selecionados'
     form_massive_setting: 'Massiva  atualização'
     system_disks: 'Sistema'
-    cache_disks: 'Cache'
+    disks_management: 'Gerenciamento de disco'
     free_disks: 'Livres'
     scan_disks: 'Detectar novos discos'
     liberate_disks: 'Libertar disks'
     assign_disks_to_cache: 'Atribuir a cache'
+    clear_disks: 'Limpar o cache'
   backup:
     backup_db_legend: "Cópia de resguardo (base de dados)"
     backup_full_legend: "Cópia de resguardo completa (aplicativo e base de datos)"
@@ -465,12 +468,16 @@ pt:
       important: "Importante"
       free: "Discos livres"
       assigned: "Discos designados"
-      scan_success: "Detectaram-se novos discos"
+      new_disks_detected: "%{disk_count} novos discos foram detectados"
+      changed_in_disks_detected: "%{disk_count} discos mudado"
+      deleted_disks_detected: "%{disk_count} discos excluídos"
       scan_fail: "Não se detectaram novos discos"
-      assign_for_cache: "Discos designados para o cache"
-      not_assign_for_cache: "Discos não atribuído para o cache"
-      liberate: "Discos lançados com sucesso"
-      not_liberate: "Erro em álbuns liberando"
+      disks_liberate: "a libertação do disco %{disk_name}"
+      the_disc_is_already_liberate: "o disco %{disk_name} é agora lançado"
+      prepare_disks_for_cache: "O disco %{disk_Name} está pronto para ser atribuído o cache"
+      the_disc_is_already_prepare: "O disco %{disk_name} já está pronto para ser atribuído"
+      will_clear_the_disk_cache: "Cache %{disk_name} será limpo"
+      fail_clear_the_disk_cache: "Limpeza de disco %{disk_name} Falha"
       empty_selection: "Não selecionou nenhum disco"
       when_apply_change: "O processo de alocação de disco deve levar cerca de 15-20 minutos; é um aumento normal em carga média"
   controllers:

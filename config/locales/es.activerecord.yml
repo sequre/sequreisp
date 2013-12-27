@@ -147,6 +147,8 @@ es:
         type: "Tipo"
         system: "Sistema"
         cache: "Cache"
+        prepare_disk_for: "Asignar disco a"
+        prepare_disk_for_cache: "Asignar el disco a cache"
       plan:
         id: 'Id'
         name: "Nombre"
@@ -378,11 +380,12 @@ es:
     massive_destroy: 'Destruir selección'
     form_massive_setting: 'Actualización masiva'
     system_disks: 'Sistema'
-    cache_disks: 'Cache'
+    disks_management: 'Administrador de discos'
     free_disks: 'Libres'
     scan_disks: 'Detectar nuevos discos'
     liberate_disks: 'Liberar discos'
     assign_disks_to_cache: 'Asignar a cache'
+    clear_disks: 'Limpiar cache'
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"
@@ -468,12 +471,16 @@ es:
       important: "Importante"
       free: "Discos libres"
       assigned: "Discos Asignados"
-      scan_success: "Se han detectado nuevos discos"
+      new_disks_detected: "%{disk_count} nuevos discos detectados"
+      changed_in_disks_detected: "Se detectaron %{disk_count} cambios en discos"
+      deleted_disks_detected: "Se eliminaron %{disk_count} discos"
+      disks_liberate: "El disco %{disk_name} se libero"
+      the_disc_is_already_liberate: "El disco %{disk_name} ya esta liberado"
+      prepare_disks_for_cache: "El disco %{disk_name} esta preparado par ser asignado a cache"
+      the_disc_is_already_prepare: "El disco %{disk_name} ya esta preparado para ser asignado"
+      will_clear_the_disk_cache: "Se limpiara el cache de %{disk_name}"
+      fail_clear_the_disk_cache: "Fallo la limpieza del cache de %{disk_name}"
       scan_fail: "No se han detectado nuevos discos"
-      assign_for_cache: "Discos asignados a cache"
-      not_assign_for_cache: "Los discos no pueden asignarse a cache"
-      liberate: "Discos liberados exitosamente"
-      not_liberate: "Discos no liberados"
       empty_selection: "No se ha seleccionado ningun disco"
       when_apply_change: "El proceso de asignación de discos puede demorar alrededor de 15-20 min, es normal que se presente un aumento en la carga del sistema (load average)"
   controllers:

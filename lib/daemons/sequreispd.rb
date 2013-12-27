@@ -83,6 +83,7 @@ def check_squid
     Rails.logger.error "ERROR check_squid swap.state check: #{e.inspect}"
   end
 
+
   #3: load average check
   max_load_average = Configuration.transparent_proxy_max_load_average
   load_average=`uptime | awk -F "load average:" '{ print $2 }' | cut -d, -f1 | sed 's/ //g'`.chomp.to_f
@@ -120,7 +121,8 @@ def backup_restore
 end
 
 # The limit current_traffic for read is 1 Gbps
-max_current_traffic_count = 1000 / 8 * 1024 * 1024 * 60
+@max_current_traffic_count = 1000 / 8 * 1024 * 1024 * 60
+
 tcounter = Thread.new do
   time_last = (Time.now - 1.minute)
   while true
@@ -147,7 +149,8 @@ tcounter = Thread.new do
               if ips.include? ip
                 hash[ip] = 0 if hash[ip].nil?
                 hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
-                hash_log_iptables[ip] = line
+                hash_log_iptables[ip] = [] if hash_log_iptables[ip].nil?
+                hash_log_iptables[ip] << line
               end
             end
           end
@@ -160,10 +163,9 @@ tcounter = Thread.new do
                 ip = proxy_bind_ips_hash[proxy_bind_ip]
                 if ips.include? ip
                   hash[ip] = 0 if hash[ip].nil?
-                  #Rails.logger.debug "Before Traffic: #{ip} => #{hash[ip]}"
                   hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
-                  #Rails.logger.debug "After Traffic: #{ip} => #{hash[ip]}"
-                  hash_log_iptables_proxy[ip] = line
+                  hash_log_iptables_proxy[ip] = [] if hash_log_iptables_proxy[ip].nil?
+                  hash_log_iptables_proxy[ip] << line
                 end
               end
             end
@@ -184,21 +186,24 @@ tcounter = Thread.new do
               end
               if hash[c.ip].present? and hash[c.ip] != 0#no read if contract.state == disabled
                 tmp = traffic_current.data_count
-                if hash[c.ip] <= max_current_traffic_count
+                if hash[c.ip] <= @max_current_traffic_count
                   traffic_current.data_count += hash[c.ip]
                   traffic_current.save
                 end
                 if contract_count <= 300
                   c.reload
                   if (hash[c.ip] >= 7864320) or (c.current_traffic.data_count - tmp >= 7864320) or ((c.current_traffic.data_count - hash[c.ip]) != tmp)
-                    f.puts("Rule chain: #{hash_log_iptables[c.ip]}") if hash_log_iptables[c.ip].present?
-                    f.puts("Rule proxy: #{hash_log_iptables_proxy[c.ip]}") if hash_log_iptables_proxy[c.ip].present?
+                    hash_log_iptables[c.ip].each do |rule|
+                      f.puts("Rule chain: #{rule}")
+                    end
+                    hash_log_iptables_proxy[c.ip].each do |rule|
+                      f.puts("Rule proxy: #{rule}")
+                    end
                     f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
                   end
                 end
               end
-              DaemonHook.data_counting({:contract => c})
-              #Rails.logger.debug "Traffic: #{c.ip} => #{hash[c.ip]}"
+              DaemonHook.data_counting(:contract => c)
             end
           end
         end
