@@ -1,7 +1,6 @@
 module SequreISP
   URL = "http://www.sequreisp.com/"
   PORTAL_URL = "http://www.sequreisp.com/portal/client_root"
-  SUPPORT_URL = "http://www.sequreisp.com/portal/issues/new"
 
   class Version
     RELEASE = 3

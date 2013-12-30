@@ -90,7 +90,7 @@ module ApplicationHelper
   end
 
   def support_url
-    SequreISP::SUPPORT_URL + "?locale=#{I18n.locale}"
+    "http://www.sequreisp.com/portal/issues/new?locale=#{I18n.locale}"
   end
 
 end
