@@ -122,6 +122,7 @@ end
 
 # The limit current_traffic for read is 1 Gbps
 @max_current_traffic_count = 1000 / 8 * 1024 * 1024 * 60
+conf = Configuration.first
 
 tcounter = Thread.new do
   time_last = (Time.now - 1.minute)
@@ -136,8 +137,6 @@ tcounter = Thread.new do
             hash[contract.ip] = rand(1844674)
           end
         else
-          conf = Configuration.first
-          # IO.popen('grep "^\[.*:.*\] -A sq.* -s .* -j .*$" /home/gabriel/iptab.txt', "r") do |io|
           ips = Contract.all.collect(&:ip)
           chain_prefix = conf.iptables_tree_optimization_enabled ? "sq" : "sequreisp"
           # WARN! dobule escape for bracket seems mandatory \\[
@@ -196,8 +195,10 @@ tcounter = Thread.new do
                     hash_log_iptables[c.ip].each do |rule|
                       f.puts("Rule chain: #{rule}")
                     end
-                    hash_log_iptables_proxy[c.ip].each do |rule|
-                      f.puts("Rule proxy: #{rule}")
+                    if conf.transparent_proxy and conf.transparent_proxy_n_to_m
+                      hash_log_iptables_proxy[c.ip].each do |rule|
+                        f.puts("Rule proxy: #{rule}")
+                      end
                     end
                     f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
                   end
