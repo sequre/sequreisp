@@ -483,7 +483,7 @@ en:
       scan_fail: "No new disks have been detected"
       empty_selection: "Empty selection"
       when_apply_change: "The disk allocation process should take about 15-20 minutes; is normal an increase in load average"
-
+      capacity_used_for_cache: "Capacity used (cache)"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"

@@ -163,6 +163,10 @@ class Disk < ActiveRecord::Base
     end
   end
 
+  def capacity_used_for_cache
+    cache? ? `du -hs #{mounting_point}/squid`.split(" ").first : "0k"
+  end
+
   def self.not_custom_raids_present?
     all(:conditions => 'raid is not NULL and system = 0').count == 0
   end

@@ -483,6 +483,7 @@ es:
       scan_fail: "No se han detectado nuevos discos"
       empty_selection: "No se ha seleccionado ningun disco"
       when_apply_change: "El proceso de asignación de discos puede demorar alrededor de 15-20 min, es normal que se presente un aumento en la carga del sistema (load average)"
+      capacity_used_for_cache: "Capacidad usada (cache)"
   controllers:
     successfully_updated: "Actualización de datos exitosa"
     successfully_created: "Creación exitosa"
