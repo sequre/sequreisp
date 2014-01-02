@@ -26,6 +26,7 @@ class ContractsController < ApplicationController
     # delete proxy_arp boolean condition unless it is true
     # that results in a more intuitive behavior
     params[:search].delete("proxy_arp_is") if params[:search]["proxy_arp_is"] == "0"
+    params[:search].delete("is_connected") if params[:search]["is_connected"] == "0"
     per_page = Contract.count if params[:search][:not_paged].present?
     params[:search][:order] ||= 'ascend_by_ip_custom'
     params[:search].delete(:not_paged)

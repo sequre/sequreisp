@@ -98,6 +98,11 @@
         <%= f.label :unique_provider_id_equals, t('activerecord.attributes.contract.unique_provider') %>
         <%= f.collection_select :unique_provider_id_equals, Provider.all, :id, :name, :include_blank => true %>
       </li>
+      <div style="clear: both"></div>
+      <li>
+        <%= f.label :is_connected, t('activerecord.attributes.contract.is_connected') %>
+        <%= f.check_box :is_connected %>
+      </li>
       <%= render_search_extensions :form => f  %>
     </div>
 

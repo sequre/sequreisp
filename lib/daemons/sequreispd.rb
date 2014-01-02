@@ -177,6 +177,7 @@ tcounter = Thread.new do
           contract_count = Contract.count
           File.open(file, "a") do |f|
             Contract.all(:include => :current_traffic).each do |c|
+              c.is_connected = false
               traffic_current = c.current_traffic
               if traffic_current.nil?
                 traffic_current = c.create_traffic_for_this_period
@@ -203,7 +204,9 @@ tcounter = Thread.new do
                     f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
                   end
                 end
+                c.is_connected = true
               end
+              c.save if c.changed?
               DaemonHook.data_counting(:contract => c)
             end
           end
