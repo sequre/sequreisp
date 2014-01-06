@@ -467,6 +467,10 @@ es:
       reboot_error: "Ocurrió un error, el servidor no será reiniciado"
       halt: "El servidor se apagara en breve"
       halt_error: "Ocurrió un error, el servidor no se apagará"
+    traffic:
+      data_count_less_than: "Trafico menor a"
+      data_count_greater_than: "Trafico mayor a"
+      placeholder_only_gb: "valor en GB ej 2"
     disk:
       important: "Importante"
       free: "Discos libres"

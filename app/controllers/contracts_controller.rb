@@ -29,8 +29,15 @@ class ContractsController < ApplicationController
     per_page = Contract.count if params[:search][:not_paged].present?
     params[:search][:order] ||= 'ascend_by_ip_custom'
     params[:search].delete(:not_paged)
+    params[:search][:current_traffic_data_count_less_than] = (params[:search][:current_traffic_data_count_less_than].to_f * 2**30) if params[:search][:current_traffic_data_count_less_than].present?
+    params[:search][:current_traffic_data_count_greater_than] = (params[:search][:current_traffic_data_count_greater_than].to_f * 2**30) if params[:search][:current_traffic_data_count_greater_than].present?
+
     @search = Contract.search(params[:search])
     @contracts = @search.paginate(:page => params[:page],:per_page => per_page)
+
+    @search.current_traffic_data_count_less_than = (@search.current_traffic_data_count_less_than.to_f / 2**30) if @search.current_traffic_data_count_less_than.present?
+    @search.current_traffic_data_count_greater_than = (@search.current_traffic_data_count_greater_than.to_f / 2**30) if @search.current_traffic_data_count_greater_than.present?
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @contracts }

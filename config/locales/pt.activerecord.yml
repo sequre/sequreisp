@@ -464,6 +464,10 @@ pt:
       reboot_error: "Ocorreu um erro, o servidor não será reiniciado"
       halt: "O servidor será desligado em breve"
       halt_error: "Ocorreu um erro, o servidor não será desligado"
+    traffic:
+      data_count_less_than: "Tráfego de dados menor do que"
+      data_count_greater_than: "tráfego de dados maior do que"
+      placeholder_only_gb: "valor em GB ej 2"
     disk:
       important: "Importante"
       free: "Discos livres"

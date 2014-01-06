@@ -98,6 +98,15 @@
         <%= f.label :unique_provider_id_equals, t('activerecord.attributes.contract.unique_provider') %>
         <%= f.collection_select :unique_provider_id_equals, Provider.all, :id, :name, :include_blank => true %>
       </li>
+      <div style="clear: both"></div>
+      <li>
+        <%= f.label :current_traffic_data_count_greater_than, t('messages.traffic.data_count_greater_than') %>
+        <%= f.text_field :current_traffic_data_count_greater_than, :placeholder => t('messages.traffic.placeholder_only_gb') %>
+      </li>
+      <li>
+        <%= f.label :current_traffic_data_count_less_than, t('messages.traffic.data_count_less_than') %>
+        <%= f.text_field :current_traffic_data_count_less_than, :placeholder =>  t('messages.traffic.placeholder_only_gb') %>
+      </li>
       <%= render_search_extensions :form => f  %>
     </div>
 
