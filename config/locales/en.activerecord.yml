@@ -115,6 +115,8 @@ en:
         proxy_arp_use_lan_gateway: "Use LAN gateway"
         proxy_arp_lan_gateway: "Lan gateway"
         forwarded_ports: "Forwarded ports"
+        public_forwarded_ports: "Public forwarded ports"
+        private_forwarded_ports: "Private forwarded ports"
         transparent_proxy: "Transparent proxy"
         created_at: "Created at"
         detail: "Detail"

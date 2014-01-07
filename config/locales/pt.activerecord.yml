@@ -112,6 +112,8 @@ pt:
         proxy_arp_use_lan_gatewas: "Usar gateway LAN"
         proxy_arp_lan_gateway: "Gateway LAN"
         forwarded_ports: "Portas redirecionadas"
+        public_forwarded_ports: "Portas redirecionadas (publicas)"
+        private_forwarded_ports: "Portas redirecionadas (privadas)"
         transparent_proxy: "Proxy transparente"
         created_at: "Data de cadastro"
         detail: "Detalhe"
