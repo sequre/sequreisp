@@ -153,7 +153,7 @@
         <th><%= order @search, :by => :ip, :ascend_scope => "ascend_by_ip_custom", :descend_scope => "descend_by_ip_custom", :as => t('activerecord.attributes.contract.ip') %></th>
         <th><%=t 'activerecord.attributes.contract.forwarded_ports' %></th>
         <th><%= order @search, :by => :state, :as => t('activerecord.attributes.contract.state') %></th>
-        <th><%= t('activerecord.attributes.traffic.data_count') %></th>
+        <th><%= order @search, :by => :current_traffic_data_count, :as => t('activerecord.attributes.traffic.data_count') %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
         <% if current_user.may_update_contracts? or current_user.may_index_contracts? or current_user.may_destroy_contract?(Contract.new)%>
         <th></th>
