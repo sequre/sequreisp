@@ -155,16 +155,15 @@ class ContractsController < ApplicationController
     unless params[:massive_setting].empty?
       errors = []
       applied = []
+      if params[:massive_setting][:client_name].present?
+        params[:massive_setting][:client_id] = Client.find_by_name(params[:massive_setting][:client_name]).id
+        params[:massive_setting].delete(:client_name)
+      end
+      params[:massive_setting][:plan_id] = params[:massive_setting][:plan] if params[:massive_setting][:plan].present?
+      params[:massive_setting].delete(:plan) if params[:massive_setting][:plan].present?
+
       @contracts.each do |contract|
-        contract.client = Client,find_by_name(params[:massive_setting][:client_name]) if params[:massive_setting][:client_name].present?
-        contract.plan_id = params[:massive_setting][:plan] if params[:massive_setting][:plan].present?
-        contract.state = params[:massive_setting][:state] if params[:massive_setting][:state].present?
-        contract.ceil_dfl_percent = params[:massive_setting][:ceil_dfl_percent] if params[:massive_setting][:ceil_dfl_percent].present?
-        contract.detail = params[:massive_setting][:detail] if params[:massive_setting][:detail].present?
-        contract.cpe = params[:massive_setting][:cpe] if params[:massive_setting][:cpe].present?
-        contract.node = params[:massive_setting][:node] if params[:massive_setting][:node].present?
-        contract = add_more_attributes contract, params
-        if contract.save
+        if contract.update_attributes(params[:massive_setting])
           applied << contract.id
         else
           errors << "#{Contract.human_name} id #{contract.id}: #{contract.errors.full_messages.to_sentence}"
@@ -175,11 +174,6 @@ class ContractsController < ApplicationController
     else
       flash[:warning] = t('error_messages.not_selected_any_options')
     end
-  end
-
-  # mothod for plugins patches
-  def add_more_attributes contract, params
-    contract
   end
 
   def instant
