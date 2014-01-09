@@ -623,7 +623,7 @@ class Contract < ActiveRecord::Base
           c.plan.ceil_up,
           c.ip,
           #c.forwarded_ports.collect{ |fp| "[#{fp.provider.name}]#{fp.public_port}=>#{fp.private_port}" }.join("|"),
-          c.state,
+          I18n.t("aasm.contract." + c.state),
           c.ceil_dfl_percent,
           c.forwarded_ports.collect(&:public_port).join(", "),
           c.forwarded_ports.collect(&:private_port).join(", "),
