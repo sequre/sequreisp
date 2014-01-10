@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#Colors
+# text
+black='\e[0;30m'
+white='\e[0;37m'
+yellow='\e[0;33m'
+red='\e[00;31m'
+green='\e[00;32m'
+close_color='\e[00m'
+
+plugins=`ls vendor/plugins/ | grep 'sequreisp_'`
+current_directory=`pwd`
+for plugin in $plugins
+do
+cd vendor/plugins/$plugin
+branch=`git branch | awk '/\*/ { print $2; }'`
+echo -e "${red} script/generate plugin_migration $plugin${close_color} ${green}[${branch}]${close_color}"
+cd $current_directory
+script/generate plugin_migration $plugin 2> /dev/null
+done

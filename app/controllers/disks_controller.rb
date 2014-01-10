@@ -3,87 +3,123 @@ class DisksController < ApplicationController
   permissions :disks
 
   def index
+    Disk.scan if (Disk.count == 0)
     @free_disks = Disk.free
-    @system_disks = Disk.find(:all, :conditions => {:system => true})
-    @cache_disks = Disk.find(:all, :conditions => {:cache => true, :free => false})
-    hook_other_uses
+    @assigned_disks = Disk.assigned
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @disks}
     end
   end
 
-  def liberate
-    if params[:liberate_disks_ids].present?
-      count = 0
-      Disk.find(params[:liberate_disks_ids]).each do |disk|
-        disk.free = true
-        disk.save
-        count += 1
-      end
-      if count > 0
-        flash[:notice] = I18n.t('messages.disk.liberate')
+  def free_assign_for
+    flashes = {:error => [], :notice => [], :warning => [] }
+    if params[:assign_disks_ids].present?
+      if params[:liberate].present?
+        free_assign_for_liberate(flashes)
+      elsif params[:cache].present?
+        free_assign_for_cache(flashes)
       else
-        flash[:warning] = I18n.t('messages.disk.not_liberate')
+        hook_free_assign_for(flashes)
       end
     else
-      flash[:warning] = I18n.t('messages.disk.empty_selection')
+      flashes[:warning] << I18n.t('messages.disk.empty_selection')
     end
+    flash[:notice] = flashes[:notice].join(" ") if flashes[:notice].present?
+    flash[:warning] = flashes[:warning].join(" ") if flashes[:warning].present?
+    flash[:error] = flashes[:error].join(" ") if flashes[:error].present?
     redirect_to disks_path
   end
 
-  def assign_for
-    if params[:assign_disks_ids].present?
-      if params[:cache].present?
-        assign_for_cache
-      else
-        hook_assign_for
+  def assigned_assign_for
+    flashes = {:error => [], :notice => [], :warning => [] }
+
+    if params[:assigned_disks_ids].present?
+      if params[:liberate].present?
+        assigned_assign_for_liberate(flashes)
+      end
+      if params[:clean].present?
+        assigned_assign_for_clean_cache(flashes)
       end
     else
-      flash[:warning] = I18n.t('messages.disk.empty_selection')
-      redirect_to disks_path
+      flashes[:warning] << I18n.t('messages.disk.empty_selection')
     end
+    flash[:notice] = flashes[:notice].join(" ") if flashes[:notice].present?
+    flash[:warning] = flashes[:warning].join(" ") if flashes[:warning].present?
+    flash[:error] = flashes[:error].join(" ") if flashes[:error].present?
+
+    redirect_to disks_path
   end
 
   def scan
-    count = 0
+    flashes = []
+    result = Disk.scan
 
-    Disk.destroy_all
+    flashes << I18n.t('messages.disk.new_disks_detected', :disk_count => result[:new_disks]) if result[:new_disks] > 0
+    flashes << I18n.t('messages.disk.changed_in_disks_detected', :disk_count => result[:changed_disks]) if result[:changed_disks] > 0
+    flashes << I18n.t('messages.disk.deleted_disks_detected', :disk_count => result[:deleted_disks]) if result[:deleted_disks] > 0
 
-    Disk.scan.each_value do |disk|
-      count += 1
-      Disk.create(disk)
-    end
-
-    if count > 0
-      flash[:notice] = I18n.t('messages.disk.scan_success')
-    else
-      flash[:warning] = I18n.t('messages.disk.scan_fail')
-    end
+    flashes.present? ? flash[:notice] = flashes.join("  ") : flash[:warning] = I18n.t('messages.disk.scan_fail')
 
     redirect_to disks_path
   end
 
   private
 
-  def assign_for_cache
-    count = 0
+  def free_assign_for_liberate(flashes)
     Disk.find(params[:assign_disks_ids]).each do |disk|
-      disk.assigned_for([:cache])
-      count += 1
+      disk.prepare_disk_for_cache = false
+      hook_free_assign_for_liberate(disk)
+      if disk.changed?
+        disk.save
+        flashes[:notice] << I18n.t('messages.disk.disks_liberate', :disk_name => disk.name)
+      else
+        flashes[:warning] << I18n.t('messages.disk.the_disc_is_already_liberate', :disk_name => disk.name)
+      end
     end
-    if count > 0
-      flash[:notice] = I18n.t('messages.disk.assign_for_cache')
-    else
-      flash[:warning] = I18n.t('messages.disk.not_assign_for_cache')
-    end
-    redirect_to disks_path
   end
 
-  def hook_assign_for
+  def free_assign_for_cache(flashes)
+    Disk.find(params[:assign_disks_ids]).each do |disk|
+      disk.prepare_disk_for_cache = true
+      if disk.changed?
+        disk.save
+        flashes[:notice] << I18n.t('messages.disk.prepare_disks_for_cache', :disk_name => disk.name)
+      else
+        flashes[:warning] << I18n.t('messages.disk.the_disc_is_already_prepare', :disk_name => disk.name)
+      end
+    end
   end
 
-  def hook_other_uses
+  def hook_free_assign_for(flashes)
+  end
+
+  def hook_free_assign_for_liberate(disk)
+  end
+
+  def assigned_assign_for_liberate(flashes)
+    Disk.find(params[:assigned_disks_ids]).each do |disk|
+      disk.assigned_for([:free])
+      disk.save
+      flashes[:notice] << I18n.t('messages.disk.disks_liberate', :disk_name => disk.name)
+    end
+  end
+
+  def assigned_assign_for_clean_cache(flashes)
+    Disk.find(params[:assigned_disks_ids]).each do |disk|
+      if not disk.system?
+        disk.prepare_disk_for_cache = true if disk.cache?
+        hook_assigned_assign_for_clean_cache(disk)
+        disk.save
+        flashes[:notice] << I18n.t('messages.disk.will_clear_the_disk_cache', :disk_name => disk.name)
+      else
+        flashes[:error] << I18n.t('messages.disk.fail_clear_the_disk_cache', :disk_name => disk.name)
+      end
+    end
+  end
+
+  def hook_assigned_assign_for_clean_cache(disk)
   end
 
 end

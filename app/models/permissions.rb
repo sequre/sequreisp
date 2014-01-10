@@ -116,4 +116,13 @@ class Permissions < Aegis::Permissions
     end
   end
 
+  resource :always_allowed_sites do
+    reading do
+      allow :technical, :technical_readonly
+    end
+    action :cpu, :services, :load_average do
+      allow :technical, :technical_readonly
+    end
+  end
+
 end

@@ -42,7 +42,15 @@ module HooksHelper
   end
 
   def plugins_table_columns_values object
-    {}
+    []
+  end
+
+  def show_traffic(contract)
+    "#{number_to_human_size(contract.current_traffic.data_count)}"
+  end
+
+  def massive_settings_form_extensions(form)
+    ""
   end
 
   def plugins_header_extensions
