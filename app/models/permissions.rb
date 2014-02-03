@@ -45,7 +45,7 @@ class Permissions < Aegis::Permissions
       allow :technical, :technical_readonly, :administrative, :administrative_readonly
     end
   end
-  action :free_ips_contracts, :ips_contracts do
+  action :free_ips_contracts, :ips_contracts, :arping_mac_address do
     allow :technical, :technical_readonly, :administrative, :administrative_readonly
   end
 
