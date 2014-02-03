@@ -593,7 +593,14 @@ class Contract < ActiveRecord::Base
         I18n.t('activerecord.attributes.plan.ceil_up'),
         I18n.t('activerecord.attributes.contract.ip'),
         #I18n.t('activerecord.attributes.contract.forwarded_ports'),
-        I18n.t('activerecord.attributes.contract.state')
+        I18n.t('activerecord.attributes.contract.state'),
+        I18n.t('activerecord.attributes.contract.ceil_dfl_percent'),
+        I18n.t('activerecord.attributes.contract.public_forwarded_ports'),
+        I18n.t('activerecord.attributes.contract.private_forwarded_ports'),
+        I18n.t('activerecord.attributes.contract.mac_address'),
+        I18n.t('activerecord.attributes.contract.transparent_proxy'),
+        I18n.t('activerecord.attributes.contract.node'),
+        I18n.t('activerecord.attributes.contract.cpe')
       ] + plugins_columns
 
       # data rows
@@ -617,7 +624,14 @@ class Contract < ActiveRecord::Base
           c.plan.ceil_up,
           c.ip,
           #c.forwarded_ports.collect{ |fp| "[#{fp.provider.name}]#{fp.public_port}=>#{fp.private_port}" }.join("|"),
-          c.state
+          I18n.t("aasm.contract." + c.state),
+          c.ceil_dfl_percent,
+          c.forwarded_ports.collect(&:public_port).join(", "),
+          c.forwarded_ports.collect(&:private_port).join(", "),
+          c.mac_address,
+          c.transparent_proxy,
+          c.node,
+          c.cpe
         ] + plugins_rows(c)
       end
     end

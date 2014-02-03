@@ -69,4 +69,16 @@ module ApplicationHelper
     Configuration::GUIDES_URL + (I18n.locale == :en ? "/en" : "")
   end
 
+  def portal_url
+    SequreISP::PORTAL_URL + "?locale=#{I18n.locale}"
+  end
+
+  def website_url
+    SequreISP::URL + "?locale=#{I18n.locale}"
+  end
+
+  def support_url
+    "http://www.sequreisp.com/portal/issues/new?locale=#{I18n.locale}"
+  end
+
 end

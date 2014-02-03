@@ -115,6 +115,8 @@ pt:
         proxy_arp_use_lan_gatewas: "Usar gateway LAN"
         proxy_arp_lan_gateway: "Gateway LAN"
         forwarded_ports: "Portas redirecionadas"
+        public_forwarded_ports: "Portas redirecionadas (publicas)"
+        private_forwarded_ports: "Portas redirecionadas (privadas)"
         transparent_proxy: "Proxy transparente"
         created_at: "Data de cadastro"
         detail: "Detalhe"
@@ -349,6 +351,7 @@ pt:
     always_allowed_sites: "Sites permitidos"
     help: "Ajudar"
     guides: "Guias SequireISP"
+    support: "Apoio"
   buttons:
     login: "Ingressar"
     edit: "Editar"
@@ -421,6 +424,7 @@ pt:
   about:
     version: "Versão SequreISP"
     url: "Atualizações, módulos e suporte em"
+    website_url: "Website"
   dashboard:
     services: "Serviços"
     cpu: "Uso de CPU"
