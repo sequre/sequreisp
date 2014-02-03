@@ -107,6 +107,10 @@
         <%= f.label :current_traffic_data_count_less_than, t('messages.traffic.data_count_less_than') %>
         <%= f.text_field :current_traffic_data_count_less_than, :placeholder =>  t('messages.traffic.placeholder_only_gb') %>
       </li>
+      <li>
+        <%= f.label :is_connected, t('activerecord.attributes.contract.is_connected') %>
+        <%= f.check_box :is_connected %>
+      </li>
       <%= render_search_extensions :form => f  %>
     </div>
 

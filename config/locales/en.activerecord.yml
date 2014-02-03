@@ -126,6 +126,7 @@ en:
         autocomplete_client_name: "Search client"
         unique_provider: "Use a specific provider for this contract (avoids balancing)"
         start_date: "Start date"
+        is_connected: "Connected"
       client:
         id: "ID"
         name: "First name and surname"
@@ -488,6 +489,9 @@ en:
       empty_selection: "Empty selection"
       when_apply_change: "The disk allocation process should take about 15-20 minutes; is normal an increase in load average"
       capacity_used_for_cache: "Capacity used (cache)"
+    contract:
+      online: "Online"
+      offline: "Offline"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"

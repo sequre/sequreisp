@@ -47,6 +47,7 @@ class Contract < ActiveRecord::Base
 
   named_scope :ascend_by_ip_custom, :order => "CAST(INET_ATON(SUBSTRING_INDEX(contracts.ip, '/', 1)) AS UNSIGNED) ASC, CAST(INET_ATON(contracts.netmask) AS UNSIGNED) ASC"
   named_scope :descend_by_ip_custom, :order => "CAST(INET_ATON(SUBSTRING_INDEX(contracts.ip, '/', 1)) AS UNSIGNED) DESC, CAST(INET_ATON(contracts.netmask) AS UNSIGNED) DESC"
+  named_scope :how_many_connected, :conditions => {:is_connected => true}
 
   include ModelsWatcher
   watch_fields :ip, :plan_id, :mac_address, :ceil_dfl_percent, :state,
@@ -628,6 +629,10 @@ class Contract < ActiveRecord::Base
 
   def self.plugins_rows contract
     []
+  end
+
+  def is_online?
+    is_connected? ? I18n.t("messages.contract.online") : I18n.t("messages.contract.offline")
   end
 
   def data_count_for_last_year
