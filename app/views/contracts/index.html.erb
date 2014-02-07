@@ -20,6 +20,12 @@
     margin-left: 11px;
     float: left;
   }
+  span.red{
+    color: red;
+  }
+  span.green{
+    color: green;
+  }
 </style>
 <script type="text/javascript">
   $(function(){
@@ -189,7 +195,7 @@
             <%=h contract.state.human %>
             <br />
             <span class=<%= contract.is_connected? ? "green" : "red" %>>
-              <%= contract.is_online? %>
+              <b><%= contract.is_online? %></b>
             </span>
           </td>
           <td><%= show_traffic(contract) rescue 0%></td>
