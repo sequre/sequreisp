@@ -150,6 +150,9 @@
 
 
 <div class="main">
+  <div style="float: right;">
+    <h3><%= t('messages.contracts_online', :count => Contract.how_many_connected.count) %></h3>
+  </div>
   <%= page_entries_info @contracts %>
   <table cellspacing="0" cellpadding="0">
     <tbody>
