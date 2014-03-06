@@ -717,7 +717,7 @@ def update_fallback_route(f=nil, force=false, boot=true)
   commands = []
   #tabla default (fallback de todos los enlaces)
   currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
-  if (currentroute != Provider.fallback_default_route) or force
+  if (currentroute != Provider.fallback_default_route and currentroute != Provider.fallback_default_route(true)) or force
     if Provider.fallback_default_route != ""
       #TODO por ahora solo cambio si hay ruta, sino no toco x las dudas
       commands << "ro re table default #{Provider.fallback_default_route}"

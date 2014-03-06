@@ -238,14 +238,18 @@ class Provider < ActiveRecord::Base
   def default_route
     "default via #{self.gateway} dev #{self.link_interface}  proto static onlink"
   end
-  def self.fallback_default_route
+  def self.fallback_default_route(alt_format=false)
     providers = Provider.enabled.ready.online
     case providers.count 
     when 0
       ""
     when 1
       p = providers.first
-      "default via #{p.gateway} dev #{p.link_interface} onlink proto static"
+      if alt_format
+        "default via #{p.gateway} dev #{p.link_interface}  proto static onlink"
+      else
+        "default via #{p.gateway} dev #{p.link_interface} onlink proto static"
+      end
     else
       route = ""
       providers.each do |p|
