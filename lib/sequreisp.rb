@@ -724,7 +724,9 @@ def update_fallback_route(f=nil, force=false, boot=true)
     end
     #TODO loguear? el cambio de estado en una bitactora
   end
-  f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot)
+  if commands.any?
+    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot) 
+  end
 end
 
 def update_provider_group_route pg, f=nil, force=false, boot=true
@@ -738,7 +740,9 @@ def update_provider_group_route pg, f=nil, force=false, boot=true
     end
     #TODO loguear el cambio de estado en una bitactora
   end
-  f ? f.puts(commands) : exec_context_commands("update_provider_group_route #{pg.id}", commands.map{|c| "ip " + c }, boot)
+  if commands.any?
+    f ? f.puts(commands) : exec_context_commands("update_provider_group_route #{pg.id}", commands.map{|c| "ip " + c }, boot)
+  end
 end
 
 def update_provider_route p, f=nil, force=false, boot=true
@@ -753,7 +757,9 @@ def update_provider_route p, f=nil, force=false, boot=true
     end
     #TODO loguear el cambio de estado en una bitactora
   end
-  f ? f.puts(commands) : exec_context_commands("update_provider_route #{p.id}", commands.map{|c| "ip " + c }, boot)
+  if commands.any?
+    f ? f.puts(commands) : exec_context_commands("update_provider_route #{p.id}", commands.map{|c| "ip " + c }, boot)
+  end
 end
 
 def gen_ip_ro
@@ -1024,7 +1030,7 @@ def setup_proxy_arp
   exec_context_commands "setup_proxy_arp", commands
 end
 
-def do_provider_up
+def do_provider_up(p)
   commands = []
   commands << "ip rule add from #{p.network} table #{p.table} prio 100"
   commands << "ip rule add from #{p.ip}/32 table #{p.check_link_table} prio 90"
