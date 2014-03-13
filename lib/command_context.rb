@@ -2,14 +2,14 @@ class CommandContext
   require 'sequreisp_constants'
   attr_accessor :commands
   attr_accessor :name
-  @@command_logger = Logger.new File.join Rails.root, "log/command.log"
-  @@run = true
 
   def self.run= _run
     @@run = _run
   end
 
   def initialize name, commands
+    @@run = true
+    @@command_logger = Logger.new File.join Rails.root, "log/command.log"
     @commands = []
     @name = name
     #commands = _commands.to_a if _commands.is_a? String
