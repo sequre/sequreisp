@@ -205,12 +205,12 @@ padding:2px;
 	.inner{
 		position:relative;
 		}
-	#header{
-		position:relative;
-		background: url(../images/header.png) no-repeat;
-		width: 902px;
-		height: 122px;
-		}	
+/*	#header{ */
+/*		position:relative; */
+/*		background: url(../images/header.png) no-repeat; */
+/*		width: 902px; */
+/*		height: 122px; */
+/*		} */
 	#footer{
 		position:relative;
 		clear:both;
