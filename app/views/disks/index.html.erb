@@ -78,7 +78,6 @@
           <th><%= t('activerecord.attributes.disk.serial') %></th>
           <th><%= t('activerecord.attributes.disk.name') %></th>
           <th><%= t('activerecord.attributes.disk.capacity') %></th>
-          <th><%= t('messages.disk.capacity_used_for_cache') %></th>
           <%= render :partial => "shared/plugins_table_headers" %>
           <th><b><%= t('activerecord.attributes.disk.type') %></b></th>
           <th><%= t('buttons.clear_disks') %></th>
@@ -92,7 +91,6 @@
               <td><%= disk.serial %></td>
               <td><b><%= disk.name %></b> <em><%= "(#{disk.raid})" if not disk.raid.nil? %></em></td>
               <td><%= number_to_human_size(disk.capacity.to_i) %></td>
-              <td><%= disk.capacity_used_for_cache %></td>
               <%= render :partial => "shared/plugins_table_cells", :locals => {:object => disk} %>
               <td><b><%= disk.assigned_to %></b></td>
               <td><b><%= disk.prepare_disk_for.present? ? "<span style='color:

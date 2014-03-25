@@ -163,6 +163,8 @@ class Disk < ActiveRecord::Base
     end
   end
 
+  #TODO currently not used because it is extremly slow
+  # it has already a translation messages.disk.capacity_used_for_cache
   def capacity_used_for_cache
     cache? ? `du -hs #{mounting_point}/squid`.split(" ").first : "0k"
   end
