@@ -19,7 +19,7 @@
 class Contract < ActiveRecord::Base
   acts_as_audited :except => [:netmask,
                               :queue_down_prio, :queue_up_prio, :queue_down_dfl, :queue_up_dfl,
-                              :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl]
+                              :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl, :is_connected]
   def initialize(attributes = nil)
     super(attributes)
     self.start_date = Date.today if start_date.nil?
