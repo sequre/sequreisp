@@ -129,6 +129,7 @@ class Configuration < ActiveRecord::Base
     ActiveSupport::StringInquirer.new read_attribute(:use_global_prios_strategy)
   end
 
+  # this can be overrided from a plug-in like invocing
   def day_of_the_beginning_of_the_period
     1
   end
