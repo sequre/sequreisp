@@ -57,6 +57,14 @@ module HooksHelper
     ""
   end
 
+  def header_logo_extension
+    "background: url(/images/header.png) no-repeat;".html_safe
+  end
+
+  def link_footer_extension
+  "<a href='http://www.sequreisp.com'>sequreisp.com</a>".html_safe
+  end
+
   def massive_settings_form_extensions(form)
     ""
   end
