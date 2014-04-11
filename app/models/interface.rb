@@ -156,4 +156,10 @@ class Interface < ActiveRecord::Base
   def current_physical_link
     `ip link show dev #{name} 2>/dev/null`.scan(/state (\w+) /).flatten[0] == "UP" || `sudo mii-tool #{name} 2>/dev/null`.scan(/link ok/).flatten[0] == "link ok" || `sudo ethtool #{name} 2>/dev/null`.scan(/Link detected: yes/).flatten[0] == "Link detected: yes"
   end
+  # Used by modules
+  def self.lan_ip_addresses
+    lan_ips = []
+    self.only_lan.each { |lan_interface| lan_ips.concat(lan_interface.addresses.collect{ |address| address.ip }) }
+    lan_ips
+  end
 end
