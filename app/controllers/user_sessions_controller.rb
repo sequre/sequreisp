@@ -24,6 +24,8 @@ class UserSessionsController < ApplicationController
   def new
     redirect_to eval(current_user.default_path) if current_user
     @user_session = UserSession.new
+    @user_session_email = params[:u] if params[:u]
+    @user_session_password = params[:p] if params[:p]
   end
   
   def create
