@@ -6,7 +6,8 @@ module Dashboard
       { :id => 3,:name => 'Bind DNS server', :command => 'named', :pattern => 'named'},
       { :id => 4,:name => 'Videocache Daemon', :command => 'python', :pattern => 'vc-scheduler' },
       { :id => 5,:name => 'Apache Web Server', :command => 'apache2', :pattern => 'apache2' },
-      { :id => 6,:name => 'Mysql Server', :command => 'mysqld', :pattern => 'mysqld' }
+      { :id => 6,:name => 'Mysql Server', :command => 'mysqld', :pattern => 'mysqld' },
+      { :id => 7,:name => 'FreeRadius', :command => 'freeradius', :pattern => 'freeradius' }
     ]
     #%w{sequreispd squid named vc-scheduler apache2}
     attr_reader :name, :mem_p, :cpu_p, :mem, :up, :id, :mem_p_html, :cpu_p_html, :up_html
@@ -50,7 +51,7 @@ module Dashboard
       end
     end
   end
-  class LoadAverage 
+  class LoadAverage
     attr_reader :now, :min5, :min15
     def initialize
       @now, @min5, @min15 = `uptime`.split('load average:')[1].chomp.split(",").map(&:strip).map(&:to_f)
@@ -85,9 +86,9 @@ module Dashboard
     end
     def data
       [
-      { :name => "#{I18n.t('dashboard.pie.free')} #{free}MB", 
+      { :name => "#{I18n.t('dashboard.pie.free')} #{free}MB",
         :y => free_p.round, :color => '#00ff00', :sliced => true, :selected => true },
-      { :name => "#{I18n.t('dashboard.pie.use')} #{used}MB", 
+      { :name => "#{I18n.t('dashboard.pie.use')} #{used}MB",
         :y => used_p.round,:color => '#0000ff' }
       ]
     end
@@ -102,7 +103,7 @@ module Dashboard
       @total_g = to_g @total
       @free = free.to_i
       @free_p = @free * 100 / @total rescue 0
-      @used = @total - @free 
+      @used = @total - @free
       @used_p = 100 - @free_p
       @mount_point = mount_point
     end
@@ -119,7 +120,7 @@ module Dashboard
     def self.load_all
       ret = []
       `/bin/df -P -text3 -text4 -treiserfs`.each_with_index do |l,i|
-        next if i==0; 
+        next if i==0;
         d = Disk.new([i] + l.split)
         ret << d
       end
