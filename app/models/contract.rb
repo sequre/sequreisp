@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 # Sequreisp - Copyright 2010, 2011 Luciano Ruete
 #
@@ -35,9 +36,8 @@ class Contract < ActiveRecord::Base
   belongs_to :proxy_arp_interface, :class_name => 'Interface', :conditions => "kind = 'lan'"
   belongs_to :proxy_arp_provider, :class_name => 'Provider'
   belongs_to :unique_provider, :class_name => 'Provider'
-  has_one :current_traffic, :class_name => 'Traffic', :conditions => ["from_date <= ? and to_date >= ?", Date.today, Date.today]
   has_many :traffics, :dependent => :destroy
-
+  has_one :current_traffic, :class_name => 'Traffic', :conditions => ["traffics.from_date <= ? and traffics.to_date >= ?", Date.today, Date.today]
 
   named_scope :enabled, :conditions => { :state => "enabled" }
   named_scope :not_disabled, :conditions => "state != 'disabled'"
