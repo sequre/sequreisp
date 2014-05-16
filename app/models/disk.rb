@@ -18,7 +18,7 @@ class Disk < ActiveRecord::Base
 
   def prepare_disk_for
     _prepare_for = []
-    _prepare_for << I18n.t('activerecord.attributes.disk.cache') if self.cache?
+    _prepare_for << I18n.t('activerecord.attributes.disk.cache') if self.prepare_disk_for_cache?
   end
 
   #rewrite in videocache plugin
