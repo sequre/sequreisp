@@ -1,4 +1,4 @@
-# Sequreisp - Copyright 2010, 2011 Luciano Ruete
+# Sequreisp- - Copyright 2010, 2011 Luciano Ruete
 #
 # This file is part of Sequreisp.
 #
@@ -30,71 +30,6 @@ end
 
 def gen_tc
   commands = []
-  def tc_class_qdisc_filter(o = {})
-    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
-    tc = o[:file]
-    tc.puts "class add dev #{o[:iface]} parent #{o[:parent_mayor]}:#{o[:parent_minor]} classid #{classid} " +
-            "htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
-    tc.puts "qdisc add dev #{o[:iface]} parent #{classid} sfq perturb 10" #saco el handle
-    tc.puts "filter add dev #{o[:iface]} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}"
-  end
-  def do_global_prios_tc(file, iface, parent_mayor, parent_minor, rate, quantum)
-    mask = "f0000000"
-    #TODO tc_global ceil_prio3 quantum mark, etc
-    #prio1
-    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "a",
-                          :rate => rate * 0.4 , :ceil => rate , :prio => 1, :quantum => quantum, :mark => "a0000000", :mask => mask
-    #prio2
-    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "b",
-                          :rate => rate * 0.5 , :ceil => rate , :prio => 2, :quantum => quantum, :mark => "b0000000", :mask => mask
-    #prio3
-    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "c",
-                          :rate => rate * 0.1 , :ceil => rate * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
-  end
-  def do_per_contract_prios_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0)
-    contract_min_rate = 0.024
-    klass = c.class_hex
-    # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
-    # prefix != 0 significa que matcheo en las ifaces reales donde tengo un arbol x cada enlace
-    mask = prefix == 0 ? "0000ffff" : "00ffffff"
-    rate = plan["rate_" + direction] == 0 ?  contract_min_rate : plan["rate_" + direction]
-    rate_prio1 = rate == contract_min_rate ? rate/3 : rate*0.05
-    rate_prio2 = rate == contract_min_rate ? rate/3 : rate*0.9
-    rate_prio3 = rate == contract_min_rate ? rate/3 : rate*0.05
-    ceil = plan["ceil_" + direction]
-    mtu = Configuration.mtu
-    quantum_factor = (plan["ceil_" + direction] + plan["rate_" + direction])/Configuration.quantum_factor.to_i
-    quantum_factor = 1 if quantum_factor <= 0
-    quantum_total = mtu * quantum_factor * 3
-
-    #padre
-    tc.puts "##{c.client.name}: #{c.id} #{c.klass.number}"
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{quantum_total}"
-    if Configuration.use_global_prios
-      #huérfano, solo el filter
-      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
-    else
-      #hijos
-      #prio1
-      tc_class_qdisc_filter :prio => 1, :file => tc, :iface => iface,
-                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio1_hex,
-                            :rate => rate_prio1, :ceil => ceil,
-                            :quantum => mtu * quantum_factor * 3,
-                            :mark => c.mark_prio1_hex(prefix), :mask => mask
-      #prio2
-      tc_class_qdisc_filter :prio => 2, :file => tc, :iface => iface,
-                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio2_hex,
-                            :rate => rate_prio2, :ceil => ceil,
-                            :quantum => mtu * quantum_factor * 2,
-                            :mark => c.mark_prio2_hex(prefix), :mask => mask
-      #prio3
-      tc_class_qdisc_filter :prio => 3, :file => tc, :iface => iface,
-                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio3_hex,
-                            :rate => rate_prio3, :ceil => ceil * c.ceil_dfl_percent / 100,
-                            :quantum => mtu,
-                            :mark => c.mark_prio3_hex(prefix), :mask => mask
-    end
-  end
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
@@ -107,7 +42,8 @@ def gen_tc
     if Configuration.use_global_prios and not Configuration.use_global_prios_strategy.disabled?
       Provider.enabled.with_klass_and_interface.each do |p|
         #max quantum posible para este provider, necesito saberlo con anticipación
-        quantum = Configuration.mtu * p.quantum_factor * 3
+        #quantum = Configuration.mtu * p.quantum_factor * 3
+        quantum = p.max_quantum
         #up
         tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_up}kbit quantum #{quantum}"
         tc_ifb_up.puts "filter add dev #{IFB_UP} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
@@ -122,16 +58,20 @@ def gen_tc
         #TODONOW solo van los contratos de este provider y/o provider_group
         contracts =  Configuration.use_global_prios_strategy.provider? ? p.provider_group.contracts.not_disabled.descend_by_netmask : Contract.not_disabled.descend_by_netmask
         contracts.each do |c|
-          do_per_contract_prios_tc tc_ifb_up, c.plan, c, p.class_hex, 1, IFB_UP, "up", p.mark
-          do_per_contract_prios_tc tc_ifb_down, c.plan, c, p.class_hex, 1, IFB_DOWN, "down", p.mark
+          # do_per_contract_prios_tc tc_ifb_up, c.plan, c, p.class_hex, 1, IFB_UP, "up", p.mark
+          # do_per_contract_prios_tc tc_ifb_down, c.plan, c, p.class_hex, 1, IFB_DOWN, "down", p.mark
+          tc_ifb_up.puts(c.do_per_contract_prios_tc(p.class_hex, 1, IFB_DOWN, "up", "add", p.mark))
+          tc_ifb_down.puts(c.do_per_contract_prios_tc(p.class_hex, 1, IFB_DOWN, "down", "add", p.mark))
         end
       end
     else
       tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 htb rate 1000mbit"
       tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
       Contract.not_disabled.descend_by_netmask.each do |c|
-        do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
-        do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
+        # do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
+        # do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
+        tc_ifb_up.puts(c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "up", "add", p.mark))
+        tc_ifb_down.puts(c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", p.mark))
       end
     end
     tc_ifb_up.close
@@ -160,7 +100,8 @@ def gen_tc
   # htb tree up + ingress redirect filter (en las ifaces de Provider)
   Provider.enabled.with_klass_and_interface.each do |p|
     #max quantum posible para este provider, necesito saberlo con anticipación
-    quantum = Configuration.mtu * p.quantum_factor * 3
+    #quantum = Configuration.mtu * p.quantum_factor * 3
+    quantum = p.max_quantum
     iface = p.link_interface
     commands << "tc qdisc del dev #{iface} root"
     commands << "tc qdisc del dev #{iface} ingress"
@@ -171,11 +112,13 @@ def gen_tc
         tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
         tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
         if Configuration.use_global_prios
-          do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_up, quantum
+          # do_global_prios_tc tc,
+          tc.puts(p.do_global_prios_tc(p.class_hex, 1, iface, "up"))
         else
           if Configuration.tc_contracts_per_provider_in_wan
             Contract.not_disabled.descend_by_netmask.each do |c|
-              do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
+              #do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
+              tc.puts(c.do_per_contract_prios_tc(p.class_hex, 1, iface, "up", "add", p.mark))
             end
           else
             tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
@@ -214,12 +157,14 @@ def gen_tc
           if Configuration.use_global_prios
             tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
             tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
-            do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_down, quantum
+            #do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_down, quantum
+            tc.puts(p.do_global_prios_tc(p.class_hex, 1, iface, "down"))
           elsif Configuration.tc_contracts_per_provider_in_lan
             tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
             tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
             Contract.not_disabled.descend_by_netmask.each do |c|
-              do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
+              #do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
+              tc.puts(c.do_per_contract_prios_tc(p.class_hex, 1, iface, "down", "add", p.mark))
             end
           end
         end
@@ -725,7 +670,7 @@ def update_fallback_route(f=nil, force=false, boot=true)
     #TODO loguear? el cambio de estado en una bitactora
   end
   if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot) 
+    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot)
   end
 end
 
