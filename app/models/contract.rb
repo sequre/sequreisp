@@ -694,11 +694,11 @@ class Contract < ActiveRecord::Base
     rate_prio3 = (rate == contract_min_rate ? rate/3 : rate*0.05 ) * bandwidth_rate
     ceil = plan["ceil_" + direction]  * bandwidth_rate
     mtu = Configuration.mtu
-    quantum_factor = plan.quantum_factor
+    quantum_factor = plan.quantum_factor(direction)
 
     #padre
     tc_rules << "##{client.name}: #{id} #{self.klass.number}"
-    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{self.class_hex} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{plan.quantum_total}"
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{self.class_hex} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{plan.quantum_total(direction)}"
 
     if Configuration.use_global_prios
       #huérfano, solo el filter
@@ -743,5 +743,7 @@ class Contract < ActiveRecord::Base
       tc_rules.flatten
     end
   end
+
+  private
 
 end

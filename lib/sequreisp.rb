@@ -60,7 +60,7 @@ def gen_tc
         contracts.each do |c|
           # do_per_contract_prios_tc tc_ifb_up, c.plan, c, p.class_hex, 1, IFB_UP, "up", p.mark
           # do_per_contract_prios_tc tc_ifb_down, c.plan, c, p.class_hex, 1, IFB_DOWN, "down", p.mark
-          tc_ifb_up.puts(c.do_per_contract_prios_tc(p.class_hex, 1, IFB_DOWN, "up", "add", p.mark))
+          tc_ifb_up.puts(c.do_per_contract_prios_tc(p.class_hex, 1, IFB_UP, "up", "add", p.mark))
           tc_ifb_down.puts(c.do_per_contract_prios_tc(p.class_hex, 1, IFB_DOWN, "down", "add", p.mark))
         end
       end
@@ -70,8 +70,8 @@ def gen_tc
       Contract.not_disabled.descend_by_netmask.each do |c|
         # do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
         # do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
-        tc_ifb_up.puts(c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "up", "add", p.mark))
-        tc_ifb_down.puts(c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", p.mark))
+        tc_ifb_up.puts(c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add"))
+        tc_ifb_down.puts(c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add"))
       end
     end
     tc_ifb_up.close
