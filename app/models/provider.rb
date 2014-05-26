@@ -372,7 +372,7 @@ class Provider < ActiveRecord::Base
   end
 
   def max_quantum
-    Configuration.first.mtu * p.quantum_factor * 3
+    Configuration.first.mtu * quantum_factor * 3
   end
 
   def tc_class_qdisc_filter(o = {})
