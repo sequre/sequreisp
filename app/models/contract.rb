@@ -689,10 +689,10 @@ class Contract < ActiveRecord::Base
     mask = prefix == 0 ? "0000ffff" : "00ffffff"
     contract_min_rate = Contract::MIN_RATE
     rate = plan["rate_" + direction] == 0 ?  contract_min_rate : plan["rate_" + direction] * bandwidth_rate
-    rate_prio1 = (rate == contract_min_rate ? rate/3 : rate*0.05 ) * bandwidth_rate
-    rate_prio2 = (rate == contract_min_rate ? rate/3 : rate*0.9 ) * bandwidth_rate
-    rate_prio3 = (rate == contract_min_rate ? rate/3 : rate*0.05 ) * bandwidth_rate
-    ceil = plan["ceil_" + direction]  * bandwidth_rate
+    rate_prio1 = rate == contract_min_rate ? rate/3 : rate*0.05 * bandwidth_rate
+    rate_prio2 = rate == contract_min_rate ? rate/3 : rate*0.9 * bandwidth_rate
+    rate_prio3 = rate == contract_min_rate ? rate/3 : rate*0.05 * bandwidth_rate
+    ceil = plan["ceil_" + direction] * bandwidth_rate
     mtu = Configuration.mtu
     quantum_factor = plan.quantum_factor(direction)
 
