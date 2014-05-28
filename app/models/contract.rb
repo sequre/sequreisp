@@ -25,6 +25,9 @@ class Contract < ActiveRecord::Base
     super(attributes)
     self.start_date = Date.today if start_date.nil?
   end
+
+  MIN_RATE = 0.024
+
   belongs_to :client
   belongs_to :plan
 
@@ -668,7 +671,81 @@ class Contract < ActiveRecord::Base
     [dates, datas]
   end
 
-  private
+  def bandwidth_rate
+    1
+  end
 
+  def tc_class_qdisc_filter(o = {})
+    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
+    tc_rules = []
+    tc_rules << "class #{o[:action]} dev #{o[:iface]} parent #{o[:parent_mayor]}:#{self.class_hex} classid #{classid} htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
+    tc_rules << "qdisc add dev #{o[:iface]} parent #{classid} sfq perturb 10" if o[:action] == "add" #saco el handle
+    tc_rules << "filter add dev #{o[:iface]} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}" if o[:action] == "add"
+    tc_rules
+  end
+
+  def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, prefix=0)
+    tc_rules = []
+    # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
+    # prefix != 0 significa que matcheo en las ifaces reales donde tengo un arbol x cada enlace
+    mask = prefix == 0 ? "0000ffff" : "00ffffff"
+    contract_min_rate = Contract::MIN_RATE
+    rate = plan["rate_" + direction] == 0 ?  contract_min_rate : plan["rate_" + direction] * bandwidth_rate
+    rate_prio1 = rate == contract_min_rate ? rate/3 : rate*0.05 * bandwidth_rate
+    rate_prio2 = rate == contract_min_rate ? rate/3 : rate*0.9 * bandwidth_rate
+    rate_prio3 = rate == contract_min_rate ? rate/3 : rate*0.05 * bandwidth_rate
+    ceil = plan["ceil_" + direction] * bandwidth_rate
+    mtu = Configuration.mtu
+    quantum_factor = plan.quantum_factor(direction)
+
+    #padre
+    tc_rules << "##{client.name}: #{id} #{self.klass.number}"
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{self.class_hex} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{plan.quantum_total(direction)}"
+
+    if Configuration.use_global_prios
+      #huérfano, solo el filter
+      tc_rules << "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{self.class_hex}"
+    else
+      #hijos
+      #prio1
+      tc_rules << tc_class_qdisc_filter(:prio => 1,
+                                        :iface => iface,
+                                        :parent_mayor => parent_mayor,
+                                        :current_minor => class_prio1_hex,
+                                        :rate => rate_prio1,
+                                        :ceil => ceil,
+                                        :quantum => mtu * quantum_factor * 3,
+                                        :mark => mark_prio1_hex(prefix),
+                                        :mask => mask,
+                                        :action => action)
+
+      #prio2
+      tc_rules << tc_class_qdisc_filter(:prio => 2,
+                                        :iface => iface,
+                                        :parent_mayor => parent_mayor,
+                                        :current_minor => class_prio2_hex,
+                                        :rate => rate_prio2,
+                                        :ceil => ceil,
+                                        :quantum => mtu * quantum_factor * 2,
+                                        :mark => mark_prio2_hex(prefix),
+                                        :mask => mask,
+                                        :action => action)
+
+      #prio3
+      tc_rules << tc_class_qdisc_filter(:prio => 3,
+                                        :iface => iface,
+                                        :parent_mayor => parent_mayor,
+                                        :current_minor => class_prio3_hex,
+                                        :rate => rate_prio3,
+                                        :ceil => ceil * ceil_dfl_percent / 100,
+                                        :quantum => mtu,
+                                        :mark => mark_prio3_hex(prefix),
+                                        :mask => mask,
+                                        :action => action)
+      tc_rules.flatten
+    end
+  end
+
+  private
 
 end

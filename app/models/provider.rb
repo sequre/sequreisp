@@ -18,9 +18,9 @@
 class Provider < ActiveRecord::Base
   DYNAMIC_PROVIDER_PATH="/tmp/sequreisp"
 
-  acts_as_audited 
+  acts_as_audited
   belongs_to :provider_group
-  belongs_to :interface  
+  belongs_to :interface
   has_one :klass, :as => :klassable, :class_name => "ProviderKlass", :dependent => :nullify
   has_many :addresses, :as => :addressable, :class_name => "Address", :dependent => :destroy
   accepts_nested_attributes_for :addresses, :reject_if => lambda { |a| a[:ip].blank? }, :allow_destroy => true
@@ -50,9 +50,9 @@ class Provider < ActiveRecord::Base
   validates_format_of :netmask, :with => /^([12]{0,1}[0-9]{0,1}[0-9]{1}\.){3}[12]{0,1}[0-9]{0,1}[0-9]{1}$/, :allow_blank => true
   validates_numericality_of :rate_down, :rate_up, :only_integer => true
   validates_inclusion_of :kind, :in => %w( static adsl dhcp )
-  validates_uniqueness_of :interface_id, :name 
+  validates_uniqueness_of :interface_id, :name
   validates_uniqueness_of :ip, :allow_nil => true, :allow_blank => true
-  
+
   def validate
     if not ip.blank?
       # Address tiene las ips de las interfaces y los  proveedores
@@ -101,25 +101,25 @@ class Provider < ActiveRecord::Base
   def set_default_online_changed_at
     self.online_changed_at = Time.now
   end
-  
+
   def online= val
     write_attribute :online, val
     self.online_changed_at = Time.now if self.online_changed?
   end
-  
+
   include OverflowCheck
   before_save :check_integer_overflow
   before_create :set_defaults
-  
+
   after_update :queue_update_commands
   after_destroy :queue_destroy_commands
-  
+
   def queue_update_commands
-    cq = QueuedCommand.new 
+    cq = QueuedCommand.new
     if not interface_id_was.nil?
       _interface = Interface.find interface_id_was
       if kind_changed? or interface_id_changed?
-        case kind_was 
+        case kind_was
         when "adsl"
           cq.command += "poff #{_interface.name};"
           cq.command += "rm #{SequreispConfig::CONFIG["ppp_dir"]}/peers/#{_interface.name};"
@@ -139,8 +139,8 @@ class Provider < ActiveRecord::Base
   end
 
   def queue_destroy_commands
-    cq = QueuedCommand.new 
-    case kind 
+    cq = QueuedCommand.new
+    case kind
     when "adsl"
       cq.command += "poff #{interface.name};"
       cq.command += "rm #{SequreispConfig::CONFIG["ppp_dir"]}/peers/#{interface.name};"
@@ -165,22 +165,22 @@ class Provider < ActiveRecord::Base
   aasm_event :disable do
     transitions :from => [:enabled], :to => :disabled
   end
-  
+
   def self.aasm_states_for_select
     AASM::StateMachine[self].states.map { |state| [I18n.t("aasm.provider.#{state.name.to_s}"),state.name.to_s] }
   end
-  
+
   after_create :bind_klass
- 
+
   def bind_klass
     self.klass = ProviderKlass.find(:first, :conditions => "klassable_id is null", :lock => "for update")
     raise "TODO nos quedamos sin clases!" if self.klass.nil?
   end
-  
+
   def set_defaults
     #self.online = true
   end
-    
+
   def netmask_suffix
     begin
       mask = IP.new(self.netmask).to_i
@@ -190,7 +190,7 @@ class Provider < ActiveRecord::Base
         count+=1;
       end
       count
-    rescue 
+    rescue
       nil
     end
   end
@@ -208,7 +208,7 @@ class Provider < ActiveRecord::Base
         result << a.network
       end
       result.uniq.compact
-    rescue 
+    rescue
       []
     end
   end
@@ -221,7 +221,7 @@ class Provider < ActiveRecord::Base
   def has_ip?
     begin
       IP.new(self.ip) and IP.new(self.gateway) and !self.netmask.blank?
-    rescue 
+    rescue
       false
     end
   end
@@ -240,7 +240,7 @@ class Provider < ActiveRecord::Base
   end
   def self.fallback_default_route(alt_format=false)
     providers = Provider.enabled.ready.online
-    case providers.count 
+    case providers.count
     when 0
       ""
     when 1
@@ -272,7 +272,7 @@ class Provider < ActiveRecord::Base
     self.klass.number
   end
   def class_hex
-    self.klass.number.to_s(16)    
+    self.klass.number.to_s(16)
   end
   def mark_hex
     mark.to_s(16)
@@ -293,11 +293,11 @@ class Provider < ActiveRecord::Base
       "ca:fe:ca:fe:00:#{class_hex}"
     end
   end
-  
+
   def self.kinds_for_select
     [[I18n.t("selects.provider.kind.static"), "static"], [I18n.t("selects.provider.kind.adsl"), "adsl"],[I18n.t("selects.provider.kind.dhcp"),"dhcp"]]
   end
- 
+
   def to_ppp_peer
     string = ""
     string += "noipdefault" + "\n"
@@ -326,7 +326,7 @@ class Provider < ActiveRecord::Base
 
   def pretty_current_status_time
     cst = current_status_time.to_i
-    
+
     seconds = cst % 60
     minutes = (cst / 60)%60
     hours = (cst / 3600)%24
@@ -370,4 +370,57 @@ class Provider < ActiveRecord::Base
     Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} result:#{result} down: #{instant_rate_down} up #{instant_rate_up}"
     result
   end
+
+  def max_quantum
+    Configuration.first.mtu * quantum_factor * 3
+  end
+
+  def tc_class_qdisc_filter(o = {})
+    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
+    tc_rules = []
+    tc_rules << "class add dev #{self.link_interface} parent #{o[:parent_mayor]}:#{o[:parent_minor]} classid #{classid} htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
+    tc_rules << "qdisc add dev #{self.link_interface} parent #{classid} sfq perturb 10" #saco el handle
+    tc_rules << "filter add dev #{self.link_interface} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}"
+    tc_rules
+  end
+
+  def do_global_prios_tc(parent_mayor, parent_minor, iface, direction)
+    tc_rules = []
+    mask = "f0000000"
+    quantum = p.max_quantum
+
+    #TODO tc_global ceil_prio3 quantum mark, etc
+    #prio1
+    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
+                                      :parent_minor => parent_minor,
+                                      :current_minor => "a",
+                                      :rate => self["rate_" + direction] * 0.4 ,
+                                      :ceil => self["rate_" + direction],
+                                      :prio => 1,
+                                      :quantum => quantum,
+                                      :mark => "a0000000",
+                                      :mask => mask)
+    #prio2
+    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
+                                      :parent_minor => parent_minor,
+                                      :current_minor => "b",
+                                      :rate => self["rate_" + direction] * 0.5 ,
+                                      :ceil => self["rate_" + direction],
+                                      :prio => 2,
+                                      :quantum => quantum,
+                                      :mark => "b0000000",
+                                      :mask => mask)
+    #prio3
+    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
+                                      :parent_minor => parent_minor,
+                                      :current_minor => "c",
+                                      :rate => self["rate_" + direction] * 0.1,
+                                      :ceil => self["rate_" + direction] * 0.3 ,
+                                      :prio => 3,
+                                      :quantum => quantum / 3,
+                                      :mark => "c0000000",
+                                      :mask => mask)
+    tc_rules.flatten
+  end
+
 end
