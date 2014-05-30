@@ -28,8 +28,6 @@ class Configuration < ActiveRecord::Base
 
   acts_as_audited :except => self.acts_as_audited_except
 
-  #attr_accessor :validate_mail_relay_password
-
   include ModelsWatcher
   watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
                :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,
@@ -145,6 +143,7 @@ class Configuration < ActiveRecord::Base
     generate_postmap = false
     hash= {}
     hash["relayhost"] = ""
+    hash["myhostname"] = `cat /etc/mailname`.strip
     if mail_relay_used?
       hash["smtp_sasl_password_maps"] = "hash:/etc/postfix/sasl/passwd"
       hash["smtp_sasl_auth_enable"] = "yes"
@@ -158,7 +157,7 @@ class Configuration < ActiveRecord::Base
         sasl_passwd.puts("#{self.mail_relay_smtp_server}:#{self.mail_relay_smtp_port} #{self.mail_relay_mail}:#{self.mail_relay_password}")
         sasl_passwd.close
       when "gmail"
-        hash["relayhost"] = "[#{self.mail_relay_smtp_server}]:#{self.mail_relay_smtp_port} #mail_relay"
+        hash["relayhost"] = "[#{self.mail_relay_smtp_server}]:#{self.mail_relay_smtp_port}"
         hash["smtp_use_tls"] = "yes"
         hash["smtp_sasl_security_options"] = "noanonymous"
 
