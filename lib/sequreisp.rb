@@ -1264,6 +1264,15 @@ def setup_iptables
   ]
 end
 
+def setup_mail_relay
+  if Configuration.first.mail_relay_manipulated_for_sequreisp?
+    commands = []
+    commands << "postmap #{PATH_SASL_PASSWD}" if Configuration.first.generate_postfix_main
+    commands << "service postfix restart"
+    exec_context_commands("setup_mail_relay_create", commands)
+  end
+end
+
 def boot(run=true)
   BootCommandContext.run = run
   BootCommandContext.clear_boot_file
@@ -1289,6 +1298,7 @@ def boot(run=true)
     setup_ip_ro
     setup_tc
     setup_iptables
+    setup_mail_relay
 
     #General configuration hook, plugins seems to use it to write updated conf files
     BootHook.run :hook => :general

@@ -18,11 +18,17 @@
 class Configuration < ActiveRecord::Base
   ACCEPTED_LOCALES = ["es","en","pt"]
   GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
+
+  PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
+  PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
+
   def self.acts_as_audited_except
     [:daemon_reload]
   end
 
   acts_as_audited :except => self.acts_as_audited_except
+
+  #attr_accessor :validate_mail_relay_password
 
   include ModelsWatcher
   watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
@@ -32,12 +38,13 @@ class Configuration < ActiveRecord::Base
                :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
                :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
                :iptables_tree_optimization_enabled,
-               :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080
+               :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080, :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
   validates_presence_of :notification_timeframe
   validates_presence_of :language
+  validates_presence_of :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password, :if => "mail_relay_used == true"
 
   validates_format_of :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers, :with => /^([0-9a-z-]+,)*[0-9a-z-]+$/, :allow_blank => true
 
@@ -132,5 +139,42 @@ class Configuration < ActiveRecord::Base
   # this can be overrided from a plug-in like invocing
   def day_of_the_beginning_of_the_period
     1
+  end
+
+  def generate_postfix_main
+    generate_postmap = false
+    hash= {}
+    hash["relayhost"] = ""
+    if mail_relay_used?
+      hash["smtp_sasl_password_maps"] = "hash:/etc/postfix/sasl/passwd"
+      hash["smtp_sasl_auth_enable"] = "yes"
+      generate_postmap = true
+      case mail_relay_option_server
+      when "own"
+        hash["relayhost"] = "#{self.mail_relay_smtp_server}:#{self.mail_relay_smtp_port}"
+        hash["smtp_sasl_security_options"] = ""
+
+        sasl_passwd = File.open(PATH_SASL_PASSWD, "w")
+        sasl_passwd.puts("#{self.mail_relay_smtp_server}:#{self.mail_relay_smtp_port} #{self.mail_relay_mail}:#{self.mail_relay_password}")
+        sasl_passwd.close
+      when "gmail"
+        hash["relayhost"] = "[#{self.mail_relay_smtp_server}]:#{self.mail_relay_smtp_port} #mail_relay"
+        hash["smtp_use_tls"] = "yes"
+        hash["smtp_sasl_security_options"] = "noanonymous"
+
+        sasl_passwd = File.open(PATH_SASL_PASSWD, "w")
+        sasl_passwd.puts("[#{self.mail_relay_smtp_server}]:#{self.mail_relay_smtp_port} #{self.mail_relay_mail}:#{self.mail_relay_password}")
+        # when "yahoo"
+      end
+    end
+    write_main_postfix(hash)
+    generate_postmap
+  end
+
+  def write_main_postfix(options)
+    postfix_main = File.open(PATH_POSTFIX, "w")
+    view = ActionView::Base.new(ActionController::Base.view_paths, {})
+    postfix_main.puts view.render(:file => "configurations/postfix.conf.erb", :locals => {:params => options})
+    postfix_main.close
   end
 end
