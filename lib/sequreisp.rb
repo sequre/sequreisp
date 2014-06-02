@@ -725,7 +725,7 @@ def update_fallback_route(f=nil, force=false, boot=true)
     #TODO loguear? el cambio de estado en una bitactora
   end
   if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot) 
+    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot)
   end
 end
 
@@ -1292,6 +1292,7 @@ def boot(run=true)
 
     #General configuration hook, plugins seems to use it to write updated conf files
     BootHook.run :hook => :general
+    Configuration.first.generate_bind_dns_named_options
     exec_context_commands "bind_reload", "service bind9 reload"
 
     #Service restart hook

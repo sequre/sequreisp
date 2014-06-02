@@ -18,6 +18,9 @@
 class Configuration < ActiveRecord::Base
   ACCEPTED_LOCALES = ["es","en","pt"]
   GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
+
+  PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
+
   def self.acts_as_audited_except
     [:daemon_reload]
   end
@@ -132,5 +135,23 @@ class Configuration < ActiveRecord::Base
   # this can be overrided from a plug-in like invocing
   def day_of_the_beginning_of_the_period
     1
+  end
+
+  def generate_bind_dns_named_options
+    hash = {}
+    hash[:forwarders] = []
+
+    if dns_use_forwarders
+      hash[:forwarders] << "        #{dns_first_server};" if dns_first_server.present?
+      hash[:forwarders] << "        #{dns_second_server};" if dns_second_server.present?
+      hash[:forwarders] << "        #{dns_third_server};" if dns_third_server.present?
+    else
+      hash[:forwarders] = ["//      8.8.8.8;", "//      8.8.4.4;"]
+    end
+
+    named_options = File.open(PATH_DNS_NAMED_OPTIONS, "w")
+    view = ActionView::Base.new(ActionController::Base.view_paths, {})
+    named_options.puts view.render(:file => "configurations/named.conf.options.erb", :locals => {:params => hash})
+    named_options.close
   end
 end
