@@ -145,9 +145,9 @@ class Configuration < ActiveRecord::Base
     hash["relayhost"] = ""
     hash["myhostname"] = `cat /etc/mailname`.strip
     if mail_relay_used?
-      hash["smtp_sasl_password_maps"] = "hash:/etc/postfix/sasl/passwd"
-      hash["smtp_sasl_auth_enable"] = "yes"
       generate_postmap = true
+      hash["smtp_sasl_password_maps"] = "hash:#{PATH_SASL_PASSWD}"
+      hash["smtp_sasl_auth_enable"] = "yes"
       case mail_relay_option_server
       when "own"
         hash["relayhost"] = "#{self.mail_relay_smtp_server}:#{self.mail_relay_smtp_port}"
@@ -159,10 +159,12 @@ class Configuration < ActiveRecord::Base
       when "gmail"
         hash["relayhost"] = "[#{self.mail_relay_smtp_server}]:#{self.mail_relay_smtp_port}"
         hash["smtp_use_tls"] = "yes"
-        hash["smtp_sasl_security_options"] = "noanonymous"
+        hash["smtp_sasl_security_options"] = ""
+        hash["smtp_tls_CAfile"] = "/etc/ssl/certs/ca-certificates.crt"
 
         sasl_passwd = File.open(PATH_SASL_PASSWD, "w")
         sasl_passwd.puts("[#{self.mail_relay_smtp_server}]:#{self.mail_relay_smtp_port} #{self.mail_relay_mail}:#{self.mail_relay_password}")
+        sasl_passwd.close
         # when "yahoo"
       end
     end
