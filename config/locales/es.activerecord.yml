@@ -237,6 +237,10 @@ es:
         web_interface_listen_on_80: "Escuchar peticiones de la interfaz web en puerto 80"
         web_interface_listen_on_443: "Escuchar peticiones de la interfaz web en puerto 443(HTTPS)"
         web_interface_listen_on_8080: "Escuchar peticiones de la interfaz web en puerto 8080"
+        dns_use_forwarders: "Configurar DNS"
+        dns_first_server: "Primer server DNS"
+        dns_second_server: "Segundo server DNS"
+        dns_third_server: "Tercer Server DNS"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -553,6 +557,7 @@ es:
       global_prios: "Prioridades globales"
       proxy: "Proxy (web cache)"
       advanced: "Configuración avanzada"
+      bind_dns: "Configuración DNS"
     interface:
       ips: "IPs"
     provider:
