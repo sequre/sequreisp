@@ -592,3 +592,5 @@ en:
     error_on_reversion: 'There was an error when trying to go back to previus version'
   error_messages:
     not_selected_any_options: 'No selected any options'
+    not_repeat_dns_server: 'Exist DNS Servers replicated'
+    define_one_dns_server: 'Define at less one DNS server'

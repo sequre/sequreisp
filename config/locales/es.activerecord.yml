@@ -592,3 +592,5 @@ es:
     error_on_reversion: 'No se pudo volver a la versión indicada'
   error_messages:
     not_selected_any_options: 'No se ha selecionado ninguna opción'
+    not_repeat_dns_server: 'Existen servidores DNS repetidos'
+    define_one_dns_server: 'Definir al menos un servidor DNS'

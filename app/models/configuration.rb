@@ -27,6 +27,7 @@ class Configuration < ActiveRecord::Base
 
   acts_as_audited :except => self.acts_as_audited_except
 
+  include IpAddressCheck
   include ModelsWatcher
   watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
                :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,
@@ -35,7 +36,7 @@ class Configuration < ActiveRecord::Base
                :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
                :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
                :iptables_tree_optimization_enabled,
-               :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080
+               :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080, :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
@@ -48,6 +49,25 @@ class Configuration < ActiveRecord::Base
   validates_numericality_of :transparent_proxy_max_load_average, :only_integer => true, :greater_than => 0, :less_than => 30
   validates_numericality_of :logged_in_timeout, :only_integer => true, :greater_than_or_equal_to => 0
   validates_presence_of :apply_changes_automatically_hour, :if => :apply_changes_automatically?
+
+  validate :servers_dns_different
+  validate :presence_of_dns_server
+  validate_ip_format_of :dns_first_server, :dns_second_server, :dns_third_server
+
+
+  def presence_of_dns_server
+    if dns_use_forwarders and not (dns_first_server.present? or dns_second_server.present? or dns_third_server.present?)
+      errors.add_to_base(I18n.t('error_messages.define_one_dns_server'))
+    end
+  end
+
+  def servers_dns_different
+    servers = []
+    servers << dns_first_server if dns_first_server.present?
+    servers << dns_second_server if dns_second_server.present?
+    servers << dns_third_server if dns_third_server.present?
+    errors.add_to_base(I18n.t('error_messages.not_repeat_dns_server')) if not servers.empty? and not servers.uniq!.count != servers.count
+  end
 
   include PriosCheck
   def validate
@@ -142,11 +162,16 @@ class Configuration < ActiveRecord::Base
     hash[:forwarders] = []
 
     if dns_use_forwarders
-      hash[:forwarders] << "        #{dns_first_server};" if dns_first_server.present?
-      hash[:forwarders] << "        #{dns_second_server};" if dns_second_server.present?
-      hash[:forwarders] << "        #{dns_third_server};" if dns_third_server.present?
+      hash[:forwarders] << "forwarders {"
+      hash[:forwarders] << "      #{dns_first_server};" if dns_first_server.present?
+      hash[:forwarders] << "      #{dns_second_server};" if dns_second_server.present?
+      hash[:forwarders] << "      #{dns_third_server};" if dns_third_server.present?
+      hash[:forwarders] << "};"
     else
-      hash[:forwarders] = ["//      8.8.8.8;", "//      8.8.4.4;"]
+      hash[:forwarders] << "// forwarders {"
+      hash[:forwarders] << "//      8.8.8.8;"
+      hash[:forwarders] << "//      8.8.4.4;"
+      hash[:forwarders] << "// };"
     end
 
     named_options = File.open(PATH_DNS_NAMED_OPTIONS, "w")

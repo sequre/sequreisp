@@ -10,11 +10,10 @@ options {
         // Uncomment the following block, and insert the addresses replacing
         // the all-0's placeholder.
 
-        // forwarders {
         <% params[:forwarders].each do |server| %>
         <%= server %>
         <% end %>
-        // };
+
         //allow-query {
         //       127.0.0.1;
         //       192.168.0.0/16;
