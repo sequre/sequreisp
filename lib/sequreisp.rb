@@ -330,26 +330,21 @@ def gen_iptables
       # restauro marka en OUTPUT pero que siga viajando
       f.puts "-A OUTPUT -j CONNMARK --restore-mark"
       f.puts "-A OUTPUT -m mark ! --mark 0 -j ACCEPT"
+
       if Configuration.transparent_proxy
-        if Configuration.transparent_proxy_n_to_m
-          Contract.not_disabled.descend_by_netmask.each do |c|
-            mark = if not c.public_address.nil?
-                     c.public_address.addressable.mark_hex
-                   elsif not c.unique_provider.nil?
-                     # marko los contratos que salen por un único provider
-                     c.unique_provider.mark_hex
-                   else
-                     c.plan.provider_group.mark_hex
-                  end
-            f.puts "-A OUTPUT -s #{c.proxy_bind_ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
-          end
-        else
-          ProviderGroup.enabled.with_klass.each do |pg|
-            # marko provider_group según tcp_outgoing_address de squid
-            f.puts "-A OUTPUT -s #{pg.proxy_bind_ip} -j MARK --set-mark 0x#{pg.mark_hex}/0x00ff0000"
-          end
+        Contract.not_disabled.descend_by_netmask.each do |c|
+          mark = if not c.public_address.nil?
+                   c.public_address.addressable.mark_hex
+                 elsif not c.unique_provider.nil?
+                   # marko los contratos que salen por un único provider
+                   c.unique_provider.mark_hex
+                 else
+                   c.plan.provider_group.mark_hex
+                 end
+          f.puts "-A OUTPUT -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
         end
       end
+
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
       Provider.enabled.with_klass_and_interface.each do |p|
@@ -362,9 +357,11 @@ def gen_iptables
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
       f.puts "-A POSTROUTING -m mark --mark 0x00000000/0x00ff0000 -j sequreisp_connmark"
 
-      if Configuration.transparent_proxy and Configuration.transparent_proxy_zph_enabled
-        f.puts "-A POSTROUTING -p tcp --sport 3128 -m tos --tos 0x10 -j ACCEPT"
-      end
+      #---------------------------------------------------------------------------------------------------
+      # if Configuration.transparent_proxy and Configuration.transparent_proxy_zph_enabled
+      #   f.puts "-A POSTROUTING -p tcp --sport 3128 -m tos --tos 0x10 -j ACCEPT"
+      # end
+      #---------------------------------------------------------------------------------------------------
 
       f.puts ":sequreisp.down - [0:0]"
       f.puts ":sequreisp.up - [0:0]"
@@ -411,9 +408,6 @@ def gen_iptables
         Contract.not_disabled.descend_by_netmask.each do |c|
           mark = "0x#{c.mark_hex}/0x0000ffff"
           f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j MARK --set-mark #{mark}"
-          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-            f.puts "-A #{c.mangle_chain("up")} -s #{c.proxy_bind_ip} -j MARK --set-mark #{mark}"
-          end
           f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j MARK --set-mark #{mark}"
         end
         # una chain global
@@ -460,9 +454,7 @@ def gen_iptables
           # redirección del trafico de este cliente hacia su propia chain
           f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
           f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
-          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-            f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j #{chain}"
-          end
+
           # separo el tráfico en las 3 class: prio1 prio2 prio3
           # prio1
           do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
@@ -516,9 +508,6 @@ def gen_iptables
           f.puts "-A PREROUTING -d #{c.public_address.ip} -j DNAT --to-destination #{c.ip}"
 
           f.puts "-A POSTROUTING -s #{c.ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
-          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-            f.puts "-A POSTROUTING -s #{c.proxy_bind_ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
-          end
         end
       end
       # attribute: forwarded_ports
@@ -527,20 +516,23 @@ def gen_iptables
         do_port_forwardings fp, f
       end
 
+      # VER CON EL ALFRED
       # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
       # Avoids tproxy to server ip's
-      Interface.all(:conditions => "kind = 'lan'").each do |i|
-        i.addresses.each do |a|
-          f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
-        end
-        #TODO ver que pasa con provider dinamicos que cambian la ip
-        Provider.enabled.ready.each do |p|
-          f.puts "-A PREROUTING -i #{i.name} -d #{p.ip} -p tcp --dport 80 -j ACCEPT"
-          p.addresses.each do |a|
-            f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
-          end
-        end
-      end
+      #---------------------------------------------------------------------------------------------------
+      # Interface.all(:conditions => "kind = 'lan'").each do |i|
+      #   i.addresses.each do |a|
+      #     f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+      #   end
+      #   #TODO ver que pasa con provider dinamicos que cambian la ip
+      #   Provider.enabled.ready.each do |p|
+      #     f.puts "-A PREROUTING -i #{i.name} -d #{p.ip} -p tcp --dport 80 -j ACCEPT"
+      #     p.addresses.each do |a|
+      #       f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+      #     end
+      #   end
+      # end
+      #---------------------------------------------------------------------------------------------------
 
       f.puts ":sequreisp-accepted-sites - [0:0]"
       f.puts "-A PREROUTING -j sequreisp-accepted-sites"
@@ -725,7 +717,7 @@ def update_fallback_route(f=nil, force=false, boot=true)
     #TODO loguear? el cambio de estado en una bitactora
   end
   if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot) 
+    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot)
   end
 end
 
@@ -912,107 +904,6 @@ def setup_proc
     "echo #{Configuration.gc_thresh2} > /proc/sys/net/ipv4/neigh/default/gc_thresh2",
     "echo #{Configuration.gc_thresh3} > /proc/sys/net/ipv4/neigh/default/gc_thresh3"
     ]
-end
-
-def config_cache_disks
-  conf = Configuration.first
-  system_disk = Disk.system.first
-  disks_to_prepare = Disk.prepared_for_cache
-  use_system_disk_for_cache = (Disk.cache.count == 0 and disks_to_prepare.empty?)
-  @create_directorys_for_squid = false
-
-  if conf.transparent_proxy and (disks_to_prepare.present? or use_system_disk_for_cache)
-    exec_context_commands("stop_squid_and_add_client_redirection",
-                          ["/sbin/iptables -t nat -I avoid_proxy -p tcp --dport 80 -j ACCEPT",
-                           "service squid stop",
-                           "if (pidof squid); then pkill -9 squid; fi"], false)
-    @create_directorys_for_squid = true
-  end
-
-  system_disk.cache = false if (disks_to_prepare.present? and system_disk.cache?)
-
-  disks_to_prepare.each do |disk|
-    exec_context_commands("umount_and_remove_from_fstab_extra_disk", disk.umount_and_remove_from_fstab, false) if disk.is_mounted?
-    if exec_context_commands("format_extra_disk", disk.format, false)
-      disk.rewrite_serial
-      if exec_context_commands("mount_and_add_to_fstab_extra_disk", disk.mount_and_add_to_fstab, false)
-        if exec_context_commands("do_prepare_extra_disk_for_cache", disk.do_prepare_disk_for_cache, false)
-          disk.prepare_disk_for_cache = false
-          disk.assigned_for([:cache])
-        end
-      end
-      disk.save if disk.changed?
-    end
-  end
-
-  # When no extra disks for cache
-  if use_system_disk_for_cache
-    exec_context_commands("do_prepare_system_disk_for_cache", system_disk.do_prepare_disk_for_cache, false)
-    system_disk.cache = true
-  end
-
-  system_disk.save if system_disk.changed?
-end
-
-def setup_proxy
-  squid_file = '/etc/init/squid.conf'
-  squid_file_off = squid_file + '.disabled'
-  commands_on_boot = []
-  commands = []
-
-  if Configuration.transparent_proxy
-    commands_on_boot << "[ -f #{squid_file_off} ] && mv #{squid_file_off} #{squid_file}"
-    #relodearlo si ya está corriendo, arrancarlo sino
-    commands_on_boot << 'if [[ -n "$(pidof squid)" ]] ; then  squid -k reconfigure ; else service squid start ; fi'
-    commands << "squid -z" if @create_directorys_for_squid
-    commands << "/sbin/iptables -t nat -D avoid_proxy -p tcp --dport 80 -j ACCEPT" if @create_directorys_for_squid
-    commands << "sed -i \"/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256\" /etc/squid/squid.conf"
-    # dummy iface con ips para q cada cliente salga por su grupo
-    commands_on_boot << "modprobe dummy"
-    commands_on_boot << "ip link set dummy0 up"
-
-    begin
-      File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid|
-        if Configuration.transparent_proxy_n_to_m
-          Contract.not_disabled.descend_by_netmask.each do |c|
-            fsquid.puts "acl contract_#{c.klass.number} src #{c.ip}"
-            fsquid.puts "tcp_outgoing_address #{c.proxy_bind_ip} contract_#{c.klass.number}"
-            commands_on_boot << "ip address add #{c.proxy_bind_ip} dev dummy0"
-          end
-        else
-          Contract.not_disabled.descend_by_netmask.each do |c|
-            fsquid.puts "acl pg_#{c.plan.provider_group.klass.number} src #{c.ip}"
-          end
-          ProviderGroup.enabled.with_klass.each do |pg|
-            fsquid.puts "#Dummy address para salir via #{pg.name}"
-            fsquid.puts "#empty acl por si no hay contratos"
-            fsquid.puts "acl pg_#{pg.klass.number} src"
-            fsquid.puts "tcp_outgoing_address #{pg.proxy_bind_ip} pg_#{pg.klass.number}"
-            commands_on_boot << "ip address add #{pg.proxy_bind_ip} dev dummy0"
-          end
-        end
-        Disk.cache_dir_lines.each do |cache_dir|
-          fsquid.puts(cache_dir)
-        end
-        #TODO Option disabled for all clients
-        #if Configuration.transparent_proxy_windows_update_hack
-        #  fsquid.puts "#Windows update hacks see http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
-        #  fsquid.puts "range_offset_limit -1"
-        #  fsquid.puts "quick_abort_min -1"
-        #end
-        BootHook.run :hook => :setup_proxy, :proxy_script => fsquid
-      end
-      exec_context_commands "create_directorys_squid_and_remove_redirection", commands, false
-    rescue => e
-      Rails.logger.error "ERROR in lib/sequreisp.rb::setup_proxy e=>#{e.inspect}"
-    end
-  else
-    commands_on_boot << "service squid stop"
-    #ensure that squid gets stoped
-    commands_on_boot << "kill -9 $(pidof squid)"
-    commands_on_boot << "[ -f #{squid_file} ] && mv #{squid_file} #{squid_file_off}"
-  end
-  exec_context_commands "setup_proxy", commands_on_boot
 end
 
 def setup_proxy_arp
@@ -1275,9 +1166,9 @@ def boot(run=true)
     setup_queued_commands
     setup_clock
     setup_proc
-    Disk.scan if (Disk.count == 0)
-    config_cache_disks
-    setup_proxy
+#    Disk.scan if (Disk.count == 0)
+#    config_cache_disks
+#    setup_proxy
     setup_nf_modules
     setup_interfaces
     setup_dynamic_providers_hooks
