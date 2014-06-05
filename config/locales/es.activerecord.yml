@@ -444,6 +444,12 @@ es:
     pie:
       free: "Libre"
       use: "En uso"
+    name_service:
+      sequreisp_daemon: "Demonio SequreISP"
+      squid_proxy_web_cache: "Servicio Proxy Web Cache (Squid)"
+      bind_dns_server: "Servicio Bind DNS"
+      apache_web_server: "Servicio Apache Web"
+      mysql_server: "Servicio MySQL"
   actions:
     edit: "Editando %{model}"
     new: "Creando %{model}"

@@ -1,14 +1,15 @@
 module Dashboard
   class Service
     SERVICES= [
-      { :id => 1,:name => 'Sequreisp Daemon' , :command => 'ruby' , :pattern => 'sequreispd.rb ' },
-      { :id => 2,:name => 'Squid Proxy Web Cache', :command => 'squid' , :pattern => 'squid' },
-      { :id => 3,:name => 'Bind DNS server', :command => 'named', :pattern => 'named'},
-      { :id => 4,:name => 'Videocache Daemon', :command => 'python', :pattern => 'vc-scheduler' },
-      { :id => 5,:name => 'Apache Web Server', :command => 'apache2', :pattern => 'apache2' },
-      { :id => 6,:name => 'Mysql Server', :command => 'mysqld', :pattern => 'mysqld' },
-      { :id => 7,:name => 'FreeRadius', :command => 'freeradius', :pattern => 'freeradius' }
+      { :id => 1,:name => I18n.t("dashboard.name_service.sequreisp_daemon"), :command => 'ruby' , :pattern => 'sequreispd.rb ' },
+      { :id => 2,:name => I18n.t("dashboard.name_service.squid_proxy_web_cache"), :command => 'squid' , :pattern => 'squid' },
+      { :id => 3,:name => I18n.t("dashboard.name_service.bind_dns_server"), :command => 'named', :pattern => 'named'},
+      { :id => 4,:name => I18n.t("dashboard.name_service.apache_web_server"), :command => 'apache2', :pattern => 'apache2' },
+      { :id => 5,:name => I18n.t("dashboard.name_service.mysql_server"), :command => 'mysqld', :pattern => 'mysqld' }
     ]
+
+    SERVICES << { :id => 99,:name => 'SSH Server', :command => 'sshd', :pattern => 'sshd' } if Rails.env.development?
+
     #%w{sequreispd squid named vc-scheduler apache2}
     attr_reader :name, :mem_p, :cpu_p, :mem, :up, :id, :mem_p_html, :cpu_p_html, :up_html
     def initialize(service)
@@ -44,8 +45,8 @@ module Dashboard
     def stats
     end
     def self.load_all
+      debugger
       servs = SERVICES
-      servs << { :id => 99,:name => 'SSH', :command => 'sshd', :pattern => 'sshd' } if Rails.env.development?
       servs.each_with_object([]) do |s,memo|
         memo << Service.new(s)
       end
