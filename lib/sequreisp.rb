@@ -52,48 +52,46 @@ def gen_tc
                           :rate => rate * 0.1 , :ceil => rate * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
   end
   def do_per_contract_prios_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0)
-    contract_min_rate = 0.024
     klass = c.class_hex
     # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
     # prefix != 0 significa que matcheo en las ifaces reales donde tengo un arbol x cada enlace
     mask = prefix == 0 ? "0000ffff" : "00ffffff"
-    rate = plan["rate_" + direction] == 0 ?  contract_min_rate : plan["rate_" + direction]
-    rate_prio1 = rate == contract_min_rate ? rate/3 : rate*0.05
-    rate_prio2 = rate == contract_min_rate ? rate/3 : rate*0.9
-    rate_prio3 = rate == contract_min_rate ? rate/3 : rate*0.05
+    rt_prio1 = ""
+    rt_prio2 = ""
+    rt_prio3 = ""
+    rate = plan["rate_" + direction] == 0 ?  Contract::MIN_RATE : plan["rate_" + direction]
     ceil = plan["ceil_" + direction]
-    mtu = Configuration.mtu
-    quantum_factor = (plan["ceil_" + direction] + plan["rate_" + direction])/Configuration.quantum_factor.to_i
-    quantum_factor = 1 if quantum_factor <= 0
-    quantum_total = mtu * quantum_factor * 3
-
+    if  rate == Contract::MIN_RATE
+      rt_prio1 = "rt m2 #{rate}"
+    else
+      rt_prio1 = "rt m2 #{rate*0.10}"
+      rt_prio2 = "rt m2 #{rate*0.85}"
+      rt_prio3 = "rt m1 #{rate*0.05} d 500ms m2 #{rate*0.01}"
+    end
     #padre
     tc.puts "##{c.client.name}: #{c.id} #{c.klass.number}"
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{quantum_total}"
-    if Configuration.use_global_prios
-      #huérfano, solo el filter
-      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
-    else
+    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} hfsc ls m2 #{ceil}kbit ul #{ceil}kbit"
+    #if Configuration.use_global_prios
+    #  #huérfano, solo el filter
+    #  tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
+    #else
       #hijos
       #prio1
-      tc_class_qdisc_filter :prio => 1, :file => tc, :iface => iface,
-                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio1_hex,
-                            :rate => rate_prio1, :ceil => ceil,
-                            :quantum => mtu * quantum_factor * 3,
-                            :mark => c.mark_prio1_hex(prefix), :mask => mask
+      tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio1_hex} " +
+              "hfsc #{rt_prio1} ls m2 #{ceil}kbit"
+      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio1_hex}"
+
       #prio2
-      tc_class_qdisc_filter :prio => 2, :file => tc, :iface => iface,
-                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio2_hex,
-                            :rate => rate_prio2, :ceil => ceil,
-                            :quantum => mtu * quantum_factor * 2,
-                            :mark => c.mark_prio2_hex(prefix), :mask => mask
+      tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio2_hex} " +
+              "hfsc #{rt_prio2} ls m2 #{ceil}kbit"
+
+      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio2_hex}"
       #prio3
-      tc_class_qdisc_filter :prio => 3, :file => tc, :iface => iface,
-                            :parent_mayor => parent_mayor, :parent_minor => klass, :current_minor => c.class_prio3_hex,
-                            :rate => rate_prio3, :ceil => ceil * c.ceil_dfl_percent / 100,
-                            :quantum => mtu,
-                            :mark => c.mark_prio3_hex(prefix), :mask => mask
-    end
+      tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio3_hex} " +
+              "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent} d 1s m2 #{ceil * c.ceil_dfl_percent / 4}kbit ul #{ceil * c.ceil_dfl_percent}"
+
+      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio3_hex}"
+    #end
   end
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
@@ -101,101 +99,89 @@ def gen_tc
     tc_ifb_ingres = File.open(TC_FILE_PREFIX + IFB_INGRESS, "w")
     # htb tree de clientes en gral en IFB
     commands << "tc qdisc del dev #{IFB_UP} root"
-    tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 htb default 0"
+    tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
     commands << "tc qdisc del dev #{IFB_DOWN} root"
-    tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 htb default 0"
-    if Configuration.use_global_prios and not Configuration.use_global_prios_strategy.disabled?
-      Provider.enabled.with_klass_and_interface.each do |p|
-        #max quantum posible para este provider, necesito saberlo con anticipación
-        quantum = Configuration.mtu * p.quantum_factor * 3
-        #up
-        tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_up}kbit quantum #{quantum}"
-        tc_ifb_up.puts "filter add dev #{IFB_UP} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
-        tc_ifb_up.puts "qdisc add dev #{IFB_UP} parent 1:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-        tc_ifb_up.puts "class add dev #{IFB_UP} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
-        #down
-        tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
-        tc_ifb_down.puts "filter add dev #{IFB_DOWN} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
-        tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} parent 1:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-        tc_ifb_down.puts "class add dev #{IFB_DOWN} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
+    tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
+    #if Configuration.use_global_prios and not Configuration.use_global_prios_strategy.disabled?
+    #  Provider.enabled.with_klass_and_interface.each do |p|
+    #    #max quantum posible para este provider, necesito saberlo con anticipación
+    #    quantum = Configuration.mtu * p.quantum_factor * 3
+    #    #up
+    #    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_up}kbit quantum #{quantum}"
+    #    tc_ifb_up.puts "filter add dev #{IFB_UP} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
+    #    tc_ifb_up.puts "qdisc add dev #{IFB_UP} parent 1:#{p.class_hex} handle #{p.class_hex}: htb default 0"
+    #    tc_ifb_up.puts "class add dev #{IFB_UP} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
+    #    #down
+    #    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
+    #    tc_ifb_down.puts "filter add dev #{IFB_DOWN} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
+    #    tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} parent 1:#{p.class_hex} handle #{p.class_hex}: htb default 0"
+    #    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
 
-        #TODONOW solo van los contratos de este provider y/o provider_group
-        contracts =  Configuration.use_global_prios_strategy.provider? ? p.provider_group.contracts.not_disabled.descend_by_netmask : Contract.not_disabled.descend_by_netmask
-        contracts.each do |c|
-          do_per_contract_prios_tc tc_ifb_up, c.plan, c, p.class_hex, 1, IFB_UP, "up", p.mark
-          do_per_contract_prios_tc tc_ifb_down, c.plan, c, p.class_hex, 1, IFB_DOWN, "down", p.mark
-        end
-      end
-    else
-      tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 htb rate 1000mbit"
-      tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 htb rate 1000mbit"
-      Contract.not_disabled.descend_by_netmask.each do |c|
-        do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up"
-        do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down"
-      end
+    #    #TODONOW solo van los contratos de este provider y/o provider_group
+    #    contracts =  Configuration.use_global_prios_strategy.provider? ? p.provider_group.contracts.not_disabled.descend_by_netmask : Contract.not_disabled.descend_by_netmask
+    #    contracts.each do |c|
+    #      do_per_contract_prios_tc tc_ifb_up, c.plan, c, p.class_hex, 1, IFB_UP, "up", p.mark
+    #      do_per_contract_prios_tc tc_ifb_down, c.plan, c, p.class_hex, 1, IFB_DOWN, "down", p.mark
+    #    end
+    #  end
+    #else
+    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hsfc ls m2 1000mbit"
+    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:2 hsfc ls m2 #{ProviderGroup.total_rate_down*0.97}kbit ul #{ProviderGroup.total_rate_down*0.97}kbit"
+    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hsfc ls m2 1000mbit"
+    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:2 hsfc ls m2 #{ProviderGroup.total_rate_up*0.97}kbit ul #{ProviderGroup.total_rate_up*0.97}kbit"
+    Contract.not_disabled.descend_by_netmask.each do |c|
+      do_per_contract_prios_tc tc_ifb_up, c.plan, c, 2, 1, IFB_UP, "up"
+      do_per_contract_prios_tc tc_ifb_down, c.plan, c, 2, 1, IFB_DOWN, "down"
     end
+    #end
+    # add default classes
+    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls 1000mbit"
+    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hsfc ls 1000mbit"
     tc_ifb_up.close
     tc_ifb_down.close
-
-    # htb tree ingress IFB (htb providers + sfq)
-    divisor = 2
-    target = Contract.count
-    divisor *= 2 while target > divisor
-    commands << "tc qdisc del dev #{IFB_INGRESS} root"
-    tc_ifb_ingres.puts "qdisc add dev #{IFB_INGRESS} root handle 1: htb default 0"
-    Provider.enabled.all(:conditions => { :shape_rate_down_on_ingress => true }).each do |p|
-      tc_ifb_ingres.puts "class add dev #{IFB_INGRESS} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit"
-      tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{p.ip}/#{p.netmask_suffix} classid 1:#{p.class_hex}"
-      p.addresses.each do |a|
-        tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent 1: protocol ip prio 10 u32 match ip dst #{a.ip}/#{a.netmask_suffix} classid 1:#{p.class_hex}"
-      end
-      tc_ifb_ingres.puts "qdisc add dev #{IFB_INGRESS} parent 1:#{p.class_hex} handle #{p.class_hex} sfq"
-      tc_ifb_ingres.puts "filter add dev #{IFB_INGRESS} parent #{p.class_hex}: protocol ip pref 1 handle 0x#{p.class_hex} flow hash keys nfct-dst divisor #{divisor}"
-    end
-    tc_ifb_ingres.close
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(IFB_UP/IFB_DOWN) e=>#{e.inspect}"
   end
 
   # htb tree up + ingress redirect filter (en las ifaces de Provider)
-  Provider.enabled.with_klass_and_interface.each do |p|
-    #max quantum posible para este provider, necesito saberlo con anticipación
-    quantum = Configuration.mtu * p.quantum_factor * 3
-    iface = p.link_interface
-    commands << "tc qdisc del dev #{iface} root"
-    commands << "tc qdisc del dev #{iface} ingress"
-    begin
-      File.open(TC_FILE_PREFIX + iface, "w") do |tc|
-        tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
-        tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
-        tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
-        tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
-        if Configuration.use_global_prios
-          do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_up, quantum
-        else
-          if Configuration.tc_contracts_per_provider_in_wan
-            Contract.not_disabled.descend_by_netmask.each do |c|
-              do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
-            end
-          else
-            tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
-          end
-        end
-        # real iface setup
-        tc.puts "qdisc add dev #{iface} ingress"
-        if p.shape_rate_down_on_ingress
-          # this is supposed to match ack packets with size < 64bytes (from http://lartc.org/howto/lartc.adv-filter.html)
-          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
-          # redirect traffic to the ifb
-          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
-        else
-          tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 handle 1 flow hash keys nfct-dst divisor 1024"
-        end
-      end
-    rescue => e
-      Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree up) e=>#{e.inspect}"
-    end
-  end
+  #Provider.enabled.with_klass_and_interface.each do |p|
+  #  #max quantum posible para este provider, necesito saberlo con anticipación
+  #  quantum = Configuration.mtu * p.quantum_factor * 3
+  #  iface = p.link_interface
+  #  commands << "tc qdisc del dev #{iface} root"
+  #  commands << "tc qdisc del dev #{iface} ingress"
+  #  begin
+  #    File.open(TC_FILE_PREFIX + iface, "w") do |tc|
+  #      tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+  #      tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
+  #      tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
+  #      tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
+  #      if Configuration.use_global_prios
+  #        do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_up, quantum
+  #      else
+  #        if Configuration.tc_contracts_per_provider_in_wan
+  #          Contract.not_disabled.descend_by_netmask.each do |c|
+  #            do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
+  #          end
+  #        else
+  #          tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
+  #        end
+  #      end
+  #      # real iface setup
+  #      tc.puts "qdisc add dev #{iface} ingress"
+  #      if p.shape_rate_down_on_ingress
+  #        # this is supposed to match ack packets with size < 64bytes (from http://lartc.org/howto/lartc.adv-filter.html)
+  #        tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
+  #        # redirect traffic to the ifb
+  #        tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
+  #      else
+  #        tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 handle 1 flow hash keys nfct-dst divisor 1024"
+  #      end
+  #    end
+  #  rescue => e
+  #    Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree up) e=>#{e.inspect}"
+  #  end
+  #end
 
   # htb tree down (en las ifaces lan)
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|

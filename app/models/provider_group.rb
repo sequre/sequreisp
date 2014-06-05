@@ -85,13 +85,17 @@ class ProviderGroup < ActiveRecord::Base
     plans.each do |plan|
       if plan.rate_down == 0
         #24bits reservados por cliente
-        remaining -= (plan.contracts.count * 0.024)
+        remaining -= (plan.contracts.count * Contract::MIN_RATE)
       else 
         remaining -= (plan.contracts.count * plan.rate_down)
       end
     end
     remaining
   end
+  def self.total_rate_down
+    all.collect(&:rate_down).sum
+  end
+
   def rate_up
     total=0
     providers.enabled.each do |p|
@@ -104,13 +108,17 @@ class ProviderGroup < ActiveRecord::Base
     plans.each do |plan|
       if plan.rate_up == 0
         #24bits reservados por cliente
-        remaining -= (plan.contracts.count * 0.024)
+        remaining -= (plan.contracts.count * Contract::MIN_RATE)
       else 
         remaining -= (plan.contracts.count * plan.rate_up)
       end
     end
     remaining
   end
+  def self.total_rate_up
+    all.collect(&:rate_up).sum
+  end
+
   def table
     self.klass.number
   end
