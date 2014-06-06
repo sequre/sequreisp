@@ -456,15 +456,20 @@ class Contract < ActiveRecord::Base
     _interface
   end
 
-  def instant_bytes(prefix)
+  def sent_bits(prefix)
+    iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
     match = false
     rate = 0
-    IO.popen("sudo iptables -t mangle -nxvL #{mangle_chain(prefix)}", "r") do |io|
+    count = 0
+    IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
       io.each do |line|
-        match = true if (line =~ / sq.#{ip} /) != nil
-        if match
-          rate = line.split[1].to_i
-          break
+         if (line =~ /parent \w+:#{class_hex} /) != nil
+            match = true
+         elsif match and (line =~ /Sent (\d+) /) != nil
+          rate += $~[1].to_i
+          count += 1
+          match = false
+          break if count == 3
         end
       end
     end
@@ -477,11 +482,11 @@ class Contract < ActiveRecord::Base
       rate[:rate_down] = rand(plan.ceil_down)*1024
       rate[:rate_up] = rand(plan.ceil_up)*1024
     else
-      rate_down = instant_bytes "down"
-      rate_up = instant_bytes "up"
+      rate_down = sent_bits "down"
+      rate_up = sent_bits "up"
       sleep 2
-      rate[:rate_down] = (instant_bytes("down") - rate_down) / 2
-      rate[:rate_up] = (instant_bytes("up") - rate_up) / 2
+      rate[:rate_down] = (sent_bits("down") - rate_down) / 2
+      rate[:rate_up] = (sent_bits("up") - rate_up) / 2
       rate[:rate_down] = 0 if rate[:rate_down] < 0
       rate[:rate_up] = 0 if rate[:rate_up] < 0
     end
