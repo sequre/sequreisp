@@ -62,15 +62,15 @@ def gen_tc
     rate = plan["rate_" + direction] == 0 ?  Contract::MIN_RATE : plan["rate_" + direction]
     ceil = plan["ceil_" + direction]
     if  rate == Contract::MIN_RATE
-      rt_prio1 = "rt m2 #{rate}"
+      rt_prio1 = "rt m2 #{rate}kbit"
     else
-      rt_prio1 = "rt m2 #{rate*0.10}"
-      rt_prio2 = "rt m2 #{rate*0.85}"
-      rt_prio3 = "rt m1 #{rate*0.05} d 500ms m2 #{rate*0.01}"
+      rt_prio1 = "rt m2 #{rate*0.10}kbit"
+      rt_prio2 = "rt m2 #{rate*0.85}kbit"
+      rt_prio3 = "rt m1 #{rate*0.05}kbit d 500ms m2 #{rate*0.01}kbit"
     end
     #padre
     tc.puts "##{c.client.name}: #{c.id} #{c.klass.number}"
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} hfsc ls m2 #{ceil}kbit ul #{ceil}kbit"
+    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} hfsc ls m2 #{ceil}kbit ul m2 #{ceil}kbit"
     #if Configuration.use_global_prios
     #  #huérfano, solo el filter
     #  tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
@@ -88,7 +88,7 @@ def gen_tc
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio2_hex}"
       #prio3
       tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio3_hex} " +
-              "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent} d 1s m2 #{ceil * c.ceil_dfl_percent / 4}kbit ul #{ceil * c.ceil_dfl_percent}"
+              "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100}kbit d 1s m2 #{ceil * c.ceil_dfl_percent / 4 / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
 
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio3_hex}"
     #end
@@ -125,18 +125,18 @@ def gen_tc
     #    end
     #  end
     #else
-    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hsfc ls m2 1000mbit"
-    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:2 hsfc ls m2 #{ProviderGroup.total_rate_down*0.97}kbit ul #{ProviderGroup.total_rate_down*0.97}kbit"
-    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hsfc ls m2 1000mbit"
-    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:2 hsfc ls m2 #{ProviderGroup.total_rate_up*0.97}kbit ul #{ProviderGroup.total_rate_up*0.97}kbit"
+    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 1000mbit"
+    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:2 hfsc ls m2 #{ProviderGroup.total_rate_up*0.97}kbit ul m2 #{ProviderGroup.total_rate_up*0.97}kbit"
+    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
+    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 1000mbit"
+    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:2 hfsc ls m2 #{ProviderGroup.total_rate_down*0.97}kbit ul m2 #{ProviderGroup.total_rate_down*0.97}kbit"
+    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
     Contract.not_disabled.descend_by_netmask.each do |c|
-      do_per_contract_prios_tc tc_ifb_up, c.plan, c, 2, 1, IFB_UP, "up"
-      do_per_contract_prios_tc tc_ifb_down, c.plan, c, 2, 1, IFB_DOWN, "down"
+      do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 2, IFB_UP, "up"
+      do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 2, IFB_DOWN, "down"
     end
     #end
     # add default classes
-    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls 1000mbit"
-    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hsfc ls 1000mbit"
     tc_ifb_up.close
     tc_ifb_down.close
   rescue => e
@@ -144,16 +144,16 @@ def gen_tc
   end
 
   # htb tree up + ingress redirect filter (en las ifaces de Provider)
-  #Provider.enabled.with_klass_and_interface.each do |p|
+  Provider.enabled.with_klass_and_interface.each do |p|
   #  #max quantum posible para este provider, necesito saberlo con anticipación
   #  quantum = Configuration.mtu * p.quantum_factor * 3
-  #  iface = p.link_interface
-  #  commands << "tc qdisc del dev #{iface} root"
-  #  commands << "tc qdisc del dev #{iface} ingress"
-  #  begin
-  #    File.open(TC_FILE_PREFIX + iface, "w") do |tc|
-  #      tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
-  #      tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
+    iface = p.link_interface
+    commands << "tc qdisc del dev #{iface} root"
+    commands << "tc qdisc del dev #{iface} ingress"
+    begin
+      File.open(TC_FILE_PREFIX + iface, "w") do |tc|
+        tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+        tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
   #      tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
   #      tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
   #      if Configuration.use_global_prios
@@ -177,11 +177,11 @@ def gen_tc
   #      else
   #        tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 handle 1 flow hash keys nfct-dst divisor 1024"
   #      end
-  #    end
-  #  rescue => e
-  #    Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree up) e=>#{e.inspect}"
-  #  end
-  #end
+      end
+    rescue => e
+      Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree up) e=>#{e.inspect}"
+    end
+  end
 
   # htb tree down (en las ifaces lan)
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
@@ -191,24 +191,24 @@ def gen_tc
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
         tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
-        tc.puts "qdisc add dev #{iface} parent 1:1 handle 2: htb default 0"
-        Provider.enabled.with_klass_and_interface.each do |p|
-          #max quantum posible para este provider, necesito saberlo con anticipación
-          quantum = Configuration.mtu * p.quantum_factor * 3
-          tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
-          tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
-          if Configuration.use_global_prios
-            tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-            tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
-            do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_down, quantum
-          elsif Configuration.tc_contracts_per_provider_in_lan
-            tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-            tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
-            Contract.not_disabled.descend_by_netmask.each do |c|
-              do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
-            end
-          end
-        end
+        #tc.puts "qdisc add dev #{iface} parent 1:1 handle 2: htb default 0"
+        #Provider.enabled.with_klass_and_interface.each do |p|
+        #  #max quantum posible para este provider, necesito saberlo con anticipación
+        #  quantum = Configuration.mtu * p.quantum_factor * 3
+        #  tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
+        #  tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+        #  if Configuration.use_global_prios
+        #    tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
+        #    tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
+        #    do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_down, quantum
+        #  elsif Configuration.tc_contracts_per_provider_in_lan
+        #    tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
+        #    tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
+        #    Contract.not_disabled.descend_by_netmask.each do |c|
+        #      do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
+        #    end
+        #  end
+        #end
       end
     rescue => e
       Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree down) e=>#{e.inspect}"
@@ -901,43 +901,45 @@ def setup_proc
 end
 
 def config_cache_disks
-  conf = Configuration.first
   system_disk = Disk.system.first
-  disks_to_prepare = Disk.prepared_for_cache
-  use_system_disk_for_cache = (Disk.cache.count == 0 and disks_to_prepare.empty?)
-  @create_directorys_for_squid = false
+  if system_disk
+    conf = Configuration.first
+    disks_to_prepare = Disk.prepared_for_cache
+    use_system_disk_for_cache = (Disk.cache.count == 0 and disks_to_prepare.empty?)
+    @create_directorys_for_squid = false
 
-  if conf.transparent_proxy and (disks_to_prepare.present? or use_system_disk_for_cache)
-    exec_context_commands("stop_squid_and_add_client_redirection",
-                          ["/sbin/iptables -t nat -I avoid_proxy -p tcp --dport 80 -j ACCEPT",
-                           "service squid stop",
-                           "if (pidof squid); then pkill -9 squid; fi"], false)
-    @create_directorys_for_squid = true
-  end
-
-  system_disk.cache = false if (disks_to_prepare.present? and system_disk.cache?)
-
-  disks_to_prepare.each do |disk|
-    exec_context_commands("umount_and_remove_from_fstab_extra_disk", disk.umount_and_remove_from_fstab, false) if disk.is_mounted?
-    if exec_context_commands("format_extra_disk", disk.format, false)
-      disk.rewrite_serial
-      if exec_context_commands("mount_and_add_to_fstab_extra_disk", disk.mount_and_add_to_fstab, false)
-        if exec_context_commands("do_prepare_extra_disk_for_cache", disk.do_prepare_disk_for_cache, false)
-          disk.prepare_disk_for_cache = false
-          disk.assigned_for([:cache])
-        end
-      end
-      disk.save if disk.changed?
+    if conf.transparent_proxy and (disks_to_prepare.present? or use_system_disk_for_cache)
+      exec_context_commands("stop_squid_and_add_client_redirection",
+                            ["/sbin/iptables -t nat -I avoid_proxy -p tcp --dport 80 -j ACCEPT",
+                             "service squid stop",
+                             "if (pidof squid); then pkill -9 squid; fi"], false)
+      @create_directorys_for_squid = true
     end
-  end
 
-  # When no extra disks for cache
-  if use_system_disk_for_cache
-    exec_context_commands("do_prepare_system_disk_for_cache", system_disk.do_prepare_disk_for_cache, false)
-    system_disk.cache = true
-  end
+    system_disk.cache = false if (disks_to_prepare.present? and system_disk.cache?)
 
-  system_disk.save if system_disk.changed?
+    disks_to_prepare.each do |disk|
+      exec_context_commands("umount_and_remove_from_fstab_extra_disk", disk.umount_and_remove_from_fstab, false) if disk.is_mounted?
+      if exec_context_commands("format_extra_disk", disk.format, false)
+        disk.rewrite_serial
+        if exec_context_commands("mount_and_add_to_fstab_extra_disk", disk.mount_and_add_to_fstab, false)
+          if exec_context_commands("do_prepare_extra_disk_for_cache", disk.do_prepare_disk_for_cache, false)
+            disk.prepare_disk_for_cache = false
+            disk.assigned_for([:cache])
+          end
+        end
+        disk.save if disk.changed?
+      end
+    end
+
+    # When no extra disks for cache
+    if use_system_disk_for_cache
+      exec_context_commands("do_prepare_system_disk_for_cache", system_disk.do_prepare_disk_for_cache, false)
+      system_disk.cache = true
+    end
+
+    system_disk.save if system_disk.changed?
+  end
 end
 
 def setup_proxy
