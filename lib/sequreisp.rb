@@ -154,6 +154,10 @@ def gen_tc
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
         tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
+        tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
+        tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
+        tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_up}kbit ul m2 #{p.rate_up}kbit"
+        tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
   #      tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
   #      tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
   #      if Configuration.use_global_prios
@@ -191,6 +195,13 @@ def gen_tc
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
         tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
+        tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
+        tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
+        Provider.enabled.with_klass_and_interface.each do |p|
+          tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_down}kbit ul m2 #{p.rate_down}kbit"
+          tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+        end
+
         #tc.puts "qdisc add dev #{iface} parent 1:1 handle 2: htb default 0"
         #Provider.enabled.with_klass_and_interface.each do |p|
         #  #max quantum posible para este provider, necesito saberlo con anticipación
