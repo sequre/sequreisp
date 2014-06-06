@@ -397,11 +397,9 @@ class Contract < ActiveRecord::Base
   def instant
     latencies = instant_latency
     {
-      :rate_down => instant_rate_down,
-      :rate_up => instant_rate_up,
       :ping_latency => latencies[:ping],
       :arping_latency => latencies[:arping]
-    }
+    }.merge instant_rate
   end
 
   # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
@@ -458,53 +456,36 @@ class Contract < ActiveRecord::Base
     _interface
   end
 
-  def instant_rate_down
-    return rand(plan.ceil_down)*1024 if SequreispConfig::CONFIG["demo"]
-    instant_rate SequreispConfig::CONFIG["ifb_down"]
-
-  end
-  def instant_rate_up
-    return rand(plan.ceil_up)*1024/2 if SequreispConfig::CONFIG["demo"]
-    instant_rate SequreispConfig::CONFIG["ifb_up"]
-  end
-
-  def instant_rate(iface)
-    #return rand(plan.ceil_down)
+  def instant_bytes(prefix)
     match = false
     rate = 0
-    unit = ""
-    IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
+    IO.popen("sudo iptables -t mangle -nxvL #{mangle_chain(prefix)}", "r") do |io|
       io.each do |line|
-        match = true if (line =~ /class htb \w+:#{class_hex} /) != nil
-        if match and (line =~ /^ rate (\d+)(\w+) /) != nil
-          rate = $~[1].to_i
-          unit = $~[2]
+        match = true if (line =~ / sq.#{ip} /) != nil
+        if match
+          rate = line.split[1].to_i
           break
         end
       end
     end
-    # from tc manpage (s/unit)
-    # kbps   Kilobytes per second
-    # mbps   Megabytes per second
-    # kbit   Kilobits per second
-    # mbit   Megabits per second
-    # bps or a bare number
-    #        Bytes per second
-    case unit.downcase
-    when "kbps"
-      rate *= 1024*8
-    when "mbps"
-      rate *= 1024*1024*8
-    when "kbit"
-      rate *= 1024
-    when "mbit"
-      rate *= 1024*1024
-    when "bit"
-      rate
-    else # "bps" or a bare number
-      #TODO nunca va a caer aca x "bare number" con w+ como condición de la regexp
-      rate *= 8
+    # iptables shows bytes and we need bits
+    rate *= 8
+  end
+  def instant_rate
+    rate = {}
+    if SequreispConfig::CONFIG["demo"]
+      rate[:rate_down] = rand(plan.ceil_down)*1024
+      rate[:rate_up] = rand(plan.ceil_up)*1024
+    else
+      rate_down = instant_bytes "down"
+      rate_up = instant_bytes "up"
+      sleep 2
+      rate[:rate_down] = (instant_bytes("down") - rate_down) / 2
+      rate[:rate_up] = (instant_bytes("up") - rate_up) / 2
+      rate[:rate_down] = 0 if rate[:rate_down] < 0
+      rate[:rate_up] = 0 if rate[:rate_up] < 0
     end
+    rate
   end
   def self.transparent_proxy_for_select
     [
