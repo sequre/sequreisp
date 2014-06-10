@@ -287,14 +287,14 @@ def gen_iptables
         end
       end
       # restauro marka en PREROUTING
-      f.puts "-A PREROUTING -j CONNMARK --restore-mark"
+      f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x7fffffff --ctmask 0x7fffffff"
 
       # acepto si ya se de que enlace es
-      f.puts "-A PREROUTING -m mark ! --mark 0 -j ACCEPT"
+      f.puts "-A PREROUTING -m mark ! --mark 0x0/0x7fffffff -j ACCEPT"
       # si viene desde internet marko segun el enlace por el que entró
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
-        f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark"
+        f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark --nfmask 0x7fffffff --ctmask 0x7fffffff"
         f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT"
       end
       # tabla para evitar triangulo de nat
@@ -328,9 +328,14 @@ def gen_iptables
       # Evito balanceo para los hosts configurados
       f.puts "-A OUTPUT -j avoid_balancing"
       # restauro marka en OUTPUT pero que siga viajando
+<<<<<<< Updated upstream
       f.puts "-A OUTPUT -j CONNMARK --restore-mark"
       f.puts "-A OUTPUT -m mark ! --mark 0 -j ACCEPT"
 
+=======
+      f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x7fffffff --ctmask 0x7fffffff"
+      f.puts "-A OUTPUT -m mark ! --mark 0x0/0x7fffffff -j ACCEPT"
+>>>>>>> Stashed changes
       if Configuration.transparent_proxy
         Contract.not_disabled.descend_by_netmask.each do |c|
           mark = if not c.public_address.nil?
@@ -489,7 +494,7 @@ def gen_iptables
           f.puts "-A #{chain} -j ACCEPT"
         end
       end
-      f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark"
+      f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark --nfmask 0x7fffffff --ctmask 0x7fffffff"
       f.puts "COMMIT"
       #---------#
       # /MANGLE #
@@ -687,7 +692,7 @@ def gen_ip_ru
   begin
     File.open(IP_RU_FILE, "w") do |f|
       f.puts "rule flush"
-      f.puts "rule add prio 1 lookup main"
+      f.puts "rule add prio 10 lookup main"
       ProviderGroup.enabled.with_klass.each do |pg|
         f.puts "rule add fwmark 0x#{pg.mark_hex}/0x00ff0000 table #{pg.table} prio 200"
       end
