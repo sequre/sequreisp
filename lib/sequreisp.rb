@@ -917,41 +917,43 @@ end
 def config_cache_disks
   conf = Configuration.first
   system_disk = Disk.system.first
-  disks_to_prepare = Disk.prepared_for_cache
-  use_system_disk_for_cache = (Disk.cache.count == 0 and disks_to_prepare.empty?)
-  @create_directorys_for_squid = false
+  if system_disk
+    disks_to_prepare = Disk.prepared_for_cache
+    use_system_disk_for_cache = (Disk.cache.count == 0 and disks_to_prepare.empty?)
+    @create_directorys_for_squid = false
 
-  if conf.transparent_proxy and (disks_to_prepare.present? or use_system_disk_for_cache)
-    exec_context_commands("stop_squid_and_add_client_redirection",
-                          ["/sbin/iptables -t nat -I avoid_proxy -p tcp --dport 80 -j ACCEPT",
-                           "service squid stop",
-                           "if (pidof squid); then pkill -9 squid; fi"], false)
-    @create_directorys_for_squid = true
-  end
-
-  system_disk.cache = false if (disks_to_prepare.present? and system_disk.cache?)
-
-  disks_to_prepare.each do |disk|
-    exec_context_commands("umount_and_remove_from_fstab_extra_disk", disk.umount_and_remove_from_fstab, false) if disk.is_mounted?
-    if exec_context_commands("format_extra_disk", disk.format, false)
-      disk.rewrite_serial
-      if exec_context_commands("mount_and_add_to_fstab_extra_disk", disk.mount_and_add_to_fstab, false)
-        if exec_context_commands("do_prepare_extra_disk_for_cache", disk.do_prepare_disk_for_cache, false)
-          disk.prepare_disk_for_cache = false
-          disk.assigned_for([:cache])
-        end
-      end
-      disk.save if disk.changed?
+    if conf.transparent_proxy and (disks_to_prepare.present? or use_system_disk_for_cache)
+      exec_context_commands("stop_squid_and_add_client_redirection",
+                            ["/sbin/iptables -t nat -I avoid_proxy -p tcp --dport 80 -j ACCEPT",
+                             "service squid stop",
+                             "if (pidof squid); then pkill -9 squid; fi"], false)
+      @create_directorys_for_squid = true
     end
-  end
 
-  # When no extra disks for cache
-  if use_system_disk_for_cache
-    exec_context_commands("do_prepare_system_disk_for_cache", system_disk.do_prepare_disk_for_cache, false)
-    system_disk.cache = true
-  end
+    system_disk.cache = false if (disks_to_prepare.present? and system_disk.cache?)
 
-  system_disk.save if system_disk.changed?
+    disks_to_prepare.each do |disk|
+      exec_context_commands("umount_and_remove_from_fstab_extra_disk", disk.umount_and_remove_from_fstab, false) if disk.is_mounted?
+      if exec_context_commands("format_extra_disk", disk.format, false)
+        disk.rewrite_serial
+        if exec_context_commands("mount_and_add_to_fstab_extra_disk", disk.mount_and_add_to_fstab, false)
+          if exec_context_commands("do_prepare_extra_disk_for_cache", disk.do_prepare_disk_for_cache, false)
+            disk.prepare_disk_for_cache = false
+            disk.assigned_for([:cache])
+          end
+        end
+        disk.save if disk.changed?
+      end
+    end
+
+    # When no extra disks for cache
+    if use_system_disk_for_cache
+      exec_context_commands("do_prepare_system_disk_for_cache", system_disk.do_prepare_disk_for_cache, false)
+      system_disk.cache = true
+    end
+
+    system_disk.save if system_disk.changed?
+  end
 end
 
 def setup_proxy
