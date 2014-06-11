@@ -16,6 +16,8 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Interface < ActiveRecord::Base
+  DEFAULT_TX_QUEUE_LEN_FOR_VLAN = 1000
+  DEFAULT_TX_QUEUE_LEN_FOR_IFB = 1000
   acts_as_audited
   belongs_to :vlan_interface, :class_name => "Interface", :foreign_key => "vlan_interface_id"
   has_many :vlan_interfaces, :class_name => "Interface", :foreign_key => "vlan_interface_id", :dependent => :destroy

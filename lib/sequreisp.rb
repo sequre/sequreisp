@@ -51,7 +51,7 @@ def gen_tc
     tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "c",
                           :rate => rate * 0.1 , :ceil => rate * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
   end
-  def do_per_contract_prios_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0)
+  def do_per_contract_prios_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0, rate_factor=0)
     klass = c.class_hex
     # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
     # prefix != 0 significa que matcheo en las ifaces reales donde tengo un arbol x cada enlace
@@ -59,17 +59,26 @@ def gen_tc
     rt_prio1 = ""
     rt_prio2 = ""
     rt_prio3 = ""
-    rate = plan["rate_" + direction] == 0 ?  Contract::MIN_RATE : plan["rate_" + direction]
     ceil = plan["ceil_" + direction]
-    if  rate == Contract::MIN_RATE
-      rt_prio1 = "rt m2 #{rate}kbit"
+    if plan["rate_" + direction] == 0
+      rate = ceil * rate_factor
+      if rate > 0
+        r1 = rate*0.10
+        r2 = rate*0.90
+        rt_prio1 = "rt m1 #{r1*5}kbit d 200ms m2 #{r1}kbit"
+        rt_prio2 = "rt m1 #{r2/3}kbit d 200ms m2 #{r2}kbit"
+      end
     else
-      rt_prio1 = "rt m2 #{rate*0.10}kbit"
-      rt_prio2 = "rt m2 #{rate*0.85}kbit"
-      rt_prio3 = "rt m1 #{rate*0.05}kbit d 500ms m2 #{rate*0.01}kbit"
+      rate = plan["rate_" + direction]
+      r1 = rate*0.10
+      r2 = rate*0.85
+      r3 = rate*0.05
+      rt_prio1 = "rt m1 #{r1*5}kbit d 200ms m2 #{r1}kbit"
+      rt_prio2 = "rt m1 #{r2/3}kbit d 200ms m2 #{r2}kbit"
+      rt_prio3 = "rt m1 #{r3/3}kbit d 1s m2 #{r3}kbit"
     end
     #padre
-    tc.puts "##{c.client.name}: #{c.id} #{c.klass.number}"
+    tc.puts "##{c.client.name} - IP: #{c.ip} ID: #{c.id} KLASS_NUMBER: #{klass}"
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} hfsc ls m2 #{ceil}kbit ul m2 #{ceil}kbit"
     #if Configuration.use_global_prios
     #  #huérfano, solo el filter
@@ -88,7 +97,7 @@ def gen_tc
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio2_hex}"
       #prio3
       tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio3_hex} " +
-              "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100}kbit d 1s m2 #{ceil * c.ceil_dfl_percent / 4 / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
+              "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * c.ceil_dfl_percent / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
 
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio3_hex}"
     #end
@@ -125,15 +134,19 @@ def gen_tc
     #    end
     #  end
     #else
-    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 1000mbit"
-    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:2 hfsc ls m2 #{ProviderGroup.total_rate_up*0.97}kbit ul m2 #{ProviderGroup.total_rate_up*0.97}kbit"
+    total_rate_up = ProviderGroup.total_rate_up * ProviderGroup::SATURATION_INDEX
+    total_rate_down = ProviderGroup.total_rate_down * ProviderGroup::SATURATION_INDEX
+    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{total_rate_up}kbit ul m2 #{total_rate_up}kbit"
     tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
-    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 1000mbit"
-    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:2 hfsc ls m2 #{ProviderGroup.total_rate_down*0.97}kbit ul m2 #{ProviderGroup.total_rate_down*0.97}kbit"
+    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{total_rate_down}kbit ul m2 #{total_rate_down}kbit"
     tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
-    Contract.not_disabled.descend_by_netmask.each do |c|
-      do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 2, IFB_UP, "up"
-      do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 2, IFB_DOWN, "down"
+    ProviderGroup.all.each do |pg|
+      rate_factor_up = (pg.remaining_rate_up*ProviderGroup::SATURATION_INDEX)/pg.ceil_up rescue 0
+      rate_factor_down = (pg.remaining_rate_down*ProviderGroup::SATURATION_INDEX)/pg.ceil_down rescue 0
+      pg.contracts.not_disabled.descend_by_netmask.each do |c|
+        do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up", 0, rate_factor_up
+        do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down", 0, rate_factor_down
+      end
     end
     #end
     # add default classes
@@ -830,6 +843,12 @@ def setup_provider_interface p, boot=true
   if p.interface.vlan?
     #commands << "vconfig rem #{p.interface.name}"
     commands << "vconfig add #{p.interface.vlan_interface.name} #{p.interface.vlan_id}"
+    #BTW, in your case the drops most likely occur because HFSC's default pfifo
+    #child qdiscs use the tx_queue_len of the device as their limit, which in
+    #case of vlan devices is zero (in that case 1 is used).
+    #So you can either increase the tx_queue_len of the vlan device or manually
+    #add child qdiscs with bigger limits.
+    commands << "ip link set #{p.interface.name} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_VLAN}"
   end
   # x si necesitamos mac_address única para evitar problemas en proveedores que bridgean
   if p.unique_mac_address?
@@ -1219,8 +1238,11 @@ def setup_ifbs
   exec_context_commands "setup_ifbs", [
     "modprobe ifb numifbs=3",
     "ip link set #{IFB_UP} up",
+    "ip link set #{IFB_UP} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_IFB}",
     "ip link set #{IFB_DOWN} up",
-    "ip link set #{IFB_INGRESS} up"
+    "ip link set #{IFB_DOWN} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_IFB}",
+    "ip link set #{IFB_INGRESS} up",
+    "ip link set #{IFB_INGRESS} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_IFB}"
   ]
 end
 

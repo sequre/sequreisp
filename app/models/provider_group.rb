@@ -16,6 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class ProviderGroup < ActiveRecord::Base
+  SATURATION_INDEX=0.97
   acts_as_audited
   has_many :plans, :dependent => :nullify
   has_many :providers, :dependent => :nullify, :include => :interface
@@ -83,12 +84,7 @@ class ProviderGroup < ActiveRecord::Base
   def remaining_rate_down(exclude_id=nil)
     remaining = rate_down
     plans.each do |plan|
-      if plan.rate_down == 0
-        #24bits reservados por cliente
-        remaining -= (plan.contracts.count * Contract::MIN_RATE)
-      else 
-        remaining -= (plan.contracts.count * plan.rate_down)
-      end
+      remaining -= (plan.contracts.count * plan.rate_down)
     end
     remaining
   end
@@ -106,12 +102,7 @@ class ProviderGroup < ActiveRecord::Base
   def remaining_rate_up(exclude_id=nil)
     remaining = rate_up
     plans.each do |plan|
-      if plan.rate_up == 0
-        #24bits reservados por cliente
-        remaining -= (plan.contracts.count * Contract::MIN_RATE)
-      else 
-        remaining -= (plan.contracts.count * plan.rate_up)
-      end
+      remaining -= (plan.contracts.count * plan.rate_up)
     end
     remaining
   end
@@ -159,16 +150,22 @@ class ProviderGroup < ActiveRecord::Base
   end
   def concurrency_index_down
     begin
-      rate_down * 100 / contracts.all(:include => :plan).collect{ |c| c.plan.ceil_down }.sum
+      rate_down * 100 / ceil_up
     rescue
       0
     end
   end
   def concurrency_index_up
     begin
-      rate_up * 100 / contracts.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
+      rate_up * 100 / ceil_up
     rescue
       0
     end
+  end
+  def ceil_down
+    contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_down }.sum
+  end
+  def ceil_up
+    contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
   end
 end
