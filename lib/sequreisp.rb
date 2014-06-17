@@ -89,17 +89,21 @@ def gen_tc
       tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio1_hex} " +
               "hfsc #{rt_prio1} ls m2 #{ceil}kbit"
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio1_hex}"
+      tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio1_hex} sfq perturb 10"
 
       #prio2
       tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio2_hex} " +
               "hfsc #{rt_prio2} ls m2 #{ceil}kbit"
 
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio2_hex}"
+      tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio2_hex} sfq perturb 10"
+
       #prio3
       tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio3_hex} " +
               "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * c.ceil_dfl_percent / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
-
       tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio3_hex}"
+      tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio3_hex} sfq perturb 10"
+
     #end
   end
   begin
