@@ -30,27 +30,6 @@ end
 
 def gen_tc
   commands = []
-  def tc_class_qdisc_filter(o = {})
-    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
-    tc = o[:file]
-    tc.puts "class add dev #{o[:iface]} parent #{o[:parent_mayor]}:#{o[:parent_minor]} classid #{classid} " +
-            "htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
-    tc.puts "qdisc add dev #{o[:iface]} parent #{classid} sfq perturb 10" #saco el handle
-    tc.puts "filter add dev #{o[:iface]} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}"
-  end
-  def do_global_prios_tc(file, iface, parent_mayor, parent_minor, rate, quantum)
-    mask = "f0000000"
-    #TODO tc_global ceil_prio3 quantum mark, etc
-    #prio1
-    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "a",
-                          :rate => rate * 0.4 , :ceil => rate , :prio => 1, :quantum => quantum, :mark => "a0000000", :mask => mask
-    #prio2
-    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "b",
-                          :rate => rate * 0.5 , :ceil => rate , :prio => 2, :quantum => quantum, :mark => "b0000000", :mask => mask
-    #prio3
-    tc_class_qdisc_filter :file => file, :iface => iface, :parent_mayor => parent_mayor, :parent_minor => parent_minor, :current_minor => "c",
-                          :rate => rate * 0.1 , :ceil => rate * 0.3 , :prio => 3, :quantum => quantum / 3, :mark => "c0000000", :mask => mask
-  end
   def do_per_contract_prios_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0, rate_factor=0)
     klass = c.class_hex
     # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
@@ -80,64 +59,33 @@ def gen_tc
     #padre
     tc.puts "##{c.client.name} - IP: #{c.ip} ID: #{c.id} KLASS_NUMBER: #{klass}"
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} hfsc ls m2 #{ceil}kbit ul m2 #{ceil}kbit"
-    #if Configuration.use_global_prios
-    #  #huérfano, solo el filter
-    #  tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{klass}"
-    #else
-      #hijos
-      #prio1
-      tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio1_hex} " +
-              "hfsc #{rt_prio1} ls m2 #{ceil}kbit"
-      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio1_hex}"
-      tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio1_hex} sfq perturb 10"
+    #hijos
+    #prio1
+    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio1_hex} " +
+            "hfsc #{rt_prio1} ls m2 #{ceil}kbit"
+    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio1_hex}"
+    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio1_hex} sfq perturb 10"
 
-      #prio2
-      tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio2_hex} " +
-              "hfsc #{rt_prio2} ls m2 #{ceil}kbit"
+    #prio2
+    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio2_hex} " +
+            "hfsc #{rt_prio2} ls m2 #{ceil}kbit"
+    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio2_hex}"
+    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio2_hex} sfq perturb 10"
 
-      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio2_hex}"
-      tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio2_hex} sfq perturb 10"
-
-      #prio3
-      tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio3_hex} " +
-              "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * c.ceil_dfl_percent / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
-      tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio3_hex}"
-      tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio3_hex} sfq perturb 10"
-
-    #end
+    #prio3
+    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio3_hex} " +
+            "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * c.ceil_dfl_percent / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
+    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio3_hex}"
+    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio3_hex} sfq perturb 10"
   end
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
-    tc_ifb_ingres = File.open(TC_FILE_PREFIX + IFB_INGRESS, "w")
-    # htb tree de clientes en gral en IFB
+    # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
     commands << "tc qdisc del dev #{IFB_UP} root"
     tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
     commands << "tc qdisc del dev #{IFB_DOWN} root"
     tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
-    #if Configuration.use_global_prios and not Configuration.use_global_prios_strategy.disabled?
-    #  Provider.enabled.with_klass_and_interface.each do |p|
-    #    #max quantum posible para este provider, necesito saberlo con anticipación
-    #    quantum = Configuration.mtu * p.quantum_factor * 3
-    #    #up
-    #    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_up}kbit quantum #{quantum}"
-    #    tc_ifb_up.puts "filter add dev #{IFB_UP} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
-    #    tc_ifb_up.puts "qdisc add dev #{IFB_UP} parent 1:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-    #    tc_ifb_up.puts "class add dev #{IFB_UP} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
-    #    #down
-    #    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
-    #    tc_ifb_down.puts "filter add dev #{IFB_DOWN} parent 1: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 1:#{p.class_hex}"
-    #    tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} parent 1:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-    #    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
-
-    #    #TODONOW solo van los contratos de este provider y/o provider_group
-    #    contracts =  Configuration.use_global_prios_strategy.provider? ? p.provider_group.contracts.not_disabled.descend_by_netmask : Contract.not_disabled.descend_by_netmask
-    #    contracts.each do |c|
-    #      do_per_contract_prios_tc tc_ifb_up, c.plan, c, p.class_hex, 1, IFB_UP, "up", p.mark
-    #      do_per_contract_prios_tc tc_ifb_down, c.plan, c, p.class_hex, 1, IFB_DOWN, "down", p.mark
-    #    end
-    #  end
-    #else
     total_rate_up = ProviderGroup.total_rate_up * ProviderGroup::SATURATION_INDEX
     total_rate_down = ProviderGroup.total_rate_down * ProviderGroup::SATURATION_INDEX
     tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{total_rate_up}kbit ul m2 #{total_rate_up}kbit"
@@ -152,18 +100,14 @@ def gen_tc
         do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down", 0, rate_factor_down
       end
     end
-    #end
-    # add default classes
     tc_ifb_up.close
     tc_ifb_down.close
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(IFB_UP/IFB_DOWN) e=>#{e.inspect}"
   end
 
-  # htb tree up + ingress redirect filter (en las ifaces de Provider)
+  # Per provider upload limit, on it's own interface
   Provider.enabled.with_klass_and_interface.each do |p|
-  #  #max quantum posible para este provider, necesito saberlo con anticipación
-  #  quantum = Configuration.mtu * p.quantum_factor * 3
     iface = p.link_interface
     commands << "tc qdisc del dev #{iface} root"
     commands << "tc qdisc del dev #{iface} ingress"
@@ -175,36 +119,13 @@ def gen_tc
         tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
         tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_up}kbit ul m2 #{p.rate_up}kbit"
         tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
-  #      tc.puts "qdisc add dev #{iface} parent 1:1 handle #{p.class_hex}: htb default 0"
-  #      tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_up}kbit quantum #{quantum}"
-  #      if Configuration.use_global_prios
-  #        do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_up, quantum
-  #      else
-  #        if Configuration.tc_contracts_per_provider_in_wan
-  #          Contract.not_disabled.descend_by_netmask.each do |c|
-  #            do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "up", p.mark
-  #          end
-  #        else
-  #          tc.puts "filter add dev #{iface} parent #{p.class_hex}: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid #{p.class_hex}:1"
-  #        end
-  #      end
-  #      # real iface setup
-  #      tc.puts "qdisc add dev #{iface} ingress"
-  #      if p.shape_rate_down_on_ingress
-  #        # this is supposed to match ack packets with size < 64bytes (from http://lartc.org/howto/lartc.adv-filter.html)
-  #        tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32  match ip protocol 6 0xff match u8 0x10 0xff at nexthdr+13 match u16 0x0000 0xffc0 at 2 action pass"
-  #        # redirect traffic to the ifb
-  #        tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 u32 match u32 0 0 action mirred egress redirect dev #{IFB_INGRESS}"
-  #      else
-  #        tc.puts "filter add dev #{iface} parent ffff: protocol ip prio 1 handle 1 flow hash keys nfct-dst divisor 1024"
-  #      end
       end
     rescue => e
-      Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree up) e=>#{e.inspect}"
+      Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider upload limit in #{iface}) e=>#{e.inspect}"
     end
   end
 
-  # htb tree down (en las ifaces lan)
+  # Per provider download limit, on LAN interfaces
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
     commands << "tc qdisc del dev #{iface} root"
@@ -218,28 +139,9 @@ def gen_tc
           tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_down}kbit ul m2 #{p.rate_down}kbit"
           tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
         end
-
-        #tc.puts "qdisc add dev #{iface} parent 1:1 handle 2: htb default 0"
-        #Provider.enabled.with_klass_and_interface.each do |p|
-        #  #max quantum posible para este provider, necesito saberlo con anticipación
-        #  quantum = Configuration.mtu * p.quantum_factor * 3
-        #  tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} htb rate #{p.rate_down}kbit quantum #{quantum}"
-        #  tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
-        #  if Configuration.use_global_prios
-        #    tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-        #    tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
-        #    do_global_prios_tc tc, iface, p.class_hex, 1, p.rate_down, quantum
-        #  elsif Configuration.tc_contracts_per_provider_in_lan
-        #    tc.puts "qdisc add dev #{iface} parent 2:#{p.class_hex} handle #{p.class_hex}: htb default 0"
-        #    tc.puts "class add dev #{iface} parent #{p.class_hex}: classid #{p.class_hex}:1 htb rate #{p.rate_down}kbit quantum #{quantum}"
-        #    Contract.not_disabled.descend_by_netmask.each do |c|
-        #      do_per_contract_prios_tc tc, c.plan, c, p.class_hex, 1, iface, "down", p.mark
-        #    end
-        #  end
-        #end
       end
     rescue => e
-      Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#htb tree down) e=>#{e.inspect}"
+      Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider download limit in #{iface}) e=>#{e.inspect}"
     end
   end
   exec_context_commands "setup_tc", commands
@@ -416,100 +318,52 @@ def gen_iptables
           end
         end
       end
-      if Configuration.use_global_prios
-        #mark_burst = "0x0000/0x0000ffff"
-        mark_prio1 = "0xa0000000/0xf0000000"
-        mark_prio2 = "0xb0000000/0xf0000000"
-        mark_prio3 = "0xc0000000/0xf0000000"
-        mark_if="-m mark --mark 0x0/0xf0000000"
-        Contract.not_disabled.descend_by_netmask.each do |c|
-          mark = "0x#{c.mark_hex}/0x0000ffff"
-          f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j MARK --set-mark #{mark}"
-          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-            f.puts "-A #{c.mangle_chain("up")} -s #{c.proxy_bind_ip} -j MARK --set-mark #{mark}"
-          end
-          f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j MARK --set-mark #{mark}"
+      Contract.not_disabled.descend_by_netmask.each do |c|
+        mark_burst = "0x0000/0x0000ffff"
+        mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
+        mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
+        mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
+        # una chain por cada cliente
+        chain="sq.#{c.ip}"
+        f.puts ":#{chain} - [0:0]"
+        # redirección del trafico de este cliente hacia su propia chain
+        f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
+        f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
+        if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
+          f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j #{chain}"
         end
-        # una chain global
-        ["sequreisp.up", "sequreisp.down"].each do |chain|
-          # separo el tráfico en las 3 class: prio1 prio2 prio3
-          # prio1
-          do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
-          # prio2
-          do_prio_protos_iptables :file => f, :protos => Configuration.default_prio_protos_array, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-          do_prio_helpers_iptables :file => f, :helpers => Configuration.default_prio_helpers_array, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-          do_prio_ports_iptables :file => f, :ports => Configuration.default_tcp_prio_ports_array, :proto => "tcp", :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-          do_prio_ports_iptables :file => f, :ports => Configuration.default_udp_prio_ports_array, :proto => "udp", :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-          # prio3 (catch_all)
-          f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
+        # separo el tráfico en las 3 class: prio1 prio2 prio3
+        # prio1
+        do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
+        # prio2
+        do_prio_protos_iptables :protos => (Configuration.default_prio_protos_array + c.prio_protos_array).uniq,
+                                :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+        do_prio_helpers_iptables :helpers => (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq,
+                                 :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+        do_prio_ports_iptables :ports => (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq,
+                               :proto => "tcp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+        do_prio_ports_iptables :ports => (Configuration.default_udp_prio_ports_array + c.udp_prio_ports_array).uniq,
+                               :proto => "udp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+        # prio3 (catch_all)
+        f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
 
-          # long downloads/uploads limit
-          # TODO global_tc plan.long_download
-          #if c.plan.long_download_max != 0
-          #  f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
-          #end
-          #if c.plan.long_upload_max != 0
-          #  f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
-          #end
-          ## if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
-          #if c.plan.burst_down != 0
-          #  f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
-          #end
-          #if c.plan.burst_up != 0
-          #  f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
-          #end
-          # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
-          # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
-          f.puts "-A #{chain} -j ACCEPT"
+        # long downloads/uploads limit
+        if c.plan.long_download_max != 0
+          f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
         end
-      else
-        Contract.not_disabled.descend_by_netmask.each do |c|
-          mark_burst = "0x0000/0x0000ffff"
-          mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
-          mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
-          mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
-          # una chain por cada cliente
-          chain="sq.#{c.ip}"
-          f.puts ":#{chain} - [0:0]"
-          # redirección del trafico de este cliente hacia su propia chain
-          f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
-          f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
-          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-            f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j #{chain}"
-          end
-          # separo el tráfico en las 3 class: prio1 prio2 prio3
-          # prio1
-          do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
-          # prio2
-          do_prio_protos_iptables :protos => (Configuration.default_prio_protos_array + c.prio_protos_array).uniq,
-                                  :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-          do_prio_helpers_iptables :helpers => (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq,
-                                   :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-          do_prio_ports_iptables :ports => (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq,
-                                 :proto => "tcp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-          do_prio_ports_iptables :ports => (Configuration.default_udp_prio_ports_array + c.udp_prio_ports_array).uniq,
-                                 :proto => "udp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-          # prio3 (catch_all)
-          f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
-
-          # long downloads/uploads limit
-          if c.plan.long_download_max != 0
-            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
-          end
-          if c.plan.long_upload_max != 0
-            f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
-          end
-          # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
-          if c.plan.burst_down != 0
-            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
-          end
-          if c.plan.burst_up != 0
-            f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
-          end
-          # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
-          # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
-          f.puts "-A #{chain} -j ACCEPT"
+        if c.plan.long_upload_max != 0
+          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
         end
+        # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
+        if c.plan.burst_down != 0
+          f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+        end
+        if c.plan.burst_up != 0
+          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+        end
+        # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
+        # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
+        f.puts "-A #{chain} -j ACCEPT"
       end
       f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark"
       f.puts "COMMIT"
