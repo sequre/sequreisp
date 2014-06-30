@@ -546,7 +546,7 @@ def gen_iptables
       f.puts "-A PREROUTING -j sequreisp-accepted-sites"
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
-          f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} --dport 80 -j ACCEPT"
+          f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
         end
       end
 
@@ -624,7 +624,7 @@ def gen_iptables
       f.puts "-A FORWARD -j sequreisp-allowedsites"
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
-          f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} --dport 80 -j ACCEPT"
+          f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
         end
       end
       BootHook.run :hook => :filter_before_all, :iptables_script => f
