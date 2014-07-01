@@ -1,4 +1,4 @@
-# Sequreisp - Copyright 2010, 2011 Luciano Ruete
+# Sequreisp- - Copyright 2010, 2011 Luciano Ruete
 #
 # This file is part of Sequreisp.
 #
@@ -1160,6 +1160,7 @@ def boot(run=true)
   BootCommandContext.clear_boot_file
   create_dirs_if_not_present if Rails.env.development?
   Configuration.do_reload
+  exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"]
   #begin
     exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}"
 
@@ -1189,6 +1190,7 @@ def boot(run=true)
     BootHook.run :hook => :service_restart
 
     exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}"
+  exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"]
   #rescue => e
   #  Rails.logger.error "ERROR in lib/sequreisp.rb::boot e=>#{e.inspect}"
   #end
