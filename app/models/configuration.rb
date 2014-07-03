@@ -50,7 +50,6 @@ class Configuration < ActiveRecord::Base
   validates_numericality_of :logged_in_timeout, :only_integer => true, :greater_than_or_equal_to => 0
   validates_presence_of :apply_changes_automatically_hour, :if => :apply_changes_automatically?
 
-  validate :servers_dns_different
   validate :presence_of_dns_server
   validate_ip_format_of :dns_first_server, :dns_second_server, :dns_third_server
 
@@ -59,14 +58,6 @@ class Configuration < ActiveRecord::Base
     if dns_use_forwarders and not (dns_first_server.present? or dns_second_server.present? or dns_third_server.present?)
       errors.add_to_base(I18n.t('error_messages.define_one_dns_server'))
     end
-  end
-
-  def servers_dns_different
-    servers = []
-    servers << dns_first_server if dns_first_server.present?
-    servers << dns_second_server if dns_second_server.present?
-    servers << dns_third_server if dns_third_server.present?
-    errors.add_to_base(I18n.t('error_messages.not_repeat_dns_server')) if not servers.empty? and not servers.uniq!.count != servers.count
   end
 
   include PriosCheck
