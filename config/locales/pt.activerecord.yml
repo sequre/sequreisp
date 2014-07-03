@@ -241,6 +241,10 @@ pt:
         mail_relay_smtp_port: "Port"
         mail_relay_mail: "Mail"
         mail_relay_password: "Password"
+        dns_use_forwarders: "Use forwarders para DNS"
+        dns_first_server: "Primeiro servidor de DNS"
+        dns_second_server: "Segundo servidor DNS"
+        dns_third_server: "Tercer servidor DNS"
       user:
         name: "Nome"
         email: "E-mail do usuário"
@@ -561,6 +565,7 @@ pt:
       proxy: "Proxy (web cache)"
       advanced: "Configuração avanzada"
       mail_relay: "Mail relay"
+      bind_dns: "Configuração de DNS"
     interface:
       ips: "IPs"
     provider:
@@ -587,3 +592,5 @@ pt:
     changes_to_be_applied_notice: "Aviso: Tem sido realizadas mudanças na configuração que aínda não foram aplicadas."
   error_messages:
     not_selected_any_options: 'Não selecionou nenhum opções'
+    not_repeat_dns_server: 'Existe Servidores DNS replicados'
+    define_one_dns_server: 'Defina pelo menos um servidor DNS'

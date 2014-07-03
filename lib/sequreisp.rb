@@ -1249,6 +1249,7 @@ def boot(run=true)
 
     #General configuration hook, plugins seems to use it to write updated conf files
     BootHook.run :hook => :general
+    Configuration.first.generate_bind_dns_named_options
     exec_context_commands "bind_reload", "service bind9 reload"
 
     #Service restart hook
