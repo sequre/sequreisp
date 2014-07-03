@@ -22,8 +22,8 @@ gem "context_help", '=0.0.9'
 gem 'open4', '=1.3.3'
 
 group :development, :test do
-   gem 'faker', '=1.0.1'
-   gem 'rspec-rails', '=1.3.3'
+  gem 'faker', '=1.0.1'
+  gem 'rspec-rails', '=1.3.3'
   group :linux do
      gem 'rb-inotify', '=0.9.0'
      gem 'libnotify', '=0.8.0'

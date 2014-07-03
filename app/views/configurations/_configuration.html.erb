@@ -128,6 +128,7 @@
           <%= form.input :mail_relay_password, :as => :string %>
         </div>
       </div>
+    <% end %>
     <% form.inputs :name => t('fieldsets.configuration.bind_dns'), :context_help => { :path => { :custom => 'configuration.fieldsets.bind_dns' } } do %>
       <%= form.input :dns_use_forwarders, :as => :boolean %>
         <div id="bind_dns" >
