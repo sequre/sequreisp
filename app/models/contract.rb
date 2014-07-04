@@ -226,7 +226,7 @@ class Contract < ActiveRecord::Base
     self.netmask = IP.new(self.ip).netmask.to_s rescue nil
   end
   def bind_klass
-    self.klass = Klass.find(:first, :conditions => "contract_id is null")
+    self.klass = Klass.find(:first, :conditions => "contract_id is null", :lock => "for  update")
     raise "TODO nos quedamos sin clases!" if self.klass.nil?
   end
 

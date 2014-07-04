@@ -53,7 +53,7 @@ class ProviderGroup < ActiveRecord::Base
   end
  
   def bind_klass
-    self.klass = ProviderKlass.find(:first, :conditions => "klassable_id is null")
+    self.klass = ProviderKlass.find(:first, :conditions => "klassable_id is null", :lock => "for update")
     raise "TODO nos quedamos sin clases!" if self.klass.nil?
   end
 
