@@ -700,6 +700,7 @@ def gen_ip_ru
       end
       f.puts "rule add prio 32767 from all lookup default"
     end
+    BootHook.run :hook => :gen_ip_ru
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
   end
@@ -765,6 +766,7 @@ def gen_ip_ro
       end
       update_fallback_route f, true, true
     end
+    BootHook.run :hook => :gen_ip_ro
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
   end
