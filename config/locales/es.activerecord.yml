@@ -256,6 +256,7 @@ es:
         kind: "Tipo"
         physical_link: "Enlace"
       audit:
+        id: "ID"
         user: "Usuario"
         action: "Acción"
         created_at: "Fecha"
@@ -356,6 +357,7 @@ es:
     guides: "Guías de SequreISP"
     support: "Soporte"
   buttons:
+    export_to_csv: "Exportar a csv"
     login: "Entrar"
     edit: "Editar"
     delete: "Eliminar"
