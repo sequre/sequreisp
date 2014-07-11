@@ -253,6 +253,7 @@ pt:
         kind: "Tipo"
         physical_link: "Ligação"
       audit:
+        id: "ID"
         user: "Usuário"
         action: "Ação"
         created_at: "Data"
@@ -353,6 +354,7 @@ pt:
     guides: "Guias SequireISP"
     support: "Apoio"
   buttons:
+    export_to_csv: "Exportação para csv"
     login: "Ingressar"
     edit: "Editar"
     delete: "Eliminar"
