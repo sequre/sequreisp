@@ -244,6 +244,10 @@ en:
         mail_relay_smtp_port: "Port"
         mail_relay_mail: "Mail"
         mail_relay_password: "Password"
+        dns_use_forwarders: "Use forwarders for DNS"
+        dns_first_server: "First DNS Server"
+        dns_second_server: "Second DNS Server"
+        dns_third_server: "Third DNS Server"
       user:
         name: "Name"
         email: "User email address"
@@ -566,6 +570,7 @@ en:
       proxy: "Proxy (Web cache)"
       advanced: "Advanced configuration"
       mail_relay: "Mail relay"
+      bind_dns: "DNS Configuration"
     interface:
       ips: "IPs"
     provider:
@@ -600,3 +605,5 @@ en:
     error_on_reversion: 'There was an error when trying to go back to previus version'
   error_messages:
     not_selected_any_options: 'No selected any options'
+    not_repeat_dns_server: 'Exist DNS Servers replicated'
+    define_one_dns_server: 'Define at less one DNS server'

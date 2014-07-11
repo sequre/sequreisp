@@ -244,6 +244,10 @@ es:
         mail_relay_smtp_port: "Puerto"
         mail_relay_mail: "Mail"
         mail_relay_password: "Password"
+        dns_use_forwarders: "Configurar DNS"
+        dns_first_server: "Primer server DNS"
+        dns_second_server: "Segundo server DNS"
+        dns_third_server: "Tercer Server DNS"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -566,6 +570,7 @@ es:
       proxy: "Proxy (web cache)"
       advanced: "Configuración avanzada"
       mail_relay: "Mail relay"
+      bind_dns: "Configuración DNS"
     interface:
       ips: "IPs"
     provider:
@@ -600,3 +605,5 @@ es:
     error_on_reversion: 'No se pudo volver a la versión indicada'
   error_messages:
     not_selected_any_options: 'No se ha selecionado ninguna opción'
+    not_repeat_dns_server: 'Existen servidores DNS repetidos'
+    define_one_dns_server: 'Definir al menos un servidor DNS'
