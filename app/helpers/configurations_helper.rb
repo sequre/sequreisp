@@ -16,4 +16,8 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 module ConfigurationsHelper
+
+  def options_for_mail_relay
+    [[t("messages.configuration.own"), "own"], [t("messages.configuration.gmail"), "gmail"]]
+  end
 end

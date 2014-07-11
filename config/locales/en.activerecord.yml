@@ -237,6 +237,13 @@ en:
         web_interface_listen_on_80: "Accept web interface requests on port 80"
         web_interface_listen_on_443: "Accept web interface requests on port 443"
         web_interface_listen_on_8080: "Accept web interface requests on port 8080"
+        mail_relay_manipulated_for_sequreisp: "Allow to configure mail forwarding with SequreISP"
+        mail_relay_used: "Use mail relay"
+        mail_relay_option_server: "Server option"
+        mail_relay_smtp_server: "SMTP Server"
+        mail_relay_smtp_port: "Port"
+        mail_relay_mail: "Mail"
+        mail_relay_password: "Password"
       user:
         name: "Name"
         email: "User email address"
@@ -499,6 +506,9 @@ en:
     contract:
       online: "Online"
       offline: "Offline"
+    configuration:
+      own: "Server own"
+      gmail: "Gmail"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
@@ -555,6 +565,7 @@ en:
       global_prios: "Global high priority ports"
       proxy: "Proxy (Web cache)"
       advanced: "Advanced configuration"
+      mail_relay: "Mail relay"
     interface:
       ips: "IPs"
     provider:
