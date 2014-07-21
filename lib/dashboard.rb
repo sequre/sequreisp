@@ -45,7 +45,6 @@ module Dashboard
     def stats
     end
     def self.load_all
-      debugger
       servs = SERVICES
       servs.each_with_object([]) do |s,memo|
         memo << Service.new(s)
