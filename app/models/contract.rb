@@ -607,7 +607,8 @@ class Contract < ActiveRecord::Base
         I18n.t('activerecord.attributes.contract.mac_address'),
         I18n.t('activerecord.attributes.contract.transparent_proxy'),
         I18n.t('activerecord.attributes.contract.node'),
-        I18n.t('activerecord.attributes.contract.cpe')
+        I18n.t('activerecord.attributes.contract.cpe'),
+        I18n.t('activerecord.attributes.traffic.data_count')
       ] + plugins_columns
 
       # data rows
@@ -639,7 +640,8 @@ class Contract < ActiveRecord::Base
           c.mac_address,
           c.transparent_proxy,
           c.node,
-          c.cpe
+          c.cpe,
+          c.current_traffic.data_count
         ] + plugins_rows(c)
       end
     end
