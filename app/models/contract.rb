@@ -459,36 +459,74 @@ class Contract < ActiveRecord::Base
   def sent_bits(prefix)
     iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
     match = false
-    rate = 0
+    rate = {}
     count = 0
+    klass = ""
     IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
       io.each do |line|
-         if (line =~ /parent \w+:#{class_hex} /) != nil
-            match = true
-         elsif match and (line =~ /Sent (\d+) /) != nil
-          rate += $~[1].to_i
-          count += 1
-          match = false
-          break if count == 3
+        if match and (line =~ /rate (\d+) (\w+) /) != nil
+         _rate = $~[1].to_i
+         unit = $~[2]
+         # from tc manpage (s/unit)
+         # kbps   Kilobytes per second
+         # mbps   Megabytes per second
+         # kbit   Kilobits per second
+         # mbit   Megabits per second
+         # bps or a bare number
+         #        Bytes per second
+         rate[klass] = case unit.downcase
+         when "kbps"
+           _rate *= 1024*8
+         when "mbps"
+           _rate *= 1024*1024*8
+         when "kbit"
+           _rate *= 1024
+         when "mbit"
+           _rate *= 1024*1024
+         when "bit"
+           _rate
+         else # "bps" or a bare number
+           #TODO nunca va a caer aca x "bare number" con w+ como condición de la regexp
+           _rate *= 8
+         end
+         match = false
+         count += 1
+         break if count == 3
+        elsif (line =~ /class hfsc 1:#{class_prio1_hex} parent 1:#{class_hex} /) != nil
+           match = true
+           klass = class_prio1_hex
+        elsif (line =~ /class hfsc 1:#{class_prio2_hex} parent 1:#{class_hex} /) != nil
+           match = true
+           klass = class_prio2_hex
+        elsif (line =~ /class hfsc 1:#{class_prio3_hex} parent 1:#{class_hex} /) != nil
+           match = true
+           klass = class_prio3_hex
         end
       end
     end
-    # iptables shows bytes and we need bits
-    rate *= 8
+    rate
   end
   def instant_rate
     rate = {}
     if SequreispConfig::CONFIG["demo"]
-      rate[:rate_down] = rand(plan.ceil_down)*1024
-      rate[:rate_up] = rand(plan.ceil_up)*1024
+      rate_down = rand(plan.ceil_down)*1024
+      rate[:rate_down_prio1] = rate_down * 0.15
+      rate[:rate_down_prio2] = rate_down * 0.6
+      rate[:rate_down_prio3] = rate_down * 0.25
+      rate_up = rand(plan.ceil_up)*1024 * 0.3
+      rate[:rate_up_prio1] = rate_up * 0.15
+      rate[:rate_up_prio2] = rate_up * 0.6
+      rate[:rate_up_prio3] = rate_up * 0.25
     else
-      rate_down = sent_bits "down"
-      rate_up = sent_bits "up"
-      sleep 2
-      rate[:rate_down] = (sent_bits("down") - rate_down) / 2
-      rate[:rate_up] = (sent_bits("up") - rate_up) / 2
-      rate[:rate_down] = 0 if rate[:rate_down] < 0
-      rate[:rate_up] = 0 if rate[:rate_up] < 0
+      sent = sent_bits "down"
+      rate[:rate_prio1_down] = sent[class_prio1_hex]
+      rate[:rate_prio2_down] = sent[class_prio2_hex]
+      rate[:rate_prio3_down] = sent[class_prio3_hex]
+      sent = sent_bits "up"
+      rate[:rate_prio1_up] = sent[class_prio1_hex]
+      rate[:rate_prio2_up] = sent[class_prio2_hex]
+      rate[:rate_prio3_up] = sent[class_prio3_hex]
+
     end
     rate
   end
