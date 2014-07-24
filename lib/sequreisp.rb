@@ -44,16 +44,16 @@ def gen_tc
       if rate > 0
         r1 = rate*0.10
         r2 = rate*0.90
-        rt_prio1 = "rt m1 #{r1*5}kbit d 200ms m2 #{r1}kbit"
-        rt_prio2 = "rt m1 #{r2/3}kbit d 200ms m2 #{r2}kbit"
+        rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
+        rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
       end
     else
       rate = plan["rate_" + direction]
       r1 = rate*0.10
       r2 = rate*0.85
       r3 = rate*0.05
-      rt_prio1 = "rt m1 #{r1*5}kbit d 200ms m2 #{r1}kbit"
-      rt_prio2 = "rt m1 #{r2/3}kbit d 200ms m2 #{r2}kbit"
+      rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
+      rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
       rt_prio3 = "rt m1 #{r3/3}kbit d 1s m2 #{r3}kbit"
     end
     #padre
@@ -62,19 +62,19 @@ def gen_tc
     #hijos
     #prio1
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio1_hex} " +
-            "hfsc #{rt_prio1} ls m2 #{ceil}kbit"
+            "est 1sec 5sec hfsc #{rt_prio1} ls m2 #{ceil}kbit"
     tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio1_hex}"
     tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio1_hex} sfq perturb 10"
 
     #prio2
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio2_hex} " +
-            "hfsc #{rt_prio2} ls m2 #{ceil}kbit"
+            "est 1sec 5sec hfsc #{rt_prio2} ls m2 #{ceil}kbit"
     tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio2_hex}"
     tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio2_hex} sfq perturb 10"
 
     #prio3
     tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio3_hex} " +
-            "hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * c.ceil_dfl_percent / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
+            "est 1sec 5sec hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * c.ceil_dfl_percent / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
     tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio3_hex}"
     tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio3_hex} sfq perturb 10"
   end
@@ -86,15 +86,15 @@ def gen_tc
     tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
     commands << "tc qdisc del dev #{IFB_DOWN} root"
     tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
-    total_rate_up = ProviderGroup.total_rate_up * ProviderGroup::SATURATION_INDEX
-    total_rate_down = ProviderGroup.total_rate_down * ProviderGroup::SATURATION_INDEX
+    total_rate_up = ProviderGroup.total_rate_up
+    total_rate_down = ProviderGroup.total_rate_down
     tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{total_rate_up}kbit ul m2 #{total_rate_up}kbit"
     tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
     tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{total_rate_down}kbit ul m2 #{total_rate_down}kbit"
     tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
     ProviderGroup.all.each do |pg|
-      rate_factor_up = (pg.remaining_rate_up*ProviderGroup::SATURATION_INDEX)/pg.ceil_up rescue 0
-      rate_factor_down = (pg.remaining_rate_down*ProviderGroup::SATURATION_INDEX)/pg.ceil_down rescue 0
+      rate_factor_up = (pg.remaining_rate_up*ProviderGroup::HFSC_SATURATION_INDEX)/pg.ceil_up rescue 0
+      rate_factor_down = (pg.remaining_rate_down*ProviderGroup::HFSC_SATURATION_INDEX)/pg.ceil_down rescue 0
       pg.contracts.not_disabled.descend_by_netmask.each do |c|
         do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up", 0, rate_factor_up
         do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down", 0, rate_factor_down
