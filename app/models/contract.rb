@@ -464,7 +464,8 @@ class Contract < ActiveRecord::Base
     klass = ""
     IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
       io.each do |line|
-        if match and (line =~ /rate (\d+) (\w+) /) != nil
+        if match and (line =~ /rate (\d+)(\w+) /) != nil
+         Rails.logger.debug "Contract::instant_rate #{line}"
          _rate = $~[1].to_i
          unit = $~[2]
          # from tc manpage (s/unit)
@@ -493,12 +494,15 @@ class Contract < ActiveRecord::Base
          count += 1
          break if count == 3
         elsif (line =~ /class hfsc 1:#{class_prio1_hex} parent 1:#{class_hex} /) != nil
+           Rails.logger.debug "Contract::instant_rate #{line}"
            match = true
            klass = class_prio1_hex
         elsif (line =~ /class hfsc 1:#{class_prio2_hex} parent 1:#{class_hex} /) != nil
+           Rails.logger.debug "Contract::instant_rate #{line}"
            match = true
            klass = class_prio2_hex
         elsif (line =~ /class hfsc 1:#{class_prio3_hex} parent 1:#{class_hex} /) != nil
+           Rails.logger.debug "Contract::instant_rate #{line}"
            match = true
            klass = class_prio3_hex
         end
@@ -526,7 +530,6 @@ class Contract < ActiveRecord::Base
       rate[:rate_prio1_up] = sent[class_prio1_hex]
       rate[:rate_prio2_up] = sent[class_prio2_hex]
       rate[:rate_prio3_up] = sent[class_prio3_hex]
-
     end
     rate
   end
