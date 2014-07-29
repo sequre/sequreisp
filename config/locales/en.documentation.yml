@@ -24,14 +24,6 @@ en:
           node:
             text: >
               Free text field for entering additional information about this particular contract.
-          transparent_proxy:
-            text: >
-              Defines whether the transparent proxy (web cache) will be enabled or disabled for this contract.
-              This can be explicitly enabled or disabled, or be left by default, in which case it will be
-              enabled or disabled according to whether it is in the assigned plan.
-
-              In order for the transparent proxy to work, it must be globally enabled in the corresponding
-              section in Configuration.
           mac_address:
             text: >
               Allows to bind the IP address to the MAC address of the contract and then deny Internet access
@@ -132,10 +124,6 @@ en:
           long_upload_max:
             text: >
               This is equivalent to the long download limit, but for uploading big files.
-          transparent_proxy:
-            text: >
-              Tells whether the usage of a transparent proxy (web cache) will be enabled by default
-              for this particular plan.
       provider:
         text: ''
         attributes:
@@ -338,63 +326,6 @@ en:
 
               proto_sctp, h323, pptp, snmp_basic, irc, tftp, proto_gre, proto_dccp, ftp,
               proto_udplite, sip.
-          transparent_proxy:
-            text: >
-              This option enables the proxy or web cache functionality in the server.
-              After plans and contracts, you must define which users will have
-              the proxy enabled or disabled.
-
-              When this option is disabled, the proxy ceases to work for all clients,
-              independently from any other configuration. This allows to stop the proxy
-              in case of experiencing problems or performing diagnosis in general.
-          transparent_proxy_n_to_m:
-            text: >
-              We recomment having this box checked if you use the proxy. This will ensure that upload
-              limits are enforced for the web traffic even if the client is using the proxy, because
-              otherwise the upload web traffic would remain unbounded for technical reasons.
-          transparent_proxy_zph_enabled:
-            text: >
-              If this option is enabled, the content cached by the proxy will be delivered to the clients
-              with no bandwidth restriction, that is to say, at the speed permitted by the network.
-
-              This allows to notoriously throttle web browsing without incurring an extra cost
-              in terms of the provider's bandwidth, because it is previously cached content.
-
-              Nevertheless it is possible to disable this functionality in case the ISP has its
-              last mile saturated and it cannot be permitted to send large bursts of traffic at
-              high speeds.
-          transparent_proxy_windows_update_hack:
-            text: >
-              For Windows Update cache to work, it is necessary to enable some extra functionalities in
-              the proxy configuration.
-
-              Two features are activated by enabling this option:
-
-
-              1) If an ongoing download is cancelled by a client, the file is equally downloaded in whole
-                by the proxy for later use.
-
-              2) If a client resumes a partial download, the proxy will try to download the full file
-               from the beggining, not only the range requested by the client.
-
-              Enabling Windows Update is optional because the aforementioned behaviors are not entirely
-              standard and can cause problems in some particular scenarios.
-
-              For more information visit the Squid's page:"http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
-              about it.
-          transparent_proxy_max_load_average:
-            text:
-              Linux systems carry statistics on the work load the system is experiencing, instantaneously
-              and on average in the last 5 or 15 min.
-
-              When the server faces a lot of load, IO (input/output) bottlenecks usually begin to occur,
-              which impacts on the proxy performance, and noticeably slowing down the web browsing.
-
-              This value allows to set a maximum value for system load, above which the proxy will be automatically disabled.
-
-              We recommend to leave this setting in its default value, and to consult the technical support or in forums
-              if the proxy gets disabled for ths reason. Generally speaking, a server with more than 500 clients
-              should have a dedicated disk for the cache, or even a separated server should be used.
           filter_by_mac_address:
             text: >
               Enabling this option forces clients to access the Internet exclusively using the MAC address specified in the
@@ -509,17 +440,6 @@ en:
           notifications:
             level_class: 'help_level_1'
             text: ''
-          proxy:
-            level_class: 'help_level_1'
-            text: >
-              The proxy or web cache allows to throttle web browsing for clients as well as saving
-              bandwidth by means of locally caching pages, images and files, among others.
-
-              Notice that this feature consumes resources of the server and in case of having
-              a large number of clients, this can cause the server to saturate.
-              In servers with more than 300 clients it is recommended to use a dedicated disk for
-              cache storing, and in ISPs with more than 1000 clients the cache must be directly
-              in a separated server exclusive for this feature.
       plan:
         fieldsets:
           advanced:

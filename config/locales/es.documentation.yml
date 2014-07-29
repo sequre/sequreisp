@@ -25,15 +25,6 @@ es:
           node:
             text: >
               Campo de texto libre que permite agregar información sobre este contrato en particular
-          transparent_proxy:
-            text: >
-              Permite definir si el proxy transparente (web caché) estará
-              habilitado o no para este contrato. se puede deshabilitar o deshabilitar explícitamente,
-              o dejarlo por defecto, en cuyo caso estará habilitado o deshabilitado según lo esté en
-              el plan asignado.
-
-              Para que el proxy transparente funcione debe estar activado globalmente en la
-              sección correspondiente de Configuración.
           mac_address:
             text: >
               Relaciona la dirección MAC y la dirección IP del contrato para luego
@@ -148,10 +139,6 @@ es:
             text: >
               Es equivalente al límite para descargas de gran tamaño pero para las
               cargas de archivos de gran tamaño.
-          transparent_proxy:
-            text: >
-              Determina si el uso de proxy transparente (web caché) estará habilitado
-              por defecto para este plan en particular.
       provider:
         text: ''
         attributes:
@@ -368,71 +355,6 @@ es:
 
               proto_sctp, h323, pptp, snmp_basic, irc, tftp, proto_gre, proto_dccp, ftp,
               proto_udplite, sip.
-          transparent_proxy:
-            text: >
-              Esta opción activa la funcionalidad de proxy o web caché en el servidor.
-              Luego desde los planes y los contratos se definirá que usuarios tendrán
-              el proxy habilitado o no.
-
-              Cuando esta opción está desactivada el proxy deja de funcionar para todos
-              los clientes, independientemente de cualquier otra configuración. Esto permite
-              detener el proxy en caso de experimentar problemas o para realizar diagnósticos
-              en general.
-          transparent_proxy_n_to_m:
-            text: >
-              Recomendamos tener esta opción activada si hace uso del proxy. Esta opción
-              asegurará que se cumplan las restricciones de subida para el tráfico web aún
-              si el cliente está usando el proxy; ya que de otro modo, el tráfico web de
-              subida quedaría liberado por razones técnicas.
-          transparent_proxy_zph_enabled:
-            text: >
-              Si esta opción está activada, el contenido almacenado por el proxy será entregado
-              a los clientes sin ningún tipo de restricción de ancho de banda, es decir a la
-              velocidad que la red lo permita.
-
-              Esto permite acelerar notoriamente la navegación sin que tenga un costo extra
-              en el ancho de banda del proveedor ya que es contenido previamente almacenado en el caché.
-
-              Sin embargo es posible desactivar esa funcionalidad en el caso de que el ISP
-              tenga su última milla saturada y no pueda permitirse enviar grandes ráfagas
-              de tráfico a altas velocidades.
-          transparent_proxy_windows_update_hack:
-            text: >
-              Para que el caché de Windows Update funcione es necesario habilitar en la
-              configuración del proxy algunas funcionalidades extras.
-
-              Dos características se habilitan en el caché activando esta opción:
-
-
-              1) Si una descarga en curso es cancelada por un cliente, el proxy igualmente
-                descarga el archivo por completo para uso futuro.
-
-              2) Si un cliente reanuda una descarga parcial, el proxy intentará descargar el
-                archivo completo desde el principio y no sólo el fragmento que el cliente esté
-                solicitando.
-
-
-              Habilitar Windows Update es opcional ya que estos comportamientos antes mencionados
-              no son del todo estándar y pueden traer problemas en algunos escenarios particulares.
-
-              Para más información visitar la página:"http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
-              de Squid al respecto.
-          transparent_proxy_max_load_average:
-            text:
-              En los sistemas Linux, se llevan estadísticas de la carga de trabajo que está experimentando
-              el sistema, en forma instantánea y promedio en los últimos 5 y 15 min.
-
-              Cuando el servidor hace frente a mucha carga generalmente se comienzan a
-              producir cuellos de botella de IO (entrada/salida) y esto realmente impacta
-              sobre el rendimiento del proxy enlenteciendo notablemente la navegación.
-
-              Este valor permite configurar un valor máximo de carga del sistema a partir
-              del cual, si es superado, el proxy será deshabilitado automáticamente.
-
-              Recomendamos dejar este valor por defecto y consultar al soporte técnico o
-              en los foros si el proxy se desactiva debido a esta opción. Generalmente
-              en servidores con un número de clientes mayor a 500 ya se debe pensar en un
-              disco exclusivo para el caché o una PC dedicada.
           filter_by_mac_address:
             text: >
               Activando esta opción se fuerza a que los clientes deban navegar exclusivamente
@@ -555,17 +477,6 @@ es:
           notifications:
             level_class: 'help_level_1'
             text: ''
-          proxy:
-            level_class: 'help_level_1'
-            text: >
-              El proxy o web caché permite acelerar la navegación de los clientes y además ahorrar
-              ancho de banda mediante el almacenamiento local de páginas, imágenes y archivos entre otros.
-
-              Advertimos que esta funcionalidad consume recursos del servidor y que en el caso de
-              contar con un gran número de clientes esto puede causar que el servidor se sature.
-              En servidores con más de 300 clientes se recomienda usar un disco exclusivo para el
-              almacenamiento de caché, y en ISPs con más de 1000 clientes el caché debe estar
-              directamente en otro servidor exclusivo para esa función.
       plan:
         fieldsets:
           advanced:
