@@ -621,10 +621,8 @@ def gen_iptables
       end
       BootHook.run :hook => :filter_before_all, :iptables_script => f
       f.puts ":sequreisp-enabled - [0:0]"
-      f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
-      #f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       if Configuration.web_interface_listen_on_80
         f.puts "-A INPUT -p tcp --dport 80 -j ACCEPT"
       end
@@ -634,10 +632,17 @@ def gen_iptables
       if Configuration.web_interface_listen_on_8080
         f.puts "-A INPUT -p tcp --dport 8080 -j ACCEPT"
       end
+
+      f.puts ":dns-query -"
       Interface.all(:conditions => "kind = 'lan'").each do |i|
-        f.puts "-A INPUT -i #{i.name} -p udp --dport 53 -j ACCEPT"
-        f.puts "-A INPUT -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        ["INPUT","FORWARD"].each do |chain|
+          f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A #{chain} -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        end
       end
+      BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
+      f.puts "-A dns-query -j ACCEPT"
+
       Provider.enabled.with_klass_and_interface.each do |p|
         if p.allow_dns_queries
           f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
