@@ -523,13 +523,13 @@ class Contract < ActiveRecord::Base
       rate[:rate_up_prio3] = rate_up * 0.25
     else
       sent = sent_bits "down"
-      rate[:rate_prio1_down] = sent[class_prio1_hex]
-      rate[:rate_prio2_down] = sent[class_prio2_hex]
-      rate[:rate_prio3_down] = sent[class_prio3_hex]
+      rate[:rate_down_prio1] = sent[class_prio1_hex]
+      rate[:rate_down_prio2] = sent[class_prio2_hex]
+      rate[:rate_down_prio3] = sent[class_prio3_hex]
       sent = sent_bits "up"
-      rate[:rate_prio1_up] = sent[class_prio1_hex]
-      rate[:rate_prio2_up] = sent[class_prio2_hex]
-      rate[:rate_prio3_up] = sent[class_prio3_hex]
+      rate[:rate_up_prio1] = sent[class_prio1_hex]
+      rate[:rate_up_prio2] = sent[class_prio2_hex]
+      rate[:rate_up_prio3] = sent[class_prio3_hex]
     end
     rate
   end
