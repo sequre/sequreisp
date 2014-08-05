@@ -25,15 +25,6 @@ pt:
           node:
             text: >
               Campo de texto livre que permite adicionar informação sobre este contrato em particular
-          transparent_proxy:
-            text: >
-              Permite definir se o proxy transparente (web cache) estará
-              habilitado ou não para este contrato. Pode-se habilitar ou desabilitar explícitamente,
-              ou deixá-lo padrão, em cujo caso estará habilitado ou desabilitado segundo o estiver no
-              plano atribuído.
-
-              Para o proxy transparente funcionar, deve estar ativado globalmente na
-              seção correspondente de Configuração.
           mac_address:
             text: >
               Relaciona o endereço MAC e o endereço IP do contrato para depois
@@ -148,10 +139,6 @@ pt:
             text: >
               É equivalente ao limite para descargas de grande tamanho mas para as
               cargas de arquivos de grande tamanho.
-          transparent_proxy:
-            text: >
-              Determina se o uso de proxy transparente (web cache) estará habilitado
-              por padrão para este plano em particular.
       provider:
         text: ''
         attributes:
@@ -368,71 +355,6 @@ pt:
 
               proto_sctp, h323, pptp, snmp_basic, irc, tftp, proto_gre, proto_dccp, ftp,
               proto_udplite, sip.
-          transparent_proxy:
-            text: >
-              Esta opção ativa a funcionalidade de proxy ou web cache no servidor.
-              Depois desde os planos e os contratos se definirá que usuários terão
-              o proxy habilitado ou não.
-
-              Quando esta opção está desativada o proxy deixa de funcionar para todos
-              os clientes, independentemente de qualquer outra configuração. Isto permite
-              deter o proxy em caso de experimentar problemas ou para realizar diagnósticos
-              em geral.
-          transparent_proxy_n_to_m:
-            text: >
-              Recomendamos ter esta opção ativada se faz uso do proxy. Esta opção
-              asegurará que se cumpram as restrições de subida para o tráfego web ainda
-              se o cliente estiver usando o proxy; já que de outro modo, o tráfego web de
-              subida quedaria liberado por razões técnicas.
-          transparent_proxy_zph_enabled:
-            text: >
-              Se esta opção está ativada, o conteúdo armacenado pelo proxy será entregue
-              aos clientes sem nenhum tipo de restrição de largo de banda, é dizer à
-              velocidade que a rede permitir.
-
-              Isto permite acelerar notoriamente a navegação sem incorrer num custo extra
-              no largo de banda do fornecedor já que é conteúdo previamente armazenado no cache.
-
-              Contudo é possível desativar essa funcionalidade no caso de que o ISP
-              tenha seu última milha saturada e não possa permitir-se enviar grandes ráfegas
-              de tráfego a altas velocidades.
-          transparent_proxy_windows_update_hack:
-            text: >
-              Para que o cache de Windows Update funcione é necessário habilitar na
-              configuração do proxy algumas funcionalidades extras.
-
-              Duas caraterísticas se habilitam no cache ativando esta opção:
-
-
-              1) Se uma descarga em curso for cancelada por um cliente, o proxy igualmente
-                descarregará o arquivo por completo para uso futuro.
-
-              2) Se um cliente reanudar uma descarga parcial, o proxy intentará descarregar o
-                arquivo completo desde o começo e não apenas o fragmento que o cliente estiver
-                solicitando.
-
-
-              Habilitar Windows Update é opcional já que estes comportamentos antes mencionados
-              não são de todo normais e podem trazer problemas em alguns cenários particulares.
-
-              Para mais informação visitar a página:"http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
-              de Squid ao respecto.
-          transparent_proxy_max_load_average:
-            text:
-              Nos sistemas Linux, se levam estatísticas da carga de trabalho que está experimentando
-              o sistema, em forma instantânea e promedio nos últimos 5 e 15 min.
-
-              Quando o servidor faz frente a muita carga geralmente começam a se
-              produzir engarrafamentos de IO (entrada/saída) e isto realmente impacta
-              sobre o rendimento do proxy, alentecendo notavelmente a navegação.
-
-              Este valor permite configurar um valor máximo de carga do sistema a partir
-              do qual, se for ultrapassado, o proxy será desabilitado automaticamente.
-
-              Recomendamos deixar este valor por padrão e consultar ao suporte técnico ou
-              nos foros se o proxy se desativa debido a esta opção. Geralmente
-              em servidores com um número de clientes superior a 500 já se deve pensar num
-              disco exclusivo para o cache ou uma PC dedicada.
           filter_by_mac_address:
             text: >
               Ativando esta opção se força a que os clientes devam navegar exclusivamente
@@ -555,17 +477,6 @@ pt:
           notifications:
             level_class: 'help_level_1'
             text: ''
-          proxy:
-            level_class: 'help_level_1'
-            text: >
-              O proxy ou web cache permite acelerar a navegação dos clientes e poupar
-              largo de banda mediante o armazenamento local de páginas, imagens e arquivos entre outros.
-
-              Advertimos que esta funcionalidade consume recursos do servidor e que no caso de
-              contar com um grande número de clientes isto pode causar que o servidor se sature.
-              Em servidores com mais de 300 clientes se recomenda usar um disco exclusivo para o
-              armazenamento de cache, e em ISPs com mais de 1000 clientes o cache deve estar
-              diretamente em outro servidor exclusivo para essa função.
       plan:
         fieldsets:
           advanced:

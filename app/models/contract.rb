@@ -55,7 +55,7 @@ class Contract < ActiveRecord::Base
   include ModelsWatcher
   watch_fields :ip, :plan_id, :mac_address, :ceil_dfl_percent, :state,
                :tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers,
-               :transparent_proxy, :proxy_arp, :proxy_arp_interface_id, :public_address_id,
+               :proxy_arp, :proxy_arp_interface_id, :public_address_id,
                :unique_provider_id,
                :proxy_arp_provider_id, :proxy_arp_gateway, :proxy_arp_use_lan_gateway, :proxy_arp_lan_gateway
   watch_on_destroy
@@ -382,19 +382,6 @@ class Contract < ActiveRecord::Base
     # calculo una sola vez su valor en int para ahorro de computo
     IP::V4.new(IP.new("198.18.0.0") | self.klass.number).to_s
   end
-  def transparent_proxy?
-    # Habilitable por plan y reescribible por cliente
-    # Hay un safe global de emergencia por si se rompre el proxy
-    enabled = case self.transparent_proxy
-      when "true"
-        true
-      when "false"
-        false
-      else
-        self.plan.transparent_proxy
-    end
-    enabled and Configuration.transparent_proxy
-  end
 
   def instant
     latencies = instant_latency
@@ -508,13 +495,7 @@ class Contract < ActiveRecord::Base
       rate *= 8
     end
   end
-  def self.transparent_proxy_for_select
-    [
-    [I18n.t("selects.contract.transparent_proxy.true"),"true"],
-    [I18n.t("selects.contract.transparent_proxy.default"), "default"],
-    [I18n.t("selects.contract.transparent_proxy.false"),"false"]
-    ]
-  end
+
   def self.free_ips(term)
     used = free = []
     octets = term.split(".")
@@ -608,7 +589,6 @@ class Contract < ActiveRecord::Base
         I18n.t('activerecord.attributes.contract.public_forwarded_ports'),
         I18n.t('activerecord.attributes.contract.private_forwarded_ports'),
         I18n.t('activerecord.attributes.contract.mac_address'),
-        I18n.t('activerecord.attributes.contract.transparent_proxy'),
         I18n.t('activerecord.attributes.contract.node'),
         I18n.t('activerecord.attributes.contract.cpe'),
         I18n.t('activerecord.attributes.traffic.data_count')
@@ -641,7 +621,6 @@ class Contract < ActiveRecord::Base
           c.forwarded_ports.collect(&:public_port).join(", "),
           c.forwarded_ports.collect(&:private_port).join(", "),
           c.mac_address,
-          c.transparent_proxy,
           c.node,
           c.cpe,
           c.current_traffic.data_count

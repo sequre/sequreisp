@@ -28,11 +28,6 @@ pt:
           disabled: "Desabilitado"
           provider: "Por fornecedor(recomendado)"
           full: "Completo"
-    contract:
-      transparent_proxy:
-        default: "Padrão (segundo o plano)"
-        "false": "Desabilitado"
-        "true": "Habilitado"
     afirmative: "Sim"
     negative: "Não"
   activerecord:
@@ -40,9 +35,6 @@ pt:
       address:
         one: "Endereço IP"
         other: "Endereços IP"
-      avoid_proxy_host:
-        one: "Site sem proxy"
-        other: "Sites sem proxy"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -117,7 +109,6 @@ pt:
         forwarded_ports: "Portas redirecionadas"
         public_forwarded_ports: "Portas redirecionadas (publicas)"
         private_forwarded_ports: "Portas redirecionadas (privadas)"
-        transparent_proxy: "Proxy transparente"
         created_at: "Data de cadastro"
         detail: "Detalhe"
         cpe: "Equipamento"
@@ -161,7 +152,6 @@ pt:
         burst_up: "Rajada de subida [kbits]"
         long_download_max: "Limite para descargas grandes [kbytes]"
         long_upload_max: "Limite para cargas grandes [kbytes]"
-        transparent_proxy: "Proxy transparente"
         number_of_contracts: "Quantidade de contratos"
       provider_group:
         name: "Nome"
@@ -207,11 +197,6 @@ pt:
         default_prio_helpers: "Netfilter helpers prioritários (global)"
         mtu: "MTU (unidade de transferência máxima)"
         quantum_factor: "Largo de banda que representa 1 quanto"
-        transparent_proxy: "Habilitar proxy transparente (global)"
-        transparent_proxy_n_to_m: "Control de largo de banda de subida para proxy transparente"
-        transparent_proxy_zph_enabled: "Entregar conteúdo em cache à velocidade de ligação"
-        transparent_proxy_windows_update_hack: "Habilitar caché de Windows Update (ver ajuda)"
-        transparent_proxy_max_load_average: "Si a carga média do sistema nos últimos 5 min ultrapassa este valor, o proxy será desativado automáticamente"
         nf_conntrack_max: "Máximo nº de conexões"
         gc_thresh1: "Entradas ARP (gc_thresh1)"
         gc_thresh2: "Entradas ARP (gc_thresh2)"
@@ -282,9 +267,6 @@ pt:
         name: "IP ou o nome do site"
         provider: "Proveedor de saída"
         detail: "Detalhe"
-      avoid_proxy_host:
-        name: "IP ou o nome do site"
-        detail: "Detalhe"
       iproute:
         dst_address: "Endereço IP de destino"
         gateway: "Porta de ligação"
@@ -327,7 +309,6 @@ pt:
         burst_up: "Quantidade de dados que serão transferidos ao início duma ligação HTTP/HTTPS sem ter em conta o limite de largo de banda de subida"
         long_download_max: "Tamanho a partir do qual uma descarga HTTP/HTTPS passa a ser classificada como tráfego P2P"
         long_upload_max: "Tamanho a partir do qual uma carga HTTP/HTTPS passa a ser classificada como tráfego P2P"
-        transparent_proxy: "Habilitar aceleração proxy. Personalizável por contrato"
       interface:
         kind: "WAN se liga para a Internet ou LAN se liga para os clientes"
       configuration:
@@ -353,7 +334,6 @@ pt:
     disk_management: "Gerenciamento de disco"
     general_configuration: "configuração geral"
     avoid_balancing_hosts: "Sites sim balanceamento"
-    avoid_proxy_hosts: "Sites sim proxy"
     iproutes: "Rotas estáticas"
     dashboard: "Painel"
     apply_changes: "Aplicar câmbios"
@@ -457,7 +437,6 @@ pt:
       use: "Em uso"
     name_service:
       sequreisp_daemon: "SequreISP Daemon"
-      squid_proxy_web_cache: "Squid Proxy Web Cache"
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"
@@ -571,7 +550,6 @@ pt:
       notifications: "Notificações"
       users: "Usuários"
       global_prios: "Prioridades globales"
-      proxy: "Proxy (web cache)"
       advanced: "Configuração avanzada"
       mail_relay: "Mail relay"
       bind_dns: "Configuração de DNS"

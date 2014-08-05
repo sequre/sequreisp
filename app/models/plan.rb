@@ -23,7 +23,7 @@ class Plan < ActiveRecord::Base
 
   include ModelsWatcher
   watch_fields :provider_group_id, :rate_down, :ceil_down, :rate_up, :ceil_up,
-               :transparent_proxy, :burst_down, :burst_up, :long_download_max, :long_upload_max
+               :burst_down, :burst_up, :long_download_max, :long_upload_max
 
   validates_uniqueness_of :name
   validates_presence_of :name, :provider_group, :rate_down, :ceil_down, :rate_up, :ceil_up

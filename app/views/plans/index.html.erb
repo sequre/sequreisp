@@ -36,7 +36,6 @@
         <th><%= order @search, :by => :burst_down , :as => t('activerecord.attributes.plan.burst_down') %></th>
         <th><%= order @search, :by => :provider_group_name, :as => t('activerecord.attributes.plan.provider_group') %></th>
         <th><%= t('activerecord.attributes.plan.number_of_contracts') %></th>
-        <th><%= t('activerecord.attributes.plan.transparent_proxy') %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
         <% if current_user.may_update_plans? or current_user.may_index_plans? %>
         <th></th> 
@@ -55,7 +54,6 @@
           <td><%=h "#{plan.burst_down}" %></td>
           <td><%=h plan.provider_group.name rescue 'Undefined' %></td>
           <td><%=h plan.contracts.count %></td>
-          <td><%=h plan.transparent_proxy ? t('selects.afirmative') : t('selects.negative') %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => plan} %>
           <% if current_user.may_update_plan?(plan) %>
             <td><%= link_to t('buttons.edit'), edit_plan_path(plan) %></td>

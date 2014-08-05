@@ -8,9 +8,6 @@
   #configuration_notification_timeframe{
     width: 50px;
 }
-  #configuration_transparent_proxy_max_load_average {
-    width: 50px;
-  }
 </style>
 <script type="text/javascript">
   $(function(){
@@ -107,15 +104,6 @@
       <%= form.input :default_udp_prio_ports %>
       <%= form.input :default_prio_protos %>
       <%= form.input :default_prio_helpers %>
-    <% end %>
-    <% form.inputs :name => t('fieldsets.configuration.proxy'),
-                   :context_help => { :path => { :custom => 'configuration.fieldsets.proxy' } } do %>
-      <%= form.input :transparent_proxy %>
-      <%= form.input :transparent_proxy_n_to_m %>
-      <%= form.input :transparent_proxy_zph_enabled %>
-      <!-- <%= form.input :transparent_proxy_windows_update_hack, :input_html => { :disabled => true } %> -->
-      <li><br/></li>
-      <%= form.input :transparent_proxy_max_load_average %>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.mail_relay'), :context_help => { :path => { :custom => 'configuration.fieldsets.mail_relay' } } do %>
       <%= form.input :mail_relay_manipulated_for_sequreisp, :as => :boolean %>

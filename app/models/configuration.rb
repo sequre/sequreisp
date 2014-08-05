@@ -32,9 +32,7 @@ class Configuration < ActiveRecord::Base
   include IpAddressCheck
   include ModelsWatcher
   watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
-               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,
-               :transparent_proxy, :transparent_proxy_n_to_m, :transparent_proxy_zph_enabled,
-               :transparent_proxy_windows_update_hack,
+               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,               
                :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
                :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
                :iptables_tree_optimization_enabled,
@@ -51,7 +49,6 @@ class Configuration < ActiveRecord::Base
   validates_format_of :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers, :with => /^([0-9a-z-]+,)*[0-9a-z-]+$/, :allow_blank => true
 
   validates_numericality_of :notification_timeframe, :only_integer => true, :greater_than_or_equal_to => 0
-  validates_numericality_of :transparent_proxy_max_load_average, :only_integer => true, :greater_than => 0, :less_than => 30
   validates_numericality_of :logged_in_timeout, :only_integer => true, :greater_than_or_equal_to => 0
   validates_presence_of :apply_changes_automatically_hour, :if => :apply_changes_automatically?
 

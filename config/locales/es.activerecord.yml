@@ -28,11 +28,6 @@ es:
           disabled: "Deshabilitado"
           provider: "Por proveedor(recomendado)"
           full: "Completo"
-    contract:
-      transparent_proxy:
-        default: "Por defecto (según el plan)"
-        "false": "Deshabilitado"
-        "true": "Habilitado"
     afirmative: "Sí"
     negative: "No"
   activerecord:
@@ -43,9 +38,6 @@ es:
       avoid_balancing_host:
         one: "Sitio sin balanceo"
         other: "Sitios sin balanceo"
-      avoid_proxy_host:
-        one: "Sitio sin proxy"
-        other: "Sitios sin proxy"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -120,7 +112,6 @@ es:
         forwarded_ports: "Puertos redireccionados"
         public_forwarded_ports: "Puertos redireccionados (públicos)"
         private_forwarded_ports: "Puertos redireccionados (privados)"
-        transparent_proxy: "Proxy transparente"
         created_at: "Fecha de alta"
         detail: "Detalle"
         cpe: "Equipo"
@@ -164,7 +155,6 @@ es:
         burst_up: "Ráfaga de subida [kbits]"
         long_download_max: "Límite para descargas grandes [kbytes]"
         long_upload_max: "Límite para cargas grandes [kbytes]"
-        transparent_proxy: "Proxy transparente"
         number_of_contracts: "Cantidad de contratos"
       provider_group:
         name: "Nombre"
@@ -210,11 +200,6 @@ es:
         default_prio_helpers: "Netfilter helpers prioritarios (global)"
         mtu: "MTU (unidad de transferencia máxima)"
         quantum_factor: "Ancho de banda que representa 1 cuanto"
-        transparent_proxy: "Habilitar proxy transparente (global)"
-        transparent_proxy_n_to_m: "Control de ancho de banda de subida para proxy transparente"
-        transparent_proxy_zph_enabled: "Entregar contenido en caché a la velocidad del enlace"
-        transparent_proxy_windows_update_hack: "Habilitar caché de Windows Update (ver ayuda)"
-        transparent_proxy_max_load_average: "Si la carga promedio del sistema en los últimos 5 min supera este valor, el proxy será desactivado automáticamente"
         nf_conntrack_max: "Máximo nº de conexiones (nf_conntrack_max)"
         gc_thresh1: "Entradas ARP (gc_thresh1)"
         gc_thresh2: "Entradas ARP (gc_thresh2)"
@@ -284,10 +269,7 @@ es:
       avoid_balancing_host:
         name: "IP o nombre de dominio del sitio"
         provider: "Proveedor de salida"
-        detail: "Detalle"
-      avoid_proxy_host:
-        name: "IP o nombre de dominio del sitio"
-        detail: "Detalle"
+        detail: "Detalle"      
       iproute:
         dst_address: "Dirección IP de destino"
         gateway: "Puerta de enlace"
@@ -330,7 +312,6 @@ es:
         burst_up: "Cantidad de datos que serán transferidos al inicio de una conexión HTTP/HTTPS sin tener en cuenta el límite de ancho de banda de subida"
         long_download_max: "Tamaño a partir del cual una descarga HTTP/HTTPS pasa a ser clasificada como tráfico P2P"
         long_upload_max: "Tamaño a partir del cual una carga HTTP/HTTPS pasa a ser clasificada como tráfico P2P"
-        transparent_proxy: "Habilitar aceleración proxy. Personalizable por contrato"
       interface:
         kind: "WAN si conecta a Internet; LAN si conecta hacia los clientes"
       configuration:
@@ -356,7 +337,6 @@ es:
     disk_management: "Administración de discos"
     general_configuration: "Configuración general"
     avoid_balancing_hosts: "Sitios sin balanceo"
-    avoid_proxy_hosts: "Sitios sin proxy"
     iproutes: "Rutas estáticas"
     dashboard: "Panel"
     apply_changes: "Aplicar cambios"
@@ -460,7 +440,10 @@ es:
       use: "En uso"
     name_service:
       sequreisp_daemon: "Demonio SequreISP"
+<<<<<<< HEAD
       squid_proxy_web_cache: "Servicio Proxy Web Cache (Squid)"
+=======
+>>>>>>> origin/master_feature_supercache
       bind_dns_server: "Servicio Bind DNS"
       apache_web_server: "Servicio Apache Web"
       mysql_server: "Servicio MySQL"
@@ -574,7 +557,6 @@ es:
       notifications: "Notificaciones"
       users: "Usuarios"
       global_prios: "Prioridades globales"
-      proxy: "Proxy (web cache)"
       advanced: "Configuración avanzada"
       mail_relay: "Mail relay"
       bind_dns: "Configuración DNS"
