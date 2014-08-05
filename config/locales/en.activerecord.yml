@@ -256,6 +256,7 @@ en:
         kind: "Kind"
         physical_link: "Link"
       audit:
+        id: "ID"
         user: "User"
         action: "Action"
         created_at: "Date"
@@ -356,6 +357,7 @@ en:
     guides: "SequireISP guides"
     support: "Support"
   buttons:
+    export_to_csv: "Export to csv"
     login: "Login"
     edit: "Edit"
     delete: "Delete"
