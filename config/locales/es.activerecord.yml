@@ -440,10 +440,6 @@ es:
       use: "En uso"
     name_service:
       sequreisp_daemon: "Demonio SequreISP"
-<<<<<<< HEAD
-      squid_proxy_web_cache: "Servicio Proxy Web Cache (Squid)"
-=======
->>>>>>> origin/master_feature_supercache
       bind_dns_server: "Servicio Bind DNS"
       apache_web_server: "Servicio Apache Web"
       mysql_server: "Servicio MySQL"
