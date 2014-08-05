@@ -25,6 +25,53 @@
     $('#configuration_use_global_prios').change( function() {
       checkbox_use_global_prios();
     });
+
+    function show_hide_mail_relay() {
+      if ($('#configuration_mail_relay_used').attr('checked')) {
+        $('#mail_relay').show();
+      } else {
+        $('#mail_relay').hide();
+      }
+   }
+
+    show_hide_mail_relay();
+
+    $('#configuration_mail_relay_used').change( function() {
+      if ($('#configuration_mail_relay_used').attr('checked')) {
+        $('#mail_relay').show();
+      } else {
+        $('#mail_relay').hide();
+      }
+    });
+
+    function mail_relay_manipulated_for_sequreisp() {
+      if ($('#configuration_mail_relay_manipulated_for_sequreisp').attr('checked')) {
+        $('#manipulated_for_sequreisp').show();
+      } else {
+        $('#manipulated_for_sequreisp').hide();
+      }
+   }
+
+    mail_relay_manipulated_for_sequreisp();
+
+    $('#configuration_mail_relay_manipulated_for_sequreisp').change( function() {
+      if ($('#configuration_mail_relay_manipulated_for_sequreisp').attr('checked')) {
+        $('#manipulated_for_sequreisp').show();
+      } else {
+        $('#manipulated_for_sequreisp').hide();
+      }
+    });
+    function checkbox_dns_use_forwarders() {
+      if ($('#configuration_dns_use_forwarders').attr('checked')) {
+        $('#bind_dns').show();
+      } else {
+        $('#bind_dns').hide();
+      }
+    }
+    checkbox_dns_use_forwarders();
+    $('#configuration_dns_use_forwarders').change( function() {
+      checkbox_dns_use_forwarders();
+    });
   })
 </script>
 <% unless current_user.may_update_configuration?(@configuration) %>
@@ -69,6 +116,27 @@
       <!-- <%= form.input :transparent_proxy_windows_update_hack, :input_html => { :disabled => true } %> -->
       <li><br/></li>
       <%= form.input :transparent_proxy_max_load_average %>
+    <% end %>
+    <% form.inputs :name => t('fieldsets.configuration.mail_relay'), :context_help => { :path => { :custom => 'configuration.fieldsets.mail_relay' } } do %>
+      <%= form.input :mail_relay_manipulated_for_sequreisp, :as => :boolean %>
+      <div id="manipulated_for_sequreisp" >
+        <%= form.input :mail_relay_used, :as => :boolean %>
+        <div id="mail_relay" >
+          <%= form.input :mail_relay_option_server, :as => :select, :collection => options_for_mail_relay %>
+          <%= form.input :mail_relay_smtp_server %>
+          <%= form.input :mail_relay_smtp_port %>
+          <%= form.input :mail_relay_mail %>
+          <%= form.input :mail_relay_password, :as => :string %>
+        </div>
+      </div>
+    <% end %>
+    <% form.inputs :name => t('fieldsets.configuration.bind_dns'), :context_help => { :path => { :custom => 'configuration.fieldsets.bind_dns' } } do %>
+      <%= form.input :dns_use_forwarders, :as => :boolean %>
+        <div id="bind_dns" >
+          <%= form.input :dns_first_server %>
+          <%= form.input :dns_second_server %>
+          <%= form.input :dns_third_server %>
+        </div>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.advanced'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.advanced' } } do %>

@@ -237,6 +237,17 @@ es:
         web_interface_listen_on_80: "Escuchar peticiones de la interfaz web en puerto 80"
         web_interface_listen_on_443: "Escuchar peticiones de la interfaz web en puerto 443(HTTPS)"
         web_interface_listen_on_8080: "Escuchar peticiones de la interfaz web en puerto 8080"
+        mail_relay_used: "Usar mail relay"
+        mail_relay_manipulated_for_sequreisp: "Manejar la configuración de envíos de e-mail con SequreISP"
+        mail_relay_option_server: "Servicios"
+        mail_relay_smtp_server: "Servidor SMTP"
+        mail_relay_smtp_port: "Puerto"
+        mail_relay_mail: "Nombre de usuario"
+        mail_relay_password: "Password"
+        dns_use_forwarders: "Configurar DNS"
+        dns_first_server: "Primer server DNS"
+        dns_second_server: "Segundo server DNS"
+        dns_third_server: "Tercer Server DNS"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -329,6 +340,7 @@ es:
         tc_contracts_per_provider_in_lan: "No habilitar si contratos×providers > 8000 (aprox.)"
         use_global_prios: "Habilitar únicamente en caso de más de 2500 contratos"
         use_external_number_client: "Al desactivar utiliza como numero de cliente los ids"
+        mail_relay_manipulated_for_sequreisp: "Deshabilitar para trabajar manualmente con /etc/postfix/main.cf"
       provider:
         shape_rate_down_on_ingress: "El control de tráfico de bajada se hace en la interfaz LAN; si habilita esta opción se habitará un control adicional en la interfaz WAN que asegurará que el tráfico de los clientes más el del servidor no excedan el límite configurado"
         avoid_nat_addresses: "Una dirección por linea, notación CIDR, ejemplo 200.10.20.0/24"
@@ -499,6 +511,9 @@ es:
     contract:
       online: "Conectado"
       offline: "Desconectado"
+    configuration:
+      own: "Servidor Propio"
+      gmail: "Gmail"
   controllers:
     successfully_updated: "Actualización de datos exitosa"
     successfully_created: "Creación exitosa"
@@ -555,6 +570,8 @@ es:
       global_prios: "Prioridades globales"
       proxy: "Proxy (web cache)"
       advanced: "Configuración avanzada"
+      mail_relay: "Mail relay"
+      bind_dns: "Configuración DNS"
     interface:
       ips: "IPs"
     provider:
@@ -589,3 +606,5 @@ es:
     error_on_reversion: 'No se pudo volver a la versión indicada'
   error_messages:
     not_selected_any_options: 'No se ha selecionado ninguna opción'
+    not_repeat_dns_server: 'Existen servidores DNS repetidos'
+    define_one_dns_server: 'Definir al menos un servidor DNS'
