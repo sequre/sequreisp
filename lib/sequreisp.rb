@@ -472,14 +472,14 @@ def gen_iptables
 
           # long downloads/uploads limit
           if c.plan.long_download_max != 0
-            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
           end
           if c.plan.long_upload_max != 0
             f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
           end
           # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
           if c.plan.burst_down != 0
-            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
           end
           if c.plan.burst_up != 0
             f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
@@ -554,12 +554,7 @@ def gen_iptables
         end
       end
       f.puts "-A PREROUTING -j avoid_proxy"
-      Contract.not_disabled.descend_by_netmask.each do |c|
-        # attribute: transparent_proxy
-        if c.transparent_proxy?
-          f.puts "-A PREROUTING -s #{c.ip} -p tcp --dport 80 -j REDIRECT --to-port 3128"
-        end
-      end
+
       Provider.enabled.with_klass_and_interface.each do |p|
         p.networks.each do |network|
           f.puts "-A POSTROUTING -o #{p.link_interface} -s #{network} -j ACCEPT"
@@ -621,10 +616,8 @@ def gen_iptables
       end
       BootHook.run :hook => :filter_before_all, :iptables_script => f
       f.puts ":sequreisp-enabled - [0:0]"
-      f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
-      #f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
       if Configuration.web_interface_listen_on_80
         f.puts "-A INPUT -p tcp --dport 80 -j ACCEPT"
       end
