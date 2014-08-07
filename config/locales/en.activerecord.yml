@@ -459,8 +459,8 @@ en:
       halt: "The server will halt shortly"
       halt_error: "An error occurred, the server will not be halted"
     traffic:
-      data_count_less_than: "Data traffic less than"
-      data_count_greater_than: "Data traffic greater than"
+      data_count_less_than_or_equal_to: "Data count less than or equal to"
+      data_count_greater_than_or_equal_to: "Data count greater than or equal to"
       placeholder_only_gb: "value in GB ej 2"
     disk:
       important: "Important"

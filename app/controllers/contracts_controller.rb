@@ -31,14 +31,19 @@ class ContractsController < ApplicationController
     per_page = Contract.count if params[:search][:not_paged].present?
     params[:search][:order] ||= 'ascend_by_ip_custom'
     params[:search].delete(:not_paged)
-    params[:search][:current_traffic_data_count_less_than] = (params[:search][:current_traffic_data_count_less_than].to_f * 2**30) if params[:search][:current_traffic_data_count_less_than].present?
-    params[:search][:current_traffic_data_count_greater_than] = (params[:search][:current_traffic_data_count_greater_than].to_f * 2**30) if params[:search][:current_traffic_data_count_greater_than].present?
+
+    #it is necesary because the filter with less_than_or_equal_to or greater_than_or_equal_to not work (bug searchlogic)
+    Contract.current_traffic_data_count_less_than_or_equal_to(0).current_traffic_data_count_greater_than_or_equal_to(0).count
+
+    params[:search][:current_traffic_data_count_less_than_or_equal_to] = (params[:search][:current_traffic_data_count_less_than_or_equal_to].to_f * 2**30) if (params[:search].has_key?("current_traffic_data_count_less_than_or_equal_to") and not params[:search][:current_traffic_data_count_less_than_or_equal_to].blank?)
+    params[:search][:current_traffic_data_count_greater_than_or_equal_to] = (params[:search][:current_traffic_data_count_greater_than_or_equal_to].to_f * 2**30) if (params[:search].has_key?("current_traffic_data_count_greater_than_or_equal_to") and not params[:search][:current_traffic_data_count_greater_than_or_equal_to].blank?)
 
     @search = Contract.search(params[:search])
-    @contracts = @search.paginate(:page => params[:page],:per_page => per_page)
 
-    @search.current_traffic_data_count_less_than = (@search.current_traffic_data_count_less_than.to_f / 2**30) if @search.current_traffic_data_count_less_than.present?
-    @search.current_traffic_data_count_greater_than = (@search.current_traffic_data_count_greater_than.to_f / 2**30) if @search.current_traffic_data_count_greater_than.present?
+    params[:search][:current_traffic_data_count_less_than_or_equal_to] = (params[:search][:current_traffic_data_count_less_than_or_equal_to].to_f / 2**30) if (params[:search].has_key?("current_traffic_data_count_less_than_or_equal_to") and not params[:search][:current_traffic_data_count_less_than_or_equal_to].blank?)
+    params[:search][:current_traffic_data_count_greater_than_or_equal_to] = (params[:search][:current_traffic_data_count_greater_than_or_equal_to].to_f / 2**30) if (params[:search].has_key?("current_traffic_data_count_greater_than_or_equal_to") and not params[:search][:current_traffic_data_count_greater_than_or_equal_to].blank?)
+
+    @contracts = @search.uniq.paginate(:page => params[:page],:per_page => per_page)
 
     respond_to do |format|
       format.html # index.html.erb

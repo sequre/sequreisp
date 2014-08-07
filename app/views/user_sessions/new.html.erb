@@ -25,9 +25,17 @@
   <% form_for @user_session, :url => user_session_path do |f| %>
     <%= f.error_messages %>
     <%= f.label :email %>
-    <%= f.text_field :email %>
+    <% if @user_session_email.present? %>
+      <%= f.text_field :email, :value => @user_session_email %>
+    <% else %>
+      <%= f.text_field :email %>
+    <% end %>
     <%= f.label :password %>
-    <%= f.password_field :password %>
+    <% if @user_session_password.present? %>
+      <%= f.password_field :password, :value => @user_session_password %>
+    <% else %>
+      <%= f.password_field :password %>
+    <% end %>
     <%= f.submit t('buttons.login'), :class => "btn_submit btn_login" %>
   <% end %>
 </div>

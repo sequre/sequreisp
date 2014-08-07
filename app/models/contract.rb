@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 # Sequreisp - Copyright 2010, 2011 Luciano Ruete
 #
@@ -35,9 +36,8 @@ class Contract < ActiveRecord::Base
   belongs_to :proxy_arp_interface, :class_name => 'Interface', :conditions => "kind = 'lan'"
   belongs_to :proxy_arp_provider, :class_name => 'Provider'
   belongs_to :unique_provider, :class_name => 'Provider'
-  has_one :current_traffic, :class_name => 'Traffic', :conditions => ["from_date <= ? and to_date >= ?", Date.today, Date.today]
   has_many :traffics, :dependent => :destroy
-
+  has_one :current_traffic, :class_name => 'Traffic', :conditions => ["traffics.from_date <= ? and traffics.to_date >= ?", Date.today, Date.today]
 
   named_scope :enabled, :conditions => { :state => "enabled" }
   named_scope :not_disabled, :conditions => "state != 'disabled'"
@@ -233,7 +233,7 @@ class Contract < ActiveRecord::Base
     self.netmask = IP.new(self.ip).netmask.to_s rescue nil
   end
   def bind_klass
-    self.klass = Klass.find(:first, :conditions => "contract_id is null")
+    self.klass = Klass.find(:first, :conditions => "contract_id is null", :lock => "for  update")
     raise "TODO nos quedamos sin clases!" if self.klass.nil?
   end
 
@@ -567,6 +567,7 @@ class Contract < ActiveRecord::Base
         I18n.t('activerecord.attributes.contract.client'),
         I18n.t('activerecord.models.client.one') + " " + I18n.t('activerecord.attributes.client.id'),
         I18n.t('activerecord.attributes.client.external_client_number'),
+        I18n.t('activerecord.attributes.client.national_identification_number'),
         I18n.t('activerecord.attributes.client.email'),
         I18n.t('activerecord.attributes.client.address'),
         I18n.t('activerecord.attributes.client.phone'),
@@ -597,6 +598,7 @@ class Contract < ActiveRecord::Base
           c.client.name,
           c.client.id,
           c.client.external_client_number,
+          c.client.national_identification_number,
           c.client.email,
           c.client.address,
           c.client.phone,

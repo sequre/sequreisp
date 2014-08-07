@@ -1092,7 +1092,6 @@ def setup_interfaces
     #(current_ips - ips).each do |ip|
     #  commands << "ip address del #{ip} dev #{i.name}"
     #end
-    #emito evento de upstart, por ej. /etc/init/squid lo necesita
     commands << "initctl emit -n net-device-up \"IFACE=#{i.name}\" \"LOGICAL=#{i.name}\" \"ADDRFAM=inet\" \"METHOD=static\""
   end
   exec_context_commands "setup_interfaces", commands
