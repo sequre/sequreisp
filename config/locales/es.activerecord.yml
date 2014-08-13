@@ -269,7 +269,7 @@ es:
       avoid_balancing_host:
         name: "IP o nombre de dominio del sitio"
         provider: "Proveedor de salida"
-        detail: "Detalle"      
+        detail: "Detalle"
       iproute:
         dst_address: "Dirección IP de destino"
         gateway: "Puerta de enlace"

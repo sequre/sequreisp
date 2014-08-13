@@ -172,7 +172,7 @@ while($running) do
   Configuration.do_reload
   tsleep_count += 1
 
-  # check links & squid every 10 seconds
+  # check links every 10 seconds
   if tsleep_count%10 == 0
     tsleep_count = 0
     Rails.logger.debug "sequreispd: #{Time.now.to_s} check_physical_links"

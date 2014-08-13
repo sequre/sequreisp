@@ -25,7 +25,6 @@ IFB_DOWN=SequreispConfig::CONFIG["ifb_down"]
 IFB_INGRESS=SequreispConfig::CONFIG["ifb_ingress"]
 DEPLOY_DIR=SequreispConfig::CONFIG["deploy_dir"]
 BASE_SCRIPTS="#{BASE}/scripts"
-SEQUREISP_SQUID_CONF=Rails.env.production? ? "/etc/squid/sequreisp.squid.conf" : "/tmp/sequreisp/squid.conf"
 TC_FILE_PREFIX="#{BASE_SCRIPTS}/tc_"
 IP_FILE_PREFIX="#{BASE_SCRIPTS}/ip_"
 PROVIDER_UP_FILE_PREFIX= "#{BASE_SCRIPTS}/provider_up_"

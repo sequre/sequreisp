@@ -2,15 +2,13 @@ module Dashboard
   class Service
     SERVICES= [
       { :id => 1,:name => I18n.t("dashboard.name_service.sequreisp_daemon"), :command => 'ruby' , :pattern => 'sequreispd.rb ' },
-      { :id => 2,:name => I18n.t("dashboard.name_service.squid_proxy_web_cache"), :command => 'squid' , :pattern => 'squid' },
-      { :id => 3,:name => I18n.t("dashboard.name_service.bind_dns_server"), :command => 'named', :pattern => 'named'},
-      { :id => 4,:name => I18n.t("dashboard.name_service.apache_web_server"), :command => 'apache2', :pattern => 'apache2' },
-      { :id => 5,:name => I18n.t("dashboard.name_service.mysql_server"), :command => 'mysqld', :pattern => 'mysqld' }
+      { :id => 2,:name => I18n.t("dashboard.name_service.bind_dns_server"), :command => 'named', :pattern => 'named'},
+      { :id => 3,:name => I18n.t("dashboard.name_service.apache_web_server"), :command => 'apache2', :pattern => 'apache2' },
+      { :id => 4,:name => I18n.t("dashboard.name_service.mysql_server"), :command => 'mysqld', :pattern => 'mysqld' }
     ]
 
     SERVICES << { :id => 99,:name => 'SSH Server', :command => 'sshd', :pattern => 'sshd' } if Rails.env.development?
 
-    #%w{sequreispd squid named vc-scheduler apache2}
     attr_reader :name, :mem_p, :cpu_p, :mem, :up, :id, :mem_p_html, :cpu_p_html, :up_html
     def initialize(service)
        # SPACE at the END DOES MATTER
@@ -45,7 +43,6 @@ module Dashboard
     def stats
     end
     def self.load_all
-      debugger
       servs = SERVICES
       servs.each_with_object([]) do |s,memo|
         memo << Service.new(s)
