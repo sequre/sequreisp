@@ -692,8 +692,8 @@ def gen_ip_ru
         f.puts "rule add from #{p.ip}/32 table #{p.check_link_table} prio 90" if p.ip and not p.ip.empty?
       end
       f.puts "rule add prio 32767 from all lookup default"
+      BootHook.run :hook => :gen_ip_ru, :ip_ru_script => f
     end
-    BootHook.run :hook => :gen_ip_ru
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
   end
@@ -758,8 +758,8 @@ def gen_ip_ro
         update_provider_group_route pg, f, true, true
       end
       update_fallback_route f, true, true
+      BootHook.run :hook => :gen_ip_ro, :ip_ro_script => f
     end
-    BootHook.run :hook => :gen_ip_ro
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
   end
