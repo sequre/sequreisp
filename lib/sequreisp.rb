@@ -40,6 +40,7 @@ def gen_tc
     rt_prio3 = ""
     ceil = plan["ceil_" + direction]
     if plan["rate_" + direction] == 0
+      rate_factor = 1 if rate_factor > 1
       rate = ceil * rate_factor
       if rate > 0
         r1 = rate*0.10
