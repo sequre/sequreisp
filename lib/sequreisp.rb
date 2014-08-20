@@ -276,20 +276,6 @@ def gen_iptables
       f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x1fffffff --ctmask 0x1fffffff"
       f.puts "-A OUTPUT -m mark ! --mark 0x0/0x1fffffff -j ACCEPT"
 
-      if Configuration.transparent_proxy
-        Contract.not_disabled.descend_by_netmask.each do |c|
-          mark = if not c.public_address.nil?
-                   c.public_address.addressable.mark_hex
-                 elsif not c.unique_provider.nil?
-                   # marko los contratos que salen por un único provider
-                   c.unique_provider.mark_hex
-                 else
-                   c.plan.provider_group.mark_hex
-                 end
-          f.puts "-A OUTPUT -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
-        end
-      end
-
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
       Provider.enabled.with_klass_and_interface.each do |p|
@@ -301,12 +287,6 @@ def gen_iptables
       end
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
       f.puts "-A POSTROUTING -m mark --mark 0x00000000/0x00ff0000 -j sequreisp_connmark"
-
-      #---------------------------------------------------------------------------------------------------
-      # if Configuration.transparent_proxy and Configuration.transparent_proxy_zph_enabled
-      #   f.puts "-A POSTROUTING -p tcp --sport 3128 -m tos --tos 0x10 -j ACCEPT"
-      # end
-      #---------------------------------------------------------------------------------------------------
 
       f.puts ":sequreisp.down - [0:0]"
       f.puts ":sequreisp.up - [0:0]"
@@ -488,17 +468,6 @@ def gen_iptables
       end
 
       BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
-
-      # Evito pasar por el proxy para los hosts configurados
-      #
-      #
-      f.puts ":avoid_proxy - [0:0]"
-      AvoidProxyHost.all.each do |aph|
-        aph.ip_addresses.each do |ip|
-          f.puts "-A avoid_proxy -d #{ip} -p tcp --dport 80 -j ACCEPT"
-        end
-      end
-      f.puts "-A PREROUTING -j avoid_proxy"
 
       Provider.enabled.with_klass_and_interface.each do |p|
         p.networks.each do |network|
@@ -1122,9 +1091,6 @@ def boot(run=true)
     setup_queued_commands
     setup_clock
     setup_proc
-#    Disk.scan if (Disk.count == 0)
-#    config_cache_disks
-#    setup_proxy
     setup_nf_modules
     setup_interfaces
     setup_dynamic_providers_hooks
