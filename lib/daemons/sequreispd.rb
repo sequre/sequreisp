@@ -94,22 +94,6 @@ tcounter = Thread.new do
               end
             end
           end
-          if conf.transparent_proxy and conf.transparent_proxy_n_to_m
-            proxy_bind_ips_hash = Contract.all(:include => :klass).each_with_object({}) do |c,h| h[c.proxy_bind_ip] = c.ip end
-            IO.popen("iptables-save -t mangle -c | /bin/grep \"^\\[.*:.*\\] -A OUTPUT -s .* -j .*$\"" , "r") do |io|
-              io.each do |line|
-                rule = line.split(" ")
-                proxy_bind_ip = IP.new(rule[4]).to_s
-                ip = proxy_bind_ips_hash[proxy_bind_ip]
-                if ips.include? ip
-                  hash[ip] = 0 if hash[ip].nil?
-                  hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
-                  hash_log_iptables_proxy[ip] = [] if hash_log_iptables_proxy[ip].nil?
-                  hash_log_iptables_proxy[ip] << line
-                end
-              end
-            end
-          end
         end
 
         ActiveRecord::Base.transaction do
