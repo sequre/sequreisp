@@ -370,4 +370,13 @@ class Provider < ActiveRecord::Base
     Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} result:#{result} down: #{instant_rate_down} up #{instant_rate_up}"
     result
   end
+
+  def self.all_ips
+   provider_ips = []
+    Provider.all.each do |provider|
+      provider_ips << provider.ip
+      provider.addresses.each { |addr| provider_ips << addr.ip }
+    end
+    provider_ips.compact
+  end
 end
