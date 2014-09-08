@@ -423,4 +423,12 @@ class Provider < ActiveRecord::Base
     tc_rules.flatten
   end
 
+  def self.all_ips
+   provider_ips = []
+    Provider.all.each do |provider|
+      provider_ips << provider.ip
+      provider.addresses.each { |addr| provider_ips << addr.ip }
+    end
+    provider_ips.compact
+  end
 end

@@ -276,6 +276,8 @@ def gen_iptables
       f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x1fffffff --ctmask 0x1fffffff"
       f.puts "-A OUTPUT -m mark ! --mark 0x0/0x1fffffff -j ACCEPT"
 
+      BootHook.run :hook => :mangle_after_ouput_hook, :iptables_script => f
+
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
       Provider.enabled.with_klass_and_interface.each do |p|
