@@ -493,6 +493,9 @@ pt:
     contract:
       online: "Em linha"
       offline: "Fora de linha"
+      connected: "Conectado"
+      not_connected: "Não conectado"
+      connected_and_not_connected: "Conectado e não conectado"
     configuration:
       own: "Servidor próprio"
       gmail: "Gmail"

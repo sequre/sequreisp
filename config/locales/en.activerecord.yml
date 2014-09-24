@@ -496,6 +496,9 @@ en:
     contract:
       online: "Online"
       offline: "Offline"
+      connected: "Connected"
+      not_connected: "Not connected"
+      connected_and_not_connected: "connected and not connected"
     configuration:
       own: "Server own"
       gmail: "Gmail"

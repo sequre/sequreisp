@@ -107,9 +107,15 @@
         <%= f.label :current_traffic_data_count_less_than_or_equal_to, t('messages.traffic.data_count_less_than_or_equal_to') %>
         <%= f.text_field :current_traffic_data_count_less_than_or_equal_to, :placeholder =>  t('messages.traffic.placeholder_only_gb') %>
       </li>
+
+      <div style="clear: both"></div>
       <li>
-        <%= f.label :is_connected, t('activerecord.attributes.contract.is_connected') %>
-        <%= f.check_box :is_connected %>
+	<%= f.radio_button :is_connected, "", { :class => "left not_paged" } %>
+        <%= f.label :not_is_connected, t('messages.contract.connected_and_not_connected'), :class => 'left not_paged_label' %>
+        <%= f.radio_button :is_connected, true, { :class => "left not_paged" } %>
+        <%= f.label :not_is_connected, t('messages.contract.connected'), :class => 'left not_paged_label' %>
+        <%= f.radio_button :is_connected, false, { :class => "left not_paged" } %>
+        <%= f.label :not_is_connected, t('messages.contract.not_connected'), :class => 'left not_paged_label' %>
       </li>
       <%= render_search_extensions :form => f  %>
     </div>
