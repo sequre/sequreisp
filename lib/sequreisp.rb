@@ -522,6 +522,7 @@ def gen_iptables
       #---------#
       f.puts "*filter"
       f.puts ":sequreisp-allowedsites - [0:0]"
+      f.puts "-A INPUT -p tcp --dport 3128 -j DROP"
       f.puts "-A FORWARD -j sequreisp-allowedsites"
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
