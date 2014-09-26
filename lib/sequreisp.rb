@@ -461,6 +461,17 @@ def gen_iptables
 
       f.puts ":sequreisp-accepted-sites - [0:0]"
       f.puts "-A PREROUTING -j sequreisp-accepted-sites"
+
+      provider_ips = Provider.all_ips
+      Interface.only_lan.each do |interface|
+        interface.addresses.each do |addr|
+          puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{addr.ip} -p tcp --dport 80 -j ACCEPT"
+          provider_ips.each do |provider_ip|
+            puts "-A sequreisp-accepted-sites -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
+          end
+        end
+      end
+
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
           f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
