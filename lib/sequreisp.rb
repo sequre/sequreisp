@@ -465,9 +465,9 @@ def gen_iptables
       provider_ips = Provider.all_ips
       Interface.only_lan.each do |interface|
         interface.addresses.each do |addr|
-          puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{addr.ip} -p tcp --dport 80 -j ACCEPT"
+          f.puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{addr.ip} -p tcp --dport 80 -j ACCEPT"
           provider_ips.each do |provider_ip|
-            puts "-A sequreisp-accepted-sites -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
+            f.puts "-A sequreisp-accepted-sites -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
           end
         end
       end
