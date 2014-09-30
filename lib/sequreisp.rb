@@ -280,6 +280,11 @@ def gen_iptables
 
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
+      f.puts ":sequreisp.down - [0:0]"
+      f.puts ":sequreisp.up - [0:0]"
+
+      BootHook.run :hook => :mangle_before_postrouting_hook, :iptables_script => f
+
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A sequreisp_connmark  -o #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
       end
@@ -289,12 +294,6 @@ def gen_iptables
       end
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
       f.puts "-A POSTROUTING -m mark --mark 0x00000000/0x00ff0000 -j sequreisp_connmark"
-
-      f.puts ":sequreisp.down - [0:0]"
-      f.puts ":sequreisp.up - [0:0]"
-
-      # apache traffic without restrictions for web interface and videocache
-      f.puts "-A sequreisp.down -m owner --uid-owner www-data -j unlimited_bandwidth"
 
       #speed-up MARKo solo si no estaba a restore'ada x CONNMARK
       mark_if="-m mark --mark 0x0/0xffff"
