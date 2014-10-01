@@ -36,6 +36,7 @@ class Interface < ActiveRecord::Base
   validates_uniqueness_of :vlan_id, :scope => :vlan_interface_id, :if => Proc.new { |p| p.vlan? }
   validates_numericality_of :vlan_id, :allow_nil => true, :only_integer => true, :greater_than => 1, :less_than => 4095
   validates_uniqueness_of :name
+  validates_format_of :name, :with => /\A[a-zA-Z0-9]+\Z/, :message => I18n.t("messages.interface.name_without_space")
 
   validate :name_cannot_be_changed
 

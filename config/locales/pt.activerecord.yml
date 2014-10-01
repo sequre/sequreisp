@@ -462,6 +462,7 @@ pt:
       could_not_be_deleted_has_vlans: "Esta interface tem VLANs associadas e não pode ser eliminada"
       could_not_be_deleted_has_provider: "Esta interface tem um fornecedor associado e não pode ser eliminada"
       could_not_be_deleted_has_proxy_arp_contracts: "Esta interface tem contratos com Proxy ARP associado e não pode ser eliminado"
+      name_without_space: "O nome é,sem espaço"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "Este fornecedor tem contratos com Proxy ARP associado e não pode ser eliminado"
     dashboard:
