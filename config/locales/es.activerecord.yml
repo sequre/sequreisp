@@ -495,11 +495,9 @@ es:
       when_apply_change: "El proceso de asignación de discos puede demorar alrededor de 15-20 min, es normal que se presente un aumento en la carga del sistema (load average)"
       capacity_used_for_cache: "Capacidad usada (cache)"
     contract:
-      online: "Conectado"
-      offline: "Desconectado"
-      connected: "Conectados"
-      not_connected: "No conectados"
-      connected_and_not_connected: "Conectados y no conectados"
+      connected: "Conectado"
+      not_connected: "Desconectado"
+      connected_and_not_connected: "Todos"
     configuration:
       own: "Servidor Propio"
       gmail: "Gmail"

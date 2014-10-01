@@ -492,11 +492,9 @@ pt:
       when_apply_change: "O processo de alocação de disco deve levar cerca de 15-20 minutos; é um aumento normal em carga média"
       capacity_used_for_cache: "Capacidade utilizada (cache)"
     contract:
-      online: "Em linha"
-      offline: "Fora de linha"
       connected: "Conectado"
       not_connected: "Não conectado"
-      connected_and_not_connected: "Conectado e não conectado"
+      connected_and_not_connected: "Todos"
     configuration:
       own: "Servidor próprio"
       gmail: "Gmail"

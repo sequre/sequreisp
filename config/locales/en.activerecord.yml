@@ -495,11 +495,9 @@ en:
       when_apply_change: "The disk allocation process should take about 15-20 minutes; is normal an increase in load average"
       capacity_used_for_cache: "Capacity used (cache)"
     contract:
-      online: "Online"
-      offline: "Offline"
-      connected: "Connected"
-      not_connected: "Not connected"
-      connected_and_not_connected: "connected and not connected"
+      connected: "Online"
+      not_connected: "Offline"
+      connected_and_not_connected: "All"
     configuration:
       own: "Server own"
       gmail: "Gmail"

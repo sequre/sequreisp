@@ -638,7 +638,7 @@ class Contract < ActiveRecord::Base
   end
 
   def is_online?
-    is_connected? ? I18n.t("messages.contract.online") : I18n.t("messages.contract.offline")
+    is_connected? ? I18n.t("messages.contract.connected") : I18n.t("messages.contract.not_connected")
   end
 
   def data_count_for_last_year
