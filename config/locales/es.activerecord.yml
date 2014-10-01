@@ -465,7 +465,7 @@ es:
       could_not_be_deleted_has_vlans: "Esta interfaz tiene VLANs asociadas y no puede ser borrada"
       could_not_be_deleted_has_provider: "Esta interfaz tiene un proveedor asociado y no puede ser borrada"
       could_not_be_deleted_has_proxy_arp_contracts: "Esta interfaz no puede ser borrada, hay contratos con Proxy ARP asociado a esta interfaz"
-      name_without_space: "El nombre de la interfaz no puede estar en blanco"
+      name_without_space: "El nombre de la interfaz solo acepta letras y numeros"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "Este proveedor no puede ser borrado, hay contratos con Proxy ARP asociado a este proveedor"
     dashboard:

@@ -465,7 +465,7 @@ en:
       could_not_be_deleted_has_vlans: "This interface has VLANs assigned, therefore it can't be deleted"
       could_not_be_deleted_has_provider: "This interface has a provider assigned, therefore it can't be deleted"
       could_not_be_deleted_has_proxy_arp_contracts: "This interface has contracts with Proxy ARP associated, therefore it can't be deleted"
-      name_without_space: "The name is without space"
+      name_without_space: "Interface name only allows letters and numbers"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "This provider has contracts with Proxy ARP associated, therefore it can't be deleted"
     dashboard:
