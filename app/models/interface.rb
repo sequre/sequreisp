@@ -36,9 +36,10 @@ class Interface < ActiveRecord::Base
   validates_uniqueness_of :vlan_id, :scope => :vlan_interface_id, :if => Proc.new { |p| p.vlan? }
   validates_numericality_of :vlan_id, :allow_nil => true, :only_integer => true, :greater_than => 1, :less_than => 4095
   validates_uniqueness_of :name
-  validates_format_of :name, :with => /\A[a-zA-Z0-9]+\Z/, :message => I18n.t("messages.interface.name_without_space")
+  validates_format_of :name, :with => /^[a-zA-Z0-9]+$/, :message => I18n.t("messages.interface.name_without_space"), :if => 'not vlan'
 
   validate :name_cannot_be_changed
+  validate_on_create :interface_exist, :if => 'not vlan'
 
   def validate
     if kind_changed? and kind_was == "wan" and provider
@@ -58,7 +59,9 @@ class Interface < ActiveRecord::Base
   def name_cannot_be_changed
     errors.add(:name, I18n.t('validations.interface.name_cannot_be_changed')) if not new_record? and name_changed?
   end
-
+  def interface_exist
+    errors.add(:name, I18n.t('validations.interface.name_does_not_exist')) if not exist?
+  end
   def queue_update_commands
     cq = QueuedCommand.new
     # el vlan_id y el vlan_interface_id si cambian se reflejan en el nombre
@@ -166,6 +169,6 @@ class Interface < ActiveRecord::Base
   end
 
   def exist?
-    !`grep #{self.name} /etc/udev/rules.d/70-persistent-net.rules`.blank?
+    system "ip link show dev #{name} 1>/dev/null 2>/dev/null"
   end
 end

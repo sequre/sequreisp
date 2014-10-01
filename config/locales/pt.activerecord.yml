@@ -514,6 +514,7 @@ pt:
     interface:
       unable_to_change_kind: "Não se pode mudar o tipo, esta interface tem um fornecedor atribuído"
       name_cannot_be_changed: "O nome da interface não pode ser alterado uma vez criado"
+      name_does_not_exist: "O nome da interface não corresponde a nenhuma das interfaces de rede conectadas"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "O fornecedor escolhido não pertence ao grupo do plano atribuído"
       protocol_must_be_specified: "Deve especificar o protocolo"

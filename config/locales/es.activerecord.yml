@@ -517,6 +517,7 @@ es:
     interface:
       unable_to_change_kind: "No se puede cambiar el tipo, esta interfaz tiene un proveedor asignado"
       name_cannot_be_changed: "El nombre de una interfaz no se puede cambiar una vez creada"
+      name_does_not_exist: "El nombre de la interfaz no coincide con ninguna de las placas de red reconocidas"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "El proveedor seleccionado no pertenece al grupo del plan asignado"
       protocol_must_be_specified: "Debe especificar el protocolo"

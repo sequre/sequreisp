@@ -517,6 +517,7 @@ en:
     interface:
       unable_to_change_kind: "Unable to change kind, this interface has a provider assigned"
       name_cannot_be_changed: "The interface name cannot be changed once created"
+      name_does_not_exist: "The interface name does not match any of the attached network interfaces"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "The selected provider does not belong to the group's assigned plan"
       protocol_must_be_specified: "Protocol must be specified"
