@@ -283,6 +283,9 @@ def gen_iptables
       f.puts ":sequreisp.down - [0:0]"
       f.puts ":sequreisp.up - [0:0]"
 
+      # apache traffic without restrictions for web interface
+      f.puts "-A sequreisp.down -m owner --uid-owner www-data -j unlimited_bandwidth"
+
       BootHook.run :hook => :mangle_before_postrouting_hook, :iptables_script => f
 
       Provider.enabled.with_klass_and_interface.each do |p|
