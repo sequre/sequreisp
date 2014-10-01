@@ -273,8 +273,8 @@ def gen_iptables
       # Evito balanceo para los hosts configurados
       f.puts "-A OUTPUT -j avoid_balancing"
       # restauro marka en OUTPUT pero que siga viajando
-      f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x1fffffff --ctmask 0x1fffffff"
-      f.puts "-A OUTPUT -m mark ! --mark 0x0/0x1fffffff -j ACCEPT"
+      f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x8fffffff --ctmask 0x8fffffff"
+      f.puts "-A OUTPUT -m mark ! --mark 0x0/0x8fffffff -j ACCEPT"
 
       BootHook.run :hook => :mangle_after_ouput_hook, :iptables_script => f
 
