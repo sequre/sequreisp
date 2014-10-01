@@ -466,14 +466,17 @@ def gen_iptables
       f.puts ":sequreisp-accepted-sites - [0:0]"
       f.puts "-A PREROUTING -j sequreisp-accepted-sites"
 
-      provider_ips = Provider.all_ips
+      # Allowing access from LAN to local ips to avoid notifications redirections
       Interface.only_lan.each do |interface|
         interface.addresses.each do |addr|
-          f.puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{addr.ip} -p tcp --dport 80 -j ACCEPT"
-          provider_ips.each do |provider_ip|
-            f.puts "-A sequreisp-accepted-sites -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
-          end
+          f.puts "-A sequreisp-accepted-sites -d #{addr.ip} -p tcp --dport 80 -j ACCEPT"
         end
+        #provider_ips = Provider.all_ips
+        # We can also allow from LAN using WAN IPs, but this will add a lot of rules in case of big number of IPs on providers
+        # and we think that this can be a rare case
+        #provider_ips.each do |provider_ip|
+        #  f.puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
+        #end
       end
 
       AlwaysAllowedSite.all.each do |site|
