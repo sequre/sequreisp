@@ -273,8 +273,8 @@ def gen_iptables
       # Evito balanceo para los hosts configurados
       f.puts "-A OUTPUT -j avoid_balancing"
       # restauro marka en OUTPUT pero que siga viajando
-      f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x9fffffff --ctmask 0x9fffffff"
-      f.puts "-A OUTPUT -m mark ! --mark 0x0/0x9fffffff -j ACCEPT"
+      f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x8fffffff --ctmask 0x8fffffff"
+      f.puts "-A OUTPUT -m mark ! --mark 0x0/0x8fffffff -j ACCEPT"
 
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
