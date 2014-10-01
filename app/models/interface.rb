@@ -163,4 +163,8 @@ class Interface < ActiveRecord::Base
     self.only_lan.each { |lan_interface| lan_ips.concat(lan_interface.addresses.collect{ |address| address.ip }) }
     lan_ips
   end
+
+  def exist?
+    !`grep #{self.name} /etc/udev/rules.d/70-persistent-net.rules`.blank?
+  end
 end
