@@ -561,6 +561,9 @@ def gen_iptables
       end
 
       f.puts ":dns-query -"
+      f.puts "-A INPUT -p udp --dport 53 -j dns-query"
+      f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
+
       Interface.all(:conditions => "kind = 'lan'").each do |i|
         ["INPUT","FORWARD"].each do |chain|
           f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
