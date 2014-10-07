@@ -211,4 +211,19 @@ class Configuration < ActiveRecord::Base
     named_options.puts view.render(:file => "configurations/named.conf.options.erb", :locals => {:params => hash})
     named_options.close
   end
+
+  def self.app_listen_port_available
+    ports = []
+    if web_interface_listen_on_80
+      ports << "80"
+    end
+    if web_interface_listen_on_8080
+      ports << "8080"
+    end
+    if web_interface_listen_on_443
+      ports << "443"
+    end
+    ports
+  end
+
 end
