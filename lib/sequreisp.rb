@@ -554,14 +554,9 @@ def gen_iptables
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
-      if Configuration.web_interface_listen_on_80
-        f.puts "-A INPUT -p tcp --dport 80 -j ACCEPT"
-      end
-      if Configuration.web_interface_listen_on_443
-        f.puts "-A INPUT -p tcp --dport 443 -j ACCEPT"
-      end
-      if Configuration.web_interface_listen_on_8080
-        f.puts "-A INPUT -p tcp --dport 8080 -j ACCEPT"
+
+      app_listen_port_available.each do |port|
+        f.puts "-A INPUT -p tcp --dport #{port} -j ACCEPT"
       end
 
       f.puts ":dns-query -"
