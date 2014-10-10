@@ -555,7 +555,7 @@ def gen_iptables
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
 
-      app_listen_port_available.each do |port|
+      Configuration.app_listen_port_available.each do |port|
         f.puts "-A INPUT -p tcp --dport #{port} -j ACCEPT"
       end
 
