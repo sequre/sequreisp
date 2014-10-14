@@ -475,13 +475,12 @@ def gen_iptables
           end
         end
       end
-        #provider_ips = Provider.all_ips
-        # We can also allow from LAN using WAN IPs, but this will add a lot of rules in case of big number of IPs on providers
-        # and we think that this can be a rare case
-        #provider_ips.each do |provider_ip|
-        #  f.puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
-        #end
-      end
+      #provider_ips = Provider.all_ips
+      # We can also allow from LAN using WAN IPs, but this will add a lot of rules in case of big number of IPs on providers
+      # and we think that this can be a rare case
+      #provider_ips.each do |provider_ip|
+      #  f.puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
+      #end
 
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
