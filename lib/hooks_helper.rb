@@ -65,6 +65,10 @@ module HooksHelper
   "<a href='http://www.sequreisp.com'>sequreisp.com</a>".html_safe
   end
 
+  def heading_name
+    "SequreISP"
+  end
+
   def massive_settings_form_extensions(form)
     ""
   end
