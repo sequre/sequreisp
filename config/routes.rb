@@ -1,7 +1,7 @@
 ActionController::Routing::Routes.draw do |map|
   map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get }
 
-  map.resources :configurations, :collection => {:doreload => :get}
+  map.resources :configurations, :collection => {:doreload => :get, :ajax_request => :get, :is_apply_changes => :get }
 
   map.resources :users
 
