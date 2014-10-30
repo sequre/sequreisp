@@ -82,6 +82,9 @@
   <% semantic_form_for @configuration, :html => { :multipart => true } do |form| %>
     <%= error_messages @configuration%>
     <% form.inputs :name => t('fieldsets.configuration.system') do %>
+      <% link_to({:controller => "configurations", :action => "doreload"}, :class => "button", :style => "float:right") do %>
+        <span><span><%=  t('menu.apply_changes') %></span></span>
+      <% end %>
       <%= form.input :language, :as => :select, :collection => Language.languages_for_select, :include_blank => false %>
       <%= form.input :time_zone, :as => :time_zone, :priority_zones => /America/%>
       <%= form.input :web_interface_listen_on_80 %>
