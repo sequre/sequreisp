@@ -16,12 +16,15 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Configuration < ActiveRecord::Base
+  require 'sequreisp_constants'
+
   ACCEPTED_LOCALES = ["es","en","pt"]
   GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
 
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
+  PATH_COMMANDO_LOG = Rails.env.production? ? "#{BASE}/log/command.log" : "/tmp/command_log"
 
   def self.acts_as_audited_except
     [:daemon_reload]
