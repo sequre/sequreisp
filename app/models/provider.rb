@@ -429,6 +429,6 @@ class Provider < ActiveRecord::Base
       provider_ips << provider.ip
       provider.addresses.each { |addr| provider_ips << addr.ip }
     end
-    provider_ips.compact
+    provider_ips.delete_if{|x| (x == nil || x == "")}
   end
 end
