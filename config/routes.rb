@@ -37,6 +37,9 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :always_allowed_sites
 
+  map.command_logs '/command_logs/command_log_info', :controller => 'command_logs', :action => 'command_log_info'
+  map.command_logs '/command_logs', :controller => 'command_logs', :action => 'command_logs'
+
   map.backup '/backup', :controller => 'backup', :action => 'index'
   map.login '/login', :controller => 'user_sessions', :action => 'new'
   map.logout '/logout', :controller => 'user_sessions', :action => 'destroy'

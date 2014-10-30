@@ -348,6 +348,7 @@ es:
     help: "Ayuda"
     guides: "Guías de SequreISP"
     support: "Soporte"
+    command_log: "Log de comandos"
   buttons:
     export_to_csv: "Exportar a csv"
     login: "Entrar"

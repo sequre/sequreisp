@@ -22,6 +22,7 @@ class Configuration < ActiveRecord::Base
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
+  PATH_COMMANDO_LOG = "/tmp/command_log"
 
   def self.acts_as_audited_except
     [:daemon_reload]
