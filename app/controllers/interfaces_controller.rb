@@ -136,6 +136,14 @@ class InterfacesController < ApplicationController
       format.xml  { render :xml => @graph }
     end
   end
+
+  def get_mac_address
+    mac_address = params[:name].nil? ? nil : Interface.which_is_real_mac_address(params[:name])
+    respond_to do |format|
+      format.json { render :json => {:mac_address => mac_address} }
+    end
+  end
+
   private
   def object
     @object ||= Interface.find(params[:id])

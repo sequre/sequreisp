@@ -40,6 +40,9 @@ class Interface < ActiveRecord::Base
 
   validate :name_cannot_be_changed
   validate_on_create :interface_exist, :if => 'not vlan'
+  validates_presence_of :mac_address
+  validates_format_of :mac_address, :with => /^([0-9A-Fa-f]{2}\:){5}[0-9A-Fa-f]{2}$/, :allow_blank => true
+  validates_uniqueness_of :mac_address
 
   def validate
     if kind_changed? and kind_was == "wan" and provider
@@ -49,6 +52,11 @@ class Interface < ActiveRecord::Base
 
   before_save :if_vlan
   before_save :if_wan
+  before_save :check_if_real_mac_address, :if => "mac_address.present? and mac_address_changed?"
+
+  def check_if_real_mac_address
+    generate_internal_mac_address if (mac_address == Interface.which_is_real_mac_address(name, vlan?)) and vlan?
+  end
 
   after_update :queue_update_commands
   after_destroy :queue_destroy_commands
@@ -170,5 +178,25 @@ class Interface < ActiveRecord::Base
 
   def exist?
     system "ip link show dev #{name} 1>/dev/null 2>/dev/null"
+  end
+
+  def self.which_is_real_mac_address(_name, vlan=false)
+    _name = _name.split(".").first if vlan
+    `ip li show dev #{_name} 2>/dev/null`.match(/link\/ether ([0-9a-fA-F:]+)/)[1] rescue nil
+  end
+
+  def generate_internal_mac_address
+    foo = ["00000010", "00000000", "00000000", "00000000", "00000000", "00000000"]
+    _mac_address = "#{self.id}".to_i + "#{self.vlan_id}".to_i
+    while true
+      _mac_address = _mac_address.to_s.rjust(12,"0")
+      #Always set locally administered and unicast
+      mac_address[10,11] = "10"
+      if Interface.find_by_mac_address(_mac_address.scan(/(..)/).join(":")).nil?
+        self.mac_address = _mac_address.scan(/(..)/).join(":")
+        break
+      end
+      _mac_address = _mac_address.to_i + 1
+    end
   end
 end
