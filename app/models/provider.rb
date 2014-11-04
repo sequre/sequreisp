@@ -424,8 +424,8 @@ class Provider < ActiveRecord::Base
   end
 
   def self.all_ips
-   provider_ips = []
-    Provider.all.each do |provider|
+    provider_ips = []
+    Provider.online.ready.each do |provider|
       provider_ips << provider.ip
       provider.addresses.each { |addr| provider_ips << addr.ip }
     end
