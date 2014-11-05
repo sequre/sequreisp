@@ -542,6 +542,7 @@ def gen_iptables
       # FILTER  #
       #---------#
       f.puts "*filter"
+      f.puts ":sequreisp-enabled - [0:0]"
       f.puts ":sequreisp-allowedsites - [0:0]"
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A FORWARD -j sequreisp-allowedsites"
@@ -550,7 +551,9 @@ def gen_iptables
           f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
         end
       end
+
       BootHook.run :hook => :filter_before_all, :iptables_script => f
+
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
 
