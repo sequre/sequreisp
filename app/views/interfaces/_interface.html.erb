@@ -60,13 +60,12 @@
       select_kind();
     });
 
-
-   $('#get_interface_mac_address').click(function(){
+    $('#get_interface_mac_address').click(function(){
       $('.mac_loader').show();
-     _name = $('#interface_name').val();
-     if ($('#interface_vlan_interface_id option:selected').text() != "") {
-       _name = $('#interface_vlan_interface_id option:selected').text();
-     }
+      _name = $('#interface_name').val();
+      if ($('#interface_vlan_interface_id option:selected').text() != "") {
+        _name = $('#interface_vlan_interface_id option:selected').text();
+      }
       $.get('<%= get_mac_address_interfaces_path %>', {name: _name}, function(data){
         if (data.mac_address) {
           $('#interface_mac_address').val(data.mac_address);

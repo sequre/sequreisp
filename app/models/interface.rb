@@ -40,7 +40,6 @@ class Interface < ActiveRecord::Base
 
   validate :name_cannot_be_changed
   validate_on_create :interface_exist, :if => 'not vlan'
-  validates_presence_of :mac_address
   validates_format_of :mac_address, :with => /^([0-9A-Fa-f]{2}\:){5}[0-9A-Fa-f]{2}$/, :allow_blank => true
   validates_uniqueness_of :mac_address
 
@@ -52,17 +51,26 @@ class Interface < ActiveRecord::Base
 
   before_save :if_vlan
   before_save :if_wan
-  before_save :check_if_real_mac_address, :if => "mac_address.present? and mac_address_changed?"
-
-  def check_if_real_mac_address
-    generate_internal_mac_address if (mac_address == Interface.which_is_real_mac_address(name, vlan?)) and vlan?
-  end
+  before_save :set_mac_address
 
   after_update :queue_update_commands
   after_destroy :queue_destroy_commands
 
   named_scope :only_lan, :conditions => { :kind => "lan" }
   named_scope :only_wan, :conditions => { :kind => "wan" }
+
+  def set_mac_address
+    real_mac_address = Interface.which_is_real_mac_address(name, vlan?)
+    if mac_address.present?
+      generate_internal_mac_address if mac_address_changed? and (mac_address == real_mac_address) and vlan?
+    else
+      if vlan?
+        generate_internal_mac_address
+      else
+        self.mac_address = real_mac_address
+      end
+    end
+  end
 
   def name_cannot_be_changed
     errors.add(:name, I18n.t('validations.interface.name_cannot_be_changed')) if not new_record? and name_changed?
@@ -186,17 +194,16 @@ class Interface < ActiveRecord::Base
   end
 
   def generate_internal_mac_address
-    foo = ["00000010", "00000000", "00000000", "00000000", "00000000", "00000000"]
-    _mac_address = "#{self.id}".to_i + "#{self.vlan_id}".to_i
+    #Always set locally administered and unicast
+    locally_and_unicast = "00000010"
+    number = self.id.to_i + self.vlan_id.to_i
     while true
-      _mac_address = _mac_address.to_s.rjust(12,"0")
-      #Always set locally administered and unicast
-      mac_address[10,11] = "10"
-      if Interface.find_by_mac_address(_mac_address.scan(/(..)/).join(":")).nil?
-        self.mac_address = _mac_address.scan(/(..)/).join(":")
+      _mac_address = (locally_and_unicast + number.to_s.rjust(40,"0")).scan(/(........)/).map{|a| a[0].to_i(2).to_s.rjust(2,"0")}.join(":")
+      if Interface.find_by_mac_address(_mac_address).nil?
+        self.mac_address = _mac_address
         break
       end
-      _mac_address = _mac_address.to_i + 1
+      number += 1
     end
   end
 end
