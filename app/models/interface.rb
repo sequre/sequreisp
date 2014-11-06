@@ -41,7 +41,7 @@ class Interface < ActiveRecord::Base
   validate :name_cannot_be_changed
   validate_on_create :interface_exist, :if => 'not vlan'
   validates_format_of :mac_address, :with => /^([0-9A-Fa-f]{2}\:){5}[0-9A-Fa-f]{2}$/, :allow_blank => true
-  validates_uniqueness_of :mac_address
+  validates_uniqueness_of :mac_address, :if => "not mac_address.nil?"
 
   def validate
     if kind_changed? and kind_was == "wan" and provider
@@ -194,16 +194,7 @@ class Interface < ActiveRecord::Base
   end
 
   def generate_internal_mac_address
-    #Always set locally administered and unicast
-    locally_and_unicast = "00000010"
-    number = self.id.to_i + self.vlan_id.to_i
-    while true
-      _mac_address = (locally_and_unicast + number.to_s.rjust(40,"0")).scan(/(........)/).map{ |a| a[0].to_i(2).to_s.rjust(2,"0") }.join(":")
-      if Interface.find_by_mac_address(_mac_address).nil?
-        self.mac_address = _mac_address
-        break
-      end
-      number += 1
-    end
+    #Always set locally administered and unicast, 02 first octet
+    self.mac_address = (2**41 + self.id.to_i * (2**24) + vlan_id.to_i).to_s(16).rjust(12, "0").scan(/../).join(":")
   end
 end
