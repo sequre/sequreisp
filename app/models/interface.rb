@@ -198,7 +198,7 @@ class Interface < ActiveRecord::Base
     locally_and_unicast = "00000010"
     number = self.id.to_i + self.vlan_id.to_i
     while true
-      _mac_address = (locally_and_unicast + number.to_s.rjust(40,"0")).scan(/(........)/).map{|a| a[0].to_i(2).to_s.rjust(2,"0")}.join(":")
+      _mac_address = (locally_and_unicast + number.to_s.rjust(40,"0")).scan(/(........)/).map{ |a| a[0].to_i(2).to_s.rjust(2,"0") }.join(":")
       if Interface.find_by_mac_address(_mac_address).nil?
         self.mac_address = _mac_address
         break
