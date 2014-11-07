@@ -765,9 +765,14 @@ def setup_provider_interface p, boot=true
     commands << "vconfig add #{p.interface.vlan_interface.name} #{p.interface.vlan_id}"
   end
   # x si necesitamos mac_address única para evitar problemas en proveedores que bridgean
-  if p.unique_mac_address?
-    commands << "ip link set  #{p.interface.name} address #{p.mac_address}"
+  # if p.unique_mac_address?
+  #   commands << "ip link set #{p.interface.name} address #{p.mac_address}"
+  # end
+
+  if p.interface.mac_address_changed?
+    commands << "ip link set #{p.interface.name} address #{p.interface.mac_address}"
   end
+
   commands << "ip link set dev #{p.interface.name} up"
   # x no queremos que se mezclen los paquetes de una iface a la otra
   commands << "echo #{p.arp_ignore ? 1 : 0 } > /proc/sys/net/ipv4/conf/#{p.interface.name}/arp_ignore"
@@ -1027,6 +1032,11 @@ def setup_interfaces
       commands << "vconfig add #{i.vlan_interface.name} #{i.vlan_id}"
     end
     commands << "ip link set dev #{i.name} up"
+
+    if i.mac_address_changed?
+      commands << "ip link set #{i.name} address #{i.mac_address}"
+    end
+
     i.addresses.each do |a|
       commands << "ip address add #{a.ip}/#{a.netmask} dev #{i.name}"
       commands << "ip route re #{a.network} dev #{i.name} src #{a.ip}"

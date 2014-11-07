@@ -41,7 +41,6 @@ class Interface < ActiveRecord::Base
   validate :name_cannot_be_changed
   validate_on_create :interface_exist, :if => 'not vlan'
   validates_format_of :mac_address, :with => /^([0-9A-Fa-f]{2}\:){5}[0-9A-Fa-f]{2}$/, :allow_blank => true
-  validates_uniqueness_of :mac_address, :if => "not mac_address.nil?"
 
   def validate
     if kind_changed? and kind_was == "wan" and provider
@@ -62,7 +61,7 @@ class Interface < ActiveRecord::Base
   def set_mac_address
     real_mac_address = Interface.which_is_real_mac_address(name, vlan?)
     if mac_address.present?
-      generate_internal_mac_address if mac_address_changed? and (mac_address == real_mac_address) and vlan?
+      generate_internal_mac_address if mac_address_changed? and (self.mac_address == real_mac_address) and vlan?
     else
       if vlan?
         generate_internal_mac_address
@@ -186,6 +185,10 @@ class Interface < ActiveRecord::Base
 
   def exist?
     system "ip link show dev #{name} 1>/dev/null 2>/dev/null"
+  end
+
+  def mac_address_equal_to_real_mac?
+    mac_address == (`ip li show dev #{name} 2>/dev/null`.match(/link\/ether ([0-9a-fA-F:]+)/)[1] rescue nil)
   end
 
   def self.which_is_real_mac_address(_name, vlan=false)
