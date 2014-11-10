@@ -30,55 +30,6 @@ end
 
 def gen_tc
   commands = []
-  def do_per_contract_prios_tc(tc, plan, c, parent_mayor, parent_minor, iface, direction, prefix=0, rate_factor=0)
-    klass = c.class_hex
-    # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
-    # prefix != 0 significa que matcheo en las ifaces reales donde tengo un arbol x cada enlace
-    mask = prefix == 0 ? "0000ffff" : "00ffffff"
-    rt_prio1 = ""
-    rt_prio2 = ""
-    rt_prio3 = ""
-    ceil = plan["ceil_" + direction]
-    if plan["rate_" + direction] == 0
-      rate_factor = 1 if rate_factor > 1
-      rate = ceil * rate_factor
-      if rate > 0
-        r1 = rate*0.10
-        r2 = rate*0.90
-        rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
-        rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
-      end
-    else
-      rate = plan["rate_" + direction]
-      r1 = rate*0.10
-      r2 = rate*0.85
-      r3 = rate*0.05
-      rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
-      rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
-      rt_prio3 = "rt m1 #{r3/3}kbit d 1s m2 #{r3}kbit"
-    end
-    #padre
-    tc.puts "##{c.client.name} - IP: #{c.ip} ID: #{c.id} KLASS_NUMBER: #{klass}"
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{klass} hfsc ls m2 #{ceil}kbit ul m2 #{ceil}kbit"
-    #hijos
-    #prio1
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio1_hex} " +
-            "est 1sec 5sec hfsc #{rt_prio1} ls m2 #{ceil}kbit"
-    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio1_hex}"
-    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio1_hex} sfq perturb 10"
-
-    #prio2
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio2_hex} " +
-            "est 1sec 5sec hfsc #{rt_prio2} ls m2 #{ceil}kbit"
-    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio2_hex}"
-    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio2_hex} sfq perturb 10"
-
-    #prio3
-    tc.puts "class add dev #{iface} parent #{parent_mayor}:#{klass} classid #{parent_mayor}:#{c.class_prio3_hex} " +
-            "est 1sec 5sec hfsc #{rt_prio3} ls m1 #{ceil * c.ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * c.ceil_dfl_percent / 100}kbit ul m2 #{ceil * c.ceil_dfl_percent / 100}kbit"
-    tc.puts "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{c.mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{c.class_prio3_hex}"
-    tc.puts "qdisc add dev #{iface} parent #{parent_mayor}:#{c.class_prio3_hex} sfq perturb 10"
-  end
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
@@ -94,11 +45,11 @@ def gen_tc
     tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{total_rate_down}kbit ul m2 #{total_rate_down}kbit"
     tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
     ProviderGroup.all.each do |pg|
-      rate_factor_up = (pg.remaining_rate_up*ProviderGroup::HFSC_SATURATION_INDEX)/pg.ceil_up rescue 0
-      rate_factor_down = (pg.remaining_rate_down*ProviderGroup::HFSC_SATURATION_INDEX)/pg.ceil_down rescue 0
+      rate_factor_up = pg.rate_factor_up
+      rate_factor_down = pg.rate_factor_down
       pg.contracts.not_disabled.descend_by_netmask.each do |c|
-        do_per_contract_prios_tc tc_ifb_up, c.plan, c, 1, 1, IFB_UP, "up", 0, rate_factor_up
-        do_per_contract_prios_tc tc_ifb_down, c.plan, c, 1, 1, IFB_DOWN, "down", 0, rate_factor_down
+        tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", rate_factor_up)
+        tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", rate_factor_down)
       end
     end
     tc_ifb_up.close

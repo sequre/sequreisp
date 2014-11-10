@@ -18,7 +18,6 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Contract < ActiveRecord::Base
-  MIN_RATE=0.024
   acts_as_audited :except => [:netmask,
                               :queue_down_prio, :queue_up_prio, :queue_down_dfl, :queue_up_dfl,
                               :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl, :is_connected]
@@ -26,8 +25,6 @@ class Contract < ActiveRecord::Base
     super(attributes)
     self.start_date = Date.today if start_date.nil?
   end
-
-  MIN_RATE = 0.024
 
   belongs_to :client
   belongs_to :plan
@@ -680,79 +677,57 @@ class Contract < ActiveRecord::Base
     [dates, datas]
   end
 
+  # this will be overriden by bw changing plug-ins as time_modifiers and data_accounting
   def bandwidth_rate
     1
   end
 
-  def tc_class_qdisc_filter(o = {})
-    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
-    tc_rules = []
-    tc_rules << "class #{o[:action]} dev #{o[:iface]} parent #{o[:parent_mayor]}:#{self.class_hex} classid #{classid} htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
-    tc_rules << "qdisc add dev #{o[:iface]} parent #{classid} sfq perturb 10" if o[:action] == "add" #saco el handle
-    tc_rules << "filter add dev #{o[:iface]} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}" if o[:action] == "add"
-    tc_rules
-  end
-
-  def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, prefix=0)
-    tc_rules = []
-    # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
-    # prefix != 0 significa que matcheo en las ifaces reales donde tengo un arbol x cada enlace
-    mask = prefix == 0 ? "0000ffff" : "00ffffff"
-    contract_min_rate = Contract::MIN_RATE
-    rate = plan["rate_" + direction] == 0 ?  contract_min_rate : plan["rate_" + direction] * bandwidth_rate
-    rate_prio1 = rate == contract_min_rate ? rate/3 : rate*0.05 * bandwidth_rate
-    rate_prio2 = rate == contract_min_rate ? rate/3 : rate*0.9 * bandwidth_rate
-    rate_prio3 = rate == contract_min_rate ? rate/3 : rate*0.05 * bandwidth_rate
-    ceil = plan["ceil_" + direction] * bandwidth_rate
-    mtu = Configuration.mtu
-    quantum_factor = plan.quantum_factor(direction)
-
-    #padre
-    tc_rules << "##{client.name}: #{id} #{self.klass.number}"
-    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{self.class_hex} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{plan.quantum_total(direction)}"
-
-    if Configuration.use_global_prios
-      #huérfano, solo el filter
-      tc_rules << "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{self.class_hex}"
+  def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, rate_factor)
+    tc_rules =[]
+    mask = "0000ffff"
+    rt_prio1 = ""
+    rt_prio2 = ""
+    rt_prio3 = ""
+    ceil = plan["ceil_" + direction]
+    if plan["rate_" + direction] == 0
+      rate_factor = 1 if rate_factor > 1
+      rate = ceil * rate_factor
+      if rate > 0
+        r1 = rate*0.10
+        r2 = rate*0.90
+        rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
+        rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
+      end
     else
-      #hijos
-      #prio1
-      tc_rules << tc_class_qdisc_filter(:prio => 1,
-                                        :iface => iface,
-                                        :parent_mayor => parent_mayor,
-                                        :current_minor => class_prio1_hex,
-                                        :rate => rate_prio1,
-                                        :ceil => ceil,
-                                        :quantum => mtu * quantum_factor * 3,
-                                        :mark => mark_prio1_hex(prefix),
-                                        :mask => mask,
-                                        :action => action)
-
-      #prio2
-      tc_rules << tc_class_qdisc_filter(:prio => 2,
-                                        :iface => iface,
-                                        :parent_mayor => parent_mayor,
-                                        :current_minor => class_prio2_hex,
-                                        :rate => rate_prio2,
-                                        :ceil => ceil,
-                                        :quantum => mtu * quantum_factor * 2,
-                                        :mark => mark_prio2_hex(prefix),
-                                        :mask => mask,
-                                        :action => action)
-
-      #prio3
-      tc_rules << tc_class_qdisc_filter(:prio => 3,
-                                        :iface => iface,
-                                        :parent_mayor => parent_mayor,
-                                        :current_minor => class_prio3_hex,
-                                        :rate => rate_prio3,
-                                        :ceil => ceil * ceil_dfl_percent / 100,
-                                        :quantum => mtu,
-                                        :mark => mark_prio3_hex(prefix),
-                                        :mask => mask,
-                                        :action => action)
-      tc_rules.flatten
+      rate = plan["rate_" + direction]
+      r1 = rate*0.10
+      r2 = rate*0.85
+      r3 = rate*0.05
+      rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
+      rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
+      rt_prio3 = "rt m1 #{r3/3}kbit d 1s m2 #{r3}kbit"
     end
+    #padre
+    tc_rules << "##{client.name} - IP: #{ip} ID: #{id} KLASS_NUMBER: #{class_hex}"
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{class_hex} hfsc ls m2 #{ceil}kbit ul m2 #{ceil}kbit"
+    #hijos
+    #prio1
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio1_hex} " +
+            "est 1sec 5sec hfsc #{rt_prio1} ls m2 #{ceil}kbit"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio1_hex}"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio1_hex} sfq perturb 10"
+
+    #prio2
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio2_hex} " +
+            "est 1sec 5sec hfsc #{rt_prio2} ls m2 #{ceil}kbit"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio2_hex}"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio2_hex} sfq perturb 10"
+
+    #prio3
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio3_hex} " +
+            "est 1sec 5sec hfsc #{rt_prio3} ls m1 #{ceil * ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * ceil_dfl_percent / 100}kbit ul m2 #{ceil * ceil_dfl_percent / 100}kbit"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio3_hex}"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10"
   end
 
   private

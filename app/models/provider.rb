@@ -371,10 +371,6 @@ class Provider < ActiveRecord::Base
     result
   end
 
-  def max_quantum
-    Configuration.first.mtu * quantum_factor * 3
-  end
-
   def tc_class_qdisc_filter(o = {})
     classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
     tc_rules = []
@@ -384,44 +380,6 @@ class Provider < ActiveRecord::Base
     tc_rules
   end
 
-  def do_global_prios_tc(parent_mayor, parent_minor, iface, direction)
-    tc_rules = []
-    mask = "f0000000"
-    quantum = p.max_quantum
-
-    #TODO tc_global ceil_prio3 quantum mark, etc
-    #prio1
-    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
-                                      :parent_minor => parent_minor,
-                                      :current_minor => "a",
-                                      :rate => self["rate_" + direction] * 0.4 ,
-                                      :ceil => self["rate_" + direction],
-                                      :prio => 1,
-                                      :quantum => quantum,
-                                      :mark => "a0000000",
-                                      :mask => mask)
-    #prio2
-    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
-                                      :parent_minor => parent_minor,
-                                      :current_minor => "b",
-                                      :rate => self["rate_" + direction] * 0.5 ,
-                                      :ceil => self["rate_" + direction],
-                                      :prio => 2,
-                                      :quantum => quantum,
-                                      :mark => "b0000000",
-                                      :mask => mask)
-    #prio3
-    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
-                                      :parent_minor => parent_minor,
-                                      :current_minor => "c",
-                                      :rate => self["rate_" + direction] * 0.1,
-                                      :ceil => self["rate_" + direction] * 0.3 ,
-                                      :prio => 3,
-                                      :quantum => quantum / 3,
-                                      :mark => "c0000000",
-                                      :mask => mask)
-    tc_rules.flatten
-  end
 
   def self.all_ips
     provider_ips = []

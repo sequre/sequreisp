@@ -119,10 +119,6 @@ class ProviderGroup < ActiveRecord::Base
   def mark_hex
     (self.klass.number << 16).to_s(16)
   end
-  def proxy_bind_ip
-    # 192.0.2.0/24 reserved for TEST-NET-1 [RFC5737]
-    "192.0.2.#{klass.number}"
-  end
   def instant_rate
     rate = {}
     if SequreispConfig::CONFIG["demo"]
@@ -167,5 +163,11 @@ class ProviderGroup < ActiveRecord::Base
   end
   def ceil_up
     contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
+  end
+  def rate_factor_up
+    remaining_rate_up*HFSC_SATURATION_INDEX/ceil_up rescue 0
+  end
+  def rate_factor_down
+    remaining_rate_down*HFSC_SATURATION_INDEX/ceil_down rescue 0
   end
 end
