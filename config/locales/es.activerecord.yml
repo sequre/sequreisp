@@ -28,11 +28,6 @@ es:
           disabled: "Deshabilitado"
           provider: "Por proveedor(recomendado)"
           full: "Completo"
-    contract:
-      transparent_proxy:
-        default: "Por defecto (según el plan)"
-        "false": "Deshabilitado"
-        "true": "Habilitado"
     afirmative: "Sí"
     negative: "No"
   activerecord:
@@ -43,9 +38,6 @@ es:
       avoid_balancing_host:
         one: "Sitio sin balanceo"
         other: "Sitios sin balanceo"
-      avoid_proxy_host:
-        one: "Sitio sin proxy"
-        other: "Sitios sin proxy"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -120,7 +112,6 @@ es:
         forwarded_ports: "Puertos redireccionados"
         public_forwarded_ports: "Puertos redireccionados (públicos)"
         private_forwarded_ports: "Puertos redireccionados (privados)"
-        transparent_proxy: "Proxy transparente"
         created_at: "Fecha de alta"
         detail: "Detalle"
         cpe: "Equipo"
@@ -164,7 +155,6 @@ es:
         burst_up: "Ráfaga de subida [kbits]"
         long_download_max: "Límite para descargas grandes [kbytes]"
         long_upload_max: "Límite para cargas grandes [kbytes]"
-        transparent_proxy: "Proxy transparente"
         number_of_contracts: "Cantidad de contratos"
       provider_group:
         name: "Nombre"
@@ -210,11 +200,6 @@ es:
         default_prio_helpers: "Netfilter helpers prioritarios (global)"
         mtu: "MTU (unidad de transferencia máxima)"
         quantum_factor: "Ancho de banda que representa 1 cuanto"
-        transparent_proxy: "Habilitar proxy transparente (global)"
-        transparent_proxy_n_to_m: "Control de ancho de banda de subida para proxy transparente"
-        transparent_proxy_zph_enabled: "Entregar contenido en caché a la velocidad del enlace"
-        transparent_proxy_windows_update_hack: "Habilitar caché de Windows Update (ver ayuda)"
-        transparent_proxy_max_load_average: "Si la carga promedio del sistema en los últimos 5 min supera este valor, el proxy será desactivado automáticamente"
         nf_conntrack_max: "Máximo nº de conexiones (nf_conntrack_max)"
         gc_thresh1: "Entradas ARP (gc_thresh1)"
         gc_thresh2: "Entradas ARP (gc_thresh2)"
@@ -237,6 +222,17 @@ es:
         web_interface_listen_on_80: "Escuchar peticiones de la interfaz web en puerto 80"
         web_interface_listen_on_443: "Escuchar peticiones de la interfaz web en puerto 443(HTTPS)"
         web_interface_listen_on_8080: "Escuchar peticiones de la interfaz web en puerto 8080"
+        mail_relay_used: "Usar mail relay"
+        mail_relay_manipulated_for_sequreisp: "Manejar la configuración de envíos de e-mail con SequreISP"
+        mail_relay_option_server: "Servicios"
+        mail_relay_smtp_server: "Servidor SMTP"
+        mail_relay_smtp_port: "Puerto"
+        mail_relay_mail: "Nombre de usuario"
+        mail_relay_password: "Password"
+        dns_use_forwarders: "Configurar DNS"
+        dns_first_server: "Primer server DNS"
+        dns_second_server: "Segundo server DNS"
+        dns_third_server: "Tercer Server DNS"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -256,6 +252,7 @@ es:
         kind: "Tipo"
         physical_link: "Enlace"
       audit:
+        id: "ID"
         user: "Usuario"
         action: "Acción"
         created_at: "Fecha"
@@ -272,9 +269,6 @@ es:
       avoid_balancing_host:
         name: "IP o nombre de dominio del sitio"
         provider: "Proveedor de salida"
-        detail: "Detalle"
-      avoid_proxy_host:
-        name: "IP o nombre de dominio del sitio"
         detail: "Detalle"
       iproute:
         dst_address: "Dirección IP de destino"
@@ -318,7 +312,6 @@ es:
         burst_up: "Cantidad de datos que serán transferidos al inicio de una conexión HTTP/HTTPS sin tener en cuenta el límite de ancho de banda de subida"
         long_download_max: "Tamaño a partir del cual una descarga HTTP/HTTPS pasa a ser clasificada como tráfico P2P"
         long_upload_max: "Tamaño a partir del cual una carga HTTP/HTTPS pasa a ser clasificada como tráfico P2P"
-        transparent_proxy: "Habilitar aceleración proxy. Personalizable por contrato"
       interface:
         kind: "WAN si conecta a Internet; LAN si conecta hacia los clientes"
       configuration:
@@ -328,6 +321,7 @@ es:
         tc_contracts_per_provider_in_lan: "No habilitar si contratos×providers > 8000 (aprox.)"
         use_global_prios: "Habilitar únicamente en caso de más de 2500 contratos"
         use_external_number_client: "Al desactivar utiliza como numero de cliente los ids"
+        mail_relay_manipulated_for_sequreisp: "Deshabilitar para trabajar manualmente con /etc/postfix/main.cf"
       provider:
         shape_rate_down_on_ingress: "El control de tráfico de bajada se hace en la interfaz LAN; si habilita esta opción se habitará un control adicional en la interfaz WAN que asegurará que el tráfico de los clientes más el del servidor no excedan el límite configurado"
         avoid_nat_addresses: "Una dirección por linea, notación CIDR, ejemplo 200.10.20.0/24"
@@ -343,7 +337,6 @@ es:
     disk_management: "Administración de discos"
     general_configuration: "Configuración general"
     avoid_balancing_hosts: "Sitios sin balanceo"
-    avoid_proxy_hosts: "Sitios sin proxy"
     iproutes: "Rutas estáticas"
     dashboard: "Panel"
     apply_changes: "Aplicar cambios"
@@ -356,6 +349,7 @@ es:
     guides: "Guías de SequreISP"
     support: "Soporte"
   buttons:
+    export_to_csv: "Exportar a csv"
     login: "Entrar"
     edit: "Editar"
     delete: "Eliminar"
@@ -444,6 +438,11 @@ es:
     pie:
       free: "Libre"
       use: "En uso"
+    name_service:
+      sequreisp_daemon: "Demonio SequreISP"
+      bind_dns_server: "Servicio Bind DNS"
+      apache_web_server: "Servicio Apache Web"
+      mysql_server: "Servicio MySQL"
   actions:
     edit: "Editando %{model}"
     new: "Creando %{model}"
@@ -466,6 +465,7 @@ es:
       could_not_be_deleted_has_vlans: "Esta interfaz tiene VLANs asociadas y no puede ser borrada"
       could_not_be_deleted_has_provider: "Esta interfaz tiene un proveedor asociado y no puede ser borrada"
       could_not_be_deleted_has_proxy_arp_contracts: "Esta interfaz no puede ser borrada, hay contratos con Proxy ARP asociado a esta interfaz"
+      name_without_space: "El nombre de la interfaz solo acepta letras y numeros"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "Este proveedor no puede ser borrado, hay contratos con Proxy ARP asociado a este proveedor"
     dashboard:
@@ -495,8 +495,12 @@ es:
       when_apply_change: "El proceso de asignación de discos puede demorar alrededor de 15-20 min, es normal que se presente un aumento en la carga del sistema (load average)"
       capacity_used_for_cache: "Capacidad usada (cache)"
     contract:
-      online: "Conectado"
-      offline: "Desconectado"
+      connected: "Conectado"
+      not_connected: "Desconectado"
+      connected_and_not_connected: "Todos"
+    configuration:
+      own: "Servidor Propio"
+      gmail: "Gmail"
   controllers:
     successfully_updated: "Actualización de datos exitosa"
     successfully_created: "Creación exitosa"
@@ -511,6 +515,7 @@ es:
     interface:
       unable_to_change_kind: "No se puede cambiar el tipo, esta interfaz tiene un proveedor asignado"
       name_cannot_be_changed: "El nombre de una interfaz no se puede cambiar una vez creada"
+      name_does_not_exist: "El nombre de la interfaz no coincide con ninguna de las placas de red reconocidas"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "El proveedor seleccionado no pertenece al grupo del plan asignado"
       protocol_must_be_specified: "Debe especificar el protocolo"
@@ -551,8 +556,9 @@ es:
       notifications: "Notificaciones"
       users: "Usuarios"
       global_prios: "Prioridades globales"
-      proxy: "Proxy (web cache)"
       advanced: "Configuración avanzada"
+      mail_relay: "Mail relay"
+      bind_dns: "Configuración DNS"
     interface:
       ips: "IPs"
     provider:
@@ -587,3 +593,5 @@ es:
     error_on_reversion: 'No se pudo volver a la versión indicada'
   error_messages:
     not_selected_any_options: 'No se ha selecionado ninguna opción'
+    not_repeat_dns_server: 'Existen servidores DNS repetidos'
+    define_one_dns_server: 'Definir al menos un servidor DNS'

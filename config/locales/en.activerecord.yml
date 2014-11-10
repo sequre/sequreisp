@@ -28,11 +28,6 @@ en:
           disabled: "Disabled"
           provider: "Per provider(recommended)"
           full: "Full"
-    contract:
-      transparent_proxy:
-        default: "By Default (according to the plan)"
-        "false": "Disabled"
-        "true": "Enabled"
     afirmative: "Yes"
     negative: "No"
   activerecord:
@@ -43,9 +38,6 @@ en:
       avoid_balancing_host:
         one: "Avoid balancing host"
         other: "Avoid balancing hosts"
-      avoid_proxy_host:
-        one: "Avoid proxy host"
-        other: "Avoid proxy hosts"
       client:
         one: "Client"
         other: "Clients"
@@ -120,7 +112,6 @@ en:
         forwarded_ports: "Forwarded ports"
         public_forwarded_ports: "Public forwarded ports"
         private_forwarded_ports: "Private forwarded ports"
-        transparent_proxy: "Transparent proxy"
         created_at: "Created at"
         detail: "Detail"
         cpe: "CPE"
@@ -164,7 +155,6 @@ en:
         burst_up: "Upload Burst [kbits]"
         long_download_max: "Large downloads limit [kbytes]"
         long_upload_max: "Large uploads limit [kbytes]"
-        transparent_proxy: "Transparent Proxy"
         number_of_contracts: "Number of contracts"
       provider_group:
         name: "name"
@@ -210,11 +200,6 @@ en:
         default_prio_helpers: "High priority netfilter helpers (global)"
         mtu: "MTU (maximum transfer unit)"
         quantum_factor: "Bandwidth that represents 1 quantum"
-        transparent_proxy: "Enable transparent proxy (global)"
-        transparent_proxy_n_to_m: "Transparent proxy upload control"
-        transparent_proxy_zph_enabled: "Deliver cached content at link speed"
-        transparent_proxy_windows_update_hack: "Enable Windows Update cache (see help)"
-        transparent_proxy_max_load_average: "If system's last 5 min mean load average is above this value, then the proxy is automaticaly disabled"
         nf_conntrack_max: "Maximum number of connections (nf_conntrack_max)"
         gc_thresh1: "ARP entries (gc_thresh1)"
         gc_thresh2: "ARP entries (gc_thresh2)"
@@ -237,6 +222,17 @@ en:
         web_interface_listen_on_80: "Accept web interface requests on port 80"
         web_interface_listen_on_443: "Accept web interface requests on port 443"
         web_interface_listen_on_8080: "Accept web interface requests on port 8080"
+        mail_relay_manipulated_for_sequreisp: "Manage e-mail configuration with SequreISP"
+        mail_relay_used: "Use mail relay"
+        mail_relay_option_server: "Server option"
+        mail_relay_smtp_server: "SMTP Server"
+        mail_relay_smtp_port: "Port"
+        mail_relay_mail: "Username"
+        mail_relay_password: "Password"
+        dns_use_forwarders: "Use forwarders for DNS"
+        dns_first_server: "First DNS Server"
+        dns_second_server: "Second DNS Server"
+        dns_third_server: "Third DNS Server"
       user:
         name: "Name"
         email: "User email address"
@@ -256,6 +252,7 @@ en:
         kind: "Kind"
         physical_link: "Link"
       audit:
+        id: "ID"
         user: "User"
         action: "Action"
         created_at: "Date"
@@ -272,9 +269,6 @@ en:
       avoid_balancing_host:
         name: "IP address or domain name"
         provider: "Provider to use"
-        detail: "Detail"
-      avoid_proxy_host:
-        name: "IP address or domain name"
         detail: "Detail"
       iproute:
         dst_address: "Destination IP address"
@@ -318,7 +312,6 @@ en:
         burst_up: "Amount of data following an HTTP/HTTPS connection to which the upload limit will not be effective"
         long_download_max: "Amount of data above which an HTTP/HTTPS download is clasified as P2P"
         long_upload_max: "Amount of data above which an HTTP/HTTPS upload is clasified as P2P"
-        transparent_proxy: "Enable proxy acceleration. Customizable per contract."
       interface:
         kind: "WAN: Internet connections; LAN: clients connections"
       configuration:
@@ -328,6 +321,7 @@ en:
         tc_contracts_per_provider_in_lan: "Do not enable if contracts*providers > 8000 (approx.)"
         use_global_prios: "Enable only if there is more than 2500 contracts"
         use_external_number_client: "If disabled, internal ids are used as client numbers"
+        mail_relay_manipulated_for_sequreisp: "Disable if you want to manually edit /etc/postfix/main.cf"
       provider:
         shape_rate_down_on_ingress: "Download traffic shaping is done on the LAN interface; if you enable this option, an extra control will be enabled on ingress that will shape clients' and server's own traffic to the configured download rate"
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"
@@ -343,7 +337,6 @@ en:
     disk_management: "Disk management"
     general_configuration: "General Configuration"
     avoid_balancing_hosts: "Avoid Balancing Hosts"
-    avoid_proxy_hosts: "Avoid Proxy Hosts"
     iproutes: "Static routes"
     dashboard: "Dashboard"
     apply_changes: "Apply changes"
@@ -356,6 +349,7 @@ en:
     guides: "SequireISP guides"
     support: "Support"
   buttons:
+    export_to_csv: "Export to csv"
     login: "Login"
     edit: "Edit"
     delete: "Delete"
@@ -444,6 +438,11 @@ en:
     pie:
       free: "Free"
       use: "In use"
+    name_service:
+      sequreisp_daemon: "SequreISP Daemon"
+      bind_dns_server: "Bind DNS Server"
+      apache_web_server: "Apache Web Server"
+      mysql_server: "MySQL Server"
   actions:
     edit: "Editing %{model}"
     new: "Creating %{model}"
@@ -466,6 +465,7 @@ en:
       could_not_be_deleted_has_vlans: "This interface has VLANs assigned, therefore it can't be deleted"
       could_not_be_deleted_has_provider: "This interface has a provider assigned, therefore it can't be deleted"
       could_not_be_deleted_has_proxy_arp_contracts: "This interface has contracts with Proxy ARP associated, therefore it can't be deleted"
+      name_without_space: "Interface name only allows letters and numbers"
     provider:
       could_not_be_deleted_has_proxy_arp_contracts: "This provider has contracts with Proxy ARP associated, therefore it can't be deleted"
     dashboard:
@@ -495,8 +495,12 @@ en:
       when_apply_change: "The disk allocation process should take about 15-20 minutes; is normal an increase in load average"
       capacity_used_for_cache: "Capacity used (cache)"
     contract:
-      online: "Online"
-      offline: "Offline"
+      connected: "Online"
+      not_connected: "Offline"
+      connected_and_not_connected: "All"
+    configuration:
+      own: "Server own"
+      gmail: "Gmail"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
@@ -511,6 +515,7 @@ en:
     interface:
       unable_to_change_kind: "Unable to change kind, this interface has a provider assigned"
       name_cannot_be_changed: "The interface name cannot be changed once created"
+      name_does_not_exist: "The interface name does not match any of the attached network interfaces"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "The selected provider does not belong to the group's assigned plan"
       protocol_must_be_specified: "Protocol must be specified"
@@ -551,8 +556,9 @@ en:
       notifications: "Notifications"
       users: "Users"
       global_prios: "Global high priority ports"
-      proxy: "Proxy (Web cache)"
       advanced: "Advanced configuration"
+      mail_relay: "Mail relay"
+      bind_dns: "DNS Configuration"
     interface:
       ips: "IPs"
     provider:
@@ -587,3 +593,5 @@ en:
     error_on_reversion: 'There was an error when trying to go back to previus version'
   error_messages:
     not_selected_any_options: 'No selected any options'
+    not_repeat_dns_server: 'Exist DNS Servers replicated'
+    define_one_dns_server: 'Define at less one DNS server'

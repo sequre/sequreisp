@@ -1,4 +1,4 @@
-# Sequreisp - Copyright 2010, 2011 Luciano Ruete
+# Sequreisp- - Copyright 2010, 2011 Luciano Ruete
 #
 # This file is part of Sequreisp.
 #
@@ -204,14 +204,14 @@ def gen_iptables
         end
       end
       # restauro marka en PREROUTING
-      f.puts "-A PREROUTING -j CONNMARK --restore-mark"
+      f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
 
       # acepto si ya se de que enlace es
-      f.puts "-A PREROUTING -m mark ! --mark 0 -j ACCEPT"
+      f.puts "-A PREROUTING -m mark ! --mark 0x0/0x1fffffff -j ACCEPT"
       # si viene desde internet marko segun el enlace por el que entró
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
-        f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark"
+        f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
         f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT"
       end
       # tabla para evitar triangulo de nat
@@ -245,30 +245,21 @@ def gen_iptables
       # Evito balanceo para los hosts configurados
       f.puts "-A OUTPUT -j avoid_balancing"
       # restauro marka en OUTPUT pero que siga viajando
-      f.puts "-A OUTPUT -j CONNMARK --restore-mark"
-      f.puts "-A OUTPUT -m mark ! --mark 0 -j ACCEPT"
-      if Configuration.transparent_proxy
-        if Configuration.transparent_proxy_n_to_m
-          Contract.not_disabled.descend_by_netmask.each do |c|
-            mark = if not c.public_address.nil?
-                     c.public_address.addressable.mark_hex
-                   elsif not c.unique_provider.nil?
-                     # marko los contratos que salen por un único provider
-                     c.unique_provider.mark_hex
-                   else
-                     c.plan.provider_group.mark_hex
-                  end
-            f.puts "-A OUTPUT -s #{c.proxy_bind_ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
-          end
-        else
-          ProviderGroup.enabled.with_klass.each do |pg|
-            # marko provider_group según tcp_outgoing_address de squid
-            f.puts "-A OUTPUT -s #{pg.proxy_bind_ip} -j MARK --set-mark 0x#{pg.mark_hex}/0x00ff0000"
-          end
-        end
-      end
+      f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x8fffffff --ctmask 0x8fffffff"
+      f.puts "-A OUTPUT -m mark ! --mark 0x0/0x8fffffff -j ACCEPT"
+
+      BootHook.run :hook => :mangle_after_ouput_hook, :iptables_script => f
+
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
+      f.puts ":sequreisp.down - [0:0]"
+      f.puts ":sequreisp.up - [0:0]"
+
+      # apache traffic without restrictions for web interface
+      f.puts "-A sequreisp.down -m owner --uid-owner www-data -j unlimited_bandwidth"
+
+      BootHook.run :hook => :mangle_before_postrouting_hook, :iptables_script => f
+
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A sequreisp_connmark  -o #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
       end
@@ -278,16 +269,6 @@ def gen_iptables
       end
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
       f.puts "-A POSTROUTING -m mark --mark 0x00000000/0x00ff0000 -j sequreisp_connmark"
-
-      if Configuration.transparent_proxy and Configuration.transparent_proxy_zph_enabled
-        f.puts "-A POSTROUTING -p tcp --sport 3128 -m tos --tos 0x10 -j ACCEPT"
-      end
-
-      f.puts ":sequreisp.down - [0:0]"
-      f.puts ":sequreisp.up - [0:0]"
-
-      # apache traffic without restrictions for web interface and videocache
-      f.puts "-A sequreisp.down -m owner --uid-owner www-data -j unlimited_bandwidth"
 
       #speed-up MARKo solo si no estaba a restore'ada x CONNMARK
       mark_if="-m mark --mark 0x0/0xffff"
@@ -330,9 +311,6 @@ def gen_iptables
         # redirección del trafico de este cliente hacia su propia chain
         f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
         f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
-        if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-          f.puts "-A sequreisp.up -s #{c.proxy_bind_ip} -j #{chain}"
-        end
         # separo el tráfico en las 3 class: prio1 prio2 prio3
         # prio1
         do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
@@ -366,7 +344,7 @@ def gen_iptables
         # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
         f.puts "-A #{chain} -j ACCEPT"
       end
-      f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark"
+      f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
       f.puts "COMMIT"
       #---------#
       # /MANGLE #
@@ -385,9 +363,6 @@ def gen_iptables
           f.puts "-A PREROUTING -d #{c.public_address.ip} -j DNAT --to-destination #{c.ip}"
 
           f.puts "-A POSTROUTING -s #{c.ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
-          if Configuration.transparent_proxy and Configuration.transparent_proxy_n_to_m
-            f.puts "-A POSTROUTING -s #{c.proxy_bind_ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
-          end
         end
       end
       # attribute: forwarded_ports
@@ -396,47 +371,51 @@ def gen_iptables
         do_port_forwardings fp, f
       end
 
+      # VER CON EL ALFRED
       # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
       # Avoids tproxy to server ip's
-      Interface.all(:conditions => "kind = 'lan'").each do |i|
-        i.addresses.each do |a|
-          f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
-        end
-        #TODO ver que pasa con provider dinamicos que cambian la ip
-        Provider.enabled.ready.each do |p|
-          f.puts "-A PREROUTING -i #{i.name} -d #{p.ip} -p tcp --dport 80 -j ACCEPT"
-          p.addresses.each do |a|
-            f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
-          end
-        end
-      end
+      #---------------------------------------------------------------------------------------------------
+      # Interface.all(:conditions => "kind = 'lan'").each do |i|
+      #   i.addresses.each do |a|
+      #     f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+      #   end
+      #   #TODO ver que pasa con provider dinamicos que cambian la ip
+      #   Provider.enabled.ready.each do |p|
+      #     f.puts "-A PREROUTING -i #{i.name} -d #{p.ip} -p tcp --dport 80 -j ACCEPT"
+      #     p.addresses.each do |a|
+      #       f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+      #     end
+      #   end
+      # end
+      #---------------------------------------------------------------------------------------------------
 
       f.puts ":sequreisp-accepted-sites - [0:0]"
       f.puts "-A PREROUTING -j sequreisp-accepted-sites"
+
+      # Allowing access from LAN to local ips to avoid notifications redirections
+      listen_ports = Configuration.app_listen_port_available
+      Interface.only_lan.each do |interface|
+        interface.addresses.each do |addr|
+          listen_ports.each do |port|
+            f.puts "-A sequreisp-accepted-sites -d #{addr.ip} -p tcp --dport #{port} -j ACCEPT"
+          end
+        end
+      end
+      #provider_ips = Provider.all_ips
+      # We can also allow from LAN using WAN IPs, but this will add a lot of rules in case of big number of IPs on providers
+      # and we think that this can be a rare case
+      #provider_ips.each do |provider_ip|
+      #  f.puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
+      #end
+
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
-          f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} --dport 80 -j ACCEPT"
+          f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
         end
       end
 
       BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
 
-      # Evito pasar por el proxy para los hosts configurados
-      #
-      #
-      f.puts ":avoid_proxy - [0:0]"
-      AvoidProxyHost.all.each do |aph|
-        aph.ip_addresses.each do |ip|
-          f.puts "-A avoid_proxy -d #{ip} -p tcp --dport 80 -j ACCEPT"
-        end
-      end
-      f.puts "-A PREROUTING -j avoid_proxy"
-      Contract.not_disabled.descend_by_netmask.each do |c|
-        # attribute: transparent_proxy
-        if c.transparent_proxy?
-          f.puts "-A PREROUTING -s #{c.ip} -p tcp --dport 80 -j REDIRECT --to-port 3128"
-        end
-      end
       Provider.enabled.with_klass_and_interface.each do |p|
         p.networks.each do |network|
           f.puts "-A POSTROUTING -o #{p.link_interface} -s #{network} -j ACCEPT"
@@ -489,32 +468,38 @@ def gen_iptables
       # FILTER  #
       #---------#
       f.puts "*filter"
+      f.puts ":sequreisp-enabled - [0:0]"
       f.puts ":sequreisp-allowedsites - [0:0]"
+      f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A FORWARD -j sequreisp-allowedsites"
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
-          f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} --dport 80 -j ACCEPT"
+          f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
         end
       end
+
       BootHook.run :hook => :filter_before_all, :iptables_script => f
-      f.puts ":sequreisp-enabled - [0:0]"
-      f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
+
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
-      #f.puts "-A INPUT -p tcp --dport 3128 -j sequreisp-enabled"
-      if Configuration.web_interface_listen_on_80
-        f.puts "-A INPUT -p tcp --dport 80 -j ACCEPT"
+
+      Configuration.app_listen_port_available.each do |port|
+        f.puts "-A INPUT -p tcp --dport #{port} -j ACCEPT"
       end
-      if Configuration.web_interface_listen_on_443
-        f.puts "-A INPUT -p tcp --dport 443 -j ACCEPT"
-      end
-      if Configuration.web_interface_listen_on_8080
-        f.puts "-A INPUT -p tcp --dport 8080 -j ACCEPT"
-      end
+
+      f.puts ":dns-query -"
+      f.puts "-A INPUT -p udp --dport 53 -j dns-query"
+      f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
+
       Interface.all(:conditions => "kind = 'lan'").each do |i|
-        f.puts "-A INPUT -i #{i.name} -p udp --dport 53 -j ACCEPT"
-        f.puts "-A INPUT -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        ["INPUT","FORWARD"].each do |chain|
+          f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A #{chain} -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        end
       end
+      BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
+      f.puts "-A dns-query -j ACCEPT"
+
       Provider.enabled.with_klass_and_interface.each do |p|
         if p.allow_dns_queries
           f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
@@ -564,7 +549,7 @@ def gen_ip_ru
   begin
     File.open(IP_RU_FILE, "w") do |f|
       f.puts "rule flush"
-      f.puts "rule add prio 1 lookup main"
+      f.puts "rule add prio 10 lookup main"
       ProviderGroup.enabled.with_klass.each do |pg|
         f.puts "rule add fwmark 0x#{pg.mark_hex}/0x00ff0000 table #{pg.table} prio 200"
       end
@@ -576,6 +561,7 @@ def gen_ip_ru
         f.puts "rule add from #{p.ip}/32 table #{p.check_link_table} prio 90" if p.ip and not p.ip.empty?
       end
       f.puts "rule add prio 32767 from all lookup default"
+      BootHook.run :hook => :gen_ip_ru, :ip_ru_script => f
     end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
@@ -594,7 +580,7 @@ def update_fallback_route(f=nil, force=false, boot=true)
     #TODO loguear? el cambio de estado en una bitactora
   end
   if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot) 
+    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot)
   end
 end
 
@@ -641,6 +627,7 @@ def gen_ip_ro
         update_provider_group_route pg, f, true, true
       end
       update_fallback_route f, true, true
+      BootHook.run :hook => :gen_ip_ro, :ip_ro_script => f
     end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
@@ -787,109 +774,6 @@ def setup_proc
     "echo #{Configuration.gc_thresh2} > /proc/sys/net/ipv4/neigh/default/gc_thresh2",
     "echo #{Configuration.gc_thresh3} > /proc/sys/net/ipv4/neigh/default/gc_thresh3"
     ]
-end
-
-def config_cache_disks
-  system_disk = Disk.system.first
-  if system_disk
-    conf = Configuration.first
-    disks_to_prepare = Disk.prepared_for_cache
-    use_system_disk_for_cache = (Disk.cache.count == 0 and disks_to_prepare.empty?)
-    @create_directorys_for_squid = false
-
-    if conf.transparent_proxy and (disks_to_prepare.present? or use_system_disk_for_cache)
-      exec_context_commands("stop_squid_and_add_client_redirection",
-                            ["/sbin/iptables -t nat -I avoid_proxy -p tcp --dport 80 -j ACCEPT",
-                             "service squid stop",
-                             "if (pidof squid); then pkill -9 squid; fi"], false)
-      @create_directorys_for_squid = true
-    end
-
-    system_disk.cache = false if (disks_to_prepare.present? and system_disk.cache?)
-
-    disks_to_prepare.each do |disk|
-      exec_context_commands("umount_and_remove_from_fstab_extra_disk", disk.umount_and_remove_from_fstab, false) if disk.is_mounted?
-      if exec_context_commands("format_extra_disk", disk.format, false)
-        disk.rewrite_serial
-        if exec_context_commands("mount_and_add_to_fstab_extra_disk", disk.mount_and_add_to_fstab, false)
-          if exec_context_commands("do_prepare_extra_disk_for_cache", disk.do_prepare_disk_for_cache, false)
-            disk.prepare_disk_for_cache = false
-            disk.assigned_for([:cache])
-          end
-        end
-        disk.save if disk.changed?
-      end
-    end
-
-    # When no extra disks for cache
-    if use_system_disk_for_cache
-      exec_context_commands("do_prepare_system_disk_for_cache", system_disk.do_prepare_disk_for_cache, false)
-      system_disk.cache = true
-    end
-
-    system_disk.save if system_disk.changed?
-  end
-end
-
-def setup_proxy
-  squid_file = '/etc/init/squid.conf'
-  squid_file_off = squid_file + '.disabled'
-  commands_on_boot = []
-  commands = []
-
-  if Configuration.transparent_proxy
-    commands_on_boot << "[ -f #{squid_file_off} ] && mv #{squid_file_off} #{squid_file}"
-    #relodearlo si ya está corriendo, arrancarlo sino
-    commands_on_boot << 'if [[ -n "$(pidof squid)" ]] ; then  squid -k reconfigure ; else service squid start ; fi'
-    commands << "squid -z" if @create_directorys_for_squid
-    commands << "/sbin/iptables -t nat -D avoid_proxy -p tcp --dport 80 -j ACCEPT" if @create_directorys_for_squid
-    commands << "sed -i \"/^ *cache_dir*/ c #cache_dir ufs \/var\/spool\/squid 30000 16 256\" /etc/squid/squid.conf"
-    # dummy iface con ips para q cada cliente salga por su grupo
-    commands_on_boot << "modprobe dummy"
-    commands_on_boot << "ip link set dummy0 up"
-
-    begin
-      File.open(SEQUREISP_SQUID_CONF, "w") do |fsquid|
-        if Configuration.transparent_proxy_n_to_m
-          Contract.not_disabled.descend_by_netmask.each do |c|
-            fsquid.puts "acl contract_#{c.klass.number} src #{c.ip}"
-            fsquid.puts "tcp_outgoing_address #{c.proxy_bind_ip} contract_#{c.klass.number}"
-            commands_on_boot << "ip address add #{c.proxy_bind_ip} dev dummy0"
-          end
-        else
-          Contract.not_disabled.descend_by_netmask.each do |c|
-            fsquid.puts "acl pg_#{c.plan.provider_group.klass.number} src #{c.ip}"
-          end
-          ProviderGroup.enabled.with_klass.each do |pg|
-            fsquid.puts "#Dummy address para salir via #{pg.name}"
-            fsquid.puts "#empty acl por si no hay contratos"
-            fsquid.puts "acl pg_#{pg.klass.number} src"
-            fsquid.puts "tcp_outgoing_address #{pg.proxy_bind_ip} pg_#{pg.klass.number}"
-            commands_on_boot << "ip address add #{pg.proxy_bind_ip} dev dummy0"
-          end
-        end
-        Disk.cache_dir_lines.each do |cache_dir|
-          fsquid.puts(cache_dir)
-        end
-        #TODO Option disabled for all clients
-        #if Configuration.transparent_proxy_windows_update_hack
-        #  fsquid.puts "#Windows update hacks see http://wiki.squid-cache.org/SquidFaq/WindowsUpdate"
-        #  fsquid.puts "range_offset_limit -1"
-        #  fsquid.puts "quick_abort_min -1"
-        #end
-        BootHook.run :hook => :setup_proxy, :proxy_script => fsquid
-      end
-      exec_context_commands "create_directorys_squid_and_remove_redirection", commands, false
-    rescue => e
-      Rails.logger.error "ERROR in lib/sequreisp.rb::setup_proxy e=>#{e.inspect}"
-    end
-  else
-    commands_on_boot << "service squid stop"
-    #ensure that squid gets stoped
-    commands_on_boot << "kill -9 $(pidof squid)"
-    commands_on_boot << "[ -f #{squid_file} ] && mv #{squid_file} #{squid_file_off}"
-  end
-  exec_context_commands "setup_proxy", commands_on_boot
 end
 
 def setup_proxy_arp
@@ -1083,7 +967,6 @@ def setup_interfaces
     #(current_ips - ips).each do |ip|
     #  commands << "ip address del #{ip} dev #{i.name}"
     #end
-    #emito evento de upstart, por ej. /etc/init/squid lo necesita
     commands << "initctl emit -n net-device-up \"IFACE=#{i.name}\" \"LOGICAL=#{i.name}\" \"ADDRFAM=inet\" \"METHOD=static\""
   end
   exec_context_commands "setup_interfaces", commands
@@ -1144,20 +1027,27 @@ def setup_iptables
   ]
 end
 
+def setup_mail_relay
+  if Configuration.first.mail_relay_manipulated_for_sequreisp?
+    commands = []
+    commands << "postmap #{PATH_SASL_PASSWD}" if Configuration.first.generate_postfix_main
+    commands << "service postfix restart"
+    exec_context_commands("setup_mail_relay_create", commands)
+  end
+end
+
 def boot(run=true)
   BootCommandContext.run = run
   BootCommandContext.clear_boot_file
   create_dirs_if_not_present if Rails.env.development?
   Configuration.do_reload
+  exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"]
   #begin
     exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}"
 
     setup_queued_commands
     setup_clock
     setup_proc
-    Disk.scan if (Disk.count == 0)
-    config_cache_disks
-    setup_proxy
     setup_nf_modules
     setup_interfaces
     setup_dynamic_providers_hooks
@@ -1169,15 +1059,18 @@ def boot(run=true)
     setup_ip_ro
     setup_tc
     setup_iptables
+    setup_mail_relay
 
     #General configuration hook, plugins seems to use it to write updated conf files
     BootHook.run :hook => :general
+    Configuration.first.generate_bind_dns_named_options
     exec_context_commands "bind_reload", "service bind9 reload"
 
     #Service restart hook
     BootHook.run :hook => :service_restart
 
     exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}"
+  exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"]
   #rescue => e
   #  Rails.logger.error "ERROR in lib/sequreisp.rb::boot e=>#{e.inspect}"
   #end

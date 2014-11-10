@@ -21,9 +21,6 @@
   #advanced {
     width: 450px;
   }
-  #contract_transparent_proxy_input li {
-    width: 250px;
-  }
   #prios {
     width: auto;
   }
@@ -139,7 +136,6 @@
       <%= form.input :cpe, :wrapper_html => { :class => "left" } %>
       <%= form.input :node, :wrapper_html => { :class => "left" } %>
     <% end %>
-    <%= form.input :transparent_proxy, :as => :radio, :collection => Contract.transparent_proxy_for_select %> 
     <% form.inputs :name => t('activerecord.attributes.contract.forwarded_ports') do %>
       <% form.semantic_fields_for :forwarded_ports do |fp| %>
         <%= render "forwarded_port_fields", :f => fp %>

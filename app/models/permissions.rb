@@ -49,15 +49,6 @@ class Permissions < Aegis::Permissions
     allow :technical, :technical_readonly, :administrative, :administrative_readonly
   end
 
-  resources :disks do
-    writing do
-      allow :administrative, :technical
-    end
-    reading do
-      allow :administrative, :technical, :administrative_readonly, :technical_readonly
-    end
-  end
-
   action :scan, :liberate, :assign_for do
       allow :technical, :technical_readonly, :administrative, :administrative_readonly
     end
@@ -74,7 +65,7 @@ class Permissions < Aegis::Permissions
     end
   end
 
-  resources :avoid_balancing_hosts, :avoid_proxy_hosts, :iproutes do
+  resources :avoid_balancing_hosts, :iproutes do
     writing do
       allow :technical
     end

@@ -35,65 +35,6 @@ Signal.trap("TERM") do
   $running = false
 end
 
-def check_squid
-  def squid_pids
-    `/usr/bin/pgrep -x squid`.chomp.gsub("\n"," ")
-  end
-  pid = squid_pids
-
-  #1: is running check
-  if pid.blank?
-    success = system("/usr/sbin/service squid start")
-    Rails.logger.warn "sequreispd: #{Time.now.to_s} squid is not running, forcing start"
-  end
-
-  #2: swap.state check
-  begin
-    max_swap_size=500*1024*1024
-    # swap_files = `find /var/spool/squid | grep 'swap.state$'`.split
-    swap_files = `grep "^cache_dir*" /etc/squid/squid.conf`.split("\n")
-    swap_files = `grep "^cache_dir*" /etc/squid/sequreisp.squid.conf`.split("\n") if swap_files.empty?
-    # swap_file= "/var/spool/squid/swap.state"
-    unless swap_files.empty?
-      swap_files.each do |line|
-        swap_file = "#{line.split[2]}/swap.state"
-        swap_size = File.open(swap_file) do |sf| sf.size end
-        if swap_size > max_swap_size
-          Rails.logger.warn "sequreispd: #{Time.now.to_s} swap.state bigger than max: #{max_swap_size}, current: #{swap_size}, killing"
-          max_sleep = 20
-          while pid.present? and max_sleep > 0
-            system "kill -9 #{pid}"
-            sleep 1
-            pid = squid_pids
-            max_sleep -= 1
-          end
-          if max_sleep == 0
-            Rails.logger.error "sequreispd: #{Time.now.to_s} could not kill squid after 20 tries, aborting"
-          else
-            Rails.logger.error "sequreispd: #{Time.now.to_s} starting squid"
-            old_swap_file="#{swap_file}.old"
-            FileUtils.mv swap_file, old_swap_file
-            system "/usr/sbin/service squid start"
-            FileUtils.rm old_swap_file
-          end
-        end
-      end
-    end
-  rescue => e
-    Rails.logger.error "ERROR check_squid swap.state check: #{e.inspect}"
-  end
-
-
-  #3: load average check
-  max_load_average = Configuration.transparent_proxy_max_load_average
-  load_average=`uptime | awk -F "load average:" '{ print $2 }' | cut -d, -f1 | sed 's/ //g'`.chomp.to_f
-  if load_average > max_load_average
-    Rails.logger.error "sequreispd: #{Time.now.to_s} disabling squid because load average is bigger than max: #{max_load_average}, current: #{load_average}"
-    Configuration.first.update_attribute :transparent_proxy, false
-    Configuration.first.update_attribute :daemon_reload, true
-  end
-end
-
 def backup_restore
   # cheking if we are restoring a backup file
   # backup_restore:
@@ -150,22 +91,6 @@ tcounter = Thread.new do
                 hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
                 hash_log_iptables[ip] = [] if hash_log_iptables[ip].nil?
                 hash_log_iptables[ip] << line
-              end
-            end
-          end
-          if conf.transparent_proxy and conf.transparent_proxy_n_to_m
-            proxy_bind_ips_hash = Contract.all(:include => :klass).each_with_object({}) do |c,h| h[c.proxy_bind_ip] = c.ip end
-            IO.popen("iptables-save -t mangle -c | /bin/grep \"^\\[.*:.*\\] -A OUTPUT -s .* -j .*$\"" , "r") do |io|
-              io.each do |line|
-                rule = line.split(" ")
-                proxy_bind_ip = IP.new(rule[4]).to_s
-                ip = proxy_bind_ips_hash[proxy_bind_ip]
-                if ips.include? ip
-                  hash[ip] = 0 if hash[ip].nil?
-                  hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
-                  hash_log_iptables_proxy[ip] = [] if hash_log_iptables_proxy[ip].nil?
-                  hash_log_iptables_proxy[ip] << line
-                end
               end
             end
           end
@@ -231,14 +156,13 @@ while($running) do
   Configuration.do_reload
   tsleep_count += 1
 
-  # check links & squid every 10 seconds
+  # check links every 10 seconds
   if tsleep_count%10 == 0
     tsleep_count = 0
     Rails.logger.debug "sequreispd: #{Time.now.to_s} check_physical_links"
     check_physical_links
     Rails.logger.debug "sequreispd: #{Time.now.to_s} check_links"
     check_links
-    check_squid if Configuration.transparent_proxy
   end
 
   Rails.logger.debug "sequreispd: #{Time.now.to_s} DaemonHook"

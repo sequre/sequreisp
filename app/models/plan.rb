@@ -23,9 +23,9 @@ class Plan < ActiveRecord::Base
 
   include ModelsWatcher
   watch_fields :provider_group_id, :rate_down, :ceil_down, :rate_up, :ceil_up,
-               :transparent_proxy, :burst_down, :burst_up, :long_download_max, :long_upload_max
+               :burst_down, :burst_up, :long_download_max, :long_upload_max
 
-  validates_uniqueness_of :name 
+  validates_uniqueness_of :name
   validates_presence_of :name, :provider_group, :rate_down, :ceil_down, :rate_up, :ceil_up
   validates_length_of :name, :in => 3..128
   validates_numericality_of :rate_down, :ceil_down, :rate_up, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than_or_equal_to => 0
@@ -88,5 +88,12 @@ class Plan < ActiveRecord::Base
   end
   def auditable_name
     "#{self.class.human_name}: #{name}"
+  end
+  def quantum_factor(direction)
+    quantum = (self["ceil_" + direction] + self["rate_" + direction])/Configuration.first.quantum_factor.to_i
+    quantum <= 0 ? 1 : quantum
+  end
+  def quantum_total(direction)
+    Configuration.first.mtu * quantum_factor(direction) * 3
   end
 end

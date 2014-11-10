@@ -1,9 +1,17 @@
 <% content_for :title, t('menu.audits') %>
 <% heading t('menu.audits')  %>
-<% content_for :page_header do %>
-  <%= javascript_include_tag 'jquery' %>
+<% content_for :javascript do %>
+  <%= stylesheet_link_tag('/plugin_assets/sequreisp_invoicing/stylesheets/jquery-ui-1.8.14.custom.css') %>
+  <%= javascript_include_tag('/plugin_assets/sequreisp_invoicing/javascripts/jquery.ui.datepicker.js') %>
   <script type="text/javascript">
+    datepicker_options = {
+          dateFormat: 'dd/mm/yy',
+          showOn: "button",
+          buttonImage: "/plugin_assets/sequreisp_invoicing/images/calendar.gif",
+          buttonImageOnly: true
+        }
     $(function(){
+        $('.datepicker').datepicker(datepicker_options);
         $('#search_auditable_type_is').change(function(){
           val = $(this).val();
           if(val == ""){
@@ -44,10 +52,20 @@
       <%= f.label :changes_like, t('activerecord.attributes.audit.changes') %>
       <%= f.text_field :changes_like %>
     </li>
+    <div sytle="clear: both"></div>
+    <li>
+      <%= f.label :created_at_greater_than_or_equal_to, t('activerecord.attributes.search.issued_init_date') %>
+      <%= f.text_field :created_at_greater_than_or_equal_to , { :class => 'datepicker'} %>
+    </li>
+    <li>
+      <%= f.label :created_at_less_than_or_equal_to, t('activerecord.attributes.search.issued_end_date') %>
+      <%= f.text_field :created_at_less_than_or_equal_to , {:class => 'datepicker'} %>
+    </li>
     <li>
       <br/>
       <%= f.submit t('buttons.search') %>
       <%= f.submit t('buttons.reset'),{ :type => "button", :class => "reset"}%>
+      <%= f.submit t('buttons.export_to_csv'),{ :name => "to_csv"} %>
     </li>
   </ul>
 <% end %>
@@ -59,6 +77,7 @@
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
+        <th><%=t 'activerecord.attributes.audit.id' %></th>
         <th><%=t 'activerecord.attributes.audit.created_at' %></th>
         <th><%=t 'activerecord.attributes.audit.auditable_type' %></th>
         <th><%=t 'activerecord.attributes.audit.user' %></th>
@@ -70,6 +89,7 @@
       <% @audits.each_with_index do |audit,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
+          <td><%= audit.id %></td>
           <td><%=l audit.created_at, :format => :short %></td>
           <td><%= link_to_auditable(audit) %></td>
           <td><%=h audit.user.name rescue t 'audits.undefined' %></td>

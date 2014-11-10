@@ -18,33 +18,49 @@
 class Configuration < ActiveRecord::Base
   ACCEPTED_LOCALES = ["es","en","pt"]
   GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
+
+  PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
+  PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
+  PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
+
   def self.acts_as_audited_except
     [:daemon_reload]
   end
 
   acts_as_audited :except => self.acts_as_audited_except
 
+  include IpAddressCheck
   include ModelsWatcher
   watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
-               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,
-               :transparent_proxy, :transparent_proxy_n_to_m, :transparent_proxy_zph_enabled,
-               :transparent_proxy_windows_update_hack,
+               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,               
                :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
                :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
                :iptables_tree_optimization_enabled,
-               :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080
+               :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080,
+               :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password,
+               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
   validates_presence_of :notification_timeframe
   validates_presence_of :language
+  validates_presence_of :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password, :if => "mail_relay_used == true"
 
   validates_format_of :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers, :with => /^([0-9a-z-]+,)*[0-9a-z-]+$/, :allow_blank => true
 
   validates_numericality_of :notification_timeframe, :only_integer => true, :greater_than_or_equal_to => 0
-  validates_numericality_of :transparent_proxy_max_load_average, :only_integer => true, :greater_than => 0, :less_than => 30
   validates_numericality_of :logged_in_timeout, :only_integer => true, :greater_than_or_equal_to => 0
   validates_presence_of :apply_changes_automatically_hour, :if => :apply_changes_automatically?
+
+  validate :presence_of_dns_server
+  validate_ip_format_of :dns_first_server, :dns_second_server, :dns_third_server
+
+
+  def presence_of_dns_server
+    if dns_use_forwarders and not (dns_first_server.present? or dns_second_server.present? or dns_third_server.present?)
+      errors.add_to_base(I18n.t('error_messages.define_one_dns_server'))
+    end
+  end
 
   include PriosCheck
   def validate
@@ -133,4 +149,81 @@ class Configuration < ActiveRecord::Base
   def day_of_the_beginning_of_the_period
     1
   end
+
+  def generate_postfix_main
+    generate_postmap = false
+    hash= {}
+    hash["relayhost"] = ""
+    hash["myhostname"] = `cat /etc/mailname`.strip
+    if mail_relay_used?
+      generate_postmap = true
+      hash["smtp_sasl_password_maps"] = "hash:#{PATH_SASL_PASSWD}"
+      hash["smtp_sasl_auth_enable"] = "yes"
+      case mail_relay_option_server
+      when "own"
+        hash["relayhost"] = "#{self.mail_relay_smtp_server}:#{self.mail_relay_smtp_port}"
+        hash["smtp_sasl_security_options"] = ""
+
+        sasl_passwd = File.open(PATH_SASL_PASSWD, "w")
+        sasl_passwd.puts("#{self.mail_relay_smtp_server}:#{self.mail_relay_smtp_port} #{self.mail_relay_mail}:#{self.mail_relay_password}")
+        sasl_passwd.close
+      when "gmail"
+        hash["relayhost"] = "[#{self.mail_relay_smtp_server}]:#{self.mail_relay_smtp_port}"
+        hash["smtp_use_tls"] = "yes"
+        hash["smtp_sasl_security_options"] = ""
+        hash["smtp_tls_CAfile"] = "/etc/ssl/certs/ca-certificates.crt"
+
+        sasl_passwd = File.open(PATH_SASL_PASSWD, "w")
+        sasl_passwd.puts("[#{self.mail_relay_smtp_server}]:#{self.mail_relay_smtp_port} #{self.mail_relay_mail}:#{self.mail_relay_password}")
+        sasl_passwd.close
+        # when "yahoo"
+      end
+    end
+    write_main_postfix(hash)
+    generate_postmap
+  end
+
+  def write_main_postfix(options)
+    postfix_main = File.open(PATH_POSTFIX, "w")
+    view = ActionView::Base.new(ActionController::Base.view_paths, {})
+    postfix_main.puts view.render(:file => "configurations/postfix.conf.erb", :locals => {:params => options})
+    postfix_main.close
+  end
+  def generate_bind_dns_named_options
+    hash = {}
+    hash[:forwarders] = []
+
+    if dns_use_forwarders
+      hash[:forwarders] << "forwarders {"
+      hash[:forwarders] << "      #{dns_first_server};" if dns_first_server.present?
+      hash[:forwarders] << "      #{dns_second_server};" if dns_second_server.present?
+      hash[:forwarders] << "      #{dns_third_server};" if dns_third_server.present?
+      hash[:forwarders] << "};"
+    else
+      hash[:forwarders] << "// forwarders {"
+      hash[:forwarders] << "//      8.8.8.8;"
+      hash[:forwarders] << "//      8.8.4.4;"
+      hash[:forwarders] << "// };"
+    end
+
+    named_options = File.open(PATH_DNS_NAMED_OPTIONS, "w")
+    view = ActionView::Base.new(ActionController::Base.view_paths, {})
+    named_options.puts view.render(:file => "configurations/named.conf.options.erb", :locals => {:params => hash})
+    named_options.close
+  end
+
+  def self.app_listen_port_available
+    ports = []
+    if web_interface_listen_on_80
+      ports << "80"
+    end
+    if web_interface_listen_on_8080
+      ports << "8080"
+    end
+    if web_interface_listen_on_443
+      ports << "443"
+    end
+    ports
+  end
+
 end
