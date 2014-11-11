@@ -212,9 +212,6 @@ class Provider < ActiveRecord::Base
       []
     end
   end
-  def quantum_factor
-    (provider_group.plans.collect{|plan| plan.rate_down + plan.ceil_down }.max)/Configuration.quantum_factor.to_i rescue 1
-  end
   def status
     self.online ? "online" : "offline"
   end
@@ -370,16 +367,6 @@ class Provider < ActiveRecord::Base
     Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} result:#{result} down: #{instant_rate_down} up #{instant_rate_up}"
     result
   end
-
-  def tc_class_qdisc_filter(o = {})
-    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
-    tc_rules = []
-    tc_rules << "class add dev #{self.link_interface} parent #{o[:parent_mayor]}:#{o[:parent_minor]} classid #{classid} htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
-    tc_rules << "qdisc add dev #{self.link_interface} parent #{classid} sfq perturb 10" #saco el handle
-    tc_rules << "filter add dev #{self.link_interface} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}"
-    tc_rules
-  end
-
 
   def self.all_ips
     provider_ips = []

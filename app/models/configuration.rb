@@ -32,15 +32,14 @@ class Configuration < ActiveRecord::Base
   include IpAddressCheck
   include ModelsWatcher
   watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
-               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,               
-               :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
-               :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
+               :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,
+               :filter_by_mac_address, :clamp_mss_to_pmtu,
                :iptables_tree_optimization_enabled,
                :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080,
                :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password,
                :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
 
-  validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
+  validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
   validates_presence_of :notification_timeframe
   validates_presence_of :language
@@ -131,18 +130,6 @@ class Configuration < ActiveRecord::Base
   def self.apply_changes_automatically!
     return if Time.now.hour != apply_changes_automatically_hour
     apply_changes if changes_to_apply?
-  end
-
-  def use_global_prios_strategy_options_for_select
-    [
-      [I18n.t('selects.configuration.use_global_prios_strategy.disabled'), 'disabled'],
-      [I18n.t('selects.configuration.use_global_prios_strategy.provider'), 'provider'],
-      [I18n.t('selects.configuration.use_global_prios_strategy.full'), 'full']
-    ]
-  end
-
-  def use_global_prios_strategy
-    ActiveSupport::StringInquirer.new read_attribute(:use_global_prios_strategy)
   end
 
   # this can be overrided from a plug-in like invocing
