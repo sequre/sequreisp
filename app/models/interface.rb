@@ -200,4 +200,12 @@ class Interface < ActiveRecord::Base
     #Always set locally administered and unicast, 02 first octet
     self.mac_address = (2**41 + self.id.to_i * (2**24) + vlan_id.to_i).to_s(16).rjust(12, "0").scan(/../).join(":")
   end
+
+  def lan?
+    kind == "lan"
+  end
+
+  def wan?
+    kind == "wan"
+  end
 end
