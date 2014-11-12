@@ -544,8 +544,24 @@ def gen_iptables
       f.puts "*filter"
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts ":sequreisp-allowedsites - [0:0]"
-      f.puts ":sequreisp-enabled - [0:0]"
+      f.puts ":sequreisp-app-listened - [0:0]"
+      f.puts "-A INPUT -j sequreisp-app-listened"
       f.puts "-A FORWARD -j sequreisp-allowedsites"
+
+      listen_ports = Configuration.app_listen_port_available
+
+      Interface.only_lan.each do |interface|
+        interface.addresses.each do |addr|
+          #Accept only request to ip and port (80,8080,443) server.
+          f.puts "-A sequreisp-app-listened -d #{addr.ip} -p tcp -m multiport --dports #{listen_ports.join(',')} -j ACCEPT"
+        end
+      end
+
+      Provider.online.ready.map{ |p| p.interface.name }.each do |interface|
+        #Accept only request by interface wan to ip and port (80,8080,443) server.
+        f.puts "-A sequreisp-app-listened -i #{interface} -p tcp -m multiport --dports #{listen_ports.join(',')} -j ACCEPT"
+      end
+
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
           f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
@@ -556,10 +572,6 @@ def gen_iptables
 
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
-
-      Configuration.app_listen_port_available.each do |port|
-        f.puts "-A INPUT -p tcp --dport #{port} -j ACCEPT"
-      end
 
       f.puts ":dns-query -"
       f.puts "-A INPUT -p udp --dport 53 -j dns-query"
