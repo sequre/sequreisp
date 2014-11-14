@@ -23,6 +23,12 @@ class Configuration < ActiveRecord::Base
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
 
+  TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
+                   "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
+                   "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
+                   "icmp" => ["-p icmp"],
+                   "sip" => ["-m helper --helper sip"] }
+
   def self.acts_as_audited_except
     [:daemon_reload]
   end

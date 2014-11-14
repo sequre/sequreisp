@@ -100,32 +100,32 @@ def gen_tc
 end
 
 def gen_iptables
-  def do_prio_traffic_iptables(o={})
-    o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p tcp -m length --length 0:100 -j MARK --set-mark #{o[:mark]}"
-    o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p tcp --dport 22 -j MARK --set-mark #{o[:mark]}"
-    o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p tcp --sport 22 -j MARK --set-mark #{o[:mark]}"
-    o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p udp --dport 53 -j MARK --set-mark #{o[:mark]}"
-    o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p udp --sport 53 -j MARK --set-mark #{o[:mark]}"
-    o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p icmp -j MARK --set-mark #{o[:mark]}"
-  end
-  def do_prio_protos_iptables(o={})
-    o[:protos].each do |proto|
-      o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p #{proto} -j MARK --set-mark #{o[:mark]}"
-    end
-  end
-  def do_prio_helpers_iptables(o={})
-    o[:helpers].each do |helper|
-      o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -m helper --helper #{helper} -j MARK --set-mark #{o[:mark]}"
-    end
-  end
-  def do_prio_ports_iptables(o={})
-    # solo 15 puertos por vez en multiport
-    while !o[:ports].empty? do
-      _ports = o[:ports].slice!(0..14).join(",")
-      o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p #{o[:proto]} -m multiport --dports #{_ports} -j MARK --set-mark #{o[:mark]}"
-      o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p #{o[:proto]} -m multiport --sports #{_ports} -j MARK --set-mark #{o[:mark]}"
-    end
-  end
+  # def do_prio_traffic_iptables(o={})
+  #   o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p tcp -m length --length 0:100 -j MARK --set-mark #{o[:mark]}"
+  #   o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p tcp --dport 22 -j MARK --set-mark #{o[:mark]}"
+  #   o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p tcp --sport 22 -j MARK --set-mark #{o[:mark]}"
+  #   o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p udp --dport 53 -j MARK --set-mark #{o[:mark]}"
+  #   o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p udp --sport 53 -j MARK --set-mark #{o[:mark]}"
+  #   o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p icmp -j MARK --set-mark #{o[:mark]}"
+  # end
+  # def do_prio_protos_iptables(o={})
+  #   o[:protos].each do |proto|
+  #     o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p #{proto} -j MARK --set-mark #{o[:mark]}"
+  #   end
+  # end
+  # def do_prio_helpers_iptables(o={})
+  #   o[:helpers].each do |helper|
+  #     o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -m helper --helper #{helper} -j MARK --set-mark #{o[:mark]}"
+  #   end
+  # end
+  # def do_prio_ports_iptables(o={})
+  #   # solo 15 puertos por vez en multiport
+  #   while !o[:ports].empty? do
+  #     _ports = o[:ports].slice!(0..14).join(",")
+  #     o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p #{o[:proto]} -m multiport --dports #{_ports} -j MARK --set-mark #{o[:mark]}"
+  #     o[:file].puts "-A #{o[:chain]} #{o[:mark_if]} -p #{o[:proto]} -m multiport --sports #{_ports} -j MARK --set-mark #{o[:mark]}"
+  #   end
+  # end
   begin
     File.open(IPTABLES_FILE, "w") do |f|
       #--------#
@@ -263,17 +263,43 @@ def gen_iptables
         f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
         f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
         # separo el tráfico en las 3 class: prio1 prio2 prio3
-        # prio1
-        do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
+
+        #prio1
+        Configuration.first.traffic_prios.split(",").each do |action|
+          Configuration::TRAFFIC_PRIO[action].each do |rule|
+            f.puts "-A #{chain} #{mark_if} #{rule} -j MARK --set-mark #{mark_prio1}"
+          end
+        end
+
+        #prio2
+        (Configuration.default_prio_protos_array + c.prio_protos_array).uniq.each do |proto|
+          f.puts "-A #{chain} #{mark_if} -p #{proto} -j MARK --set-mark #{mark_prio2}"
+        end
+
+        #prio2
+        (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq do |helper|
+          f.puts "-A #{chain} #{mark_if} -m helper --helper #{helper} -j MARK --set-mark #{ mark_prio2}"
+        end
+
+        #prio2
+        ["tcp", "udp"].each do |proto|
+          # solo 15 puertos por vez en multiport
+          (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq.each_slice(15).to_a.each do |group|
+            f.puts "-A #{chain} #{mark_if} -p #{proto} -m multiport --dports #{group.join(',')} -j MARK --set-mark #{mark_prio2}"
+            f.puts "-A #{chain} #{mark_if} -p #{proto} -m multiport --sports #{group.join(',')} -j MARK --set-mark #{mark_prio2}"
+          end
+        end
+
+        #do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
         # prio2
-        do_prio_protos_iptables :protos => (Configuration.default_prio_protos_array + c.prio_protos_array).uniq,
-                                :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-        do_prio_helpers_iptables :helpers => (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq,
-                                 :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-        do_prio_ports_iptables :ports => (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq,
-                               :proto => "tcp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-        do_prio_ports_iptables :ports => (Configuration.default_udp_prio_ports_array + c.udp_prio_ports_array).uniq,
-                               :proto => "udp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+        # do_prio_protos_iptables :protos => (Configuration.default_prio_protos_array + c.prio_protos_array).uniq,
+        #                         :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+        # do_prio_helpers_iptables :helpers => (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq,
+        #                          :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+        # do_prio_ports_iptables :ports => (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq,
+        #                        :proto => "tcp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+        # do_prio_ports_iptables :ports => (Configuration.default_udp_prio_ports_array + c.udp_prio_ports_array).uniq,
+        #                        :proto => "udp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
         # prio3 (catch_all)
         f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
 

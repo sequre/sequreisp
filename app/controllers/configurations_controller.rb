@@ -41,8 +41,8 @@ class ConfigurationsController < ApplicationController
   # PUT /configurations/1.xml
   def update
     @configuration = Configuration.first
-
     respond_to do |format|
+      params[:configuration][:traffic_prio] = params[:traffic_prio].keys.select{|prio| prio != ""}.join(",")
       if @configuration.update_attributes(params[:configuration])
         # in case that users change language, we need to override locale from params[:locale]
         # before the redirect
@@ -56,10 +56,10 @@ class ConfigurationsController < ApplicationController
       end
     end
   end
-  
+
   def doreload
     Configuration.first.apply_changes
     flash[:notice] = I18n.t('messages.apply_changes_success')
-    redirect_to :back    
+    redirect_to :back
   end
 end
