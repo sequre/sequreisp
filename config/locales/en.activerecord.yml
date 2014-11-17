@@ -349,6 +349,7 @@ en:
     help: "Help"
     guides: "SequireISP guides"
     support: "Support"
+    command_log: "Command log"
   buttons:
     export_to_csv: "Export to csv"
     login: "Login"

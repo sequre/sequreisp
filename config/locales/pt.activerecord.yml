@@ -346,6 +346,7 @@ pt:
     help: "Ajudar"
     guides: "Guias SequireISP"
     support: "Apoio"
+    command_log: "Log de ​​comando"
   buttons:
     export_to_csv: "Exportação para csv"
     login: "Ingressar"
