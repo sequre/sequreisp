@@ -337,7 +337,7 @@ pt:
     iproutes: "Rotas estáticas"
     dashboard: "Painel"
     apply_changes: "Aplicar câmbios"
-    wait_apply_changes: "Aplicar as alterações"
+    wait_apply_changes: "Aplicar as alterações..."
     backups: "Cópias de resguardo"
     modules: "Módulos"
     about: "Acerca de"

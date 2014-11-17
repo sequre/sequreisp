@@ -340,7 +340,7 @@ es:
     iproutes: "Rutas estáticas"
     dashboard: "Panel"
     apply_changes: "Aplicar cambios"
-    wait_apply_changes: "Aplicando cambios"
+    wait_apply_changes: "Aplicando cambios..."
     backups: "Copias de resguardo"
     modules: "Módulos"
     about: "Acerca de"
