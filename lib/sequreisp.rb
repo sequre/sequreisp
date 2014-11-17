@@ -265,7 +265,7 @@ def gen_iptables
         # separo el tráfico en las 3 class: prio1 prio2 prio3
 
         #prio1
-        Configuration.first.traffic_prios.split(",").each do |action|
+        Configuration.first.traffic_prio.split(",").each do |action|
           Configuration::TRAFFIC_PRIO[action].each do |rule|
             f.puts "-A #{chain} #{mark_if} #{rule} -j MARK --set-mark #{mark_prio1}"
           end
