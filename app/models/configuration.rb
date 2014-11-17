@@ -43,7 +43,7 @@ class Configuration < ActiveRecord::Base
                :iptables_tree_optimization_enabled,
                :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080,
                :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password,
-               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
+               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server, :traffic_prio
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
