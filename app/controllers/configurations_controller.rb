@@ -63,11 +63,6 @@ class ConfigurationsController < ApplicationController
     redirect_to :back
   end
 
-  def ajax_request
-    lines = Configuration.get_next_lines_in_command_log(params[:last_line])
-    render :json => lines
-  end
-
   def is_apply_changes
     resp = Configuration.is_apply_changes?
     render :json => resp

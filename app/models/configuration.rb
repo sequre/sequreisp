@@ -234,14 +234,4 @@ class Configuration < ActiveRecord::Base
   def self.is_apply_changes?
     File.exists?(APPLY_CHANGES_LOCK)
   end
-
-  def self.get_next_lines_in_command_log(n)
-    lines = []
-    cont = 0
-    File.open(COMMAND_LOG, "r").each_line do |line|
-      lines << line if cont > n.to_i
-      cont += 1
-    end
-    lines
-  end
 end
