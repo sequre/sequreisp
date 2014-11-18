@@ -1,27 +1,27 @@
 <% content_for :javascript do %>
   <script type="text/javascript">
     var delta_time = 1000;
-    function updateCommandLogsInfo(){
-      setTimeout(function(){
-        ajaxCommandLogsRequest();
-        updateCommandLogsInfo();
-      },delta_time)
-    }
+    var last_line = <%= File.open(Configuration::PATH_COMMANDO_LOG, "r").readlines.count - 1 %>;
+
     function ajaxCommandLogsRequest(){
       $.ajax({
         type : 'GET',
         url : '/command_logs/command_log_info',
+        data : { from_line : (last_line + 1)},
         complete: function(resp){
-          refreshCommandLogsContent(resp.response);
+          response = JSON.parse(resp.response);
+          last_line = response["last_line"];
+          refreshCommandLogsContent(response["command_log_lines"]);
+          setTimeout(function(){ ajaxCommandLogsRequest(); }, delta_time);
         }
       });
     }
-    function refreshCommandLogsContent(command_logs_info){
-      $('#content_for_command_log').empty();
-      $('#content_for_command_log').append('<h5>' + command_logs_info.replace(/\n/g, "</h5>\n<h5>") + '</h5>');
+    function refreshCommandLogsContent(command_log_lines){
+      if (command_log_lines != null){
+        $('#content_for_command_log').append('<h5>' + command_log_lines.join("</h5>\n<h5>") + '</h5>\n');
+      };
     }
     ajaxCommandLogsRequest();
-    updateCommandLogsInfo();
   </script>
 <% end %>
 <% content_for :title, t('menu.command_log') %>
