@@ -677,6 +677,11 @@ class Contract < ActiveRecord::Base
     [dates, datas]
   end
 
+def ip_addr
+  require "ipaddr"
+  IPAddr.new(ip)
+end
+
   # this will be overriden by bw changing plug-ins as time_modifiers and data_accounting
   def bandwidth_rate
     1

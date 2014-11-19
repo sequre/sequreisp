@@ -17,6 +17,7 @@
 
 require 'sequreisp_constants'
 require 'command_context'
+require 'ip_tree'
 
 def create_dirs_if_not_present
   [BASE_SCRIPTS, DHCPD_DIR, PPP_DIR, DEPLOY_DIR, "#{PPP_DIR}/ip-up.d", "#{PPP_DIR}/ip-down.d", "#{DHCPD_DIR}/dhclient-enter-hooks.d",  "#{DHCPD_DIR}/dhclient-exit-hooks.d", "#{PPP_DIR}/peers"].each do |dir|
@@ -241,16 +242,28 @@ def gen_iptables
           build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
         end
       end
-      if Configuration.iptables_tree_optimization_enabled?
-        Contract.slash_16_networks.each do |n16|
-          [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
-            chain="sq.#{way[:prefix]}.#{n16}"
-            f.puts ":#{chain} - [0:0]"
-            f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
-            build_iptables_tree f, n16, chain, way, 3, 20
-          end
-        end
+
+      ips = Contract.descend_by_netmask.collect(&:ip_addr)
+
+      ips.each do |ip|
+        f.puts ":sq.#{ip.to_s} -"
       end
+
+      ["up", "down"].each do |action|
+        f.puts(IPTree.new({:ip_list => ips, :prefix => "sq-#{action}", :match => "-s"}))
+      end
+
+      # if Configuration.iptables_tree_optimization_enabled?
+      #   Contract.slash_16_networks.each do |n16|
+      #     [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
+      #       chain="sq.#{way[:prefix]}.#{n16}"
+      #       f.puts ":#{chain} - [0:0]"
+      #       f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
+      #       build_iptables_tree f, n16, chain, way, 3, 20
+      #     end
+      #   end
+      # end
+
       Contract.not_disabled.descend_by_netmask.each do |c|
         mark_burst = "0x0000/0x0000ffff"
         mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
@@ -258,10 +271,10 @@ def gen_iptables
         mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
         # una chain por cada cliente
         chain="sq.#{c.ip}"
-        f.puts ":#{chain} - [0:0]"
+        # f.puts ":#{chain} - [0:0]"
         # redirección del trafico de este cliente hacia su propia chain
-        f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
-        f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
+        # f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
+        # f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
         # separo el tráfico en las 3 class: prio1 prio2 prio3
 
         #prio1
