@@ -953,25 +953,13 @@ def setup_adsl_interface(p)
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::setup_provider_interface(PPP_DIR) e=>#{e.inspect}"
   end
-  pppd_running = `/usr/bin/pgrep -c -f 'pppd call #{p.interface.name}' 2>/dev/null`.chomp.to_i || 0
-  #si NO esta corriendo pppd y NO existe la iface ppp"
-  if pppd_running < 2  and not system("/sbin/ifconfig #{p.link_interface} 1>/dev/null 2>/dev/null")
-    commands << "/usr/bin/pon #{p.interface.name}"
-  end
+
+  commands = "/usr/bin/pgrep -f 'pppd call #{p.interface.name} ' >/dev/null || (ip link list #{p.link_interface} &>/dev/null && /usr/bin/pon #{p.interface.name})"
+
   if p.online?
     p.addresses.each do |a|
-      commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
-      commands << "ip route re #{a.network} dev #{p.link_interface}"
-    end
-    # commands << "ip link set dev #{i.name} up"
-
-    # if i.mac_address_changed?
-    #   commands << "ip link set #{i.name} address #{i.mac_address}"
-    # end
-
-    i.addresses.each do |a|
-      commands << "ip address add #{a.ip}/#{a.netmask} dev #{i.name}"
-      commands << "ip route re #{a.network} dev #{i.name} src #{a.ip}"
+      commands << "ip address replace #{a.ip}/#{a.netmask} dev #{p.link_interface}"
+      commands << "ip route replace #{a.network} dev #{p.link_interface}"
     end
   end
   commands
@@ -979,10 +967,7 @@ end
 
 def setup_dhcp_interface(p)
   commands = []
-  dhcp_running = `/usr/bin/pgrep -c -f 'dhclient.#{p.interface.name}' 2>/dev/null`.chomp.to_i || 0
-  if dhcp_running < 2
-    commands << "dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
-  end
+  commmands = "/usr/bin/pgrep -f 'dhclient.#{p.interface.name}' &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
   if p.online?
     p.addresses.each do |a|
       commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
@@ -994,14 +979,14 @@ end
 
 def setup_static_interface(p)
   commands = []
-  commands << "ip address add #{p.ip}/#{p.netmask} dev #{p.link_interface}"
+  commands << "ip address replace #{p.ip}/#{p.netmask} dev #{p.link_interface}"
   p.addresses.each do |a|
-    commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
-    commands << "ip route re #{a.network} dev #{p.link_interface} src #{a.ip}"
+    commands << "ip address replace #{a.ip}/#{a.netmask} dev #{p.link_interface}"
+    commands << "ip route replace #{a.network} dev #{p.link_interface} src #{a.ip}"
   end
-  commands << "ip route re #{p.network} dev #{p.link_interface} src #{p.ip}"
-  commands << "ip route re table #{p.check_link_table} #{p.gateway} dev #{p.link_interface}"
-  commands << "ip route re table #{p.check_link_table} #{p.default_route}"
+  commands << "ip route replace #{p.network} dev #{p.link_interface} src #{p.ip}"
+  commands << "ip route replace table #{p.check_link_table} #{p.gateway} dev #{p.link_interface}"
+  commands << "ip route replace table #{p.check_link_table} #{p.default_route}"
 end
 
 def setup_provider_interface p, boot=true
@@ -1018,15 +1003,14 @@ def setup_provider_interface p, boot=true
   when "static"
     commands << setup_static_interface(p)
   end
-  commands
-  #exec_context_commands "setup_provider_interface #{p.id}", commands, boot
+  exec_context_commands "setup_provider_interface #{p.id}", commands, boot
 end
 
 def setup_lan_interface(i)
   commands = []
   i.addresses.each do |a|
-    commands << "ip address add #{a.ip}/#{a.netmask} dev #{i.name}"
-    commands << "ip route re #{a.network} dev #{i.name} src #{a.ip}"
+    commands << "ip address replace #{a.ip}/#{a.netmask} dev #{i.name}"
+    commands << "ip route replace #{a.network} dev #{i.name} src #{a.ip}"
   end
   commands << "initctl emit -n net-device-up \"IFACE=#{i.name}\" \"LOGICAL=#{i.name}\" \"ADDRFAM=inet\" \"METHOD=static\""
 end
@@ -1034,9 +1018,11 @@ end
 def new_setup_interfaces
   commands = []
   Interface.all.each do |i|
-    commands << "vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
-    commands << "ip link set dev #{i.name} up"
-    commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
+    commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
+    #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
+    commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address}"
+    #commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
+    commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
     if i.lan?
       commands << setup_lan_interface(i)
       exec_context_commands "setup_lan_interface_#{i.name}", commands
