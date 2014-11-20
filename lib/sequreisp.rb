@@ -250,7 +250,7 @@ def gen_iptables
       end
 
       ["up", "down"].each do |action|
-        f.puts(IPTree.new({:ip_list => ips, :prefix => "sq-#{action}", :match => "-s"}))
+        f.puts(IPTree.new({:ip_list => ips, :prefix => "sq-#{action}", :match => "-s", :with_leaf_node => true}))
       end
 
       # if Configuration.iptables_tree_optimization_enabled?
