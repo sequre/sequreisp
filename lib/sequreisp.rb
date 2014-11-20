@@ -1015,9 +1015,9 @@ def setup_lan_interface(i)
   commands << "initctl emit -n net-device-up \"IFACE=#{i.name}\" \"LOGICAL=#{i.name}\" \"ADDRFAM=inet\" \"METHOD=static\""
 end
 
-def new_setup_interfaces
-  commands = []
+def setup_interfaces
   Interface.all.each do |i|
+    commands = []
     commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
     #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
     commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address}"
@@ -1025,10 +1025,10 @@ def new_setup_interfaces
     commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
     if i.lan?
       commands << setup_lan_interface(i)
-      exec_context_commands "setup_lan_interface_#{i.name}", commands
+      exec_context_commands("setup_lan_interface_#{i.name}", commands)
     elsif i.wan?
       commands << setup_provider_interface(i.provider) if i.wan?
-      exec_context_commands "setup_wan_interfaces_#{i.name}", commands
+      exec_context_commands("setup_wan_interfaces_#{i.name}", commands)
     end
   end
 end
