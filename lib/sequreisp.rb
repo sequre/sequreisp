@@ -231,27 +231,17 @@ def gen_iptables
         f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
       end
 
-      def build_iptables_tree(f, parent_net, parent_chain, way, cuartet, mask)
-        return if cuartet == 0
-        base_net = IP.new parent_net.gsub(/\/.*/, "") + "/#{mask}"
-        (0..15).each do |n|
-          child_net = (base_net + n * 16**cuartet).to_s
-          chain="sq.#{way[:prefix]}.#{child_net}"
-          f.puts ":#{chain} - [0:0]"
-          f.puts "-A #{parent_chain} -#{way[:dir]} #{child_net} -j #{chain}"
-          build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
-        end
-      end
-
-      ips = Contract.descend_by_netmask.collect(&:ip_addr)
-
-      ips.each do |ip|
-        f.puts ":sq.#{ip.to_s} -"
-      end
-
-      ["up", "down"].each do |action|
-        f.puts(IPTree.new({:ip_list => ips, :prefix => "sq-#{action}", :match => "-s", :with_leaf_node => true}))
-      end
+      # def build_iptables_tree(f, parent_net, parent_chain, way, cuartet, mask)
+      #   return if cuartet == 0
+      #   base_net = IP.new parent_net.gsub(/\/.*/, "") + "/#{mask}"
+      #   (0..15).each do |n|
+      #     child_net = (base_net + n * 16**cuartet).to_s
+      #     chain="sq.#{way[:prefix]}.#{child_net}"
+      #     f.puts ":#{chain} - [0:0]"
+      #     f.puts "-A #{parent_chain} -#{way[:dir]} #{child_net} -j #{chain}"
+      #     build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
+      #   end
+      # end
 
       # if Configuration.iptables_tree_optimization_enabled?
       #   Contract.slash_16_networks.each do |n16|
@@ -263,6 +253,16 @@ def gen_iptables
       #     end
       #   end
       # end
+
+      ips = Contract.descend_by_netmask.collect(&:ip_addr)
+
+      ips.each { |ip| f.puts ":sq.#{ip.to_cidr} -" } # Create all leaf nodes
+
+      #IP Tree mark mangle optimization
+      [{:prefix => "up", :dir =>"-s"}, {:prefix => "down", :dir => "-d"}].each do |way|
+        f.puts(IPTree.new({ :ip_list => ips, :prefix => "sq-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "sq" }).to_iptables)
+        f.puts("-A sequreisp.#{way[:prefix]} -j sq-#{way[:prefix]}-MAIN")
+      end
 
       Contract.not_disabled.descend_by_netmask.each do |c|
         mark_burst = "0x0000/0x0000ffff"
@@ -462,6 +462,7 @@ def gen_iptables
       f.puts ":sequreisp-allowedsites - [0:0]"
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts "-A FORWARD -j sequreisp-allowedsites"
+
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
           f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"

@@ -79,7 +79,7 @@ tcounter = Thread.new do
           end
         else
           ips = Contract.all.collect(&:ip)
-          chain_prefix = conf.iptables_tree_optimization_enabled ? "sq" : "sequreisp"
+          chain_prefix = "sq"
           # WARN! dobule escape for bracket seems mandatory \\[
           command = "iptables-save -t mangle -c | /bin/grep \"^\\[.*:.*\\] -A #{chain_prefix}.* -[sd] .* -j .*$\""
           IO.popen( command , "r") do |io|

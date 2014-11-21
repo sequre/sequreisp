@@ -1,20 +1,20 @@
 class IPTree
   require 'ipaddr'
 
-  attr_accessor :parent, :ips, :mask, :with_leaf_node
+  attr_accessor :parent, :ips, :mask
 
   def initialize(argument)
-    @with_leaf_node = argument[:with_leaf_node]
     @parent = argument[:parent]
     @prefix = argument[:prefix]
     @match = argument[:match]
     @mask = argument[:mask] || "MAIN"
     @ips = argument[:ip_list]
+    @prefix_leaf = argument[:prefix_leaf]
   end
 
   def prefix; @prefix || (parent && parent.prefix) || "PREFIX"; end
   def match; @match || (parent && parent.match) || ""; end
-  def with_leaf_node; @with_leaf_node; end
+  def prefix_leaf; @prefix_leaf ; end
 
   def extremes; @extremes ||= [ips.min,ips.max]; end
 
@@ -31,12 +31,11 @@ class IPTree
     @childs ||= (
       ch = [[],[]]
       ips.each{|ip| IPAddr.new(ch_masks[0]).include?(ip) ? ch[0] << ip : ch[1] << ip }
-      [0,1].map{|n| self.class.new(:ip_list => ch[n],:parent => self, :mask => ch_masks[n], :with_leaf_node => with_leaf_node) }
+      [0,1].map{|n| self.class.new(:ip_list => ch[n],:parent => self, :mask => ch_masks[n], :prefix_leaf => prefix_leaf) }
     )
   end
 
   def chain; @chain ||= ( "#{prefix}-#{mask}"); end
-
 
   def to_iptables
     o=[]
@@ -48,10 +47,10 @@ class IPTree
       o << "-A #{chain} #{match} #{ch.mask} -j #{ch.chain}"
       o << ch.to_iptables
     end
-    if ips.count <= 5 # Si hay 4 IPs o menos aplica salto a la ip hoja
+    if ips.count <= 5 # Si hay 5 IPs o menos aplica salto a la ip hoja
       ips.each do |ip|
-        target =  with_leaf_node ? "-j sq.#{ip.to_cidr}" : ""
-        o << "-A #{chain} #{match} #{ip.to_cidr} #{target}"
+        o << "-A #{chain} #{match} #{ip.to_cidr} -j #{prefix_leaf}.#{ip.to_cidr}"
+        # o << "-A #{chain} #{match} #{ip.to_cidr} -j sq.#{ip.to_cidr}"
       end
     end
     o
