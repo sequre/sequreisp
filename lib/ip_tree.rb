@@ -3,6 +3,8 @@ class IPTree
 
   attr_accessor :parent, :ips, :mask
 
+  LIMIT = 5
+
   def initialize(argument)
     @parent = argument[:parent]
     @prefix = argument[:prefix]
@@ -27,7 +29,7 @@ class IPTree
   end
 
   def childs
-    return [] if ips.count <= 4
+    return [] if ips.count <= LIMIT
     @childs ||= (
       ch = [[],[]]
       ips.each{|ip| IPAddr.new(ch_masks[0]).include?(ip) ? ch[0] << ip : ch[1] << ip }
@@ -47,7 +49,7 @@ class IPTree
       o << "-A #{chain} #{match} #{ch.mask} -j #{ch.chain}"
       o << ch.to_iptables
     end
-    if ips.count <= 5 # Si hay 5 IPs o menos aplica salto a la ip hoja
+    if ips.count <= LIMIT # Si hay LIMIT IPs o menos aplica salto a la ip hoja
       ips.each do |ip|
         o << "-A #{chain} #{match} #{ip.to_cidr} -j #{prefix_leaf}.#{ip.to_cidr}"
         # o << "-A #{chain} #{match} #{ip.to_cidr} -j sq.#{ip.to_cidr}"
