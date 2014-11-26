@@ -29,6 +29,8 @@ class Configuration < ActiveRecord::Base
                    "icmp" => ["-p icmp"],
                    "sip" => ["-m helper --helper sip"] }
 
+  COUNT_CATEGORIES = ["data_count"]
+
   def self.acts_as_audited_except
     [:daemon_reload]
   end
