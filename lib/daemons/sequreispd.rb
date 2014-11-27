@@ -71,11 +71,11 @@ def parse_data_count(contracts, hash_count)
   else
     begin
       # [["bytes", "ip", "up|down", "data_count"], ["bytes", "ip", "up|down", "data_count"]]
-      File.read("|iptables-save -t filter -c").scan(/\[(\d+).*comment \"data-count-(.*)-(.*)-(.*)\"/).each do |line|
+      File.read("|iptables-save -t filter -c").scan(/\[.*:(\d+).*comment \"data-count-(.*)-(.*)-(.*)\"/).each do |line|
         # line[0] => byte's, line[1] => i1p, line[2] => up | down, line[3] => category, where the category name is the same with  any traffic attribute
         if line[0] != "0"
-          hash[line[2]][line[1]] = {}
-          hash[line[2]][line[1]][line[3]] = line[0].to_i
+          hash_count[line[2]][line[1]] = {}
+          hash_count[line[2]][line[1]][line[3]] = line[0]
         end
       end
     rescue => e
@@ -93,7 +93,7 @@ tcounter = Thread.new do
   time_last = (Time.now - 1.minute)
   while true
     if (Time.now - time_last) >= 1.minute
-      hash_count = { "up" => {}, "down" => {}}
+      hash_count = { "up" => {}, "down" => {} }
       contracts = Contract.not_disabled(:include => :current_traffic)
       contract_count = contracts.count
       parse_data_count(contracts, hash_count)
@@ -106,8 +106,8 @@ tcounter = Thread.new do
 
               Configuration::COUNT_CATEGORIES.each do |category|
                 data_total = 0
-                data_total += hash["up"][c.ip][category].to_i if hash["up"].has_key(c.ip)
-                data_total += hash["down"][c.ip][category].to_i if hash["down"].has_key(c.ip)
+                data_total += hash_count["up"][c.ip][category].to_i if hash_count["up"].has_key?(c.ip)
+                data_total += hash_count["down"][c.ip][category].to_i if hash_count["down"].has_key?(c.ip)
 
                 if data_total != 0
                   c.is_connected = true
@@ -118,7 +118,7 @@ tcounter = Thread.new do
                   #Log data counting
                   if contract_count <= 300 and Rails.env.production?
                     if (data_total >= 7864320) or (eval("c.current_traffic.#{category} - current_traffic_count >= 7864320")) or (eval("(c.current_traffic.#{category} - data_total) != current_traffic_count"))
-                      f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Category: #{Category}, Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
+                      f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Category: #{Category}, Data Count: #{tmp},  Data readed: #{hash_count[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
                     end
                   end
                 end
@@ -134,7 +134,7 @@ tcounter = Thread.new do
           Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
         ensure
           time_last = Time.now
-          system "iptables -t mangle -Z" if Rails.env.production?
+          system "iptables -t filter -Z" if Rails.env.production?
         end
       end
       break unless $running
@@ -142,58 +142,6 @@ tcounter = Thread.new do
     end
   end
 end
-
-# ActiveRecord::Base.transaction do
-#   #create current traffic for new period
-#   file = File.join DEPLOY_DIR, "log/data_counting.log"
-#   contract_count = Contract.count
-#   File.open(file, "a") do |f|
-#     Contract.all(:include => :current_traffic).each do |c|
-#       c.is_connected = false
-#       traffic_current = c.current_traffic
-#       if traffic_current.nil?
-#         traffic_current = c.create_traffic_for_this_period
-#         #update the data for each traffic
-#         #c.reload
-#       end
-#       if hash[c.ip].present? and hash[c.ip] != 0#no read if contract.state == disabled
-#         tmp = traffic_current.data_count
-#         if hash[c.ip] <= @max_current_traffic_count
-#           traffic_current.data_count += hash[c.ip]
-#           traffic_current.save
-#         end
-#         if contract_count <= 300
-#           c.reload
-#           if (hash[c.ip] >= 7864320) or (c.current_traffic.data_count - tmp >= 7864320) or ((c.current_traffic.data_count - hash[c.ip]) != tmp)
-#             hash_log_iptables[c.ip].each do |rule|
-#               f.puts("Rule chain: #{rule}")
-#             end
-#             if conf.transparent_proxy and conf.transparent_proxy_n_to_m
-#               hash_log_iptables_proxy[c.ip].each do |rule|
-#                 f.puts("Rule proxy: #{rule}")
-#               end
-#             end
-#             f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
-#           end
-#         end
-#         c.is_connected = true
-#       end
-#       c.save if c.changed?
-#       DaemonHook.data_counting(:contract => c)
-#     end
-#   end
-# end
-#       rescue => e
-# Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
-#       ensure
-# time_last = Time.now
-#         system "iptables -t mangle -Z" unless SequreispConfig::CONFIG["demo"]
-#       end
-#     end
-#     break unless $running
-#     sleep 1
-#   end
-# end
 
 #esto va como param a method
 tsleep = 1
