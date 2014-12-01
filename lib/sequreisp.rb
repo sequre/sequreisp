@@ -557,11 +557,6 @@ def gen_iptables
         end
       end
 
-      Provider.online.ready.map{ |p| p.interface.name }.each do |interface|
-        #Accept only request by interface wan to ip and port (80,8080,443) server.
-        f.puts "-A sequreisp-app-listened -i #{interface} -p tcp -m multiport --dports #{listen_ports.join(',')} -j ACCEPT"
-      end
-
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
           f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
@@ -587,6 +582,8 @@ def gen_iptables
       f.puts "-A dns-query -j ACCEPT"
 
       Provider.enabled.with_klass_and_interface.each do |p|
+        #Accept only request by interface wan to ip and port (80,8080,443) server.
+        f.puts "-A sequreisp-app-listened -i #{p.link_interface} -p tcp -m multiport --dports #{listen_ports.join(',')} -j ACCEPT"
         if p.allow_dns_queries
           f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
           f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
