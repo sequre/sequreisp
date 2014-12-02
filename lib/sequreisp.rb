@@ -690,79 +690,6 @@ def setup_dynamic_providers_hooks
   end
 end
 
-def setup_provider_interface p, boot=true
-  commands = []
-  if p.interface.vlan?
-    #commands << "vconfig rem #{p.interface.name}"
-    commands << "vconfig add #{p.interface.vlan_interface.name} #{p.interface.vlan_id}"
-    #BTW, in your case the drops most likely occur because HFSC's default pfifo
-    #child qdiscs use the tx_queue_len of the device as their limit, which in
-    #case of vlan devices is zero (in that case 1 is used).
-    #So you can either increase the tx_queue_len of the vlan device or manually
-    #add child qdiscs with bigger limits.
-    commands << "ip link set #{p.interface.name} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_VLAN}"
-  end
-  # x si necesitamos mac_address única para evitar problemas en proveedores que bridgean
-  if p.unique_mac_address?
-    commands << "ip link set  #{p.interface.name} address #{p.mac_address}"
-  end
-  commands << "ip link set dev #{p.interface.name} up"
-  # x no queremos que se mezclen los paquetes de una iface a la otra
-  commands << "echo #{p.arp_ignore ? 1 : 0 } > /proc/sys/net/ipv4/conf/#{p.interface.name}/arp_ignore"
-  commands << "echo #{p.arp_announce ? 1 : 0 } > /proc/sys/net/ipv4/conf/#{p.interface.name}/arp_announce"
-  commands << "echo #{p.arp_filter ? 1 : 0 } > /proc/sys/net/ipv4/conf/#{p.interface.name}/arp_filter"
-  case p.kind
-  when "adsl"
-    begin
-      File.open("#{PPP_DIR}/peers/#{p.interface.name}", 'w') {|peer| peer.write(p.to_ppp_peer) }
-    rescue => e
-      Rails.logger.error "ERROR in lib/sequreisp.rb::setup_provider_interface(PPP_DIR) e=>#{e.inspect}"
-    end
-
-    #pgrep se ejecuta via 'sh -c' entonces siempre se ve a si mismo y la cuenta si o si arranca en 1
-    pppd_running = `/usr/bin/pgrep -c -f 'pppd call #{p.interface.name}' 2>/dev/null`.chomp.to_i || 0
-    #si NO esta corriendo pppd y NO existe la iface ppp"
-    if pppd_running < 2  and not system("/sbin/ifconfig #{p.link_interface} 1>/dev/null 2>/dev/null")
-      commands << "/usr/bin/pon #{p.interface.name}"
-    end
-    if p.online?
-      p.addresses.each do |a|
-        commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
-        commands << "ip route re #{a.network} dev #{p.link_interface}"
-      end
-    end
-  when "dhcp"
-    #pgrep se ejecuta via 'sh -c' entonces siempre se ve a si mismo y la cuenta si o si arranca en 1
-    dhcp_running = `/usr/bin/pgrep -c -f 'dhclient.#{p.interface.name}' 2>/dev/null`.chomp.to_i || 0
-    if dhcp_running < 2
-      commands << "dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
-    end
-    if p.online?
-      p.addresses.each do |a|
-        commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
-        commands << "ip route re #{a.network} dev #{p.link_interface}"
-      end
-    end
-  when "static"
-    #current_ips = `ip address show dev #{p.link_interface} 2>/dev/null`.scan(/inet ([\d.\/]+) /).flatten.collect { |ip| (IP.new ip).to_s }
-    #ips = []
-    commands << "ip address add #{p.ip}/#{p.netmask} dev #{p.link_interface}"
-    #ips << "#{p.ruby_ip.to_s}"
-    p.addresses.each do |a|
-      commands << "ip address add #{a.ip}/#{a.netmask} dev #{p.link_interface}"
-      commands << "ip route re #{a.network} dev #{p.link_interface} src #{a.ip}"
-      #ips << "#{a.ruby_ip.to_s}"
-    end
-    #(current_ips - ips).each do |ip|
-    #  commands << "ip address del #{ip} dev #{p.link_interface}"
-    #end
-    # la pongo al final para que quede el src de la ip ppal
-    commands << "ip route re #{p.network} dev #{p.link_interface} src #{p.ip}"
-    commands << "ip route re table #{p.check_link_table} #{p.gateway} dev #{p.link_interface}"
-    commands << "ip route re table #{p.check_link_table} #{p.default_route}"
-  end
-  exec_context_commands "setup_provider_interface #{p.id}", commands, boot
-end
 def setup_clock
   tz_path = "/usr/share/zoneinfo/"
   tz_name = ActiveSupport::TimeZone.new(Configuration.time_zone).tzinfo.name
@@ -952,30 +879,90 @@ def setup_nf_modules
   exec_context_commands "modprobe", modules.collect{|m| "modprobe #{m}" }
 end
 
-def setup_interfaces
+def setup_adsl_interface(p)
+  begin
+    File.open("#{PPP_DIR}/peers/#{p.interface.name}", 'w') {|peer| peer.write(p.to_ppp_peer) }
+  rescue => e
+    Rails.logger.error "ERROR in lib/sequreisp.rb::setup_provider_interface(PPP_DIR) e=>#{e.inspect}"
+  end
+
+  commands = "/usr/bin/pgrep -f 'pppd call #{p.interface.name} ' >/dev/null || (ip link list #{p.link_interface} &>/dev/null && /usr/bin/pon #{p.interface.name})"
+
+  if p.online?
+    p.addresses.each do |a|
+      commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address replace #{a.ip_in_cidr} dev #{p.link_interface}"
+      commands << "ip route replace #{a.network} dev #{p.link_interface}"
+    end
+  end
+  commands
+end
+
+def setup_dhcp_interface(p)
   commands = []
-  Interface.all(:conditions => "vlan = 0").each do |i|
-    commands << "ip link set dev #{i.name} up"
-  end
-  Interface.all(:conditions => "kind = 'lan'").each do |i|
-    #current_ips = `ip address show dev #{i.name} 2>/dev/null`.scan(/inet ([\d.\/]+) /).flatten.collect { |ip| (IP.new ip).to_s }
-    #ips = []
-    if i.vlan?
-      #commands << "vconfig rem #{p.interface.name}"
-      commands << "vconfig add #{i.vlan_interface.name} #{i.vlan_id}"
+  commmands = "/usr/bin/pgrep -f 'dhclient.#{p.interface.name}' &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
+  if p.online?
+    p.addresses.each do |a|
+      commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address add #{a.ip_in_cidr} dev #{p.link_interface}"
+      commands << "ip route re #{a.network} dev #{p.link_interface}"
     end
-    commands << "ip link set dev #{i.name} up"
-    i.addresses.each do |a|
-      commands << "ip address add #{a.ip}/#{a.netmask} dev #{i.name}"
-      commands << "ip route re #{a.network} dev #{i.name} src #{a.ip}"
-      #ips << "#{a.ruby_ip.to_s}"
-    end
-    #(current_ips - ips).each do |ip|
-    #  commands << "ip address del #{ip} dev #{i.name}"
-    #end
-    commands << "initctl emit -n net-device-up \"IFACE=#{i.name}\" \"LOGICAL=#{i.name}\" \"ADDRFAM=inet\" \"METHOD=static\""
   end
-  exec_context_commands "setup_interfaces", commands
+  commands
+end
+
+def setup_static_interface(p)
+  commands = []
+  commands << "ip address | grep \"#{p.ip_in_cidr} .* #{p.link_interface}\" || ip address replace #{p.ip_in_cidr} dev #{p.link_interface}"
+  p.addresses.each do |a|
+    commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address replace #{a.ip_in_cidr} dev #{p.link_interface}"
+    commands << "ip route replace #{a.network} dev #{p.link_interface} src #{a.ip}"
+  end
+  commands << "ip route replace #{p.network} dev #{p.link_interface} src #{p.ip}"
+  commands << "ip route replace table #{p.check_link_table} #{p.gateway} dev #{p.link_interface}"
+  commands << "ip route replace table #{p.check_link_table} #{p.default_route}"
+end
+
+def setup_provider_interface p, boot=true
+  commands = []
+  commands << "echo #{p.arp_ignore ? 1 : 0 } > /proc/sys/net/ipv4/conf/#{p.interface.name}/arp_ignore"
+  commands << "echo #{p.arp_announce ? 1 : 0 } > /proc/sys/net/ipv4/conf/#{p.interface.name}/arp_announce"
+  commands << "echo #{p.arp_filter ? 1 : 0 } > /proc/sys/net/ipv4/conf/#{p.interface.name}/arp_filter"
+
+  case p.kind
+  when "adsl"
+    commands << setup_adsl_interface(p)
+  when "dhcp"
+    commands << setup_dhcp_interface(p)
+  when "static"
+    commands << setup_static_interface(p)
+  end
+  exec_context_commands "setup_provider_interface #{p.id}", commands, boot
+end
+
+def setup_lan_interface(i)
+  commands = []
+  i.addresses.each do |a|
+    commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address replace #{a.ip_in_cidr} dev #{i.name}"
+    commands << "ip route replace #{a.network} dev #{i.name} src #{a.ip}"
+  end
+  commands << "initctl emit -n net-device-up \"IFACE=#{i.name}\" \"LOGICAL=#{i.name}\" \"ADDRFAM=inet\" \"METHOD=static\""
+end
+
+def setup_interfaces
+  Interface.all.each do |i|
+    commands = []
+    commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
+    #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
+    commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address}"
+    #commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
+    commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
+    if i.lan?
+      commands << setup_lan_interface(i)
+      exec_context_commands("setup_lan_interface_#{i.name}", commands)
+    elsif i.wan?
+      commands << setup_provider_interface(i.provider) if i.wan?
+      exec_context_commands("setup_wan_interfaces_#{i.name}", commands)
+    end
+  end
 end
 
 def setup_static_routes
@@ -1019,11 +1006,11 @@ def setup_ip_ru
   gen_ip_ru
   exec_context_commands "ip_ru", "ip -batch #{IP_RU_FILE}"
 end
-def setup_providers_interfaces
-  Provider.with_klass_and_interface.each do |p|
-    setup_provider_interface p
-  end
-end
+# def setup_providers_interfaces
+#   Provider.with_klass_and_interface.each do |p|
+#     setup_provider_interface p
+#   end
+# end
 def setup_iptables
   gen_iptables
   exec_context_commands "setup_iptables", [
@@ -1057,7 +1044,7 @@ def boot(run=true)
     setup_nf_modules
     setup_interfaces
     setup_dynamic_providers_hooks
-    setup_providers_interfaces
+#    setup_providers_interfaces
     setup_proxy_arp
     setup_static_routes
     setup_ifbs
