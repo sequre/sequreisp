@@ -234,6 +234,7 @@ es:
         dns_second_server: "Segundo server DNS"
         dns_third_server: "Tercer Server DNS"
         traffic_prio: "Tráfico prioritario de baja latencia"
+        in_safe_mode: "Modo seguro"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -323,6 +324,7 @@ es:
         use_global_prios: "Habilitar únicamente en caso de más de 2500 contratos"
         use_external_number_client: "Al desactivar utiliza como numero de cliente los ids"
         mail_relay_manipulated_for_sequreisp: "Deshabilitar para trabajar manualmente con /etc/postfix/main.cf"
+        in_safe_mode: "En modo seguro, no se aplicará ninguna reglas de control de ancho de banda, priorizaciones, redirecciones, proxy arp y ningun tipo de filtrado de paquete."
       provider:
         shape_rate_down_on_ingress: "El control de tráfico de bajada se hace en la interfaz LAN; si habilita esta opción se habitará un control adicional en la interfaz WAN que asegurará que el tráfico de los clientes más el del servidor no excedan el límite configurado"
         avoid_nat_addresses: "Una dirección por linea, notación CIDR, ejemplo 200.10.20.0/24"
@@ -566,6 +568,7 @@ es:
       mail_relay: "Mail relay"
       bind_dns: "Configuración DNS"
       traffic_prio: "Tráfico prioritario de baja latencia"
+      in_safe_mode: "Modo seguro"
     interface:
       ips: "IPs"
     provider:
