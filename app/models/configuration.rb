@@ -32,7 +32,7 @@ class Configuration < ActiveRecord::Base
   include IpAddressCheck
   include ModelsWatcher
   watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
-               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,               
+               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,
                :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
                :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
                :iptables_tree_optimization_enabled,
@@ -224,6 +224,36 @@ class Configuration < ActiveRecord::Base
       ports << "443"
     end
     ports
+  end
+
+  def include_exclude_files_in_backup(backup)
+    include_files = true
+    exclude_files = true
+    errors = { :include_files => [],
+               :exclude_files => [] }
+
+    if backup.has_key?(:include_files)
+      backup[:include_files].delete("\r").split("\n").uniq.each do |path|
+        unless File.exists?(path.chomp)
+          errors[:include_files] << path.chomp
+          include_files = false
+        end
+      end
+    end
+
+    if backup.has_key?(:exclude_files)
+      backup[:exclude_files].delete("\r").split("\n").uniq.each do |path|
+        unless File.exists?(path.chomp)
+          errors[:exclude_files] << path.chomp
+          exclude_files = false
+        end
+      end
+    end
+
+    self.files_include_in_buckup = backup[:include_files].delete("\r") if include_files
+    self.files_exclude_in_buckup = backup[:exclude_files].delete("\r") if exclude_files
+    self.save if self.changed?
+    errors
   end
 
 end

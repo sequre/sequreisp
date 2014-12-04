@@ -145,4 +145,3 @@ class Backup
     backup_version.present? and ::SequreISP::Version.new(backup_version) == ::SequreISP::Version.new
   end
 end
-

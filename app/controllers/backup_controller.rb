@@ -68,14 +68,22 @@ class BackupController < ApplicationController
     @reboot = true
     upload_full
   end
+
   def create_full
-    if file = Backup.new.full(params[:include_graphs])
-      send_file file, :type => 'application/x-gzip'
+    errors = Configuration.first.include_exclude_files_in_backup(params[:backup])
+    if errors[:include_files].empty? and errors[:exclude_files].empty?
+      if file = Backup.new.full(params[:include_graphs])
+        send_file file, :type => 'application/x-gzip'
+      else
+        flash[:error] = t 'backup.notice.create_error'
+        redirect_to backup_path
+      end
     else
-      flash[:error] = t 'backup.notice.create_error'
+      flash[:error] = "No existen los siguientes archivos #{errors[:include_files].join('\n')} \n #{errors[:exclude_files].join('\n')}"
       redirect_to backup_path
     end
   end
+
   def create_db
     if file = Backup.new.db
       send_file file, :type => 'application/x-gzip'

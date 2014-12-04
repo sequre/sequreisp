@@ -26,19 +26,24 @@ $(function() {
     <legend><span><%=t 'backup.backup_full_legend' %></span></legend>
     <ol>
     <fieldset class="inputs">
-    <% form_tag ({:action => 'create_full'}) do %>
-      <legend><span><%=t 'backup.create_backup_legend' %></span></legend>
-      <li>
-        <%#= link_to t('backup.create_backup_button'), full_backup_path %>
-        <label for="include_graphs">
-          <%= check_box_tag 'include_graphs' %>
-          <%= t('backup.include_graphs', :size => Contract.count/2.0) %>
-        </label>
-      </li>
-      <li>
-        <%= submit_tag t('backup.create_backup_button') %>
-      </li>
-    <% end %>
+     <legend><span><%=t 'backup.create_backup_legend' %></span></legend>
+      <% semantic_form_for 'backup', :url => create_full_backup_path  do |f| %>
+	<%= f.input :include_graph,
+	            :as => :boolean,
+	            :label => t('backup.include_graphs', :size => Contract.count/2.0),
+	            :required => false %>
+
+	<%= f.input :include_files,
+               	    :as => :text,
+                    :label =>t('backup.include_fies'),
+                    :required => false %>
+
+	<%= f.input :exclude_files,
+	            :as => :text,
+                    :label =>t('backup.exclude_fies'),
+                    :required => false  %>
+	<%= f.submit t('buttons.process') %>
+      <% end %>
     </fieldset>
     <fieldset class="inputs">
       <% form_tag({:action => 'upload_full'}, :multipart => true, :id => 'upload_full') do %>
