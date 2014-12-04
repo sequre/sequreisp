@@ -20,24 +20,10 @@ class AuditsController < ApplicationController
   permissions :audits
 
   def index
-    params[:search] ||= {}
-    order = 'created_at DESC'
-    format_date params
-
     export_to_csv if params.has_key?("to_csv")
 
     @search = Audit.search(params[:search])
-
-    @audits = @search.paginate(:page => params[:page], :per_page => 10, :order => order )
-
-    @models = Audit.all(:select => "DISTINCT auditable_type", :order => "auditable_type ASC")\
-                        .map(&:auditable_type)\
-                        .map do |m|
-                          human_name = m.constantize.human_name rescue m
-                          [human_name, m]
-                        end
-    @search.created_at_greater_than_or_equal_to = @search.created_at_greater_than_or_equal_to.to_date if @search.created_at_greater_than_or_equal_to
-    @search.created_at_less_than_or_equal_to = @search.created_at_less_than_or_equal_to.to_date if @search.created_at_less_than_or_equal_to
+    @audits = @search.paginate(:page => params[:page], :per_page => 10, :order => 'created_at DESC' )
   end
 
   def export_to_csv
@@ -72,29 +58,6 @@ class AuditsController < ApplicationController
     else
       flash[:error] = t 'audits.error_on_reversion'
       redirect_to audits_path
-    end
-  end
-
-  def self.action_select_options
-    [
-      [I18n.t('audits.create'),"create"],
-      [I18n.t('audits.update'),"update"],
-      [I18n.t('audits.destroy'),"destroy"]
-    ]
-  end
-
-  def format_date params
-    if params[:search][:created_at_greater_than_or_equal_to].present?
-      array_date = params[:search][:created_at_greater_than_or_equal_to].split("/")
-      month = array_date.slice!(1)
-      params[:search][:created_at_greater_than_or_equal_to] = array_date.unshift(month).join("/")
-      params[:search][:created_at_greater_than_or_equal_to] = params[:search][:created_at_greater_than_or_equal_to].to_datetime.change({:hour => 0, :min => 0, :sec => 0})
-    end
-    if params[:search][:created_at_less_than_or_equal_to].present?
-      array_date = params[:search][:created_at_less_than_or_equal_to].split("/")
-      month = array_date.slice!(1)
-      params[:search][:created_at_less_than_or_equal_to] = array_date.unshift(month).join("/")
-      params[:search][:created_at_less_than_or_equal_to] = params[:search][:created_at_less_than_or_equal_to].to_datetime.change({:hour => 23, :min => 59, :sec => 59})
     end
   end
 

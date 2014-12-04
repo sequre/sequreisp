@@ -253,7 +253,7 @@ es:
         physical_link: "Enlace"
       audit:
         id: "ID"
-        user: "Usuario"
+        user: "Usuario Responsable"
         action: "Acción"
         created_at: "Fecha"
         auditable_type: "Modelo"
@@ -448,6 +448,9 @@ es:
     new: "Creando %{model}"
     login: "Acceso"
   messages:
+    audits:
+      changes_in: "Cambios en"
+      selected_attributes: "atributo/s seleccionado/s"
     contracts_online: "%{count} contratos conectados"
     contracts_with_id_was_updated_successfully: 'Los contractos con id %{ids} se actualizaron con exito'
     access_denied: "Acceso denegado"
@@ -591,6 +594,11 @@ es:
     go_back: 'Volver a esta versión'
     successfully_reverted: 'Se aplicaron los cambios correctamente'
     error_on_reversion: 'No se pudo volver a la versión indicada'
+    any_user: 'Cualquier Usuario'
+    any_action: 'Cualquier Acción'
+    any_model: 'Cualquier Modelo'
+    all: 'Todos'
+    any: 'Cualquier'
   error_messages:
     not_selected_any_options: 'No se ha selecionado ninguna opción'
     not_repeat_dns_server: 'Existen servidores DNS repetidos'

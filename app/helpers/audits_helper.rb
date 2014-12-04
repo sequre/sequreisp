@@ -44,4 +44,34 @@ module AuditsHelper
       link_to(h(a.auditable_name), a)
     end
   end
+
+  def collect_of_auditable_models
+    Audit.audited_classes.collect{|c| [I18n.t("activerecord.models.#{c.name.underscore}.one"),c.name] }.sort
+  end
+
+
+  def collect_actions
+    [
+      [I18n.t('audits.create'),"create"],
+      [I18n.t('audits.update'),"update"],
+      [I18n.t('audits.destroy'),"destroy"]
+    ]
+  end
+
+  def attributes_audits_to_json
+    hidden_attributes = {
+      :Client => ['invoicing_bar_code_content_type',
+                  'invoicing_bar_code_file_size']
+    }
+    result_hash = {}
+    Audit.audited_classes.each do |cl|
+      result_hash[cl] = [];
+      cl.audited_columns.each do |a|
+        unless (hidden_attributes.has_key? cl.name.to_sym and hidden_attributes[cl.name.to_sym].include? a.name)
+          result_hash[cl] << [ a.name, I18n.t("activerecord.attributes.#{cl.name.underscore}.#{a.name}") ]
+        end
+      end
+    end
+    result_hash.to_json
+  end
 end
