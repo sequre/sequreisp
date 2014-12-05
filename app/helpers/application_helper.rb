@@ -81,4 +81,8 @@ module ApplicationHelper
     "http://www.sequreisp.com/portal/issues/new?locale=#{I18n.locale}"
   end
 
+  def app_version
+    require 'sequreisp_about'
+    SequreISP::Version.to_s
+  end
 end

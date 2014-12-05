@@ -12,4 +12,5 @@
   <% if current_user %>
     <%= link_to "#{current_user.name} (Logout)", logout_path, :class => "logout" %>
   <% end %>
+  <span id="header_version">v <%= app_version %></span>
 </div>

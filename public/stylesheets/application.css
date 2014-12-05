@@ -57,4 +57,17 @@ div#apply_changes_button{
     margin-top: 7px;
 }
 
+#header_version{
+  font-size: 14px;
+  font-weight: bold;
+  position: relative;
+  top: 8px;
+  margin-right: 15px;
+  float: right;
+  color: #3c0202;
+  text-shadow: 0 1px 0 rgba(117, 35, 35, 0.5);
+  width: 100%;
+  text-align: right;
+}
+
 
