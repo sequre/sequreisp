@@ -89,11 +89,4 @@ class Plan < ActiveRecord::Base
   def auditable_name
     "#{self.class.human_name}: #{name}"
   end
-  def quantum_factor(direction)
-    quantum = (self["ceil_" + direction] + self["rate_" + direction])/Configuration.first.quantum_factor.to_i
-    quantum <= 0 ? 1 : quantum
-  end
-  def quantum_total(direction)
-    Configuration.first.mtu * quantum_factor(direction) * 3
-  end
 end

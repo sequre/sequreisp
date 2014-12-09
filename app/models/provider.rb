@@ -212,9 +212,6 @@ class Provider < ActiveRecord::Base
       []
     end
   end
-  def quantum_factor
-    (provider_group.plans.collect{|plan| plan.rate_down + plan.ceil_down }.max)/Configuration.quantum_factor.to_i rescue 1
-  end
   def status
     self.online ? "online" : "offline"
   end
@@ -371,61 +368,9 @@ class Provider < ActiveRecord::Base
     result
   end
 
-  def max_quantum
-    Configuration.first.mtu * quantum_factor * 3
-  end
-
-  def tc_class_qdisc_filter(o = {})
-    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
-    tc_rules = []
-    tc_rules << "class add dev #{self.link_interface} parent #{o[:parent_mayor]}:#{o[:parent_minor]} classid #{classid} htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
-    tc_rules << "qdisc add dev #{self.link_interface} parent #{classid} sfq perturb 10" #saco el handle
-    tc_rules << "filter add dev #{self.link_interface} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}"
-    tc_rules
-  end
-
-  def do_global_prios_tc(parent_mayor, parent_minor, iface, direction)
-    tc_rules = []
-    mask = "f0000000"
-    quantum = p.max_quantum
-
-    #TODO tc_global ceil_prio3 quantum mark, etc
-    #prio1
-    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
-                                      :parent_minor => parent_minor,
-                                      :current_minor => "a",
-                                      :rate => self["rate_" + direction] * 0.4 ,
-                                      :ceil => self["rate_" + direction],
-                                      :prio => 1,
-                                      :quantum => quantum,
-                                      :mark => "a0000000",
-                                      :mask => mask)
-    #prio2
-    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
-                                      :parent_minor => parent_minor,
-                                      :current_minor => "b",
-                                      :rate => self["rate_" + direction] * 0.5 ,
-                                      :ceil => self["rate_" + direction],
-                                      :prio => 2,
-                                      :quantum => quantum,
-                                      :mark => "b0000000",
-                                      :mask => mask)
-    #prio3
-    tc_rules << tc_class_qdisc_filter(:parent_mayor => parent_mayor,
-                                      :parent_minor => parent_minor,
-                                      :current_minor => "c",
-                                      :rate => self["rate_" + direction] * 0.1,
-                                      :ceil => self["rate_" + direction] * 0.3 ,
-                                      :prio => 3,
-                                      :quantum => quantum / 3,
-                                      :mark => "c0000000",
-                                      :mask => mask)
-    tc_rules.flatten
-  end
-
   def self.all_ips
-   provider_ips = []
-    Provider.all.each do |provider|
+    provider_ips = []
+    Provider.online.ready.each do |provider|
       provider_ips << provider.ip
       provider.addresses.each { |addr| provider_ips << addr.ip }
     end

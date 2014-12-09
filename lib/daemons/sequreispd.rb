@@ -61,6 +61,30 @@ def backup_restore
   end
 end
 
+
+def parse_data_count(contracts, hash_count)
+  if SequreispConfig::CONFIG["demo"]
+    contracts.all.each do |contract|
+      hash_count["up"][contract.ip]["data_count"] = rand(1844674)
+      hash_count["down"][contract.ip]["data_count"] = rand(1844674)
+    end
+  else
+    begin
+      # [["bytes", "ip", "up|down", "data_count"], ["bytes", "ip", "up|down", "data_count"]]
+      File.read("|iptables-save -t filter -c").scan(/\[.*:(\d+).*comment \"data-count-(.*)-(.*)-(.*)\"/).each do |line|
+        # line[0] => byte's, line[1] => i1p, line[2] => up | down, line[3] => category, where the category name is the same with  any traffic attribute
+        if line[0] != "0"
+          hash_count[line[2]][line[1]] = {}
+          hash_count[line[2]][line[1]][line[3]] = line[0]
+        end
+      end
+    rescue => e
+      Rails.logger.error "ERROR Daemon: Command iptables-save -t filter -c: #{e.inspect}"
+    end
+  end
+end
+
+
 # The limit current_traffic for read is 1 Gbps
 @max_current_traffic_count = 1000 / 8 * 1024 * 1024 * 60
 conf = Configuration.first
@@ -69,82 +93,53 @@ tcounter = Thread.new do
   time_last = (Time.now - 1.minute)
   while true
     if (Time.now - time_last) >= 1.minute
-      begin
-        hash = {}
-        hash_log_iptables = {}
-        hash_log_iptables_proxy = {}
-        if SequreispConfig::CONFIG["demo"]
-          Contract.all.each do |contract|
-            hash[contract.ip] = rand(1844674)
-          end
-        else
-          ips = Contract.all.collect(&:ip)
-          chain_prefix = conf.iptables_tree_optimization_enabled ? "sq" : "sequreisp"
-          # WARN! dobule escape for bracket seems mandatory \\[
-          command = "iptables-save -t mangle -c | /bin/grep \"^\\[.*:.*\\] -A #{chain_prefix}.* -[sd] .* -j .*$\""
-          IO.popen( command , "r") do |io|
-            io.each do |line|
-              rule = line.split(" ")
-              ip = IP.new(rule[4]).to_s
-              if ips.include? ip
-                hash[ip] = 0 if hash[ip].nil?
-                hash[ip] += rule[0].match('[^\[].*[^\]]').to_s.split(":").last.to_i
-                hash_log_iptables[ip] = [] if hash_log_iptables[ip].nil?
-                hash_log_iptables[ip] << line
-              end
-            end
-          end
-        end
+      hash_count = { "up" => {}, "down" => {} }
+      contracts = Contract.not_disabled(:include => :current_traffic)
+      contract_count = contracts.count
+      parse_data_count(contracts, hash_count)
 
-        ActiveRecord::Base.transaction do
-          #create current traffic for new period
-          file = File.join DEPLOY_DIR, "log/data_counting.log"
-          contract_count = Contract.count
-          File.open(file, "a") do |f|
-            Contract.all(:include => :current_traffic).each do |c|
+      ActiveRecord::Base.transaction do
+        begin
+          File.open(File.join(DEPLOY_DIR, "log/data_counting.log"), "a") do |f|
+            contracts.each do |c|
               c.is_connected = false
-              traffic_current = c.current_traffic
-              if traffic_current.nil?
-                traffic_current = c.create_traffic_for_this_period
-                #update the data for each traffic
-                #c.reload
-              end
-              if hash[c.ip].present? and hash[c.ip] != 0#no read if contract.state == disabled
-                tmp = traffic_current.data_count
-                if hash[c.ip] <= @max_current_traffic_count
-                  traffic_current.data_count += hash[c.ip]
-                  traffic_current.save
-                end
-                if contract_count <= 300
-                  c.reload
-                  if (hash[c.ip] >= 7864320) or (c.current_traffic.data_count - tmp >= 7864320) or ((c.current_traffic.data_count - hash[c.ip]) != tmp)
-                    hash_log_iptables[c.ip].each do |rule|
-                      f.puts("Rule chain: #{rule}")
+
+              Configuration::COUNT_CATEGORIES.each do |category|
+                data_total = 0
+                data_total += hash_count["up"][c.ip][category].to_i if hash_count["up"].has_key?(c.ip)
+                data_total += hash_count["down"][c.ip][category].to_i if hash_count["down"].has_key?(c.ip)
+
+                if data_total != 0
+                  c.is_connected = true
+                  traffic_current = c.current_traffic || c.create_traffic_for_this_period
+                  current_traffic_count = traffic_current.data_count
+                  eval("traffic_current.#{category} += data_total") if data_total <= @max_current_traffic_count
+
+                  #Log data counting
+                  if contract_count <= 300 and Rails.env.production?
+                    if (data_total >= 7864320) or (eval("c.current_traffic.#{category} - current_traffic_count >= 7864320")) or (eval("(c.current_traffic.#{category} - data_total) != current_traffic_count"))
+                      f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Category: #{Category}, Data Count: #{tmp},  Data readed: #{hash_count[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
                     end
-                    if conf.transparent_proxy and conf.transparent_proxy_n_to_m
-                      hash_log_iptables_proxy[c.ip].each do |rule|
-                        f.puts("Rule proxy: #{rule}")
-                      end
-                    end
-                    f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Data Count: #{tmp},  Data readed: #{hash[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
                   end
                 end
-                c.is_connected = true
               end
+
+              traffic_current.save if traffic_current.changed?
               c.save if c.changed?
+              c.reload
               DaemonHook.data_counting(:contract => c)
             end
           end
+        rescue => e
+          Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
+        ensure
+          time_last = Time.now
+          system "iptables -t filter -Z" if Rails.env.production?
         end
-      rescue => e
-        Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
-      ensure
-        time_last = Time.now
-        system "iptables -t mangle -Z" unless SequreispConfig::CONFIG["demo"]
       end
+      break unless $running
+      sleep 1
     end
-    break unless $running
-    sleep 1
   end
 end
 
