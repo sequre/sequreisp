@@ -376,4 +376,10 @@ class Provider < ActiveRecord::Base
     end
     provider_ips.compact
   end
+
+  def ip_in_cidr
+    cidr = IPAddr.new("#{ip}/#{netmask}").cidr_mask
+    "#{ip}/#{cidr}"
+  end
+
 end

@@ -2,6 +2,14 @@
 <% heading t('menu.interfaces') %>
 <% render_new_button_for :interface %>
 
+<style type="text/css">
+  .mac_address {
+    font-size: 85%;
+    color: gray;
+  }
+</style>
+
+
 <ul id="nav" style="float:right">
   <li><%= link_to t('buttons.scan_interfaces'), scan_interfaces_path %> </li>
   <%= render :partial => "shared/submenu_items"%>  
@@ -60,7 +68,12 @@
           </td>
           <td><%= interface.kind %></td>
           <td><%=h interface.vlan_id %></td>
-          <td><%= interface.addresses.collect{ |a| a.ip}.join("<br/>") %></td>
+          <td>
+	    <%= interface.addresses.collect{ |a| a.ip}.join("<br/>") %>
+            <% unless interface.mac_address.blank? %>
+              <br/><span class="mac_address">(<%= interface.mac_address %>)</span>
+            <% end %>
+          </td>
           <td <%= interface.current_physical_link ? 'class="enable_color"' : 'class="disable_color"' %>>
             <%=h interface.status %><br/>
             <%=h interface.speed %>
