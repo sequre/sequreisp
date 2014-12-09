@@ -36,21 +36,23 @@ def gen_tc
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
     commands << "tc qdisc del dev #{IFB_UP} root"
-    tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
     commands << "tc qdisc del dev #{IFB_DOWN} root"
-    tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
-    total_rate_up = ProviderGroup.total_rate_up
-    total_rate_down = ProviderGroup.total_rate_down
-    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{total_rate_up}kbit ul m2 #{total_rate_up}kbit"
-    tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
-    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{total_rate_down}kbit ul m2 #{total_rate_down}kbit"
-    tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
-    ProviderGroup.all.each do |pg|
-      rate_factor_up = pg.rate_factor_up
-      rate_factor_down = pg.rate_factor_down
-      pg.contracts.not_disabled.descend_by_netmask.each do |c|
-        tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", rate_factor_up)
-        tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", rate_factor_down)
+    unless Configuration.first.in_safe_mode?
+      tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
+      tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
+      total_rate_up = ProviderGroup.total_rate_up
+      total_rate_down = ProviderGroup.total_rate_down
+      tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{total_rate_up}kbit ul m2 #{total_rate_up}kbit"
+      tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
+      tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{total_rate_down}kbit ul m2 #{total_rate_down}kbit"
+      tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
+      ProviderGroup.all.each do |pg|
+        rate_factor_up = pg.rate_factor_up
+        rate_factor_down = pg.rate_factor_down
+        pg.contracts.not_disabled.descend_by_netmask.each do |c|
+          tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", rate_factor_up)
+          tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", rate_factor_down)
+        end
       end
     end
     tc_ifb_up.close
@@ -66,12 +68,14 @@ def gen_tc
     commands << "tc qdisc del dev #{iface} ingress"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
-        tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
-        tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
-        tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
-        tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
-        tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_up}kbit ul m2 #{p.rate_up}kbit"
-        tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+        unless Configuration.first.in_safe_mode?
+          tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+          tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
+          tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
+          tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
+          tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_up}kbit ul m2 #{p.rate_up}kbit"
+          tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+        end
       end
     rescue => e
       Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider upload limit in #{iface}) e=>#{e.inspect}"
@@ -84,13 +88,15 @@ def gen_tc
     commands << "tc qdisc del dev #{iface} root"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
-        tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
-        tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
-        tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
-        tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
-        Provider.enabled.with_klass_and_interface.each do |p|
-          tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_down}kbit ul m2 #{p.rate_down}kbit"
-          tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+        unless Configuration.first.in_safe_mode?
+          tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+          tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
+          tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
+          tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
+          Provider.enabled.with_klass_and_interface.each do |p|
+            tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_down}kbit ul m2 #{p.rate_down}kbit"
+            tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+          end
         end
       end
     rescue => e
@@ -133,208 +139,219 @@ def gen_iptables
       # MANGLE #
       #--------#
       f.puts "*mangle"
+      unless Configuration.first.in_safe_mode?
+        #Chain for unlimitd bandwidth traffic, jump here if you need it
+        f.puts ":unlimited_bandwidth - [0:0]"
+        f.puts "-A unlimited_bandwidth -j MARK --set-mark 0x0/0xffffff"
+        f.puts "-A unlimited_bandwidth -j ACCEPT"
 
-      #Chain for unlimitd bandwidth traffic, jump here if you need it
-      f.puts ":unlimited_bandwidth - [0:0]"
-      f.puts "-A unlimited_bandwidth -j MARK --set-mark 0x0/0xffffff"
-      f.puts "-A unlimited_bandwidth -j ACCEPT"
-
-      if Configuration.clamp_mss_to_pmtu
-        f.puts "-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
-        f.puts "-A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
-      end
-      # CONNMARK PREROUTING
-      # Evito balanceo para los hosts configurados
-      f.puts ":avoid_balancing - [0:0]"
-      f.puts "-A PREROUTING -j avoid_balancing"
-      AvoidBalancingHost.all.each do |abh|
-        if abh.provider
-          abh.ip_addresses.each do |ip|
-            f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
-            f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
+        if Configuration.clamp_mss_to_pmtu
+          f.puts "-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
+          f.puts "-A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
+        end
+        # CONNMARK PREROUTING
+        # Evito balanceo para los hosts configurados
+        f.puts ":avoid_balancing - [0:0]"
+        f.puts "-A PREROUTING -j avoid_balancing"
+        AvoidBalancingHost.all.each do |abh|
+          if abh.provider
+            abh.ip_addresses.each do |ip|
+              f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
+              f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
+            end
           end
         end
-      end
-      # restauro marka en PREROUTING
-      f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
+        # restauro marka en PREROUTING
+        f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
 
-      # acepto si ya se de que enlace es
-      f.puts "-A PREROUTING -m mark ! --mark 0x0/0x1fffffff -j ACCEPT"
-      # si viene desde internet marko segun el enlace por el que entró
-      Provider.enabled.with_klass_and_interface.each do |p|
-        f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
-        f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
-        f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT"
-      end
-      # tabla para evitar triangulo de nat
-      # como arriba ya hice ACCEPT de lo que entra por los
-      # providers, esto solo impacta si la iface de entrada no es WAN
-      f.puts ":avoid_nat_triangle - [0:0]"
-      f.puts "-A PREROUTING -j avoid_nat_triangle"
-      ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
-        do_port_forwardings_avoid_nat_triangle fp, f
-      end
-
-      # sino marko por cliente segun el ProviderGroup al que pertenezca
-      Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ]).each do |c|
-        if !c.public_address.nil?
-          #evito triangulo de NAT si tiene full DNAT
-          f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
+        # acepto si ya se de que enlace es
+        f.puts "-A PREROUTING -m mark ! --mark 0x0/0x1fffffff -j ACCEPT"
+        # si viene desde internet marko segun el enlace por el que entró
+        Provider.enabled.with_klass_and_interface.each do |p|
+          f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
+          f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
+          f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT"
+        end
+        # tabla para evitar triangulo de nat
+        # como arriba ya hice ACCEPT de lo que entra por los
+        # providers, esto solo impacta si la iface de entrada no es WAN
+        f.puts ":avoid_nat_triangle - [0:0]"
+        f.puts "-A PREROUTING -j avoid_nat_triangle"
+        ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
+          do_port_forwardings_avoid_nat_triangle fp, f
         end
 
-        mark = if not c.public_address.nil?
-                 c.public_address.addressable.mark_hex
-               elsif not c.unique_provider.nil?
-                 # marko los contratos que salen por un único provider
-                 c.unique_provider.mark_hex
-               else
-                 c.plan.provider_group.mark_hex
-              end
-        f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
-        f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT"
-      end
-      # CONNMARK OUTPUT
-      # Evito balanceo para los hosts configurados
-      f.puts "-A OUTPUT -j avoid_balancing"
-      # restauro marka en OUTPUT pero que siga viajando
-      f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x8fffffff --ctmask 0x8fffffff"
-      f.puts "-A OUTPUT -m mark ! --mark 0x0/0x8fffffff -j ACCEPT"
+        # sino marko por cliente segun el ProviderGroup al que pertenezca
+        Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ]).each do |c|
+          if !c.public_address.nil?
+            #evito triangulo de NAT si tiene full DNAT
+            f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
+          end
 
-      BootHook.run :hook => :mangle_after_ouput_hook, :iptables_script => f
+          mark = if not c.public_address.nil?
+                   c.public_address.addressable.mark_hex
+                 elsif not c.unique_provider.nil?
+                   # marko los contratos que salen por un único provider
+                   c.unique_provider.mark_hex
+                 else
+                   c.plan.provider_group.mark_hex
+                 end
+          f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
+          f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT"
+        end
+        # CONNMARK OUTPUT
+        # Evito balanceo para los hosts configurados
+        f.puts "-A OUTPUT -j avoid_balancing"
+        # restauro marka en OUTPUT pero que siga viajando
+        f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x8fffffff --ctmask 0x8fffffff"
+        f.puts "-A OUTPUT -m mark ! --mark 0x0/0x8fffffff -j ACCEPT"
+
+        BootHook.run :hook => :mangle_after_ouput_hook, :iptables_script => f
+      end
 
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
-      f.puts ":sequreisp.down - [0:0]"
-      f.puts ":sequreisp.up - [0:0]"
+      unless Configuration.first.in_safe_mode?
+        f.puts ":sequreisp.down - [0:0]"
+        f.puts ":sequreisp.up - [0:0]"
 
-      # apache traffic without restrictions for web interface
-      f.puts "-A sequreisp.down -m owner --uid-owner www-data -j unlimited_bandwidth"
+        # apache traffic without restrictions for web interface
+        f.puts "-A sequreisp.down -m owner --uid-owner www-data -j unlimited_bandwidth"
 
-      BootHook.run :hook => :mangle_before_postrouting_hook, :iptables_script => f
+        BootHook.run(:hook => :mangle_before_postrouting_hook, :iptables_script => f)
+
+      end
 
       Provider.enabled.with_klass_and_interface.each do |p|
         f.puts "-A sequreisp_connmark  -o #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
       end
-      # si tiene marka de ProviderGroup voy a sequreisp_connmark
-      ProviderGroup.enabled.with_klass.each do |pg|
-        f.puts "-A POSTROUTING -m mark --mark 0x#{pg.mark_hex}/0x00ff0000 -j sequreisp_connmark"
+
+      unless Configuration.first.in_safe_mode?
+        # si tiene marka de ProviderGroup voy a sequreisp_connmark
+        ProviderGroup.enabled.with_klass.each do |pg|
+          f.puts "-A POSTROUTING -m mark --mark 0x#{pg.mark_hex}/0x00ff0000 -j sequreisp_connmark"
+        end
       end
+
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
       f.puts "-A POSTROUTING -m mark --mark 0x00000000/0x00ff0000 -j sequreisp_connmark"
 
-      #speed-up MARKo solo si no estaba a restore'ada x CONNMARK
-      mark_if="-m mark --mark 0x0/0xffff"
-      Interface.all(:conditions => { :kind => "lan" }).each do |interface|
-        f.puts "-A POSTROUTING #{mark_if} -o #{interface.name} -j sequreisp.down"
-      end
-      Provider.enabled.with_klass_and_interface.each do |p|
-        f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
-      end
 
-      # def build_iptables_tree(f, parent_net, parent_chain, way, cuartet, mask)
-      #   return if cuartet == 0
-      #   base_net = IP.new parent_net.gsub(/\/.*/, "") + "/#{mask}"
-      #   (0..15).each do |n|
-      #     child_net = (base_net + n * 16**cuartet).to_s
-      #     chain="sq.#{way[:prefix]}.#{child_net}"
-      #     f.puts ":#{chain} - [0:0]"
-      #     f.puts "-A #{parent_chain} -#{way[:dir]} #{child_net} -j #{chain}"
-      #     build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
-      #   end
-      # end
+      unless Configuration.first.in_safe_mode?
+        #speed-up MARKo solo si no estaba a restore'ada x CONNMARK
+        mark_if="-m mark --mark 0x0/0xffff"
+        Interface.all(:conditions => { :kind => "lan" }).each do |interface|
+          f.puts "-A POSTROUTING #{mark_if} -o #{interface.name} -j sequreisp.down"
+        end
+        Provider.enabled.with_klass_and_interface.each do |p|
+          f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
+        end
 
-      # if Configuration.iptables_tree_optimization_enabled?
-      #   Contract.slash_16_networks.each do |n16|
-      #     [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
-      #       chain="sq.#{way[:prefix]}.#{n16}"
-      #       f.puts ":#{chain} - [0:0]"
-      #       f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
-      #       build_iptables_tree f, n16, chain, way, 3, 20
-      #     end
-      #   end
-      # end
+        # def build_iptables_tree(f, parent_net, parent_chain, way, cuartet, mask)
+        #   return if cuartet == 0
+        #   base_net = IP.new parent_net.gsub(/\/.*/, "") + "/#{mask}"
+        #   (0..15).each do |n|
+        #     child_net = (base_net + n * 16**cuartet).to_s
+        #     chain="sq.#{way[:prefix]}.#{child_net}"
+        #     f.puts ":#{chain} - [0:0]"
+        #     f.puts "-A #{parent_chain} -#{way[:dir]} #{child_net} -j #{chain}"
+        #     build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
+        #   end
+        # end
 
-      ips = Contract.descend_by_netmask.collect(&:ip_addr)
+        # if Configuration.iptables_tree_optimization_enabled?
+        #   Contract.slash_16_networks.each do |n16|
+        #     [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
+        #       chain="sq.#{way[:prefix]}.#{n16}"
+        #       f.puts ":#{chain} - [0:0]"
+        #       f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
+        #       build_iptables_tree f, n16, chain, way, 3, 20
+        #     end
+        #   end
+        # end
 
-      ips.each { |ip| f.puts ":sq.#{ip.to_cidr} -" } # Create all leaf nodes
+        ips = Contract.descend_by_netmask.collect(&:ip_addr)
 
-      #IP Tree mark mangle optimization
-      [{:prefix => "up", :dir =>"-s"}, {:prefix => "down", :dir => "-d"}].each do |way|
-        f.puts(IPTree.new({ :ip_list => ips, :prefix => "sq-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "sq" }).to_iptables)
-        f.puts("-A sequreisp.#{way[:prefix]} -j sq-#{way[:prefix]}-MAIN")
-      end
+        ips.each { |ip| f.puts ":sq.#{ip.to_cidr} -" } # Create all leaf nodes
 
-      Contract.not_disabled.descend_by_netmask.each do |c|
-        mark_burst = "0x0000/0x0000ffff"
-        mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
-        mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
-        mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
-        # una chain por cada cliente
-        chain="sq.#{c.ip}"
-        # f.puts ":#{chain} - [0:0]"
-        # redirección del trafico de este cliente hacia su propia chain
-        # f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
-        # f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
-        # separo el tráfico en las 3 class: prio1 prio2 prio3
+        #IP Tree mark mangle optimization
+        [{:prefix => "up", :dir =>"-s"}, {:prefix => "down", :dir => "-d"}].each do |way|
+          f.puts(IPTree.new({ :ip_list => ips, :prefix => "sq-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "sq" }).to_iptables)
+          f.puts("-A sequreisp.#{way[:prefix]} -j sq-#{way[:prefix]}-MAIN")
+        end
 
-        #prio1
-        Configuration.first.traffic_prio.split(",").each do |action|
-          Configuration::TRAFFIC_PRIO[action].each do |rule|
-            f.puts "-A #{chain} #{mark_if} #{rule} -j MARK --set-mark #{mark_prio1}"
+        Contract.not_disabled.descend_by_netmask.each do |c|
+          mark_burst = "0x0000/0x0000ffff"
+          mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
+          mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
+          mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
+          # una chain por cada cliente
+          chain="sq.#{c.ip}"
+          # f.puts ":#{chain} - [0:0]"
+          # redirección del trafico de este cliente hacia su propia chain
+          # f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
+          # f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
+          # separo el tráfico en las 3 class: prio1 prio2 prio3
+
+          #prio1
+          Configuration.first.traffic_prio.split(",").each do |action|
+            Configuration::TRAFFIC_PRIO[action].each do |rule|
+              f.puts "-A #{chain} #{mark_if} #{rule} -j MARK --set-mark #{mark_prio1}"
+            end
           end
-        end
 
-        #prio2
-        (Configuration.default_prio_protos_array + c.prio_protos_array).uniq.each do |proto|
-          f.puts "-A #{chain} #{mark_if} -p #{proto} -j MARK --set-mark #{mark_prio2}"
-        end
-
-        #prio2
-        (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq do |helper|
-          f.puts "-A #{chain} #{mark_if} -m helper --helper #{helper} -j MARK --set-mark #{ mark_prio2}"
-        end
-
-        #prio2
-        ["tcp", "udp"].each do |proto|
-          # solo 15 puertos por vez en multiport
-          (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq.each_slice(15).to_a.each do |group|
-            f.puts "-A #{chain} #{mark_if} -p #{proto} -m multiport --dports #{group.join(',')} -j MARK --set-mark #{mark_prio2}"
-            f.puts "-A #{chain} #{mark_if} -p #{proto} -m multiport --sports #{group.join(',')} -j MARK --set-mark #{mark_prio2}"
+          #prio2
+          (Configuration.default_prio_protos_array + c.prio_protos_array).uniq.each do |proto|
+            f.puts "-A #{chain} #{mark_if} -p #{proto} -j MARK --set-mark #{mark_prio2}"
           end
-        end
 
-        #do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
-        # prio2
-        # do_prio_protos_iptables :protos => (Configuration.default_prio_protos_array + c.prio_protos_array).uniq,
-        #                         :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-        # do_prio_helpers_iptables :helpers => (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq,
-        #                          :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-        # do_prio_ports_iptables :ports => (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq,
-        #                        :proto => "tcp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-        # do_prio_ports_iptables :ports => (Configuration.default_udp_prio_ports_array + c.udp_prio_ports_array).uniq,
-        #                        :proto => "udp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
-        # prio3 (catch_all)
-        f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
+          #prio2
+          (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq do |helper|
+            f.puts "-A #{chain} #{mark_if} -m helper --helper #{helper} -j MARK --set-mark #{ mark_prio2}"
+          end
 
-        # long downloads/uploads limit
-        if c.plan.long_download_max != 0
-          f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+          #prio2
+          ["tcp", "udp"].each do |proto|
+            # solo 15 puertos por vez en multiport
+            (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq.each_slice(15).to_a.each do |group|
+              f.puts "-A #{chain} #{mark_if} -p #{proto} -m multiport --dports #{group.join(',')} -j MARK --set-mark #{mark_prio2}"
+              f.puts "-A #{chain} #{mark_if} -p #{proto} -m multiport --sports #{group.join(',')} -j MARK --set-mark #{mark_prio2}"
+            end
+          end
+
+          #do_prio_traffic_iptables :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio1
+          # prio2
+          # do_prio_protos_iptables :protos => (Configuration.default_prio_protos_array + c.prio_protos_array).uniq,
+          #                         :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+          # do_prio_helpers_iptables :helpers => (Configuration.default_prio_helpers_array + c.prio_helpers_array).uniq,
+          #                          :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+          # do_prio_ports_iptables :ports => (Configuration.default_tcp_prio_ports_array + c.tcp_prio_ports_array).uniq,
+          #                        :proto => "tcp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+          # do_prio_ports_iptables :ports => (Configuration.default_udp_prio_ports_array + c.udp_prio_ports_array).uniq,
+          #                        :proto => "udp", :file => f, :chain => chain, :mark_if => mark_if, :mark => mark_prio2
+          # prio3 (catch_all)
+          f.puts "-A #{chain} #{mark_if} -j MARK --set-mark #{mark_prio3}"
+
+          # long downloads/uploads limit
+          if c.plan.long_download_max != 0
+            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes #{c.plan.long_download_max_to_bytes}: --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+          end
+          if c.plan.long_upload_max != 0
+            f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
+          end
+          # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
+          if c.plan.burst_down != 0
+            f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+          end
+          if c.plan.burst_up != 0
+            f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
+          end
+          # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
+          # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
+          f.puts "-A #{chain} -j ACCEPT"
         end
-        if c.plan.long_upload_max != 0
-          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes #{c.plan.long_upload_max_to_bytes}: --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_prio3}"
-        end
-        # if burst, sets mark to 0x0000, making the packet impact in provider class rather than contract's one
-        if c.plan.burst_down != 0
-          f.puts "-A #{chain} -p tcp -m multiport --sports 80,443,3128 -m connbytes --connbytes 0:#{c.plan.burst_down_to_bytes} --connbytes-dir reply --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
-        end
-        if c.plan.burst_up != 0
-          f.puts "-A #{chain} -p tcp -m multiport --dports 80,443 -m connbytes --connbytes 0:#{c.plan.burst_up_to_bytes} --connbytes-dir original --connbytes-mode bytes -j MARK --set-mark #{mark_burst}"
-        end
-        # guardo la marka para evitar pasar por todo esto de nuevo, salvo si impacto en la prio1
-        # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
-        f.puts "-A #{chain} -j ACCEPT"
+        f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
       end
-      f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
       f.puts "COMMIT"
       #---------#
       # /MANGLE #
@@ -355,36 +372,59 @@ def gen_iptables
           f.puts "-A POSTROUTING -s #{c.ip} -o #{c.public_address.addressable.link_interface} -j SNAT --to-source #{c.public_address.ip}"
         end
       end
-      # attribute: forwarded_ports
-      #   forward de ports por Provider
-      ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
-        do_port_forwardings fp, f
-      end
 
-      # VER CON EL ALFRED
-      # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
-      # Avoids tproxy to server ip's
+      unless Configuration.first.in_safe_mode?
+        # attribute: forwarded_ports
+        #   forward de ports por Provider
+        ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
+          do_port_forwardings fp, f
+        end
 
-      f.puts ":sequreisp-accepted-sites - [0:0]"
-      f.puts "-A PREROUTING -j sequreisp-accepted-sites"
+        # VER CON EL ALFRED
+        # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
+        # Avoids tproxy to server ip's
+        #---------------------------------------------------------------------------------------------------
+        # Interface.all(:conditions => "kind = 'lan'").each do |i|
+        #   i.addresses.each do |a|
+        #     f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+        #   end
+        #   #TODO ver que pasa con provider dinamicos que cambian la ip
+        #   Provider.enabled.ready.each do |p|
+        #     f.puts "-A PREROUTING -i #{i.name} -d #{p.ip} -p tcp --dport 80 -j ACCEPT"
+        #     p.addresses.each do |a|
+        #       f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
+        #     end
+        #   end
+        # end
+        #---------------------------------------------------------------------------------------------------
 
-      # Allowing access from LAN to local ips to avoid notifications redirections
-      listen_ports = Configuration.app_listen_port_available
-      Interface.only_lan.each do |interface|
-        interface.addresses.each do |addr|
-          listen_ports.each do |port|
-            f.puts "-A sequreisp-accepted-sites -d #{addr.ip} -p tcp --dport #{port} -j ACCEPT"
+        f.puts ":sequreisp-accepted-sites - [0:0]"
+        f.puts "-A PREROUTING -j sequreisp-accepted-sites"
+
+        # Allowing access from LAN to local ips to avoid notifications redirections
+        listen_ports = Configuration.app_listen_port_available
+        Interface.only_lan.each do |interface|
+          interface.addresses.each do |addr|
+            listen_ports.each do |port|
+              f.puts "-A sequreisp-accepted-sites -d #{addr.ip} -p tcp --dport #{port} -j ACCEPT"
+            end
           end
         end
-      end
+        #provider_ips = Provider.all_ips
+        # We can also allow from LAN using WAN IPs, but this will add a lot of rules in case of big number of IPs on providers
+        # and we think that this can be a rare case
+        #provider_ips.each do |provider_ip|
+        #  f.puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
+        #end
 
-      AlwaysAllowedSite.all.each do |site|
-        site.ip_addresses.each do |ip|
-          f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
+        AlwaysAllowedSite.all.each do |site|
+          site.ip_addresses.each do |ip|
+            f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
+          end
         end
-      end
 
-      BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
+        BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
+      end
 
       Provider.enabled.with_klass_and_interface.each do |p|
         p.networks.each do |network|
@@ -428,8 +468,8 @@ def gen_iptables
           #end
 
         end
-      end
       f.puts "-A POSTROUTING -m mark --mark 0x01000000/0x01000000 -j MASQUERADE"
+      end
       f.puts "COMMIT"
       #-------#
       # /NAT  #
@@ -437,73 +477,75 @@ def gen_iptables
       #---------#
       # FILTER  #
       #---------#
-      f.puts "*filter"
-      f.puts ":sequreisp-enabled - [0:0]"
-      f.puts ":sequreisp-allowedsites - [0:0]"
-      f.puts ":sequreisp-enabled - [0:0]"
+      unless Configuration.first.in_safe_mode?
+        f.puts "*filter"
+        f.puts ":sequreisp-enabled - [0:0]"
+        f.puts ":sequreisp-allowedsites - [0:0]"
+        f.puts ":sequreisp-enabled - [0:0]"
 
-      contracts = Contract.descend_by_netmask
+        contracts = Contract.descend_by_netmask
 
-      contracts.each do |contract|
-        f.puts contract.rules_for_up_data_counting
-        f.puts contract.rules_for_down_data_counting
-      end # Create all leaf nodes
+        contracts.each do |contract|
+          f.puts contract.rules_for_up_data_counting
+          f.puts contract.rules_for_down_data_counting
+        end # Create all leaf nodes
 
-      [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
-        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
-        Interface.only_lan.each do |interface|
-          f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN")
+        [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
+          f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
+          Interface.only_lan.each do |interface|
+            f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN")
+          end
         end
-      end
 
-      f.puts "-A FORWARD -j sequreisp-allowedsites"
+        f.puts "-A FORWARD -j sequreisp-allowedsites"
 
-      AlwaysAllowedSite.all.each do |site|
-        site.ip_addresses.each do |ip|
-          f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
+        AlwaysAllowedSite.all.each do |site|
+          site.ip_addresses.each do |ip|
+            f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
+          end
         end
-      end
 
-      BootHook.run :hook => :filter_before_all, :iptables_script => f
+        BootHook.run :hook => :filter_before_all, :iptables_script => f
 
-      f.puts "-A INPUT -i lo -j ACCEPT"
-      f.puts "-A OUTPUT -o lo -j ACCEPT"
+        f.puts "-A INPUT -i lo -j ACCEPT"
+        f.puts "-A OUTPUT -o lo -j ACCEPT"
 
-      Configuration.app_listen_port_available.each do |port|
-        f.puts "-A INPUT -p tcp --dport #{port} -j ACCEPT"
-      end
-
-      f.puts ":dns-query -"
-      f.puts "-A INPUT -p udp --dport 53 -j dns-query"
-      f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
-
-      Interface.all(:conditions => "kind = 'lan'").each do |i|
-        ["INPUT","FORWARD"].each do |chain|
-          f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
-          f.puts "-A #{chain} -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        Configuration.app_listen_port_available.each do |port|
+          f.puts "-A INPUT -p tcp --dport #{port} -j ACCEPT"
         end
-      end
-      BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
-      f.puts "-A dns-query -j ACCEPT"
 
-      Provider.enabled.with_klass_and_interface.each do |p|
-        if p.allow_dns_queries
-          f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
-          f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
+        f.puts ":dns-query -"
+        f.puts "-A INPUT -p udp --dport 53 -j dns-query"
+        f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
+
+        Interface.all(:conditions => "kind = 'lan'").each do |i|
+          ["INPUT","FORWARD"].each do |chain|
+            f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
+            f.puts "-A #{chain} -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+          end
         end
-        f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
-      end
+        BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
+        f.puts "-A dns-query -j ACCEPT"
 
-      #
-      Contract.not_disabled.descend_by_netmask.each do |c|
-        BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
-        # attribute: state
-        #   estado del cliente enabled/alerted/disabled
-        macrule = (Configuration.filter_by_mac_address and !c.mac_address.blank?) ? "-m mac --mac-source #{c.mac_address}" : ""
-        f.puts "-A sequreisp-enabled #{macrule} -s #{c.ip} -j ACCEPT"
+        Provider.enabled.with_klass_and_interface.each do |p|
+          if p.allow_dns_queries
+            f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
+            f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
+          end
+          f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
+        end
+
+        #
+        Contract.not_disabled.descend_by_netmask.each do |c|
+          BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
+          # attribute: state
+          #   estado del cliente enabled/alerted/disabled
+          macrule = (Configuration.filter_by_mac_address and !c.mac_address.blank?) ? "-m mac --mac-source #{c.mac_address}" : ""
+          f.puts "-A sequreisp-enabled #{macrule} -s #{c.ip} -j ACCEPT"
+        end
+        f.puts "-A sequreisp-enabled -j DROP"
+        f.puts "COMMIT"
       end
-      f.puts "-A sequreisp-enabled -j DROP"
-      f.puts "COMMIT"
       #---------#
       # /FILTER #
       #---------#
@@ -536,8 +578,10 @@ def gen_ip_ru
     File.open(IP_RU_FILE, "w") do |f|
       f.puts "rule flush"
       f.puts "rule add prio 10 lookup main"
-      ProviderGroup.enabled.with_klass.each do |pg|
-        f.puts "rule add fwmark 0x#{pg.mark_hex}/0x00ff0000 table #{pg.table} prio 200"
+      unless Configuration.first.in_safe_mode?
+        ProviderGroup.enabled.with_klass.each do |pg|
+          f.puts "rule add fwmark 0x#{pg.mark_hex}/0x00ff0000 table #{pg.table} prio 200"
+        end
       end
       Provider.with_klass_and_interface.each do |p|
         f.puts "rule add fwmark 0x#{p.mark_hex}/0x00ff0000 table #{p.table} prio 300"
@@ -547,7 +591,7 @@ def gen_ip_ru
         f.puts "rule add from #{p.ip}/32 table #{p.check_link_table} prio 90" if p.ip and not p.ip.empty?
       end
       f.puts "rule add prio 32767 from all lookup default"
-      BootHook.run :hook => :gen_ip_ru, :ip_ru_script => f
+      BootHook.run(:hook => :gen_ip_ru, :ip_ru_script => f) unless Configuration.first.in_safe_mode?
     end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
@@ -609,11 +653,13 @@ def gen_ip_ro
       Provider.enabled.ready.with_klass_and_interface.each do |p|
         update_provider_route p, f, true
       end
-      ProviderGroup.enabled.each do |pg|
-        update_provider_group_route pg, f, true, true
+      unless Configuration.first.in_safe_mode?
+        ProviderGroup.enabled.each do |pg|
+          update_provider_group_route pg, f, true, true
+        end
+        update_fallback_route f, true, true
+        BootHook.run :hook => :gen_ip_ro, :ip_ro_script => f
       end
-      update_fallback_route f, true, true
-      BootHook.run :hook => :gen_ip_ro, :ip_ro_script => f
     end
   rescue => e
     Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
@@ -690,18 +736,20 @@ def setup_proc
 end
 
 def setup_proxy_arp
-  commands = []
-  Contract.find(:all, :conditions => "proxy_arp = 1 and proxy_arp_interface_id is not null").each do |c|
-    p = c.proxy_arp_provider.present? ? c.proxy_arp_provider : c.guess_proxy_arp_provider
-    if p
-      g = c.proxy_arp_gateway.present? ? c.proxy_arp_gateway : p.gateway
-      route = c.proxy_arp_use_lan_gateway ? "via #{c.proxy_arp_lan_gateway}" : "dev #{c.proxy_arp_interface.name}"
-      commands << "arp -i #{p.interface.name} -Ds #{c.ip} #{p.interface.name} pub"
-      commands << "ip ro re #{c.ip} #{route}"
-      commands << "arp -i #{c.proxy_arp_interface.name} -Ds #{g} #{c.proxy_arp_interface.name} pub"
+  unless Configuration.in_safe_mode?
+    commands = []
+    Contract.find(:all, :conditions => "proxy_arp = 1 and proxy_arp_interface_id is not null").each do |c|
+      p = c.proxy_arp_provider.present? ? c.proxy_arp_provider : c.guess_proxy_arp_provider
+      if p
+        g = c.proxy_arp_gateway.present? ? c.proxy_arp_gateway : p.gateway
+        route = c.proxy_arp_use_lan_gateway ? "via #{c.proxy_arp_lan_gateway}" : "dev #{c.proxy_arp_interface.name}"
+        commands << "arp -i #{p.interface.name} -Ds #{c.ip} #{p.interface.name} pub"
+        commands << "ip ro re #{c.ip} #{route}"
+        commands << "arp -i #{c.proxy_arp_interface.name} -Ds #{g} #{c.proxy_arp_interface.name} pub"
+      end
     end
+    exec_context_commands "setup_proxy_arp", commands
   end
-  exec_context_commands "setup_proxy_arp", commands
 end
 
 def do_provider_up(p)
