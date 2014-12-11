@@ -16,6 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class ProviderGroup < ActiveRecord::Base
+  HFSC_SATURATION_INDEX=0.80
   acts_as_audited
   has_many :plans, :dependent => :nullify
   has_many :providers, :dependent => :nullify, :include => :interface
@@ -83,15 +84,14 @@ class ProviderGroup < ActiveRecord::Base
   def remaining_rate_down(exclude_id=nil)
     remaining = rate_down
     plans.each do |plan|
-      if plan.rate_down == 0
-        #24bits reservados por cliente
-        remaining -= (plan.contracts.count * 0.024)
-      else 
-        remaining -= (plan.contracts.count * plan.rate_down)
-      end
+      remaining -= (plan.contracts.count * plan.rate_down)
     end
     remaining
   end
+  def self.total_rate_down
+    all.collect(&:rate_down).sum
+  end
+
   def rate_up
     total=0
     providers.enabled.each do |p|
@@ -102,15 +102,14 @@ class ProviderGroup < ActiveRecord::Base
   def remaining_rate_up(exclude_id=nil)
     remaining = rate_up
     plans.each do |plan|
-      if plan.rate_up == 0
-        #24bits reservados por cliente
-        remaining -= (plan.contracts.count * 0.024)
-      else 
-        remaining -= (plan.contracts.count * plan.rate_up)
-      end
+      remaining -= (plan.contracts.count * plan.rate_up)
     end
     remaining
   end
+  def self.total_rate_up
+    all.collect(&:rate_up).sum
+  end
+
   def table
     self.klass.number
   end
@@ -119,10 +118,6 @@ class ProviderGroup < ActiveRecord::Base
   end
   def mark_hex
     (self.klass.number << 16).to_s(16)
-  end
-  def proxy_bind_ip
-    # 192.0.2.0/24 reserved for TEST-NET-1 [RFC5737]
-    "192.0.2.#{klass.number}"
   end
   def instant_rate
     rate = {}
@@ -151,16 +146,28 @@ class ProviderGroup < ActiveRecord::Base
   end
   def concurrency_index_down
     begin
-      rate_down * 100 / contracts.all(:include => :plan).collect{ |c| c.plan.ceil_down }.sum
+      rate_down * 100 / ceil_up
     rescue
       0
     end
   end
   def concurrency_index_up
     begin
-      rate_up * 100 / contracts.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
+      rate_up * 100 / ceil_up
     rescue
       0
     end
+  end
+  def ceil_down
+    contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_down }.sum
+  end
+  def ceil_up
+    contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
+  end
+  def rate_factor_up
+    remaining_rate_up*HFSC_SATURATION_INDEX/ceil_up rescue 0
+  end
+  def rate_factor_down
+    remaining_rate_down*HFSC_SATURATION_INDEX/ceil_down rescue 0
   end
 end

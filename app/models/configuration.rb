@@ -28,6 +28,14 @@ class Configuration < ActiveRecord::Base
 
   APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
 
+  TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
+                   "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
+                   "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
+                   "icmp" => ["-p icmp"],
+                   "sip" => ["-m helper --helper sip"] }
+
+  COUNT_CATEGORIES = ["data_count"]
+
   def self.acts_as_audited_except
     [:daemon_reload]
   end
@@ -43,9 +51,9 @@ class Configuration < ActiveRecord::Base
                :iptables_tree_optimization_enabled,
                :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080,
                :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password,
-               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
+               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server, :traffic_prio
 
-  validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
+  validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
   validates_presence_of :notification_timeframe
   validates_presence_of :language
@@ -59,7 +67,15 @@ class Configuration < ActiveRecord::Base
 
   validate :presence_of_dns_server
   validate_ip_format_of :dns_first_server, :dns_second_server, :dns_third_server
+  validate :not_repeat_traffic_prio
 
+  def not_repeat_traffic_prio
+    prios = []
+    traffic_prio.split(",").each do |prio|
+      prios << prio if (default_tcp_prio_ports + default_udp_prio_ports + default_prio_protos + default_prio_helpers).include?(prio)
+    end
+    errors.add_to_base("No se pueden repetir los puertos #{prios.join(',')}") unless prios.empty?
+  end
 
   def presence_of_dns_server
     if dns_use_forwarders and not (dns_first_server.present? or dns_second_server.present? or dns_third_server.present?)
@@ -136,18 +152,6 @@ class Configuration < ActiveRecord::Base
   def self.apply_changes_automatically!
     return if Time.now.hour != apply_changes_automatically_hour
     apply_changes if changes_to_apply?
-  end
-
-  def use_global_prios_strategy_options_for_select
-    [
-      [I18n.t('selects.configuration.use_global_prios_strategy.disabled'), 'disabled'],
-      [I18n.t('selects.configuration.use_global_prios_strategy.provider'), 'provider'],
-      [I18n.t('selects.configuration.use_global_prios_strategy.full'), 'full']
-    ]
-  end
-
-  def use_global_prios_strategy
-    ActiveSupport::StringInquirer.new read_attribute(:use_global_prios_strategy)
   end
 
   # this can be overrided from a plug-in like invocing

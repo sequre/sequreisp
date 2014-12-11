@@ -1,5 +1,5 @@
 ActionController::Routing::Routes.draw do |map|
-  map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get }
+  map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get, :get_mac_address => :get }
 
   map.resources :configurations, :collection => {:doreload => :get, :is_apply_changes => :get }
 

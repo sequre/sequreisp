@@ -14,12 +14,13 @@
   li.delete_address {
     margin-top: 31px;
   }
+  }
 </style>
 <script type="text/javascript">
   $(function(){
     function checkbox_vlan() {
       function enable(i,e) {
-        $(e).removeAttr("disabled"); 
+        $(e).removeAttr("disabled");
         //$(e).removeClass('disabled'); 
       }
       function disable(i,e) {
@@ -53,32 +54,61 @@
         $('#ips').hide();
         break;
       }
-    } 
+    }
     select_kind();
     $('#interface_kind').change( function() {
       select_kind();
     });
+
+    $('#get_interface_mac_address').click(function(){
+      $('.mac_loader').show();
+      _name = $('#interface_name').val();
+      if ($('#interface_vlan_interface_id option:selected').text() != "") {
+        _name = $('#interface_vlan_interface_id option:selected').text();
+      }
+      $.get('<%= get_mac_address_interfaces_path %>', {name: _name}, function(data){
+        if (data.mac_address) {
+          $('#interface_mac_address').val(data.mac_address);
+          //$.scrollTo('#contract_mac_address_input', 600);
+	 $('#interface_mac_address').css('background-color', '#00FF00').effect('pulsate', {times: 3}, null, function(){
+            $('#interface_mac_address').css('background-color', '#FFFFFF');
+          })
+        } else {
+          $('#interface_mac_address').css('background-color', '#FF0000').effect('pulsate', {times: 3}, null, function(){
+            $('#interface_mac_address').css('background-color', '#FFFFFF');
+          })
+	 /* $('#contract_ip').focus(); */
+        }
+        $('.mac_loader').hide();
+      },'json');
+    });
+    $('.mac_loader').hide();
   })
 </script>
 <% unless current_user.may_update_interface?(@interface) %>
 <script type="text/javascript">
   $(function(){
     $('input,select,textarea').attr('disabled',true)
-  })  
+  })
 </script>
 <% end %>
 <div id="main">
 <% semantic_form_for @interface do |form| %>
   <%= error_messages @interface %>
   <% form.inputs do %>
-    <%= form.input :name, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :name, :wrapper_html => { :class => "left" } %>
     <%= form.input :vlan_interface, :wrapper_html => { :class => "left" }, :collection => @interface.vlan_interface_collection %>
-    <%= form.input :vlan_id, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :vlan_id, :wrapper_html => { :class => "left" } %>
     <%= form.input :vlan %>
     <div style="clear: both"></div>
     <%= form.input :description %>
     <div style="clear: both"></div>
     <%= form.input :kind, :as => :select, :collection => Interface.kinds_for_select, :include_blank => false %>
+    <div style="clear: both"></div>
+    <%= form.input :mac_address, :wrapper_html => {:class => "left" } %>
+      <a id="get_interface_mac_address" href="javascript:void(null)"><%= I18n.t('buttons.get_arping_mac_address') %></a>
+      <%= image_tag "loader_horizontal.gif", :class => 'mac_loader' %>
+    <div style="clear: both"></div>
     <% form.inputs :name => t('fieldsets.interface.ips'), :id => "ips" do %>
       <% form.semantic_fields_for :addresses do |address| %>
         <%= render "shared/address_fields", :f => address %>

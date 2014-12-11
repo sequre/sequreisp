@@ -41,8 +41,8 @@ class ConfigurationsController < ApplicationController
   # PUT /configurations/1.xml
   def update
     @configuration = Configuration.first
-
     respond_to do |format|
+      params[:configuration][:traffic_prio] = params[:traffic_prio].keys.select{|prio| prio != ""}.join(",")
       if @configuration.update_attributes(params[:configuration])
         # in case that users change language, we need to override locale from params[:locale]
         # before the redirect
@@ -67,5 +67,4 @@ class ConfigurationsController < ApplicationController
     resp = Configuration.is_apply_changes?
     render :json => resp
   end
-
 end
