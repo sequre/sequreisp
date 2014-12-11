@@ -11,18 +11,6 @@
 </style>
 <script type="text/javascript">
   $(function(){
-    function checkbox_use_global_prios() {
-      if ($('#configuration_use_global_prios').attr('checked')) {
-        $('#configuration_use_global_prios_strategy_input').show();
-      } else {
-        $('#configuration_use_global_prios_strategy_input').hide();
-      }
-    }
-    checkbox_use_global_prios();
-    $('#configuration_use_global_prios').change( function() {
-      checkbox_use_global_prios();
-    });
-
     function show_hide_mail_relay() {
       if ($('#configuration_mail_relay_used').attr('checked')) {
         $('#mail_relay').show();
@@ -131,14 +119,8 @@
       <%= form.input :apply_changes_automatically %>
       <%= form.input :apply_changes_automatically_hour, :as => :select, :collection => (0...24).map, :include_blank => false %>
       <%= form.input :filter_by_mac_address %>
-      <%= form.input :tc_contracts_per_provider_in_wan %>
-      <%= form.input :tc_contracts_per_provider_in_lan %>
       <%= form.input :iptables_tree_optimization_enabled %>
-      <%= form.input :use_global_prios %>
-      <%= form.input :use_global_prios_strategy, :as => :select, :collection => Configuration.use_global_prios_strategy_options_for_select, :include_blank => false %>
-      <%= form.input :mtu %>
       <%= form.input :clamp_mss_to_pmtu %><br/>
-      <%= form.input :quantum_factor %>
       <%= form.input :nf_conntrack_max %>
       <%= form.input :gc_thresh1, :wrapper_html => { :class => "left" } %>
       <%= form.input :gc_thresh2, :wrapper_html => { :class => "left" } %>
