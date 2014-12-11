@@ -1074,6 +1074,7 @@ def boot(run=true)
   create_dirs_if_not_present if Rails.env.development?
   Configuration.do_reload
   #begin
+    I18n.locale = Configuration.language
     exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n("command.human.create_tmp_file")
     exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}", I18n("command.human.sequreisp_pre")
 
