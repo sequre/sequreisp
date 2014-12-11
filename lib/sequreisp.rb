@@ -34,9 +34,9 @@ def gen_tc
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
-    commands << "tc qdisc del dev #{IFB_UP} root"
+    commands << "tc qdisc del dev #{IFB_UP} root 2> /dev/null"
     tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
-    commands << "tc qdisc del dev #{IFB_DOWN} root"
+    commands << "tc qdisc del dev #{IFB_DOWN} root 2> /dev/null"
     tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
     total_rate_up = ProviderGroup.total_rate_up
     total_rate_down = ProviderGroup.total_rate_down
@@ -61,8 +61,9 @@ def gen_tc
   # Per provider upload limit, on it's own interface
   Provider.enabled.with_klass_and_interface.each do |p|
     iface = p.link_interface
-    commands << "tc qdisc del dev #{iface} root"
-    commands << "tc qdisc del dev #{iface} ingress"
+    commands << "tc qdisc del dev #{iface} root 2> /dev/null"
+    commands << "tc qdisc show dev #{iface} | grep 'qdisc ingress' > /dev/null && tc qdisc del dev #{iface} ingress"
+#    commands << "tc qdisc del dev #{iface} ingress 2> /dev/null"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
@@ -80,7 +81,7 @@ def gen_tc
   # Per provider download limit, on LAN interfaces
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
-    commands << "tc qdisc del dev #{iface} root"
+    commands << "tc qdisc del dev #{iface} root 2> /dev/null"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
@@ -944,7 +945,6 @@ def setup_tc
   commands = []
   commands << "tc -b #{TC_FILE_PREFIX + IFB_UP}"
   commands << "tc -b #{TC_FILE_PREFIX + IFB_DOWN}"
-  commands << "tc -b #{TC_FILE_PREFIX + IFB_INGRESS}"
 
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     commands << "tc -b #{TC_FILE_PREFIX + interface.name}"
