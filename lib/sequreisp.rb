@@ -1025,10 +1025,10 @@ def setup_interfaces
     commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
     if i.lan?
       commands << setup_lan_interface(i)
-      exec_context_commands("setup_lan_interface_#{i.name}", commands)
+      exec_context_commands("setup_lan_interface_#{i.name}", commands.flatten)
     elsif i.wan?
       commands << setup_provider_interface(i.provider) if i.wan?
-      exec_context_commands("setup_wan_interfaces_#{i.name}", commands)
+      exec_context_commands("setup_wan_interfaces_#{i.name}", commands.flatten)
     end
   end
 end
