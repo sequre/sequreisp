@@ -7,11 +7,12 @@ class CommandContext
     @@run = _run
   end
 
-  def initialize name, commands
+  def initialize name, commands, message=nil
     @@run = true
     @@command_logger = Logger.new File.join Rails.root, "log/command.log"
     @commands = []
     @name = name
+    @message = message
     #commands = _commands.to_a if _commands.is_a? String
 
     commands.each do |command|
@@ -19,13 +20,14 @@ class CommandContext
     end
   end
 
-  def exec_commands(f=nil)
+  def exec_commands(f=nil, human=nil)
     commands.each do |c|
       c.exec if @@run
       @@command_logger.info "#{Time.now}, #{name}, #{c.to_log}"
       f.puts c.command if f
     end
     @@command_logger.info "#{Time.now}, #{name}, status: #{status}"
+    human.puts "#{I18n.l(Time.now, :format => :long)}, #{message}, status: #{status}" if human
     status
   end
 
@@ -36,12 +38,14 @@ end
 class BootCommandContext < CommandContext
   def self.clear_boot_file
     File.open(BOOT_FILE, 'w') {|file| file.truncate(0) }
+    File.open(File.join(Rails.root, "log/command_human.log"), 'w') {|file| file.truncate(0) }
   end
 
   def exec_commands
     begin
       f = File.open BOOT_FILE, "a+"
-      super f
+      human = File.open(File.join(Rails.root, "log/command_human.log"), "a+")
+      super f, human
     rescue
       Rails.logger.error "ERROR in lib/sequreisp.rb::exec_commands e=>#{e.inspect}"
     ensure

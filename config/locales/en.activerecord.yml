@@ -233,6 +233,8 @@ en:
         dns_first_server: "First DNS Server"
         dns_second_server: "Second DNS Server"
         dns_third_server: "Third DNS Server"
+        traffic_prio: "Priority traffic (low latency)"
+        in_safe_mode: "Safe mode"
       user:
         name: "Name"
         email: "User email address"
@@ -322,6 +324,7 @@ en:
         use_global_prios: "Enable only if there is more than 2500 contracts"
         use_external_number_client: "If disabled, internal ids are used as client numbers"
         mail_relay_manipulated_for_sequreisp: "Disable if you want to manually edit /etc/postfix/main.cf"
+        in_safe_mode: "In safe mode, not be apply rules for bandwidth control, ip forwarding, proxy arp and any package filter"
       provider:
         shape_rate_down_on_ingress: "Download traffic shaping is done on the LAN interface; if you enable this option, an extra control will be enabled on ingress that will shape clients' and server's own traffic to the configured download rate"
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"
@@ -502,6 +505,11 @@ en:
     configuration:
       own: "Server own"
       gmail: "Gmail"
+      length: "Packet size between 0 and 100 byte"
+      ssh: "Server and client SSH"
+      dns: "Server and client DNS"
+      icmp: "Protocol ICMP"
+      sip: "Protocol SIP"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
@@ -560,6 +568,8 @@ en:
       advanced: "Advanced configuration"
       mail_relay: "Mail relay"
       bind_dns: "DNS Configuration"
+      traffic_prio: "Priority traffic (low latency)"
+      in_safe_mode: "Safe mode"
     interface:
       ips: "IPs"
     provider:
@@ -596,3 +606,34 @@ en:
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'
     define_one_dns_server: 'Define at less one DNS server'
+  command:
+    human:
+      create_tmp_file: "Initialize apply changes process"
+      sequreisp_pre: "Initialize iptables"
+      setup_queued_commands: "Start pending jobs"
+      setup_clock: "Setup time zone"
+      setup_proc: "Setup sysctl general params"
+      setup_nf_modules: "Setup kernel modules"
+      setup_lan_interface: "Setup lan interface in %{dev}"
+      setup_wan_interface: "Setup provider %{kind} in wan interface %{dev}"
+      setup_proxy_arp: "Setup proxy arp in contracts"
+      setup_static_routes: "Setup static routes"
+      setup_ifbs: "Setup virtual interface"
+      setup_ip_ru: "Setup rules"
+      setup_ip_ro: "Setup routes"
+      gen_tc: "Deleted the rules for controlling bandwidth"
+      setup_tc: "Setup rules for controlling bandwidth"
+      setup_iptables_try: "Generate iptables rules"
+      setup_iptables_success: "Setup rules iptables success"
+      setup_iptables_restore_old: "Fail loading iptables, restore the old iptables"
+      setup_mail_relay: "Setup mail relay"
+      bind_reload: "Setup DNS service"
+      sequreisp_post: "Finalize iptables"
+      delete_tmp_file: "Finalize apply changes process"
+      do_port_forwarding: "Do port forwarding"
+      do_port_forwardings_avoid_nat_triangle: "Do port forwardings avoid nat triangle"
+      update_fallback_route: "Update fallback route"
+      update_provider_group_route: "Update provider group route"
+      update_provider_route: "Update provider route"
+      do_provider_up: "Do provider up"
+      do_provider_down: "Do provider down"

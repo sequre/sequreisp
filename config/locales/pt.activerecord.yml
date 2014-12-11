@@ -230,6 +230,8 @@ pt:
         dns_first_server: "Primeiro servidor de DNS"
         dns_second_server: "Segundo servidor DNS"
         dns_third_server: "Tercer servidor DNS"
+        traffic_prio: "Prioridade de tráfego (baixa latência)"
+        in_safe_mode: "Modo seguro"
       user:
         name: "Nome"
         email: "E-mail do usuário"
@@ -319,6 +321,7 @@ pt:
         use_global_prios: "Habilitar somente se o número do contratos é superior a 2500"
         use_external_number_client: "Se desativado, ids internos são usados como números de clientes"
         mail_relay_manipulated_for_sequreisp: "Desativar se você quiser editar manualmente o /etc/postfix/main.cf"
+        in_mode_safe: "No modo de segurança, não ser aplicáveis as regras para o controle de largura de banda, o encaminhamento de IP, arp proxy e qualquer filtro de pacote"
       provider:
         shape_rate_down_on_ingress: "O controle de tráfego de baixada se faz na interface LAN; se habilita esta opção se habilitará um controle adicional na interface WAN que garantirá que o tráfego dos clientes mais o do servidor não excedam o limite configurado"
         avoid_nat_addresses: "Um endereço por linha, notação CIDR, como 200.10.20.0/24"
@@ -499,6 +502,11 @@ pt:
     configuration:
       own: "Servidor próprio"
       gmail: "Gmail"
+      length: "Tamanho de pacote entre 0 e 100 bytes"
+      ssh: "Servidor e cliente SSH"
+      dns: "Servidor e cliente DNS"
+      icmp: "Protocolo ICMP"
+      sip: "Protocolo SIP"
   controllers:
     successfully_updated: "Atualização de dados bem-sucedida"
     successfully_created: "Criação bem-sucedida"
@@ -557,6 +565,8 @@ pt:
       advanced: "Configuração avanzada"
       mail_relay: "Mail relay"
       bind_dns: "Configuração de DNS"
+      traffic_prio: "Prioridade de tráfego (baixa latência)"
+      in_safe_mode: "Modo seguro"
     interface:
       ips: "IPs"
     provider:
@@ -585,3 +595,34 @@ pt:
     not_selected_any_options: 'Não selecionou nenhum opções'
     not_repeat_dns_server: 'Existe Servidores DNS replicados'
     define_one_dns_server: 'Defina pelo menos um servidor DNS'
+  command:
+    human:
+      create_tmp_file: "Initialize apply changes process"
+      sequreisp_pre: "Restore iptables pre"
+      setup_queued_commands: "Start pending jobs"
+      setup_clock: "Setup time zone"
+      setup_proc: "Setup sysctl general params"
+      setup_nf_modules: "Setup kernel modules"
+      setup_lan_interface: "Setup lan interface in %{dev}"
+      setup_wan_interface: "Setup provider %{kind} in wan interface %{dev}"
+      setup_proxy_arp: "Setup proxy arp in contracts"
+      setup_static_routes: "Setup static routes"
+      setup_ifbs: "Setup virtual interface"
+      setup_ip_ru: "Setup rules"
+      setup_ip_ro: "Setup routes"
+      gen_tc: "Deleted the rules for controlling bandwidth"
+      setup_tc: "Setup rules for controlling bandwidth"
+      setup_iptables_try: "Generate iptables rules"
+      setup_iptables_success: "Setup rules iptables success"
+      setup_iptables_restore_old: "Fail loading iptables, restore the old iptables"
+      setup_mail_relay: "Setup mail relay"
+      bind_reload: "Setup DNS service"
+      sequreisp_post: "Restore iptables post"
+      delete_tmp_file: "Finalize apply changes process"
+      do_port_forwarding: "Do port forwarding"
+      do_port_forwardings_avoid_nat_triangle: "Do port forwardings avoid nat triangle"
+      update_fallback_route: "Update fallback route"
+      update_provider_group_route: "Update provider group route"
+      update_provider_route: "Update provider route"
+      do_provider_up: "Do provider up"
+      do_provider_down: "Do provider down"
