@@ -1,7 +1,7 @@
 <% content_for :javascript do %>
   <script type="text/javascript">
     var delta_time = 1000;
-    var last_line = <%= (File.open(Configuration::PATH_COMMANDO_LOG, "r").readlines.count - 1) rescue -1 %>;
+    var last_line = -1;
 
     function ajaxCommandLogsRequest(){
       $.ajax({
