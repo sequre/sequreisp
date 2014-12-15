@@ -17,7 +17,7 @@ class CommandLogsController < ApplicationController
   private
 
   def parse_line line
-    line.scan(/.*(..:..,.*),/).first.first + " <img src='/images/check_#{line.split.last}.png'>"
+    time, message, status = line.scan(/(\d+:\d+, )(.*), (true|false)/).flatten
+    {:time => time, :message => message, :status => status}
   end
-
 end
