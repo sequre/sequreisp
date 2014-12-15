@@ -572,23 +572,23 @@ def gen_iptables
       f.puts "-A INPUT -p udp --dport 53 -j dns-query"
       f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
 
-      Interface.all(:conditions => "kind = 'lan'").each do |i|
-        ["INPUT","FORWARD"].each do |chain|
-          f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
-          f.puts "-A #{chain} -i #{i.name} -p tcp --dport 53 -j ACCEPT"
-        end
-      end
       BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
-      f.puts "-A dns-query -j ACCEPT"
 
       Provider.enabled.with_klass_and_interface.each do |p|
         #Accept only request by interface wan to ip and port (80,8080,443) server.
         f.puts "-A sequreisp-app-listened -i #{p.link_interface} -p tcp -m multiport --dports #{listen_ports.join(',')} -j ACCEPT"
         if p.allow_dns_queries
-          f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
-          f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
+          f.puts "-A dns-query -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A dns-query -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
         end
         f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
+      end
+
+      Interface.all(:conditions => "kind = 'lan'").each do |i|
+        ["INPUT","FORWARD"].each do |chain|
+          f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A #{chain} -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        end
       end
 
       #
