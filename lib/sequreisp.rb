@@ -542,6 +542,7 @@ def gen_iptables
       # FILTER  #
       #---------#
       f.puts "*filter"
+      f.puts ":dns-query -"
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts ":sequreisp-allowedsites - [0:0]"
       f.puts ":sequreisp-app-listened - [0:0]"
@@ -549,8 +550,9 @@ def gen_iptables
       f.puts "-A FORWARD -j sequreisp-allowedsites"
 
       listen_ports = Configuration.app_listen_port_available
+      lan_interfaces = Interface.only_lan
 
-      Interface.only_lan.each do |interface|
+      lan_interfaces.each do |interface|
         interface.addresses.each do |addr|
           #Accept only request to ip and port (80,8080,443) server.
           f.puts "-A sequreisp-app-listened -d #{addr.ip} -p tcp -m multiport --dports #{listen_ports.join(',')} -j ACCEPT"
@@ -568,23 +570,22 @@ def gen_iptables
       f.puts "-A INPUT -i lo -j ACCEPT"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
 
-      f.puts ":dns-query -"
+      Provider.enabled.with_klass_and_interface.each do |p|
+        #Accept only request by interface wan to ip and port (80,8080,443) server.
+        f.puts "-A sequreisp-app-listened -i #{p.link_interface} -p tcp -m multiport --dports #{listen_ports.join(',')} -j ACCEPT"
+        if p.allow_dns_queries
+          f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
+        end
+        f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
+      end
+
       f.puts "-A INPUT -p udp --dport 53 -j dns-query"
       f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
 
       BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
 
-      Provider.enabled.with_klass_and_interface.each do |p|
-        #Accept only request by interface wan to ip and port (80,8080,443) server.
-        f.puts "-A sequreisp-app-listened -i #{p.link_interface} -p tcp -m multiport --dports #{listen_ports.join(',')} -j ACCEPT"
-        if p.allow_dns_queries
-          f.puts "-A dns-query -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
-          f.puts "-A dns-query -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
-        end
-        f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
-      end
-
-      Interface.all(:conditions => "kind = 'lan'").each do |i|
+      lan_interfaces.each do |i|
         ["INPUT","FORWARD"].each do |chain|
           f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
           f.puts "-A #{chain} -i #{i.name} -p tcp --dport 53 -j ACCEPT"
