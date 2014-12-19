@@ -396,6 +396,8 @@ pt:
     confirm_restore_button: "Restaurar"
     confirm_restore_and_reboot_button: "Restaurar y reiniciar"
     cancel: "Cancelar"
+    include_files: "Incluir arquivos"
+    exclude_files: "Excluir arquivos"
     notice:
       missing_file: "Debe selecionar um arquivo de cópia de resguardo para restaurar"
       restore_error: "Produziu-se um erro; confira que o arquivo de cópia de resguardo seja correto"

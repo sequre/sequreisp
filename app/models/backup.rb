@@ -19,25 +19,19 @@ class Backup
   CONFIG = ActiveRecord::Base.configurations[Rails.env]
   attr_reader :name
 
+  BASE_DIR = SequreispConfig::CONFIG["base_dir"]
+  BACKUP_FILE_INCLUDE = "#{BASE_DIR}/backup_files_include"
+  DATABASE_DUMP_PATH = "#{BASE_DIR}/sequreisp.sql"
+
   def initialize
     require 'sequreisp_about'
     @name = "sequreisp_#{::SequreISP::Version.to_s}_backup_#{Time.now.strftime("%Y-%m-%d_%H%M")}"
   end
 
-  def base_dir
-    SequreispConfig::CONFIG["base_dir"]
+  def full_path
+    File.join(Dir::tmpdir, name)
   end
-  def backup_include
-    "#{base_dir}/.sequreisp_backup.include"
-  end
-  def backup_exclude
-    "#{base_dir}/.sequreisp_backup.exclude"
-  end
-  def exclude(include_graphs)
-    paths = ["/deploy/old/*", "/deploy/shared/log/*", "/deploy/shared/public/images/rrd/*"]
-    paths << "/deploy/shared/db/rrd/*" unless include_graphs
-    paths.each_with_object("") { |str, res| res << "--exclude=\"#{base_dir}#{str}\" " }
-  end
+
   def mysqldump(file)
     begin
       _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
@@ -51,20 +45,25 @@ class Backup
       Rails.logger.error e.inspect
     end
   end
-  def db
-    "#{full_path}.db.gz" if mysqldump "#{full_path}.db" and system "gzip #{full_path}.db"
+
+  def backup_include_files(include_graphs)
+    paths = ["#{DATABASE_DUMP_PATH}", "#{BASE_DIR}/scripts"]
+    paths << "#{BASE_DIR}/deploy/shared/db/rrd" unless include_graphs
+    paths << Configuration.first.files_include_in_backup.split("\n")
+    paths.flatten.uniq
   end
+
+  def backup_exclude_files
+    Configuration.first.files_exclude_in_backup.split("\n").map{|path| "--exclude=#{path}"}
+  end
+
   def full(include_graphs=false)
-    if mysqldump "#{base_dir}/sequreisp.sql"
-      FileUtils.touch backup_include if not File.exists? backup_include
-      FileUtils.touch backup_exclude if not File.exists? backup_exclude
-      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{exclude(include_graphs)} --files-from #{backup_include} --exclude-from #{backup_exclude} -zSpcf #{full_path}.tar.gz #{base_dir}"
+    if mysqldump "#{DATABASE_DUMP_PATH}"
+      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{backup_exclude_files.join(' ')} -zSpcf #{full_path}.tar.gz #{backup_include_files(include_graphs).join(' ')}"
     end
     "#{full_path}.tar.gz" if success
   end
-  def full_path
-    File.join(Dir::tmpdir, name)
-  end
+
   def flush_db
     _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
     command = "/usr/bin/mysqldump --no-data --add-drop-table -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]} | grep '^DROP' |  /usr/bin/mysql -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]}"
@@ -72,6 +71,7 @@ class Backup
     Rails.logger.error("Backup::flush_db command failed: #{command}") unless success
     success
   end
+
   def pop_db(sql_file, compressed=false)
     cat_command = compressed ? "zcat" : "cat"
     _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
@@ -81,29 +81,14 @@ class Backup
     Rails.logger.error("Backup::pop_db failed") unless success
     success
   end
-  def restore_db(file, reboot=false, failsafe=false)
-    failsafe_backup = Backup.new.db unless failsafe
-    success = false
-    if flush_db
-      success = pop_db(file, true)
-    end
-    unless failsafe
-      if success
-        respawn(reboot)
-      else
-        #recursive call, we use failsafe=true to avoid an infinite loop
-        Backup.new.restore_db(failsafe_backup, false, true)
-      end
-    end
-    success
-  end
+
   def restore_full(file, reboot=false, failsafe=false)
     failsafe_backup = Backup.new.full(false) unless failsafe
     success = false
     # tar exit_status == 1 is not fatal
     if system("#{SequreispConfig::CONFIG["tar_command"]} -zxpf #{file} -C /") or $?.exitstatus == 1
       if flush_db
-        success = pop_db("#{base_dir}/sequreisp.sql")
+        success = pop_db("#{DATABASE_DUMP_PATH}")
       end
     else
       Rails.logger.error("Backup::restore_full tar_command failure")
@@ -118,6 +103,7 @@ class Backup
     end
     success
   end
+
   def respawn(reboot)
     begin
       c = Configuration.first
@@ -140,8 +126,13 @@ class Backup
       Rails.logger.warn "Downgrading to a version without backup_restore or backup_reboot, need to respawn or reboot by hand"
     end
   end
+
   def self.is_compatible_with_this_version?(path)
-    backup_version = File.basename(path).match(/sequreisp_(.*)_backup/)[1] rescue nil
-    backup_version.present? and ::SequreISP::Version.new(backup_version) == ::SequreISP::Version.new
+    if Rails.env.production?
+      backup_version = File.basename(path).match(/sequreisp_(.*)_backup/)[1] rescue nil
+      backup_version.present? and ::SequreISP::Version.new(backup_version) == ::SequreISP::Version.new
+    else
+      true
+    end
   end
 end

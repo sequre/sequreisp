@@ -399,6 +399,8 @@ en:
     confirm_restore_button: "Restore"
     confirm_restore_and_reboot_button: "Restore and reboot"
     cancel: "Cancel"
+    include_files: "Include files"
+    exclude_files: "Exclude files"
     notice:
       missing_file: "A backup file must be selected to restore"
       restore_error: "An error has occurred, check the backup file is correct"

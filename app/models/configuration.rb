@@ -213,33 +213,9 @@ class Configuration < ActiveRecord::Base
   end
 
   def include_exclude_files_in_backup(backup)
-    include_files = true
-    exclude_files = true
-    errors = { :include_files => [],
-               :exclude_files => [] }
-
-    if backup.has_key?(:include_files)
-      backup[:include_files].delete("\r").split("\n").uniq.each do |path|
-        unless File.exists?(path.chomp)
-          errors[:include_files] << path.chomp
-          include_files = false
-        end
-      end
-    end
-
-    if backup.has_key?(:exclude_files)
-      backup[:exclude_files].delete("\r").split("\n").uniq.each do |path|
-        unless File.exists?(path.chomp)
-          errors[:exclude_files] << path.chomp
-          exclude_files = false
-        end
-      end
-    end
-
-    self.files_include_in_buckup = backup[:include_files].delete("\r") if include_files
-    self.files_exclude_in_buckup = backup[:exclude_files].delete("\r") if exclude_files
-    self.save if self.changed?
-    errors
+    self.files_include_in_backup = backup[:include_files].delete("\r")
+    self.files_exclude_in_backup = backup[:exclude_files].delete("\r")
+    self.save
   end
 
 end

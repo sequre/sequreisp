@@ -25,65 +25,45 @@ $(function() {
   <fieldset class="inputs">
     <legend><span><%=t 'backup.backup_full_legend' %></span></legend>
     <ol>
-    <fieldset class="inputs">
-     <legend><span><%=t 'backup.create_backup_legend' %></span></legend>
-      <% semantic_form_for 'backup', :url => create_full_backup_path  do |f| %>
-	<%= f.input :include_graph,
-	            :as => :boolean,
-	            :label => t('backup.include_graphs', :size => Contract.count/2.0),
-	            :required => false %>
+      <fieldset class="inputs">
+        <legend><span><%=t 'backup.create_backup_legend' %></span></legend>
+        <% semantic_form_for 'backup', :url => create_full_backup_path  do |f| %>
 
-	<%= f.input :include_files,
-               	    :as => :text,
-                    :label =>t('backup.include_fies'),
-                    :required => false %>
+	  <%= f.input :include_graph,
+	              :as => :boolean,
+	              :label => t('backup.include_graphs', :size => Contract.count/2.0),
+	              :required => false %>
 
-	<%= f.input :exclude_files,
-	            :as => :text,
-                    :label =>t('backup.exclude_fies'),
-                    :required => false  %>
-	<%= f.submit t('buttons.process') %>
-      <% end %>
-    </fieldset>
-    <fieldset class="inputs">
-      <% form_tag({:action => 'upload_full'}, :multipart => true, :id => 'upload_full') do %>
-      <legend><span><%=t 'backup.restore_backup_legend' %></span></legend>
-        <li>
-          <label for="backup"><%=t 'backup.backup_file_label' %></label>
-          <%= file_field 'backup_full', 'backup_file' %>
-        </li>
-        <li class="left">
-          <br/>
-          <%= submit_tag t('backup.restore_backup_full_button'), :class => "restore" %>
-        </li>
-    <% end %>
-    </fieldset>
-    </ol>
-  </fieldset>
-  <fieldset class="inputs">
-    <legend><span><%=t 'backup.backup_db_legend' %></span></legend>
-    <ol>
-    <fieldset class="inputs">
-    <% form_tag ({:action => 'create_db'}) do %>
-      <legend><span><%=t 'backup.create_backup_legend' %></span></legend>
-      <li class="left">
-        <%= submit_tag t('backup.create_backup_button') %>
-      </li>
-    <% end %>
-    </fieldset>
-    <fieldset class="inputs">
-    <% form_tag({:action => 'upload_db'}, :multipart => true, :id => 'upload_db') do %>
-      <legend><span><%=t 'backup.restore_backup_legend' %></span></legend>
-      <li>
-        <label for="backup_db"><%=t 'backup.backup_file_label' %></label>
-        <%= file_field 'backup_db', 'backup_file' %>
-      </li>
-      <li class="left">
-        <br/>
-        <%= submit_tag t('backup.restore_backup_db_button'), :class => "restore" %>
-      </li>
-    <% end %>
-    </fieldset>
+          <%= f.input :include_files,
+                      :as => :text,
+                      :label =>t('backup.include_files'),
+                      :required => false,
+		      :input_html => { :value => Configuration.first.files_include_in_backup } %>
+
+	  <%= f.input :exclude_files,
+	              :as => :text,
+                      :label =>t('backup.exclude_files'),
+		      :selected => Configuration.first.files_exclude_in_backup,
+                      :required => false,
+		      :input_html => { :value => Configuration.first.files_exclude_in_backup } %>
+
+	  <%= f.submit t('buttons.process') %>
+        <% end %>
+      </fieldset>
+
+      <fieldset class="inputs">
+        <% form_tag({:action => 'upload_full'}, :multipart => true, :id => 'upload_full') do %>
+          <legend><span><%=t 'backup.restore_backup_legend' %></span></legend>
+          <li>
+            <label for="backup"><%=t 'backup.backup_file_label' %></label>
+            <%= file_field 'backup_full', 'backup_file' %>
+          </li>
+          <li class="left">
+            <br/>
+            <%= submit_tag t('backup.restore_backup_full_button'), :class => "restore" %>
+          </li>
+        <% end %>
+      </fieldset>
     </ol>
   </fieldset>
 </div>
