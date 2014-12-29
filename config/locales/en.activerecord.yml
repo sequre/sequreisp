@@ -233,6 +233,7 @@ en:
         dns_first_server: "First DNS Server"
         dns_second_server: "Second DNS Server"
         dns_third_server: "Third DNS Server"
+        traffic_prio: "Priority traffic (low latency)"
       user:
         name: "Name"
         email: "User email address"
@@ -501,6 +502,11 @@ en:
     configuration:
       own: "Server own"
       gmail: "Gmail"
+      length: "Packet size between 0 and 100 byte"
+      ssh: "Server and client SSH"
+      dns: "Server and client DNS"
+      icmp: "Protocol ICMP"
+      sip: "Protocol SIP"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
@@ -559,6 +565,7 @@ en:
       advanced: "Advanced configuration"
       mail_relay: "Mail relay"
       bind_dns: "DNS Configuration"
+      traffic_prio: "Priority traffic (low latency)"
     interface:
       ips: "IPs"
     provider:

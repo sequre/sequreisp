@@ -4,7 +4,7 @@
 <% end %>
 <script type="text/javascript">
   $(document).ready(function() {
-    chart_rate = new_chart_rate(<%= Time.zone.utc_offset %>);
+    chart_rate = new_chart_rate_prios(<%= Time.zone.utc_offset %>);
     chart_latency = new_chart_latency(<%= Time.zone.utc_offset %>);
 
 
@@ -51,8 +51,10 @@ $('#foo').highcharts({
   });
   function get_data(){
     $.get('<%= instant_contract_path %>',null,function(data){
-      chart_rate.series[0].addPoint(data.rate_down, true, true);
-      chart_rate.series[1].addPoint(data.rate_up, true, true);
+      chart_rate.series[0].addPoint(data.rate_down_prio1, true, true);
+      chart_rate.series[1].addPoint(data.rate_down_prio2, true, true);
+      chart_rate.series[2].addPoint(data.rate_down_prio3, true, true);
+      chart_rate.series[3].addPoint(data.rate_up_prio1 + data.rate_up_prio2 + data.rate_up_prio3, true, true);
       chart_latency.series[0].addPoint(data.ping_latency, true, true);
       chart_latency.series[1].addPoint(data.arping_latency, true, true);
     },'json');
