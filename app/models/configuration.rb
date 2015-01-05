@@ -16,13 +16,15 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Configuration < ActiveRecord::Base
+  require 'sequreisp_constants'
+
   ACCEPTED_LOCALES = ["es","en","pt"]
   GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
 
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
-
+ APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
   TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
                    "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
                    "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
@@ -226,6 +228,10 @@ class Configuration < ActiveRecord::Base
       ports << "443"
     end
     ports
+  end
+
+  def self.is_apply_changes?
+    File.exists?(APPLY_CHANGES_LOCK)
   end
 
 end
