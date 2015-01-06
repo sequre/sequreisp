@@ -471,9 +471,7 @@ def gen_iptables
 
       [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
         f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
-        Interface.only_lan.each do |interface|
-          f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN")
-        end
+        Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
       end
 
       f.puts "-A FORWARD -j sequreisp-allowedsites"
