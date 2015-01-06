@@ -17,10 +17,10 @@ end
 
 class DaemonTask
 
+  @@debug = Rails.env.production? ? false : true
   @@threads ||= []
 
   def initialize
-    @run = true
     @thread_daemon = nil
     @name = self.class.to_s.underscore.gsub("_"," ").capitalize
     set_next_exec
@@ -58,6 +58,7 @@ class DaemonTask
           if Time.now >= @next_exec
             set_next_exec
             @proc.call if Rails.env.production?
+            log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}" if @@debug
           end
         rescue Exception => e
           log_rescue("Daemon", e)
@@ -89,6 +90,7 @@ class DaemonTask
     @thread_daemon
   end
 
+  #Only works in development
   def self.threads
     @@threads
   end
@@ -116,7 +118,6 @@ class DaemonApplyChange < DaemonTask
 
   def exec_daemon_apply_change
     if Configuration.daemon_reload
-      log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}"
       Configuration.first.update_attribute :daemon_reload, false
       boot
     end
@@ -135,10 +136,7 @@ class DaemonApplyChangeAutomatically < DaemonTask
   private
 
   def exec_daemon_apply_change_automatically
-    unless apply_changes?
-      log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}"
-      Configuration.apply_changes_automatically!
-    end
+    Configuration.apply_changes_automatically! unless apply_changes?
   end
 
 end
@@ -155,7 +153,6 @@ class DaemonCheckLink < DaemonTask
 
   def exec_daemon_check_link
     unless apply_changes?
-      log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}"
       exec_check_physical_links
       exec_check_links
     end
@@ -262,7 +259,6 @@ class DaemonBackupRestore < DaemonTask
 
   def exec_daemon_backup_restore
     unless apply_changes?
-      log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}"
       exec_backup_restore if Configuration.backup_restore
     end
   end
@@ -297,10 +293,7 @@ class DaemonDataCounting < DaemonTask
   private
 
   def exec_daemon_data_counting
-    unless apply_changes?
-      log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}"
-      exec_data_counting
-    end
+    exec_data_counting unless apply_changes?
   end
 
   def exec_data_counting
@@ -391,10 +384,7 @@ class DaemonRrdFeed < DaemonTask
   private
 
   def exec_daemon_rrd_feed
-    unless apply_changes?
-      log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}"
-      exec_rrd_feed
-    end
+    exec_rrd_feed unless apply_changes?
   end
 
   def exec_rrd_feed
