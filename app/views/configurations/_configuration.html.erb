@@ -8,6 +8,17 @@
   #configuration_notification_timeframe{
     width: 50px;
 }
+
+.traffic-prio-hints {
+color: grey;
+font-size: 0.88em;
+font-style: italic;
+float: left;
+#line-height: 1.3em;
+#margin-left: 8px;
+#width: 142px;
+}
+
 </style>
 <script type="text/javascript">
   $(function(){
@@ -91,6 +102,16 @@
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.global_prios'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.global_prios' } } do %>
+      <% form.inputs :name => t('fieldsets.configuration.traffic_prio') do %>
+        <% Configuration::TRAFFIC_PRIO.keys.each do |tp| %>
+          <%= check_box_tag "traffic_prio[#{tp.to_s}]", nil, @configuration.traffic_prio.include?(tp.to_s), :class => "left not_paged" %>
+          <%= label_tag "<b>#{tp.to_s}</b>", nil, :class => "left not_paged" %>
+	  <div class="traffic-prio-hints" %>
+	    <%= t("messages.configuration.#{tp.to_s}") %>
+	  </div>
+          <div style="clear: both"></div>
+        <% end %>
+      <% end %>
       <%= form.input :default_tcp_prio_ports %>
       <%= form.input :default_udp_prio_ports %>
       <%= form.input :default_prio_protos %>

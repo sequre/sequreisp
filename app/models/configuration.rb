@@ -23,8 +23,12 @@ class Configuration < ActiveRecord::Base
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
-
   APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
+  TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
+                   "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
+                   "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
+                   "icmp" => ["-p icmp"],
+                   "sip" => ["-m helper --helper sip"] }
 
   def self.acts_as_audited_except
     [:daemon_reload]
@@ -40,7 +44,7 @@ class Configuration < ActiveRecord::Base
                :iptables_tree_optimization_enabled,
                :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080,
                :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password,
-               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
+               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server, :traffic_prio
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
@@ -56,7 +60,15 @@ class Configuration < ActiveRecord::Base
 
   validate :presence_of_dns_server
   validate_ip_format_of :dns_first_server, :dns_second_server, :dns_third_server
+  validate :not_repeat_traffic_prio
 
+  def not_repeat_traffic_prio
+    prios = []
+    traffic_prio.split(",").each do |prio|
+      prios << prio if (default_tcp_prio_ports + default_udp_prio_ports + default_prio_protos + default_prio_helpers).include?(prio)
+    end
+    errors.add_to_base("No se pueden repetir los puertos #{prios.join(',')}") unless prios.empty?
+  end
 
   def presence_of_dns_server
     if dns_use_forwarders and not (dns_first_server.present? or dns_second_server.present? or dns_third_server.present?)
