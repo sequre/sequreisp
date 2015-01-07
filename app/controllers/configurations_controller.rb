@@ -72,5 +72,4 @@ class ConfigurationsController < ApplicationController
     resp = Configuration.is_apply_changes?
     render :json => resp
   end
-
 end

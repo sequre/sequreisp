@@ -17,12 +17,14 @@
 
 class Configuration < ActiveRecord::Base
   require 'sequreisp_constants'
+
   ACCEPTED_LOCALES = ["es","en","pt"]
   GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
 
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
+  PATH_COMMANDO_LOG = Rails.env.production? ? HUMANIZED_COMMAND_LOG : "/tmp/command_log"
   APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
   TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
                    "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
@@ -231,15 +233,5 @@ class Configuration < ActiveRecord::Base
 
   def self.is_apply_changes?
     File.exists?(APPLY_CHANGES_LOCK)
-  end
-
-  def self.get_next_lines_in_command_log(n)
-    lines = []
-    cont = 0
-    File.open(COMMAND_LOG, "r").each_line do |line|
-      lines << line if cont > n.to_i
-      cont += 1
-    end
-    lines
   end
 end

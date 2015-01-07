@@ -1,7 +1,7 @@
 ActionController::Routing::Routes.draw do |map|
   map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get, :get_mac_address => :get }
 
-  map.resources :configurations, :collection => {:doreload => :get, :ajax_request => :get, :is_apply_changes => :get }
+  map.resources :configurations, :collection => {:doreload => :get, :is_apply_changes => :get }
 
   map.resources :users
 
@@ -36,6 +36,9 @@ ActionController::Routing::Routes.draw do |map|
   map.resource :dashboard, :collection => { :cpu => :get , :services => :get, :load_average => :get, :reboot => :get, :halt => :get }
 
   map.resources :always_allowed_sites
+
+  map.command_logs '/command_logs/command_log_info', :controller => 'command_logs', :action => 'command_log_info'
+  map.command_logs '/command_logs', :controller => 'command_logs', :action => 'command_logs'
 
   map.backup '/backup', :controller => 'backup', :action => 'index'
   map.login '/login', :controller => 'user_sessions', :action => 'new'

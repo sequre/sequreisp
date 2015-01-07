@@ -1,4 +1,4 @@
-# Sequreisp- - Copyright 2010, 2011 Luciano Ruete
+# Sequreisp-- - Copyright 2010, 2011 Luciano Ruete
 #
 # This file is part of Sequreisp.
 #
@@ -104,7 +104,7 @@ def gen_tc
       Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider download limit in #{iface}) e=>#{e.inspect}"
     end
   end
-  exec_context_commands "setup_tc", commands
+  exec_context_commands "setup_tc", commands, I18n("command.human.gen_tc")
 end
 
 def gen_iptables
@@ -544,7 +544,7 @@ def do_port_forwardings(fp, f=nil, boot=true)
     commands << "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.tcp
     commands << "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.udp
   end
-  f ? f.puts(commands) : exec_context_commands("do_port_forwardings", commands.map{|c| "iptables -t nat " + c }, boot)
+  f ? f.puts(commands) : exec_context_commands("do_port_forwardings", commands.map{|c| "iptables -t nat " + c }, I18n("command.human.do_port_forwarding"), boot)
 end
 def do_port_forwardings_avoid_nat_triangle(fp, f=nil, boot=true)
   commands = []
@@ -552,7 +552,7 @@ def do_port_forwardings_avoid_nat_triangle(fp, f=nil, boot=true)
     commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.tcp
     commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.udp
   end
-  f ? f.puts(commands) : exec_context_commands("do_port_forwardings_avoid_nat_triangle", commands.map{|c| "iptables -t mangle " + c }, boot)
+  f ? f.puts(commands) : exec_context_commands("do_port_forwardings_avoid_nat_triangle", commands.map{|c| "iptables -t mangle " + c }, I18n("command.human.do_port_forwardings_avoid_nat_triangle"), boot)
 end
 
 def gen_ip_ru
@@ -592,7 +592,7 @@ def update_fallback_route(f=nil, force=false, boot=true)
     #TODO loguear? el cambio de estado en una bitactora
   end
   if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, boot)
+    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, I18n("command.human.update_fallback_route"), boot)
   end
 end
 
@@ -608,7 +608,7 @@ def update_provider_group_route pg, f=nil, force=false, boot=true
     #TODO loguear el cambio de estado en una bitactora
   end
   if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_provider_group_route #{pg.id}", commands.map{|c| "ip " + c }, boot)
+    f ? f.puts(commands) : exec_context_commands("update_provider_group_route #{pg.id}", commands.map{|c| "ip " + c }, I18n("command.human.update_provider_group_route"), boot)
   end
 end
 
@@ -625,7 +625,7 @@ def update_provider_route p, f=nil, force=false, boot=true
     #TODO loguear el cambio de estado en una bitactora
   end
   if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_provider_route #{p.id}", commands.map{|c| "ip " + c }, boot)
+    f ? f.puts(commands) : exec_context_commands("update_provider_route #{p.id}", commands.map{|c| "ip " + c }, I18n("command.human.update_provider_route"), boot)
   end
 end
 
@@ -702,7 +702,7 @@ def setup_clock
   tz_path = "/usr/share/zoneinfo/"
   tz_name = ActiveSupport::TimeZone.new(Configuration.time_zone).tzinfo.name
   if tz_name
-    exec_context_commands "setup_clock", ["echo '#{tz_path}' > /etc/timezone", "cp #{File.join(tz_path, tz_name)} /etc/localtime"]
+    exec_context_commands "setup_clock", ["echo '#{tz_path}' > /etc/timezone", "cp #{File.join(tz_path, tz_name)} /etc/localtime"], I18n("command.human.setup_clock")
   end
 end
 def setup_proc
@@ -714,7 +714,7 @@ def setup_proc
     "echo #{Configuration.gc_thresh1} > /proc/sys/net/ipv4/neigh/default/gc_thresh1",
     "echo #{Configuration.gc_thresh2} > /proc/sys/net/ipv4/neigh/default/gc_thresh2",
     "echo #{Configuration.gc_thresh3} > /proc/sys/net/ipv4/neigh/default/gc_thresh3"
-    ]
+    ], I18n("command.human.setup_proc")
 end
 
 def setup_proxy_arp
@@ -730,7 +730,7 @@ def setup_proxy_arp
         commands << "arp -i #{c.proxy_arp_interface.name} -Ds #{g} #{c.proxy_arp_interface.name} pub"
       end
     end
-    exec_context_commands "setup_proxy_arp", commands
+    exec_context_commands "setup_proxy_arp", commands, I18n("command.human.setup_proxy_arp")
   end
 end
 
@@ -763,7 +763,7 @@ def do_provider_up(p)
     commands << "tc qdisc del dev #{p.link_interface} ingress"
     commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
   end
-  exec_context_commands "do_provider_up #{p.id}", commands, false
+  exec_context_commands "do_provider_up #{p.id}", commands, I18n("command.human.do_provider_up"), false
 end
 
 def do_provider_down(p)
@@ -777,7 +777,7 @@ def do_provider_down(p)
   update_provider_group_route p.provider_group, nil, false, false
   update_fallback_route nil, false, false
 
-  exec_context_commands "do_provider_down #{p.id}", commands, false
+  exec_context_commands "do_provider_down #{p.id}", commands, I18n("command.human.do_provider_down"), false
 end
 
 def check_physical_links
@@ -873,7 +873,7 @@ def setup_queued_commands
     qc.executed = true
     qc.save
   end
-  exec_context_commands "queued_commands", commands
+  exec_context_commands "queued_commands", commands, I18n("command.human.setup_queued_commands")
 end
 
 def exec_context_commands context_name, commands, boot=true
@@ -886,7 +886,7 @@ end
 
 def setup_nf_modules
   modules = %w{nf_nat_ftp nf_nat_amanda nf_nat_pptp nf_nat_proto_gre nf_nat_sip nf_nat_irc 8021q}
-  exec_context_commands "modprobe", modules.collect{|m| "modprobe #{m}" }
+  exec_context_commands "modprobe", modules.collect{|m| "modprobe #{m}" }, I18n("command.human.setup_nf_modules")
 end
 
 def setup_adsl_interface(p)
@@ -945,7 +945,7 @@ def setup_provider_interface p, boot=true
   when "static"
     commands << setup_static_interface(p)
   end
-  exec_context_commands "setup_provider_interface #{p.id}", commands, boot
+  commands
 end
 
 def setup_lan_interface(i)
@@ -967,16 +967,16 @@ def setup_interfaces
     commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
     if i.lan?
       commands << setup_lan_interface(i)
-      exec_context_commands("setup_lan_interface_#{i.name}", commands.flatten)
+      exec_context_commands("setup_lan_interface_#{i.name}", commands, I18n.t("command.human.setup_lan_interface", :dev => i.name))
     elsif i.wan?
       commands << setup_provider_interface(i.provider) if i.wan?
-      exec_context_commands("setup_wan_interfaces_#{i.name}", commands.flatten)
+      exec_context_commands("setup_wan_interfaces_#{i.name}", commands, I18n.t("command.human.setup_wan_interface", :kind => i.provider.kind, :dev => i.name))
     end
   end
 end
 
 def setup_static_routes
-  exec_context_commands "setup_static_routes", Iproute.all.collect{|ipr| "ip ro re #{ipr.route}" }
+  exec_context_commands "setup_static_routes", Iproute.all.collect{|ipr| "ip ro re #{ipr.route}" }, I18n("command.human.setup_static_routes")
 end
 
 def setup_ifbs
@@ -988,7 +988,7 @@ def setup_ifbs
     "ip link set #{IFB_DOWN} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_IFB}",
     "ip link set #{IFB_INGRESS} up",
     "ip link set #{IFB_INGRESS} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_IFB}"
-  ]
+  ], I18n("command.human.setup_ifbs")
 end
 
 def setup_tc
@@ -1004,16 +1004,16 @@ def setup_tc
     #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada
     commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
   end
-  exec_context_commands "setup_tc", commands
+  exec_context_commands "setup_tc", commands, I18n("command.human.setup_tc")
 end
 
 def setup_ip_ro
   gen_ip_ro
-  exec_context_commands "ip_ro", ["ip route del default table main", "ip -batch #{IP_RO_FILE}"]
+  exec_context_commands "ip_ro", ["ip route del default table main", "ip -batch #{IP_RO_FILE}"], I18n("command.human.setup_ip_ro")
 end
 def setup_ip_ru
   gen_ip_ru
-  exec_context_commands "ip_ru", "ip -batch #{IP_RU_FILE}"
+  exec_context_commands "ip_ru", "ip -batch #{IP_RU_FILE}", I18n("command.human.setup_ip_ru")
 end
 # def setup_providers_interfaces
 #   Provider.with_klass_and_interface.each do |p|
@@ -1026,17 +1026,17 @@ def setup_iptables
     "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}",
     "iptables-restore -n < #{IPTABLES_FILE}.tmp",
     "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
-  ]
+  ], I18n("command.human.setup_iptables_try")
   if status
     exec_context_commands "create_iptables_file", [
         "mv #{IPTABLES_FILE}.tmp #{IPTABLES_FILE}"
-    ]
+    ], I18n("command.human.setup_iptables_success")
   else
     exec_context_commands "restore_old_iptables", [
       "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}",
       "iptables-restore -n < #{IPTABLES_FILE}",
       "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
-    ]
+    ], I18n("command.human.setup_iptables_restore_old")
   end
 end
 
@@ -1045,7 +1045,7 @@ def setup_mail_relay
     commands = []
     commands << "postmap #{PATH_SASL_PASSWD}" if Configuration.first.generate_postfix_main
     commands << "service postfix restart"
-    exec_context_commands("setup_mail_relay_create", commands)
+    exec_context_commands("setup_mail_relay_create", commands, I18n("command.human.setup_mail_relay"))
   end
 end
 
@@ -1054,9 +1054,10 @@ def boot(run=true)
   BootCommandContext.clear_boot_file
   create_dirs_if_not_present if Rails.env.development?
   Configuration.do_reload
-  exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"]
   #begin
-    exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}"
+    I18n.locale = Configuration.language
+    exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n("command.human.create_tmp_file")
+    exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}", I18n("command.human.sequreisp_pre")
 
     setup_queued_commands
     setup_clock
@@ -1077,13 +1078,13 @@ def boot(run=true)
     #General configuration hook, plugins seems to use it to write updated conf files
     BootHook.run :hook => :general
     Configuration.first.generate_bind_dns_named_options
-    exec_context_commands "bind_reload", "service bind9 reload"
+    exec_context_commands "bind_reload", "service bind9 reload", I18n("command.human.bind_reload")
 
     #Service restart hook
     BootHook.run :hook => :service_restart
 
-    exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}"
-    exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"]
+    exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}", I18n("command.human.sequreisp_post")
+    exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n("command.human.delete_tmp_file")
   #rescue => e
   #  Rails.logger.error "ERROR in lib/sequreisp.rb::boot e=>#{e.inspect}"
   #end

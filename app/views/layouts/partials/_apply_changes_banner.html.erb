@@ -11,16 +11,16 @@
  function IsRunning(){
    if(running){
      $.ajax({
-       type : 'GET',
-       url : '/configurations/is_apply_changes',
-       complete : function(resp){
-	 running = resp.responseText === "true";
-	 UpdateButtons();
-	 setTimeout(function(){ IsRunning(); },delta_time);
-       }
-     });
-   }
- }
+        type : 'GET',
+        url : '/configurations/is_apply_changes',
+        complete : function(resp){
+          running = resp.responseText === "true";
+          UpdateButtons();
+          setTimeout(function(){ IsRunning(); },delta_time);
+        }
+      });
+    }
+  }
 
  function UpdateButtons(){
    if(running){
@@ -37,31 +37,30 @@
    Init();
  });
 
-
 </script>
 
 <div id="apply_changes_wrapper">
   <div class="wait_apply_changes" id="apply_changes_banner">
-    <div id="wait_apply_changes_button">
-      <% link_to("javascript:void()", :class => "button", :disabled => true) do %>
-	<span><span>
-	  <%=  t('menu.wait_apply_changes') %>
-	</span></span>
-      <% end %>
+    <div id="wait_apply_changes_button" style="width: 43%;">
+      <ul class="nav"><li><b>
+        <img src="/images/loading.GIF" WIDTH=15 HEIGHT=15>
+        <em style="font-size:17px; color: rgb(223, 1, 1);"><%=  t('menu.wait_apply_changes') %></em>
+        <%= link_to("(#{t('menu.command_log')})", command_logs_path) %>
+      </b></li></ul>
     </div>
   </div>
 
   <% if current_user.may_doreload_configuration? and Configuration.first.changes_to_apply? %>
     <div id="apply_changes_banner">
       <span id="apply_changes_notice">
-	<%= t('notifications.changes_to_be_applied_notice') %>
+        <%= t('notifications.changes_to_be_applied_notice') %>
       </span>
       <div id="apply_changes_button">
-	<% link_to({:controller => "configurations", :action => "doreload"}, :class => "button") do %>
+        <% link_to({:controller => "configurations", :action => "doreload"}, :class => "button") do %>
           <span> <span>
             <%=  t('menu.apply_changes') %>
           </span> </span>
-	<% end %>
+        <% end %>
       </div>
     </div>
   <% end %>
