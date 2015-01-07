@@ -780,91 +780,91 @@ def do_provider_down(p)
   exec_context_commands "do_provider_down #{p.id}", commands, I18n("command.human.do_provider_down"), false
 end
 
-def check_physical_links
-  changes = false
-  readme = []
-  writeme = []
-  pid = []
-  Interface.all(:conditions => "vlan = 0").each do |i|
-    physical_link = i.current_physical_link
-    if i.physical_link != physical_link
-      changes = true
-      i.physical_link = physical_link
-      i.save(false)
-      #TODO loguear el cambio de estado en una bitactora
-    end
-  end
-  begin
-    if Configuration.deliver_notifications
-      AppMailer.deliver_check_physical_links_email if changes
-    end
-  rescue => e
-    Rails.logger.error "ERROR in lib/sequreisp.rb::check_physical_links e=>#{e.inspect}"
-  end
-end
-def check_links
-  Configuration.do_reload
-  changes = false
-  send_notification_mail = false
-  providers = Provider.ready.all(:include => :interface)
-  threads = {}
+# def check_physical_links
+#   changes = false
+#   readme = []
+#   writeme = []
+#   pid = []
+#   Interface.all(:conditions => "vlan = 0").each do |i|
+#     physical_link = i.current_physical_link
+#     if i.physical_link != physical_link
+#       changes = true
+#       i.physical_link = physical_link
+#       i.save(false)
+#       #TODO loguear el cambio de estado en una bitactora
+#     end
+#   end
+#   begin
+#     if Configuration.deliver_notifications
+#       AppMailer.deliver_check_physical_links_email if changes
+#     end
+#   rescue => e
+#     Rails.logger.error "ERROR in lib/sequreisp.rb::check_physical_links e=>#{e.inspect}"
+#   end
+# end
+# def check_links
+#   Configuration.do_reload
+#   changes = false
+#   send_notification_mail = false
+#   providers = Provider.ready.all(:include => :interface)
+#   threads = {}
 
-  providers.each do |p|
-    threads[p.id] = Thread.new do
-      Thread.current['online'] = begin
-        # 1st by rate, if offline, then by ping
-        # (r)etry=3 (t)iemout=500 (B)ackoff=1.5 (defualts)_
-        p.is_online_by_rate? || `fping -a -S#{p.ip} #{PINGABLE_SERVERS} 2>/dev/null | wc -l`.chomp.to_i > 0
-      end
-    end
-  end
+#   providers.each do |p|
+#     threads[p.id] = Thread.new do
+#       Thread.current['online'] = begin
+#         # 1st by rate, if offline, then by ping
+#         # (r)etry=3 (t)iemout=500 (B)ackoff=1.5 (defualts)_
+#         p.is_online_by_rate? || `fping -a -S#{p.ip} #{PINGABLE_SERVERS} 2>/dev/null | wc -l`.chomp.to_i > 0
+#       end
+#     end
+#   end
 
-  # waith for threads
-  threads.each do |k,t| t.join end
+#   # waith for threads
+#   threads.each do |k,t| t.join end
 
-  providers.each do |p|
-    #puts "#{p.id} #{readme[p.id].first}"
-    online = threads[p.id]['online']
-    p.online = online
-    #TODO loguear el cambio de estado en una bitactora
+#   providers.each do |p|
+#     #puts "#{p.id} #{readme[p.id].first}"
+#     online = threads[p.id]['online']
+#     p.online = online
+#     #TODO loguear el cambio de estado en una bitactora
 
-    if !online and !p.notification_flag and p.offline_time > Configuration.notification_timeframe
-      p.notification_flag = true
-      send_notification_mail = true
+#     if !online and !p.notification_flag and p.offline_time > Configuration.notification_timeframe
+#       p.notification_flag = true
+#       send_notification_mail = true
 
-    elsif online and p.notification_flag
-      p.notification_flag = false
-      send_notification_mail = true
-    end
+#     elsif online and p.notification_flag
+#       p.notification_flag = false
+#       send_notification_mail = true
+#     end
 
-    p.save(false) if p.changed?
+#     p.save(false) if p.changed?
 
-    #TODO refactorizar esto de alguna manera
-    # la idea es killear el dhcp si esta caido más de 30 segundos
-    # pero solo hacer kill en la primer pasada cada minuto, para darle tiempo de levantar
-    # luego lo de abajo lo va a levantar
-    offline_time = p.offline_time
-    if p.kind == "dhcp" and offline_time > 30 and (offline_time-30)%120 < 16
-      system "/usr/bin/pkill -f 'dhclient.#{p.interface.name}'"
-    end
-  end
+#     #TODO refactorizar esto de alguna manera
+#     # la idea es killear el dhcp si esta caido más de 30 segundos
+#     # pero solo hacer kill en la primer pasada cada minuto, para darle tiempo de levantar
+#     # luego lo de abajo lo va a levantar
+#     offline_time = p.offline_time
+#     if p.kind == "dhcp" and offline_time > 30 and (offline_time-30)%120 < 16
+#       system "/usr/bin/pkill -f 'dhclient.#{p.interface.name}'"
+#     end
+#   end
 
-  Provider.with_klass_and_interface.each do |p|
-    setup_provider_interface p, false if not p.online?
-    update_provider_route p, nil, false, false
-  end
-  ProviderGroup.enabled.each do |pg|
-    update_provider_group_route pg, nil, false, false
-  end
-  update_fallback_route nil, false, false
-  begin
-    if send_notification_mail and Configuration.deliver_notifications
-      AppMailer.deliver_check_links_email
-    end
-  rescue => e
-    Rails.logger.error "ERROR in lib/sequreisp.rb::check_links(AppMailer) e=>#{e.inspect}"
-  end
-end
+#   Provider.with_klass_and_interface.each do |p|
+#     setup_provider_interface p, false if not p.online?
+#     update_provider_route p, nil, false, false
+#   end
+#   ProviderGroup.enabled.each do |pg|
+#     update_provider_group_route pg, nil, false, false
+#   end
+#   update_fallback_route nil, false, false
+#   begin
+#     if send_notification_mail and Configuration.deliver_notifications
+#       AppMailer.deliver_check_links_email
+#     end
+#   rescue => e
+#     Rails.logger.error "ERROR in lib/sequreisp.rb::check_links(AppMailer) e=>#{e.inspect}"
+#   end
+# end
 
 def setup_queued_commands
   commands = []
