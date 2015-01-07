@@ -41,6 +41,7 @@ ActionController::Routing::Routes.draw do |map|
   map.command_logs '/command_logs', :controller => 'command_logs', :action => 'command_logs'
 
   map.backup '/backup', :controller => 'backup', :action => 'index'
+  map.create_full_backup '/create_full', :controller => 'backup', :action => 'create_full', :method => :put
   map.login '/login', :controller => 'user_sessions', :action => 'new'
   map.logout '/logout', :controller => 'user_sessions', :action => 'destroy'
 

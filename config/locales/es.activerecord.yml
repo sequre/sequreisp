@@ -404,6 +404,8 @@ es:
     confirm_restore_button: "Restaurar"
     confirm_restore_and_reboot_button: "Restaurar y reiniciar"
     cancel: "Cancelar"
+    include_files: "Archivos a incluir"
+    exclude_files: "Archivos a excluir"
     notice:
       missing_file: "Debe seleccionar un archivo de copia de resguardo para restaurar"
       restore_error: "Se produjo un error; verifique que el archivo de copia de resguardo sea correcto"

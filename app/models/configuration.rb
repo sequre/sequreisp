@@ -234,4 +234,11 @@ class Configuration < ActiveRecord::Base
   def self.is_apply_changes?
     File.exists?(APPLY_CHANGES_LOCK)
   end
+
+  def include_exclude_files_in_backup(backup)
+    self.files_include_in_backup = backup[:include_files].delete("\r")
+    self.files_exclude_in_backup = backup[:exclude_files].delete("\r")
+    self.save
+  end
+
 end

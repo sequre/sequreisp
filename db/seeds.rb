@@ -3,8 +3,6 @@ Configuration.create!(
  :default_udp_prio_ports => "",
  :default_prio_protos =>  "udp,icmp,igmp,esp,ah,gre",
  :default_prio_helpers =>  "ftp,irc,sip",
- :mtu => 1500,
- :quantum_factor => "256",
  :nf_conntrack_max => 1048576,
  :gc_thresh1 => 2048,
  :gc_thresh2 => 4096,
@@ -43,9 +41,9 @@ Klass.import klass, :optimize=>true
 
 # tc class y ip ro table name de los provider y provider_groups
 # arranco en 10 hasta 250 para no tener conflifctos con /etc/iproute2/rt_tables
-# un máximo de 240 proveedores parece más que suficiente para un solo server 
+# un máximo de 240 proveedores parece más que suficiente para un solo server
 #ProviderKlass.transaction do
-#  for i in 10..250 do  
+#  for i in 10..250 do
 #    ProviderKlass.create!(:number => i)
 #  end
 #end
@@ -66,7 +64,7 @@ Interface.scan.each do |name|
      :netmask => '255.255.255.0'
     )
     first=false
-  else 
+  else
     Interface.create!(
      :name => name,
      :kind => 'wan',
