@@ -1,16 +1,68 @@
+<script type="text/javascript">
+ var running = <%= Configuration.is_apply_changes? %>;
+ var delta_time = 1000;
+
+ function Init(){
+   UpdateButtons();
+   setTimeout(function(){ running = true; IsRunning(); },5000);
+   IsRunning();
+ }
+
+ function IsRunning(){
+   if(running){
+     $.ajax({
+       type : 'GET',
+       url : '/configurations/is_apply_changes',
+       complete : function(resp){
+	 running = resp.responseText === "true";
+	 UpdateButtons();
+	 setTimeout(function(){ IsRunning(); },delta_time);
+       }
+     });
+   }
+ }
+
+ function UpdateButtons(){
+   if(running){
+     $('#apply_changes_button').hide();
+     $('.wait_apply_changes').show();
+   }
+   else{
+     $('#apply_changes_button').show();
+     $('.wait_apply_changes').hide();
+   }
+ }
+
+ $(document).ready( function(){
+   Init();
+ });
+
+
+</script>
+
 <div id="apply_changes_wrapper">
-<% if current_user.may_doreload_configuration? and Configuration.first.changes_to_apply? %>
-  <div id="apply_changes_banner">
-    <span id="apply_changes_notice">
-      <%= t('notifications.changes_to_be_applied_notice') %>
-    </span>
-    <div id="apply_changes_button">
-      <% link_to({:controller => "configurations", :action => "doreload"}, :class => "button") do %>
-        <span> <span>
-            <%=  t('menu.apply_changes') %>
-        </span> </span>
+  <div class="wait_apply_changes" id="apply_changes_banner">
+    <div id="wait_apply_changes_button">
+      <% link_to("javascript:void()", :class => "button", :disabled => true) do %>
+	<span><span>
+	  <%=  t('menu.wait_apply_changes') %>
+	</span></span>
       <% end %>
     </div>
   </div>
-<% end %>
+
+  <% if current_user.may_doreload_configuration? and Configuration.first.changes_to_apply? %>
+    <div id="apply_changes_banner">
+      <span id="apply_changes_notice">
+	<%= t('notifications.changes_to_be_applied_notice') %>
+      </span>
+      <div id="apply_changes_button">
+	<% link_to({:controller => "configurations", :action => "doreload"}, :class => "button") do %>
+          <span> <span>
+            <%=  t('menu.apply_changes') %>
+          </span> </span>
+	<% end %>
+      </div>
+    </div>
+  <% end %>
 </div>

@@ -340,6 +340,7 @@ en:
     iproutes: "Static routes"
     dashboard: "Dashboard"
     apply_changes: "Apply changes"
+    wait_apply_changes: "Applying changes"
     backups: "Backups"
     modules: "Plugins"
     about: "About"

@@ -56,10 +56,21 @@ class ConfigurationsController < ApplicationController
       end
     end
   end
-  
+
   def doreload
     Configuration.first.apply_changes
     flash[:notice] = I18n.t('messages.apply_changes_success')
-    redirect_to :back    
+    redirect_to :back
   end
+
+  def ajax_request
+    lines = Configuration.get_next_lines_in_command_log(params[:last_line])
+    render :json => lines
+  end
+
+  def is_apply_changes
+    resp = Configuration.is_apply_changes?
+    render :json => resp
+  end
+
 end
