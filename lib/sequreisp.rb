@@ -204,7 +204,7 @@ def gen_iptables
     end
   end
   begin
-    File.open(IPTABLES_FILE, "w") do |f|
+    File.open("#{IPTABLES_FILE}.tmp", "w") do |f|
       #--------#
       # MANGLE #
       #--------#
@@ -448,20 +448,6 @@ def gen_iptables
       # VER CON EL ALFRED
       # Transparent PROXY rules (should be at the end of all others DNAT/REDIRECTS
       # Avoids tproxy to server ip's
-      #---------------------------------------------------------------------------------------------------
-      # Interface.all(:conditions => "kind = 'lan'").each do |i|
-      #   i.addresses.each do |a|
-      #     f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
-      #   end
-      #   #TODO ver que pasa con provider dinamicos que cambian la ip
-      #   Provider.enabled.ready.each do |p|
-      #     f.puts "-A PREROUTING -i #{i.name} -d #{p.ip} -p tcp --dport 80 -j ACCEPT"
-      #     p.addresses.each do |a|
-      #       f.puts "-A PREROUTING -i #{i.name} -d #{a.ip} -p tcp --dport 80 -j ACCEPT"
-      #     end
-      #   end
-      # end
-      #---------------------------------------------------------------------------------------------------
 
       f.puts ":sequreisp-accepted-sites - [0:0]"
       f.puts "-A PREROUTING -j sequreisp-accepted-sites"
@@ -475,12 +461,6 @@ def gen_iptables
           end
         end
       end
-      #provider_ips = Provider.all_ips
-      # We can also allow from LAN using WAN IPs, but this will add a lot of rules in case of big number of IPs on providers
-      # and we think that this can be a rare case
-      #provider_ips.each do |provider_ip|
-      #  f.puts "-A sequreisp-accepted-sites -i #{interface.name} -d #{provider_ip} -p tcp --dport 80 -j ACCEPT"
-      #end
 
       AlwaysAllowedSite.all.each do |site|
         site.ip_addresses.each do |ip|
@@ -1080,11 +1060,22 @@ end
 # end
 def setup_iptables
   gen_iptables
-  exec_context_commands "setup_iptables", [
+  status = exec_context_commands "setup_iptables", [
     "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}",
-    "iptables-restore -n < #{IPTABLES_FILE}",
+    "iptables-restore -n < #{IPTABLES_FILE}.tmp",
     "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
   ]
+  if status
+    exec_context_commands "create_iptables_file", [
+        "mv #{IPTABLES_FILE}.tmp #{IPTABLES_FILE}"
+    ]
+  else
+    exec_context_commands "restore_old_iptables", [
+      "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}",
+      "iptables-restore -n < #{IPTABLES_FILE}",
+      "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
+    ]
+  end
 end
 
 def setup_mail_relay
@@ -1130,7 +1121,7 @@ def boot(run=true)
     BootHook.run :hook => :service_restart
 
     exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}"
-  exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"]
+    exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"]
   #rescue => e
   #  Rails.logger.error "ERROR in lib/sequreisp.rb::boot e=>#{e.inspect}"
   #end
