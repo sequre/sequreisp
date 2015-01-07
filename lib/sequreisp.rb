@@ -17,6 +17,7 @@
 
 require 'sequreisp_constants'
 require 'command_context'
+require 'ip_tree'
 
 def create_dirs_if_not_present
   [BASE_SCRIPTS, DHCPD_DIR, PPP_DIR, DEPLOY_DIR, "#{PPP_DIR}/ip-up.d", "#{PPP_DIR}/ip-down.d", "#{DHCPD_DIR}/dhclient-enter-hooks.d",  "#{DHCPD_DIR}/dhclient-exit-hooks.d", "#{PPP_DIR}/peers"].each do |dir|
@@ -231,27 +232,39 @@ def gen_iptables
         f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
       end
 
-      def build_iptables_tree(f, parent_net, parent_chain, way, cuartet, mask)
-        return if cuartet == 0
-        base_net = IP.new parent_net.gsub(/\/.*/, "") + "/#{mask}"
-        (0..15).each do |n|
-          child_net = (base_net + n * 16**cuartet).to_s
-          chain="sq.#{way[:prefix]}.#{child_net}"
-          f.puts ":#{chain} - [0:0]"
-          f.puts "-A #{parent_chain} -#{way[:dir]} #{child_net} -j #{chain}"
-          build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
-        end
+      # def build_iptables_tree(f, parent_net, parent_chain, way, cuartet, mask)
+      #   return if cuartet == 0
+      #   base_net = IP.new parent_net.gsub(/\/.*/, "") + "/#{mask}"
+      #   (0..15).each do |n|
+      #     child_net = (base_net + n * 16**cuartet).to_s
+      #     chain="sq.#{way[:prefix]}.#{child_net}"
+      #     f.puts ":#{chain} - [0:0]"
+      #     f.puts "-A #{parent_chain} -#{way[:dir]} #{child_net} -j #{chain}"
+      #     build_iptables_tree f, child_net, chain, way, cuartet - 1, mask + 4
+      #   end
+      # end
+
+      # if Configuration.iptables_tree_optimization_enabled?
+      #   Contract.slash_16_networks.each do |n16|
+      #     [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
+      #       chain="sq.#{way[:prefix]}.#{n16}"
+      #       f.puts ":#{chain} - [0:0]"
+      #       f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
+      #       build_iptables_tree f, n16, chain, way, 3, 20
+      #     end
+      #   end
+      # end
+
+      ips = Contract.descend_by_netmask.collect(&:ip_addr)
+
+      ips.each { |ip| f.puts ":sq.#{ip.to_cidr} -" } # Create all leaf nodes
+
+      #IP Tree mark mangle optimization
+      [{:prefix => "up", :dir =>"-s"}, {:prefix => "down", :dir => "-d"}].each do |way|
+        f.puts(IPTree.new({ :ip_list => ips, :prefix => "sq-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "sq" }).to_iptables)
+        f.puts("-A sequreisp.#{way[:prefix]} -j sq-#{way[:prefix]}-MAIN")
       end
-      if Configuration.iptables_tree_optimization_enabled?
-        Contract.slash_16_networks.each do |n16|
-          [{:prefix =>'up', :dir => 's'},{:prefix => 'down', :dir => 'd'}].each do |way|
-            chain="sq.#{way[:prefix]}.#{n16}"
-            f.puts ":#{chain} - [0:0]"
-            f.puts "-A sequreisp.#{way[:prefix]} -#{way[:dir]} #{n16} -j #{chain}"
-            build_iptables_tree f, n16, chain, way, 3, 20
-          end
-        end
-      end
+
       Contract.not_disabled.descend_by_netmask.each do |c|
         mark_burst = "0x0000/0x0000ffff"
         mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
@@ -259,10 +272,10 @@ def gen_iptables
         mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
         # una chain por cada cliente
         chain="sq.#{c.ip}"
-        f.puts ":#{chain} - [0:0]"
+        # f.puts ":#{chain} - [0:0]"
         # redirección del trafico de este cliente hacia su propia chain
-        f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
-        f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
+        # f.puts "-A #{c.mangle_chain("down")} -d #{c.ip} -j #{chain}"
+        # f.puts "-A #{c.mangle_chain("up")} -s #{c.ip} -j #{chain}"
         # separo el tráfico en las 3 class: prio1 prio2 prio3
 
         #prio1
@@ -430,7 +443,6 @@ def gen_iptables
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts ":sequreisp-allowedsites - [0:0]"
       f.puts "-A FORWARD -j sequreisp-allowedsites"
-
       f.puts "-A OUTPUT -o lo -j ACCEPT"
 
       providers = Provider.enabled.with_klass_and_interface

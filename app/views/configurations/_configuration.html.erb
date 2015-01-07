@@ -143,7 +143,6 @@ float: left;
       <%= form.input :apply_changes_automatically %>
       <%= form.input :apply_changes_automatically_hour, :as => :select, :collection => (0...24).map, :include_blank => false %>
       <%= form.input :filter_by_mac_address %>
-      <%= form.input :iptables_tree_optimization_enabled %>
       <%= form.input :clamp_mss_to_pmtu %><br/>
       <%= form.input :nf_conntrack_max %>
       <%= form.input :gc_thresh1, :wrapper_html => { :class => "left" } %>
