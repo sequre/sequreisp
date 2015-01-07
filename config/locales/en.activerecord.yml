@@ -234,6 +234,7 @@ en:
         dns_second_server: "Second DNS Server"
         dns_third_server: "Third DNS Server"
         traffic_prio: "Priority traffic (low latency)"
+        in_safe_mode: "Safe mode"
       user:
         name: "Name"
         email: "User email address"
@@ -323,6 +324,7 @@ en:
         use_global_prios: "Enable only if there is more than 2500 contracts"
         use_external_number_client: "If disabled, internal ids are used as client numbers"
         mail_relay_manipulated_for_sequreisp: "Disable if you want to manually edit /etc/postfix/main.cf"
+        in_safe_mode: "In safe mode, not be apply rules for bandwidth control, ip forwarding, proxy arp and any package filter"
       provider:
         shape_rate_down_on_ingress: "Download traffic shaping is done on the LAN interface; if you enable this option, an extra control will be enabled on ingress that will shape clients' and server's own traffic to the configured download rate"
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"
@@ -567,6 +569,7 @@ en:
       mail_relay: "Mail relay"
       bind_dns: "DNS Configuration"
       traffic_prio: "Priority traffic (low latency)"
+      in_safe_mode: "Safe mode"
     interface:
       ips: "IPs"
     provider:
