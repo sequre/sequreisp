@@ -102,9 +102,7 @@ class Graph
       ] 
     when "Provider", "ProviderGroup"
       args = [ "AREA:down_prio_#00AA00:down" ] 
-      args += [ "STACK:down_dfl_#00EE00:down p2p" ] if Configuration.first.use_global_prios
       args += [ "LINE1:up_prio_#FF0000:up" ]
-      args += [ "STACK:up_dfl_#FF6600:up p2p" ] if Configuration.first.use_global_prios
       args += 
       [  
         "HRULE:#{element.rate_down*1024}#00AA0066",

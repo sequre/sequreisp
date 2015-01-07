@@ -53,7 +53,7 @@ def tc_class(iface, karray = {})
   sent=false
   IO.popen("/sbin/tc -s class show dev #{iface}", "r").each do |line|
     #puts line
-    if (line =~ /class htb (\w+):(\w+)/) != nil
+    if (line =~ /class hfsc (\w+):(\w+)/) != nil
       #puts "pklass = #{$~[1]} cklass =  #{$~[2]}"
       #next if $~[2].hex < 4
       pklass = $~[1]
