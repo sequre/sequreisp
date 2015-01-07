@@ -103,4 +103,9 @@ class Address < ActiveRecord::Base
   def auditable_model_to_show
     addressable rescue nil
   end
+
+  def ip_in_cidr
+    cidr = IPAddr.new("#{ip}/#{netmask}").cidr_mask
+    "#{ip}/#{cidr}"
+  end
 end
