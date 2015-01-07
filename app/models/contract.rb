@@ -735,6 +735,16 @@ end
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10"
   end
 
+  def rules_for_up_data_counting
+    [ ":count-up.#{ip_addr.to_cidr} -",
+      "-A count-up.#{ip_addr.to_cidr} -s #{ip} -m comment --comment \"data-count-#{ip}-up-data_count\"" ]
+  end
+
+  def rules_for_down_data_counting
+    [ ":count-down.#{ip_addr.to_cidr} -",
+      "-A count-down.#{ip_addr.to_cidr} -d #{ip} -m comment --comment \"data-count-#{ip}-down-data_count\"" ]
+  end
+
   private
 
 end

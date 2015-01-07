@@ -442,6 +442,20 @@ def gen_iptables
       f.puts ":dns-query -"
       f.puts ":sequreisp-enabled - [0:0]"
       f.puts ":sequreisp-allowedsites - [0:0]"
+      f.puts ":sequreisp-enabled - [0:0]"
+
+      contracts = Contract.descend_by_netmask
+
+      contracts.each do |contract|
+        f.puts contract.rules_for_up_data_counting
+        f.puts contract.rules_for_down_data_counting
+      end # Create all leaf nodes
+
+      [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
+        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
+        Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
+      end
+
       f.puts "-A FORWARD -j sequreisp-allowedsites"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
 

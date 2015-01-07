@@ -47,8 +47,8 @@ class IPTree
     end
     childs.each do |ch| # cadena de cada hijo, seguida de las iptables de cada hijo
       o << ":#{ch.chain} -"
-      o << "-A #{chain} #{match} #{ch.mask} -j #{ch.chain}"
       o << "-F #{ch.chain}"
+      o << "-A #{chain} #{match} #{ch.mask} -j #{ch.chain}"
       o << ch.to_iptables
     end
     if ips.count <= LIMIT # Si hay LIMIT IPs o menos aplica salto a la ip hoja
