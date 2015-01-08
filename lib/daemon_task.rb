@@ -22,7 +22,8 @@ class DaemonTask
 
   def initialize
     @thread_daemon = nil
-    @name = self.class.to_s.underscore.gsub("_"," ").capitalize
+    @name = self.class.to_s.humanize
+    @log_path = "#{BASE}/tmp/#{self.class.to_s.underscore.downcase}"
     set_next_exec
   end
 
@@ -54,14 +55,16 @@ class DaemonTask
       Thread.current["name"] = @name
       loop do
         begin
-          Configuration.do_reload
           if Time.now >= @next_exec
+            Configuration.do_reload
+            FileUtils.rm(@log_path) if File.exists?(@log_path)
             set_next_exec
             @proc.call if Rails.env.production?
             log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}" if @@debug
           end
         rescue Exception => e
           log_rescue("Daemon", e)
+          log_rescue_file(@log_path, e)
         end
         to_sleep
       end
