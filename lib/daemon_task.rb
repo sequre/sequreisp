@@ -12,8 +12,12 @@ if Rails.env.development?
     end
     daemons
   end
-
 end
+
+
+$mutex = Mutex.new
+$resource = ConditionVariable.new
+$borrar = 0
 
 class DaemonTask
 
@@ -59,7 +63,7 @@ class DaemonTask
             Configuration.do_reload
             FileUtils.rm(@log_path) if File.exists?(@log_path)
             set_next_exec
-            @proc.call if Rails.env.production?
+            @proc.call #if Rails.env.production?
             log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}" if @@debug
           end
         rescue Exception => e
@@ -99,7 +103,9 @@ class DaemonTask
   end
 
   def apply_changes?
-    Configuration.is_apply_changes?
+    $mutex.synchronize {
+      $resource.wait($mutex) if Configuration.is_apply_changes?
+    }
   end
 
   # give all subclasses
@@ -120,10 +126,16 @@ class DaemonApplyChange < DaemonTask
   private
 
   def exec_daemon_apply_change
-    if Configuration.daemon_reload
-      Configuration.first.update_attribute :daemon_reload, false
-      boot
-    end
+#    if Configuration.daemon_reload
+    $mutex.synchronize {
+      #      Configuration.first.update_attribute :daemon_reload, false
+      if $borrar == 0
+        sleep 60
+        $borrar = 3
+        $resource.signal
+      end
+    }
+ #   end
   end
 
 end
@@ -147,7 +159,7 @@ end
 class DaemonCheckLink < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10 }
+    @time_for_exec = { :frecuency => 10.seconds }
     @proc = Proc.new { exec_daemon_check_link }
     super
   end
@@ -155,10 +167,10 @@ class DaemonCheckLink < DaemonTask
   private
 
   def exec_daemon_check_link
-    unless apply_changes?
-      exec_check_physical_links
-      exec_check_links
-    end
+    apply_changes?
+    log "HOLA MUNDO"
+    # exec_check_physical_links
+    # exec_check_links
   end
 
   def exec_check_physical_links
