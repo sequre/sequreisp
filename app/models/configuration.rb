@@ -24,12 +24,9 @@ class Configuration < ActiveRecord::Base
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
-<<<<<<< HEAD
   PATH_COMMANDO_LOG = Rails.env.production? ? HUMANIZED_COMMAND_LOG : "/tmp/command_log"
   APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
-=======
- APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
->>>>>>> master_feature_replace_cron_for_daemon
+
   TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
                    "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
                    "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
@@ -239,13 +236,9 @@ class Configuration < ActiveRecord::Base
     File.exists?(APPLY_CHANGES_LOCK)
   end
 
-<<<<<<< HEAD
   def include_exclude_files_in_backup(backup)
     self.files_include_in_backup = backup[:include_files].delete("\r")
     self.files_exclude_in_backup = backup[:exclude_files].delete("\r")
     self.save
   end
-
-=======
->>>>>>> master_feature_replace_cron_for_daemon
 end
