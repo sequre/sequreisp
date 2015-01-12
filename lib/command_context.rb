@@ -1,5 +1,6 @@
 class CommandContext
   require 'sequreisp_constants'
+  require 'sequreisp_logger'
   attr_accessor :commands
   attr_accessor :name
 
@@ -46,8 +47,9 @@ class BootCommandContext < CommandContext
       f = File.open BOOT_FILE, "a+"
       human = File.open(File.join(Rails.root, "log/command_human.log"), "a+")
       super f, human
-    rescue
-      Rails.logger.error "ERROR in lib/sequreisp.rb::exec_commands e=>#{e.inspect}"
+    rescue => e
+      log_rescue("CommandContext", e)
+      # Rails.logger.error "ERROR in lib/sequreisp.rb::exec_commands e=>#{e.inspect}"
     ensure
       f.close if f
     end
