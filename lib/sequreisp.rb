@@ -829,8 +829,10 @@ def setup_interfaces
       commands << setup_lan_interface(i)
       exec_context_commands("setup_lan_interface_#{i.name}", commands, I18n.t("command.human.setup_lan_interface", :dev => i.name))
     elsif i.wan?
-      commands << setup_provider_interface(i.provider) if i.wan?
-      exec_context_commands("setup_wan_interfaces_#{i.name}", commands.flatten, I18n.t("command.human.setup_wan_interface", :kind => i.provider.kind, :dev => i.name))
+      if not i.provider.nil?
+        commands << setup_provider_interface(i.provider)
+        exec_context_commands("setup_wan_interfaces_#{i.name}", commands.flatten, I18n.t("command.human.setup_wan_interface", :kind => i.provider.kind, :dev => i.name))
+      end
     end
   end
 end
