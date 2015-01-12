@@ -17,7 +17,6 @@ end
 
 $mutex = Mutex.new
 $resource = ConditionVariable.new
-$borrar = 0
 
 class DaemonTask
 
@@ -63,7 +62,8 @@ class DaemonTask
             Configuration.do_reload
             FileUtils.rm(@log_path) if File.exists?(@log_path)
             set_next_exec
-            @proc.call #if Rails.env.production?
+            apply_changes? if Rails.env.production?
+            @proc.call if Rails.env.production?
             log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}" if @@debug
           end
         rescue Exception => e
@@ -126,16 +126,13 @@ class DaemonApplyChange < DaemonTask
   private
 
   def exec_daemon_apply_change
-#    if Configuration.daemon_reload
     $mutex.synchronize {
-      #      Configuration.first.update_attribute :daemon_reload, false
-      if $borrar == 0
-        sleep 60
-        $borrar = 3
+      if Configuration.daemon_reload
+        Configuration.first.update_attribute :daemon_reload, false
+        boot
         $resource.signal
       end
     }
- #   end
   end
 
 end
@@ -151,7 +148,10 @@ class DaemonApplyChangeAutomatically < DaemonTask
   private
 
   def exec_daemon_apply_change_automatically
-    Configuration.apply_changes_automatically! unless apply_changes?
+    $mutex.synchronize {
+      Configuration.apply_changes_automatically!
+      $resource.signal
+    }
   end
 
 end
@@ -167,10 +167,8 @@ class DaemonCheckLink < DaemonTask
   private
 
   def exec_daemon_check_link
-    apply_changes?
-    log "HOLA MUNDO"
-    # exec_check_physical_links
-    # exec_check_links
+    exec_check_physical_links
+    exec_check_links
   end
 
   def exec_check_physical_links
