@@ -3,6 +3,7 @@ class CommandContext
   require 'sequreisp_logger'
   attr_accessor :commands
   attr_accessor :name
+  attr_accessor :message
 
   def self.run= _run
     @@run = _run
