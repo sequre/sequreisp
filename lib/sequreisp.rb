@@ -735,9 +735,9 @@ def setup_queued_commands
   exec_context_commands "queued_commands", commands, I18n.t("command.human.setup_queued_commands")
 end
 
-def exec_context_commands context_name, commands, boot=true
+def exec_context_commands context_name, commands, message, boot=true
   if boot
-    BootCommandContext.new(context_name, commands).exec_commands
+    BootCommandContext.new(context_name, commands, message).exec_commands
   else
     CommandContext.new(context_name, commands).exec_commands
   end
