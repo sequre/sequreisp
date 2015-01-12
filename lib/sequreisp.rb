@@ -929,14 +929,18 @@ def boot(run=true)
     setup_iptables
     setup_mail_relay
 
-    #General configuration hook, plugins seems to use it to write updated conf files
-    BootHook.run :hook => :general
-    Configuration.first.generate_bind_dns_named_options
-    exec_context_commands "bind_reload", "service bind9 reload", I18n.t("command.human.bind_reload")
+    begin
+      #General configuration hook, plugins seems to use it to write updated conf files
+      BootHook.run :hook => :general
+      Configuration.first.generate_bind_dns_named_options
+      exec_context_commands "bind_reload", "service bind9 reload", I18n.t("command.human.bind_reload")
 
-    #Service restart hook
-    BootHook.run :hook => :service_restart
+      #Service restart hook
+      BootHook.run :hook => :service_restart
 
-    exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}", I18n.t("command.human.sequreisp_post")
-    exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.delete_tmp_file")
+      exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}", I18n.t("command.human.sequreisp_post")
+      exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.delete_tmp_file")
+    rescue => e
+      log_rescue("SequreISP", e)
+    end
 end
