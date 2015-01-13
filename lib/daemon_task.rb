@@ -123,8 +123,6 @@ class DaemonApplyChange < DaemonTask
     super
   end
 
-  private
-
   def exec_daemon_apply_change
     $mutex.synchronize {
       if Configuration.daemon_reload
@@ -145,8 +143,6 @@ class DaemonApplyChangeAutomatically < DaemonTask
     super
   end
 
-  private
-
   def exec_daemon_apply_change_automatically
     $mutex.synchronize {
       Configuration.apply_changes_automatically!
@@ -163,8 +159,6 @@ class DaemonCheckLink < DaemonTask
     @proc = Proc.new { exec_daemon_check_link }
     super
   end
-
-  private
 
   def exec_daemon_check_link
     exec_check_physical_links
@@ -268,8 +262,6 @@ class DaemonBackupRestore < DaemonTask
     super
   end
 
-  private
-
   def exec_daemon_backup_restore
     exec_backup_restore if Configuration.backup_restore
   end
@@ -300,8 +292,6 @@ class DaemonDataCounting < DaemonTask
     @proc = Proc.new { exec_daemon_data_counting }
     super
   end
-
-  private
 
   def exec_daemon_data_counting
     exec_data_counting
@@ -392,8 +382,6 @@ class DaemonRrdFeed < DaemonTask
     @proc = Proc.new { exec_daemon_rrd_feed }
     super
   end
-
-  private
 
   def exec_daemon_rrd_feed
     exec_rrd_feed
