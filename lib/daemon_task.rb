@@ -25,7 +25,7 @@ class DaemonTask
 
   def initialize
     @thread_daemon = nil
-    @name = self.class.to_s.humanize
+    @name = self.class.to_s.underscore.humanize
     @log_path = "#{BASE}/tmp/#{self.class.to_s.underscore.downcase}"
     set_next_exec
   end
