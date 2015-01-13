@@ -271,9 +271,7 @@ class DaemonBackupRestore < DaemonTask
   private
 
   def exec_daemon_backup_restore
-    unless apply_changes?
-      exec_backup_restore if Configuration.backup_restore
-    end
+    exec_backup_restore if Configuration.backup_restore
   end
 
   def exec_backup_restore
@@ -306,7 +304,7 @@ class DaemonDataCounting < DaemonTask
   private
 
   def exec_daemon_data_counting
-    exec_data_counting unless apply_changes?
+    exec_data_counting
   end
 
   def exec_data_counting
@@ -379,6 +377,7 @@ class DaemonDataCounting < DaemonTask
 
 end
 
+
 class DaemonRrdFeed < DaemonTask
 
   require 'rrd'
@@ -397,7 +396,7 @@ class DaemonRrdFeed < DaemonTask
   private
 
   def exec_daemon_rrd_feed
-    exec_rrd_feed unless apply_changes?
+    exec_rrd_feed
   end
 
   def exec_rrd_feed
