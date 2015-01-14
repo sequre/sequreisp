@@ -62,7 +62,7 @@ class DaemonTask
             Configuration.do_reload
             FileUtils.rm(@log_path) if File.exists?(@log_path)
             set_next_exec
-            apply_changes? if Rails.env.production?
+            applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
             log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}" if @@debug
           end
@@ -102,7 +102,7 @@ class DaemonTask
     @@threads
   end
 
-  def apply_changes?
+  def applying_changes?
     $mutex.synchronize {
       $resource.wait($mutex) if Configuration.is_apply_changes?
     }
@@ -119,6 +119,7 @@ class DaemonApplyChange < DaemonTask
 
   def initialize
     @time_for_exec = { :frecuency => 1.seconds }
+    @wait_for_apply_changes = false
     @proc = Proc.new { exec_daemon_apply_change }
     super
   end
@@ -139,6 +140,7 @@ class DaemonApplyChangeAutomatically < DaemonTask
 
   def initialize
     @time_for_exec = { :frecuency => 1.hour }
+    @wait_for_apply_changes = false
     @proc = Proc.new { exec_daemon_apply_change_automatically }
     super
   end
@@ -156,6 +158,7 @@ class DaemonCheckLink < DaemonTask
 
   def initialize
     @time_for_exec = { :frecuency => 10.seconds }
+    @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_check_link }
     super
   end
@@ -258,6 +261,7 @@ class DaemonBackupRestore < DaemonTask
 
   def initialize
     @time_for_exec = { :frecuency => 10 }
+    @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_backup_restore }
     super
   end
@@ -289,6 +293,7 @@ class DaemonDataCounting < DaemonTask
   def initialize
     @time_for_exec = { :frecuency => 10.seconds }
     @max_current_traffic_count = 1000 / 8 * 1024 * 1024 * 60
+    @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_data_counting }
     super
   end
@@ -379,6 +384,7 @@ class DaemonRrdFeed < DaemonTask
 
   def initialize
     @time_for_exec = { :frecuency => 5.minutes }
+    @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_rrd_feed }
     super
   end
