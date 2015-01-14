@@ -81,9 +81,6 @@ float: left;
   <% semantic_form_for @configuration, :html => { :multipart => true } do |form| %>
     <%= error_messages @configuration%>
     <% form.inputs :name => t('fieldsets.configuration.system') do %>
-      <% link_to({:controller => "configurations", :action => "doreload"}, :class => "button", :style => "float:right") do %>
-        <span><span><%=  t('menu.apply_changes') %></span></span>
-      <% end %>
       <% form.inputs :name => t('fieldsets.configuration.in_safe_mode') do %>
 	<%= form.input :in_safe_mode %>
       <% end %>

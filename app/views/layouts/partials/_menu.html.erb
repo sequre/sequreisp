@@ -112,6 +112,10 @@ ul li a:hover.no_pointer {
         <li><%= link_to t('menu.audits'), audits_path %></li>
       <% end %>
 
+      <% if current_user.may_command_logs? %>
+        <li><%= link_to t('menu.command_log'), command_logs_path %></li>
+      <% end %>
+
       <% if current_user.may_show_about? %>
         <li><a id="plugins_button" class="no_pointer last" href="javascript:void(null)"> <%=t 'menu.help' %></a>
           <ul class="submenu" style="width:150px;">
