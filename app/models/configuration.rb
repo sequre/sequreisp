@@ -24,7 +24,7 @@ class Configuration < ActiveRecord::Base
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
-  PATH_COMMANDO_LOG = Rails.env.production? ? HUMANIZED_COMMAND_LOG : "/tmp/command_log"
+  PATH_COMMAND_LOG = Rails.env.production? ? HUMANIZED_COMMAND_LOG : "/tmp/command_log"
   APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
 
   TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
