@@ -612,7 +612,7 @@ en:
   command:
     human:
       create_tmp_file: "Initialize apply changes process"
-      sequreisp_pre: "Initialize iptables"
+      sequreisp_pre: "Clear cache virtual memory"
       setup_queued_commands: "Start pending jobs"
       setup_clock: "Setup time zone"
       setup_proc: "Setup sysctl general params"

@@ -612,7 +612,7 @@ es:
   command:
     human:
       create_tmp_file: "Inicializando proceso de aplicar cambios"
-      sequreisp_pre: "Inicializando iptables"
+      sequreisp_pre: "Eliminado cache de memoria virtual"
       setup_queued_commands: "Realizando tareas pendientes"
       setup_clock: "Configurando zona horario en el servidor"
       setup_proc: "Configurando parametros generales del sistema operativo (sysctl)"

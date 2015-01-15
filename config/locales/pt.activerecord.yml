@@ -601,7 +601,7 @@ pt:
   command:
     human:
       create_tmp_file: "Initialize apply changes process"
-      sequreisp_pre: "Restore iptables pre"
+      sequreisp_pre: "Memória virtual Limpar cache"
       setup_queued_commands: "Start pending jobs"
       setup_clock: "Setup time zone"
       setup_proc: "Setup sysctl general params"
