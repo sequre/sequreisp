@@ -872,7 +872,7 @@ end
 def setup_ip_ro
   gen_ip_ro
   # the ';:' is because only work the first time, the other times fail. with ';:' always return status 0
-  exec_context_commands "ip_ro", ["ip route del default table main;:", "ip -batch #{IP_RO_FILE}"], I18n.t("command.human.setup_ip_ro")
+  exec_context_commands "ip_ro", ["ip route flush table cache", "ip route del default table main;:", "ip -batch #{IP_RO_FILE}"], I18n.t("command.human.setup_ip_ro")
 end
 def setup_ip_ru
   gen_ip_ru
