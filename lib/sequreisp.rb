@@ -827,7 +827,7 @@ def setup_interfaces
     commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
     if i.lan?
       commands << setup_lan_interface(i)
-      exec_context_commands("setup_lan_interface_#{i.name}", commands, I18n.t("command.human.setup_lan_interface", :dev => i.name))
+      exec_context_commands("setup_lan_interface_#{i.name}", commands.flatten, I18n.t("command.human.setup_lan_interface", :dev => i.name))
     elsif i.wan?
       if not i.provider.nil?
         commands << setup_provider_interface(i.provider)
