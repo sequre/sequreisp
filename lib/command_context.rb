@@ -29,7 +29,7 @@ class CommandContext
       f.puts c.command if f
     end
     @@command_logger.info "#{Time.now}, #{name}, status: #{status}"
-    human.puts "#{I18n.l(Time.now, :format => :long)}, #{message}, #{status}" if human
+    human.puts "#{Time.now.to_formatted_s(:db)}, #{message}, #{status}" if human
     human.close
     status
   end

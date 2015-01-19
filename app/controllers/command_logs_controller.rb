@@ -16,7 +16,7 @@ class CommandLogsController < ApplicationController
   private
 
   def parse_line line
-    date, time, message, status = line.scan(/(.*) (\d+:\d+, )(.*), (true|false)/).flatten
+    date, time, message, status = line.scan(/(.*) (\d+:\d+:\d+, )(.*), (true|false)/).flatten
     {:date => I18n.l(date.to_date), :time => time, :message => message, :status => status}
   end
 end
