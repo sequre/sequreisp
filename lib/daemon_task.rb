@@ -510,6 +510,21 @@ class DaemonRrdFeed < DaemonTask
 
 end
 
+class DaemonCheckBind < DaemonTask
+
+  def initialize
+    @time_for_exec = { :frecuency => 10.seconds }
+    @wait_for_apply_changes = true
+    @proc = Proc.new { exec_daemon_bind }
+    super
+  end
+
+  def exec_daemon_bind
+    system("pgrep -x named || service bind9 start")
+  end
+
+end
+
 
 #########################################################
 #
