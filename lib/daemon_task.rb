@@ -357,7 +357,7 @@ class DaemonDataCounting < DaemonTask
     else
       begin
         # [["bytes", "ip", "up|down", "data_count"], ["bytes", "ip", "up|down", "data_count"]]
-        File.read("|iptables-save -t filter -c").scan(/\[.*:(\d+).*comment \"data-count-(.*)-(.*)-(.*)\"/).each do |line|
+        File.read("|iptables-save -t filter -c").scan(/\[.*:(\d+)\].*comment \"data-count-(.*)-(.*)-(.*)\"/).each do |line|
           # line[0] => byte's, line[1] => i1p, line[2] => up | down, line[3] => category, where the category name is the same with  any traffic attribute
           if line[0] != "0"
             hash_count[line[2]][line[1]] = {}
