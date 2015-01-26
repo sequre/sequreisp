@@ -49,12 +49,12 @@ class Backup
   def backup_include_files(include_graphs)
     paths = ["#{DATABASE_DUMP_PATH}", "#{BASE_DIR}/scripts"]
     paths << "#{BASE_DIR}/deploy/shared/db/rrd" unless include_graphs
-    paths << Configuration.first.files_include_in_backup.split("\n")
+    paths << Configuration.first.files_include_in_backup.split("\n") rescue []
     paths.flatten.uniq
   end
 
   def backup_exclude_files
-    Configuration.first.files_exclude_in_backup.split("\n").map{|path| "--exclude=#{path}"}
+    Configuration.first.files_exclude_in_backup.split("\n").map{|path| "--exclude=#{path}"} rescue []
   end
 
   def full(include_graphs=false)
