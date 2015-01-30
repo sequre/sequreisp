@@ -241,4 +241,9 @@ class Configuration < ActiveRecord::Base
     self.files_exclude_in_backup = backup[:exclude_files].delete("\r")
     self.save
   end
+
+  def Configuration.app_version
+    require 'sequreisp_about'
+    SequreISP::Version.to_s
+  end
 end
