@@ -246,4 +246,7 @@ class Configuration < ActiveRecord::Base
     require 'sequreisp_about'
     SequreISP::Version.to_s
   end
+##############################################################
+#
+##############################################################
 end
