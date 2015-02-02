@@ -35,6 +35,12 @@ opts = OptionParser.new do |opts|
     options.extension = "\"conf = Configuration; conf.in_safe_mode = true; conf.save; require 'sequreisp'; boot\""
   end
 
+  opts.on("-p","--providers", "Show provider status. Example: sequreisp -p") do
+    options.cmd= "runner"
+    options.extension ="\"puts'Providers:\n'; Provider.all.map{|a| puts 'Name: ' + a.name + ', kind: ' + a.kind + ', IP: ' + a.ip + ',rate_down: ' + a.rate_down.to_s + ',rate_up: ' + a.rat\
+e_up.to_s + ', State: ' + a.state + '\n' }\""
+  end
+
   opts.on("-t", "--tail FILE", "Show tail for production, command, command_human, daemon log. Example sequreisp -t [production|command|command_human|daemon]") do |log_file|
     options.cmd = "tail"
     options.extension = "-n80 -F"
