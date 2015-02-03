@@ -408,6 +408,7 @@ def gen_iptables
 
         contracts = Contract.descend_by_netmask
         providers = Provider.enabled.with_klass_and_interface
+        lan_interfaces = Interface.only_lan
 
         contracts.each do |contract|
           f.puts contract.rules_for_up_data_counting
@@ -427,9 +428,12 @@ def gen_iptables
           end
         end
 
-        BootHook.run :hook => :filter_before_all, :iptables_script => f
+        f.puts "-A INPUT -p udp --dport 53 -j dns-query"
 
-        f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
+        lan_interfaces.each do |i|
+          f.puts "-A INPUT -i #{i.name} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A INPUT -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        end
 
         providers.each do |p|
           if p.allow_dns_queries
@@ -438,8 +442,17 @@ def gen_iptables
           end
         end
 
-        f.puts "-A INPUT -p udp --dport 53 -j dns-query"
+        BootHook.run :hook => :filter_before_all, :iptables_script => f
+
+        lan_interfaces.each do |i|
+          f.puts "-A FORWARD -i #{i.name} -p udp --dport 53 -j ACCEPT"
+          f.puts "-A FORWARD -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        end
+
         f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
+
+        f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
+
 
         BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
 
