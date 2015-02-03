@@ -693,7 +693,7 @@ end
     rt_prio1 = ""
     rt_prio2 = ""
     rt_prio3 = ""
-    ceil = plan["ceil_" + direction]
+    ceil = plan["ceil_" + direction] * bandwidth_rate
     if plan["rate_" + direction] == 0
       rate_factor = 1 if rate_factor > 1
       rate = ceil * rate_factor
