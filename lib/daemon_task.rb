@@ -20,7 +20,6 @@ $resource = ConditionVariable.new
 
 class DaemonTask
 
-  @@debug = Rails.env.production? ? false : true
   @@threads ||= []
 
   def initialize
@@ -28,6 +27,10 @@ class DaemonTask
     @name = self.class.to_s.underscore.humanize
     @log_path = "#{BASE}/tmp/#{self.class.to_s.underscore.downcase}"
     set_next_exec
+  end
+
+  def verbose?
+    File.exists?("#{DEPLOY_DIR}/tmp/verbose")
   end
 
   def stop
@@ -64,7 +67,7 @@ class DaemonTask
             set_next_exec
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
-            log "[SequreISP][Daemon] EXEC Thread #{name} NEXT_EXEC: #{@next_exec}" if @@debug
+            log "[SequreISP][Daemon] EXEC Thread #{name}" if verbose?
           end
         rescue Exception => e
           log_rescue("Daemon", e)
@@ -104,7 +107,7 @@ class DaemonTask
 
   def applying_changes?
     $mutex.synchronize {
-      $resource.wait($mutex) if Configuration.is_apply_changes?
+      Configuration.is_apply_changes? ? $resource.wait($mutex) : $resource.signal
     }
   end
 
