@@ -325,6 +325,10 @@ def gen_iptables
           do_port_forwardings fp, f
         end
 
+        if Configuration.first.redirect_external_dns_request?
+          Interface.only_lan.each{ |interface| f.puts "-A PREROUTING -i #{interface.name} -p udp --dport 53 -j REDIRECT --to-ports 53" }
+        end
+
         f.puts ":sequreisp-accepted-sites - [0:0]"
         f.puts "-A PREROUTING -j sequreisp-accepted-sites"
 

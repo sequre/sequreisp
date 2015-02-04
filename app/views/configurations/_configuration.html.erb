@@ -90,6 +90,7 @@ float: left;
       <%= form.input :web_interface_listen_on_443 %>
       <%= form.input :web_interface_listen_on_8080 %>
       <%= form.input :use_external_number_client %>
+      <%= form.input :redirect_external_dns_request %>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.notifications'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.notifications' } } do %>

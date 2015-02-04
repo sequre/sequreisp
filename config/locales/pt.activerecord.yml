@@ -190,6 +190,7 @@ pt:
         tcp: "TCP"
         udp: "UDP"
       configuration:
+        redirect_external_dns_request: "Redirecionar pedido dns externar a SequreISP"
         use_external_number_client: 'Use o número de cliente externo'
         default_tcp_prio_ports: "Portas TCP prioritárias (global)"
         default_udp_prio_ports: "Portas UDP prioritárias (global)"
