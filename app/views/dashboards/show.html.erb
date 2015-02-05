@@ -135,6 +135,7 @@
         $('.services_loader').hide();
       },'json');
     }, 15000);
+
     load_average_chart = new Highcharts.Chart({
       chart: {
         renderTo: 'load_average',
@@ -267,6 +268,27 @@
   </table>
   </div>
   </li>
+
+  <li>
+    <h2><%=t 'dashboard.daemons' %></h2>
+    <div id="services" style="width: 740px; margin: 20px">
+      <table cellspacing="0" cellpadding="0">
+	<tbody>
+	  <tr class="odd">
+            <th><%=t 'dashboard.daemons_table.daemon' %></th>
+            <th><%=t 'dashboard.daemons_table.status' %></th>
+	  </tr>
+	  <% @daemons.each do |s| %>
+	    <tr class="even" >
+              <td style="width: 350px"> <%= s %> <%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
+              <td> UP </td>
+	    </tr>
+	  <% end %>
+	</tbody>
+      </table>
+    </div>
+  </li>
+
   <li>
   <h2><%=t 'dashboard.memory' %></h2>
   <div id="ram" style="height:200px;width: 350px; float:left; margin: 20px"></div>
@@ -286,4 +308,3 @@
   <div style="clear: both"></div>
   </li>
 </ul>
-

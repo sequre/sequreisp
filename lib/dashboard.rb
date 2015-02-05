@@ -49,6 +49,17 @@ module Dashboard
       end
     end
   end
+
+  class Daemons
+    def self.load_all
+      daemons = {}
+      Configuration.daemons.each do |daemon|
+        daemons[daemon] = File.zero?("#{DEPLOY_DIR}/tmp/#{daemon}") ? true : false
+      end
+      daemons
+    end
+  end
+
   class LoadAverage
     attr_reader :now, :min5, :min15
     def initialize

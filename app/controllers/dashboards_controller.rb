@@ -6,24 +6,33 @@ class DashboardsController < ApplicationController
     @ram = Dashboard::Memory.new(/Mem:/)
     @swap = Dashboard::Memory.new(/Swap:/)
     @services = Dashboard::Service.load_all
+    @daemons = Dashboard::Daemons.load_all
   end
   def cpu
     @cpu = Dashboard::Cpu.new
     respond_to do |format|
       format.json { render :json => @cpu.stats }
-    end 
+    end
   end
   def services
     @services = Dashboard::Service.load_all
     respond_to do |format|
       format.json { render :json => @services }
-    end 
+    end
   end
+
+  def daemons
+    @Daemons = Dashboard::Daemons.load_all
+    respond_to do |format|
+      format.json { render :json => @daemons }
+    end
+  end
+
   def load_average
     @load_average = Dashboard::LoadAverage.new
     respond_to do |format|
       format.json { render :json => @load_average }
-    end 
+    end
   end
   def reboot
     if system("sleep 5 && sudo /usr/sbin/reboot &")
