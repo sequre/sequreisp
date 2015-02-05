@@ -50,7 +50,7 @@
     </div>
   </div>
 
-  <% if current_user.may_doreload_configuration? and Configuration.first.changes_to_apply? %>
+  <% if current_user.may_doreload_configuration? and Configuration.first.changes_to_apply? and not Configuration.is_apply_changes? %>
     <div id="apply_changes_banner">
       <span id="apply_changes_notice">
         <%= t('notifications.changes_to_be_applied_notice') %>
