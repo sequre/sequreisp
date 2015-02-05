@@ -25,7 +25,8 @@ class DaemonTask
   def initialize
     @thread_daemon = nil
     @name = self.class.to_s.underscore.humanize
-    @log_path = "#{BASE}/tmp/#{self.class.to_s.underscore.downcase}"
+    @log_path = "#{DEPLOY_DIR}/tmp/#{self.class.to_s.underscore.downcase}"
+    FileUtils.touch(@log_path)
     set_next_exec
   end
 
@@ -39,6 +40,7 @@ class DaemonTask
     rescue Exception => e
       log_rescue("Daemon", e)
     ensure
+      FileUtils.rm(@log_path) if File.exist?(@log_path)
       log "[SequreISP][Daemon] STOP thread #{name}"
     end
   end
@@ -63,7 +65,6 @@ class DaemonTask
         begin
           if Time.now >= @next_exec
             Configuration.do_reload
-            FileUtils.rm(@log_path) if File.exists?(@log_path)
             set_next_exec
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
