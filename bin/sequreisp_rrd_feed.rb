@@ -118,15 +118,15 @@ ProviderGroup.enabled.each do |pg|
     p_down_prio2 = p_down_prio3 = p_up_prio2 = p_up_prio3 = 0
     if Configuration.use_global_prios
       p_down_prio2 = p_down[p.class_hex]["a"] + p_down[p.class_hex]["b"] rescue 0
-      p_down_prio3 = p_down[p.class_hex]["c"] rescue 0
+      p_down_prio3 = p_down[p.class_hex]["c"] || 0
       # dynamic ifaces like ppp could not exists, so we need to rescue an integer
       # if we scope providers by ready and online, we may skip traffic to be logged 
       # and the ppp iface could go down betwen check and the read
       p_up_prio2 = (p_up[p.class_hex]["a"] + p_up[p.class_hex]["b"]) rescue 0
-      p_up_prio3 = p_up[p.class_hex]["c"] rescue 0
+      p_up_prio3 = p_up[p.class_hex]["c"] || 0
     else
-      p_up_prio2 = p_up[p.id]
-      p_down_prio2 = p_down[p.id]
+      p_up_prio2 = p_up[p.id] || 0
+      p_down_prio2 = p_down[p.id] || 0
     end
     rrd_update p, time_p, p_down_prio2, p_down_prio3, p_up_prio2, p_up_prio3
     pg_down_prio2 += p_down_prio2
