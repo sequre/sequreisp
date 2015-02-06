@@ -6,7 +6,7 @@ class DashboardsController < ApplicationController
     @ram = Dashboard::Memory.new(/Mem:/)
     @swap = Dashboard::Memory.new(/Swap:/)
     @services = Dashboard::Service.load_all
-    @daemons = Dashboard::Daemons.load_all
+    @daemons = Dashboard::Daemon.load_all
   end
   def cpu
     @cpu = Dashboard::Cpu.new
@@ -22,7 +22,7 @@ class DashboardsController < ApplicationController
   end
 
   def daemons
-    @Daemons = Dashboard::Daemons.load_all
+    @daemons = Dashboard::Daemon.load_all
     respond_to do |format|
       format.json { render :json => @daemons }
     end

@@ -432,6 +432,10 @@ en:
     website_url: "Website"
   dashboard:
     services: "Services"
+    daemons: "Daemons"
+    daemons_table:
+      daemon: "Daemon name"
+      status: "Status"
     cpu: "CPU usage"
     memory: "Memory usage"
     disks: "Disk usage"

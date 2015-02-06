@@ -5,6 +5,9 @@
 .services_loader {
   display: none;
 }
+.daemons_loader {
+  display: none;
+}
 </style>
 <script type="text/javascript">
   var chart;
@@ -133,6 +136,16 @@
           $('#mem_p_'+ s.id).html(s.mem_p_html);
         });
         $('.services_loader').hide();
+      },'json');
+    }, 15000);
+
+    setInterval(function() {
+      $('.daemons_loader').show();
+      $.get('<%= daemons_dashboard_path %>', function(daemons){
+        $.each(daemons, function (index, daemon) {
+          $('#daemon_'+ daemon.id).html(daemon.status_html);
+        });
+        $('.daemons_loader').hide();
       },'json');
     }, 15000);
 
@@ -278,10 +291,10 @@
             <th><%=t 'dashboard.daemons_table.daemon' %></th>
             <th><%=t 'dashboard.daemons_table.status' %></th>
 	  </tr>
-	  <% @daemons.each do |s| %>
+	  <% @daemons.each do |daemon| %>
 	    <tr class="even" >
-              <td style="width: 350px"> <%= s %> <%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
-              <td> UP </td>
+              <td style="width: 350px"> <%= daemon.name %> <%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
+              <td id="daemon_<%= daemon.id %>"> <%= daemon.status_html %> </td>
 	    </tr>
 	  <% end %>
 	</tbody>
