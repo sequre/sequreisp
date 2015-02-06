@@ -432,6 +432,10 @@ pt:
     cpu: "Uso de CPU"
     memory: "Uso de memória"
     disks: "Uso de discos"
+    daemons: "Daemons"
+    daemons_table:
+      daemon: "Daemon name"
+      status: "Status"
     services_table:
       service: "Serviço"
       status: "Estado"

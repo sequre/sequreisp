@@ -25,15 +25,11 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :plans
 
-  # map.resources :disks, :collection => { :scan => :get, :liberate => :put, :assign_for => :put, :clean_cache => :put, :action_for_assigned => :put }
-
-    map.resources :disks, :collection => { :scan => :get, :free_assign_for => :put, :assigned_assign_for => :put }
-
   map.resource :user_session
 
   map.resource :about
 
-  map.resource :dashboard, :collection => { :cpu => :get , :services => :get, :load_average => :get, :reboot => :get, :halt => :get }
+  map.resource :dashboard, :collection => { :cpu => :get , :services => :get, :load_average => :get, :reboot => :get, :halt => :get, :daemons => :get }
 
   map.resources :always_allowed_sites
 

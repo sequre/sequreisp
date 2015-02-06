@@ -26,7 +26,7 @@ class DaemonTask
     @thread_daemon = nil
     @name = self.class.to_s.underscore.humanize
     @log_path = "#{DEPLOY_DIR}/tmp/#{self.class.to_s.underscore.downcase}"
-    FileUtils.touch(@log_path)
+    FileUtils.touch @log_path
     set_next_exec
   end
 

@@ -242,9 +242,13 @@ class Configuration < ActiveRecord::Base
     self.save
   end
 
-  def Configuration.app_version
+  def self.app_version
     require 'sequreisp_about'
     SequreISP::Version.to_s
+  end
+
+  def self.daemons
+    (Dir.entries("#{DEPLOY_DIR}/tmp") -[".", ".."]).select{|file| file.include?("daemon_")}.sort
   end
 ##############################################################
 #

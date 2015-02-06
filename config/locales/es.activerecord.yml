@@ -435,6 +435,10 @@ es:
     cpu: "Uso de CPU"
     memory: "Uso de memoria"
     disks: "Uso de discos"
+    daemons: "Demonios"
+    daemons_table:
+      daemon: "Nombre demonio"
+      status: "Estado"
     services_table:
       service: "Servicio"
       status: "Estado"
