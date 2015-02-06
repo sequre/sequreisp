@@ -557,6 +557,8 @@ en:
       not_enough_down_bandwidth: "There's not enough download bandwidth"
       not_enough_up_bandwidth_in_this_plan: "There's not enough upload bandwidth to assign this plan"
       not_enough_up_bandwidth: "There's not enough upload bandwidth"
+      ceil_up_different_to_zero: "The max upload must be different to zero"
+      ceil_down_different_to_zero: "The max download must be different to zero"
     provider:
       provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "Provider group can't be changed, there are contracts using this provider to avoid balancing"
       invalid_avoid_nat_addresses: "Invalid IP address %{invalid_ip}, use CIDR notation"

@@ -557,6 +557,8 @@ es:
       not_enough_down_bandwidth: "No hay suficiente ancho de banda de bajada"
       not_enough_up_bandwidth_in_this_plan: "No hay suficiente ancho de banda de subida para asignar este plan"
       not_enough_up_bandwidth: "No hay suficiente ancho de banda de subida"
+      ceil_up_different_to_zero: "El maximo de subida debe ser mayor que cero"
+      ceil_down_different_to_zero: "El maximo de bajada debe ser mayor que cero"
     provider:
       provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "El grupo de proveedores no puede ser cambiado, existen contratos usando este proveedor para anular el balanceo"
       invalid_avoid_nat_addresses: "Dirección IP inválida %{invalid_ip}, usar notación CIDR"
