@@ -1,17 +1,17 @@
 /*--------------------------------------------------------------------------------------------------
-  
+
    Simply Buttons, version 1.0
    (c) 2007-2009 Kevin Miller
 
    This script is freely distributable under the terms of an MIT-style license.
 
-   BUTTON DEFINITIONS 
-  
+   BUTTON DEFINITIONS
+
    Edit below at your own risk, everything done here is for a reason for cross browser
    compatibility so that the buttons will appear identical in the tested browsers.
-   
+
    Tested on: IE6 IE7 FF(PC/MAC) Safari SafariMobile Opera(PC/MAC)
-   
+
 --------------------------------------------------------------------------------------------------*/
 
 button,
@@ -67,22 +67,22 @@ a.button:visited {
   }
 
 /*--------------------------------------------------------------------------------------------------
-  
-   CUSTOMIZATIONS 
-  
+
+   CUSTOMIZATIONS
+
    Edit below to change the look and feel of the buttons and even add more classes for
    different looks and feels.
-   
+
 --------------------------------------------------------------------------------------------------*/
 
 button,
 a.button,
 a.button:link,
 a.button:visited {
-  /* 
-      HEIGHT - Total height of button. 
+  /*
+      HEIGHT - Total height of button.
   */
-  height: 26px; 
+  height: 26px;
 
   /*
       NOTE - You must define the font here otherwise your buttons and links could end up diffrent.
@@ -90,7 +90,7 @@ a.button:visited {
 	font-family: "Helvetica Neue", Helvetica, clean, sans-serif;
 
   font-size: 13px;
-  color: #666666;
+  color: #F0EAEA;
   background-color: #ffffff;
 }
 
@@ -102,12 +102,12 @@ a.button:visited {
   a.button span,
   a.button:link span,
   a.button:visited span {
-    /* 
-        Right side padding for button (default). 
+    /*
+        Right side padding for button (default).
     */
     padding: 0 14px 0 0;
 
-    /* 
+    /*
         SPAN HEIGHT - This should be 2px smaller than the height set on the button (see HEIGHT).
     */
     height: 24px;
@@ -122,18 +122,18 @@ a.button:visited {
   a.button span span,
   a.button:link span span,
   a.button:visited span span {
-    /* 
-        Left side padding for button (default). 
+    /*
+        Left side padding for button (default).
     */
     padding: 0 0 0 13px;
 
-    /* 
+    /*
         SPAN HEIGHT - This should be 1px smaller than the height set on the button (see HEIGHT).
     */
     height: 24px;
 
-    /* 
-        SPAN LINE-HEIGHT - This should be 1px smaller than the height set on the button (see HEIGHT) and will 
+    /*
+        SPAN LINE-HEIGHT - This should be 1px smaller than the height set on the button (see HEIGHT) and will
                             center the text vertcailly.
     */
     line-height: 24px;
