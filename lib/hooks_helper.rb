@@ -66,7 +66,7 @@ module HooksHelper
   end
 
   def heading_name
-    "SequreISP"
+    "Wispro"
   end
 
   def massive_settings_form_extensions(form)
