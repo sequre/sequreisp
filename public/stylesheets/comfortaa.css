@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'comfortaa';
+    src: url('comfortaa/comfortaa-regular-webfont.eot');
+    src: url('comfortaa/comfortaa-regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('comfortaa/comfortaa-regular-webfont.woff2') format('woff2'),
+         url('comfortaa/comfortaa-regular-webfont.woff') format('woff'),
+         url('comfortaa/comfortaa-regular-webfont.ttf') format('truetype'),
+         url('comfortaa/comfortaa-regular-webfont.svg#comfortaaregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}

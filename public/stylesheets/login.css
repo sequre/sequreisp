@@ -1,0 +1,127 @@
+@-webkit-keyframes background_zoom{
+  0% {transform:scale(1) rotate(0deg)}
+  50% {transform:scale(1.4) rotate(0.3deg)}
+  100% {transform:scale(1) rotate(0deg)}
+}
+
+@keyframes background_zoom{
+  0% {transform:scale(1) rotate(0deg)}
+  50% {transform:scale(1.4) rotate(0.3deg)}
+  100% {transform:scale(1) rotate(0deg)}
+}
+
+@-webkit-keyframes init_login{
+  0% { opacity : 0; margin-top: -180px; }
+  100% { opacity : 1; margin-top: -160px; }
+}
+
+@keyframes init_login{
+  0% { opacity : 0; }
+  100% { opacity : 1; }
+}
+.login form{
+  width: 300px;
+  height: 320px;
+  position: fixed;
+  left: 50%;
+  margin-left: -190px;
+  top: 50%;
+  margin-top: -155px;
+  box-shadow: rgba(0, 0, 0, 0.54902) 0px 2px 20px 4px;
+  background-color: rgba(0, 0, 0, 0.66);
+  padding: 20px;
+  text-align: center;
+  -webkit-animation: init_login 0.5s linear;
+  animation: init_login 0.5s linear;
+}
+.login form .logo{
+  width: 150px;
+  height: 125px;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-image: url(/images/logo_wispro.png);
+  margin: auto;
+}
+.login.sequre form .logo{
+  background-image: url(/images/logo_sequre.png) !important;
+}
+.login .bg{
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background-size: cover;
+  background-position: center;
+  background-image: url(/images/login_background.jpg);
+  -webkit-animation: background_zoom 120s infinite linear;
+  animation: background_zoom 120s infinite linear;
+}
+.login h4{
+  font-family: comfortaa;
+  font-size: 25px;
+  color: #fff;
+  margin-top: -35px;
+  margin-left: 197px;
+  margin-bottom: 0px;
+}
+.login form input{
+  width: 280px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px rgba(77, 77, 77, 0.32) solid;
+  padding: 10px;
+  height: 25px;
+  font-size: 14px;
+  margin: auto;
+  color: #ffffff;
+}
+input:-webkit-autofill{
+  background-color: #ffffff !important;
+}
+.login form input[type="text"]{
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  margin-top: 30px;
+}
+.login form input[type="password"]{
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-top: none;
+}
+.login form input[type="submit"]{
+  width: 100%;
+  height: 34px;
+  border: none;
+  border-radius: 5px;
+  background-color: #428bca;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 30px;
+}
+.login form input[type="submit"]:hover{
+  background-color: #3071a9;
+}
+.login.sequre form input[type="submit"]{
+  background: #626262 !important;
+}
+.login.sequre form input[type="submit"]:hover{
+  background: #303030 !important;
+}
+.login form .errorExplanation h2, .login form .errorExplanation p{
+  display: none;
+}
+.login form .errorExplanation ul{
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  margin-left: -190px;
+  list-style: none;
+  padding: 0px;
+  width: 300px;
+  background-color: #FD9494;
+  color: #fff;
+  padding: 20px;
+  font-family: arial;
+  border-radius: 5px;
+}
