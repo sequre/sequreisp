@@ -1,5 +1,5 @@
 module SequreISP
-  URL = "http://www.sequreisp.com/"
+  URL = "http://www.wispro.co/"
   PORTAL_URL = "http://www.sequreisp.com/portal/client_root"
 
   class Version
