@@ -193,7 +193,7 @@ en:
         tcp: "TCP"
         udp: "UDP"
       configuration:
-        redirect_external_dns_request: "Redirect externar dns request to SequreISP"
+        redirect_external_dns_request: "Redirect externar dns request to wispro"
         use_external_number_client: 'Use external client_number'
         default_tcp_prio_ports: "High priority TCP ports (global)"
         default_udp_prio_ports: "High priority UDP ports (global)"
@@ -223,7 +223,7 @@ en:
         web_interface_listen_on_80: "Accept web interface requests on port 80"
         web_interface_listen_on_443: "Accept web interface requests on port 443"
         web_interface_listen_on_8080: "Accept web interface requests on port 8080"
-        mail_relay_manipulated_for_sequreisp: "Manage e-mail configuration with SequreISP"
+        mail_relay_manipulated_for_sequreisp: "Manage e-mail configuration with wispro"
         mail_relay_used: "Use mail relay"
         mail_relay_option_server: "Server option"
         mail_relay_smtp_server: "SMTP Server"
@@ -427,7 +427,7 @@ en:
     data: 'Data'
     traffic: 'Traffic'
   about:
-    version: "SequreISP version"
+    version: "wispro version"
     url: "Upgrades, plugins and support available at"
     website_url: "Website"
   dashboard:
@@ -451,7 +451,7 @@ en:
       free: "Free"
       use: "In use"
     name_service:
-      sequreisp_daemon: "SequreISP Daemon"
+      sequreisp_daemon: "wispro Daemon"
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"
