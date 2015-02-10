@@ -35,10 +35,10 @@ Deprecated in favor of foldeable menues
 */
 
 div#apply_changes_banner{
-    background-color: #B6B6B6;
+    background-color: #cae1f1;
     height: 40px;
     margin: 0 -20px 0 -20px;
-    
+
 }
 
 div#apply_changes_banner a{
@@ -47,7 +47,7 @@ div#apply_changes_banner a{
 div#apply_changes_banner span#apply_changes_notice{
     line-height: 40px;
     margin:0 20px;
-    color: #900;
+    color: #374D5A;
     font-weight: bold;
 }
 
@@ -56,5 +56,3 @@ div#apply_changes_button{
     padding-right: 20px;
     margin-top: 7px;
 }
-
-
