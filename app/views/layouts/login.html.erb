@@ -1,18 +1,12 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!doctype html>
+<html lang="en">
   <head>
     <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-    <%= render :partial => "layouts/partials/head" %>
+    <%= stylesheet_link_tag "login", "comfortaa" %>
+    <%= javascript_include_tag "jquery", "application" %>
   </head>
-  <body>
-    <div id="container" class="centered">
-      <%= render :partial => "layouts/partials/header" %>
-      <div class="content">
-        <%= yield %>
-      </div>
-      <%= render :partial => "layouts/partials/footer" %>
-    </div>
+  <body class="login sequre">
+    <div class="bg"></div>
+    <%= yield %>
   </body>
 </html>
