@@ -48,8 +48,7 @@ class DaemonTask
   def set_next_exec
     if not defined?(@next_exec)
       @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.now
-      #always exec daemon when restart if not defined begin_in
-      @next_exec += @time_for_exec[:frecuency] if Time.now > @next_exec and @time_for_exec.has_key?(:begin_in)
+      @next_exec += @time_for_exec[:frecuency] if Time.now > @next_exec
     else
       while @next_exec <= Time.now
         @next_exec += @time_for_exec[:frecuency]
