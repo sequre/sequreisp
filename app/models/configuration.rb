@@ -247,6 +247,7 @@ class Configuration < ActiveRecord::Base
     SequreISP::Version.to_s
   end
 
+  # This method is rewrite
   def self.daemons
     (Dir.entries("#{DEPLOY_DIR}/tmp") -[".", ".."]).select{|file| file.include?("daemon_")}.sort
   end
