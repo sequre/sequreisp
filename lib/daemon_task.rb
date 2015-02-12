@@ -264,7 +264,7 @@ end
 class DaemonBackupRestore < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10 }
+    @time_for_exec = { :frecuency => 10.seconds }
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_backup_restore }
     super
@@ -295,7 +295,7 @@ end
 class DaemonDataCounting < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10.seconds }
+    @time_for_exec = { :frecuency => 60.seconds }
     @max_current_traffic_count = 1000 / 8 * 1024 * 1024 * 60
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_data_counting }
