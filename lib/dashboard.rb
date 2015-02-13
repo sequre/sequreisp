@@ -59,7 +59,7 @@ module Dashboard
       @status = daemon[:status]
 
       color = @status ? '#00aa00' : '#ff0000'
-      word = @status ? "UP" : "DOWN"
+      word = @status ? "OK" : "ERROR"
       @status_html = "<span style=\"color: #{color}\">#{word}</span>"
     end
 
