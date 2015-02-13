@@ -55,7 +55,7 @@ module Dashboard
 
     def initialize(daemon)
       @id = daemon[:id]
-      @name = daemon[:name].humanize
+      @name = I18n.t("daemons.name.#{daemon[:name]}")
       @status = daemon[:status]
 
       color = @status ? '#00aa00' : '#ff0000'
@@ -71,7 +71,7 @@ module Dashboard
         _daemon[:id] = id
         _daemon[:name] = daemon
         _daemon[:status] = File.zero?("#{DEPLOY_DIR}/tmp/#{daemon}") ? true : false
-        Daemon.new(_daemon)
+        daemons << Daemon.new(_daemon)
         id += 1
       end
       daemons

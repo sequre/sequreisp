@@ -647,3 +647,12 @@ es:
       update_provider_route: "Update provider route"
       do_provider_up: "Do provider up"
       do_provider_down: "Do provider down"
+  daemons:
+    name:
+      daemon_apply_change: "Aplicar cambios"
+      daemon_apply_change_automatically: "Aplicar cambios de forma automatica"
+      daemon_backup_restore: "Restaurar backup"
+      daemon_check_bind: "Bind"
+      daemon_check_link: "Chequeo de proveedores"
+      daemon_data_counting: "Conteo de datos"
+      daemon_rrd_feed: "Generación de estadisticas"

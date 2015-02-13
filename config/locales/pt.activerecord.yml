@@ -636,3 +636,12 @@ pt:
       update_provider_route: "Update provider route"
       do_provider_up: "Do provider up"
       do_provider_down: "Do provider down"
+  daemons:
+    name:
+      daemon_apply_change: "Daemon Apply changes"
+      daemon_apply_change_automatically: "Daemon Apply change automatically"
+      daemon_backup_restore: "Daemon backup restore"
+      daemon_check_bind: "Daemon bind"
+      daemon_check_link: "Daemon check link providers"
+      daemon_data_counting: "Daemon data count"
+      daemon_rrd_feed: "Daemon generate stats"
