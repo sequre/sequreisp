@@ -22,7 +22,8 @@ float: left;
 </style>
 <script type="text/javascript">
   $(function(){
-    function show_hide_mail_relay() {
+
+   function show_hide_mail_relay() {
       if ($('#configuration_mail_relay_used').attr('checked')) {
         $('#mail_relay').show();
       } else {
@@ -31,6 +32,20 @@ float: left;
    }
 
     show_hide_mail_relay();
+
+   function configuration_apply_changes_automatically() {
+      if ($('#configuration_apply_changes_automatically').attr('checked')) {
+        $('#configuration_apply_changes_automatically_hour_input').show();
+      } else {
+        $('#configuration_apply_changes_automatically_hour_input').hide();
+      }
+    }
+
+   configuration_apply_changes_automatically();
+
+   $('#configuration_apply_changes_automatically').change( function() {
+     configuration_apply_changes_automatically();
+   });
 
     $('#configuration_mail_relay_used').change( function() {
       if ($('#configuration_mail_relay_used').attr('checked')) {
@@ -57,6 +72,7 @@ float: left;
         $('#manipulated_for_sequreisp').hide();
       }
     });
+
     function checkbox_dns_use_forwarders() {
       if ($('#configuration_dns_use_forwarders').attr('checked')) {
         $('#bind_dns').show();
@@ -64,7 +80,8 @@ float: left;
         $('#bind_dns').hide();
       }
     }
-    checkbox_dns_use_forwarders();
+
+   checkbox_dns_use_forwarders();
     $('#configuration_dns_use_forwarders').change( function() {
       checkbox_dns_use_forwarders();
     });
