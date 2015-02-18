@@ -58,6 +58,8 @@ class Contract < ActiveRecord::Base
                :proxy_arp_provider_id, :proxy_arp_gateway, :proxy_arp_use_lan_gateway, :proxy_arp_lan_gateway
   watch_on_destroy
 
+  before_validation :strip_whitespace, :only => [:tcp_prio_ports, :udp_prio_ports, :prio_protos, :prio_helpers]
+
   validates_presence_of :ip, :ceil_dfl_percent, :client, :plan
   validates_presence_of :proxy_arp_interface, :if => Proc.new { |c| c.proxy_arp }
   validates_presence_of :proxy_arp_lan_gateway, :if => Proc.new { |c| c.proxy_arp_use_lan_gateway }
@@ -747,5 +749,13 @@ end
   end
 
   private
+
+  #Please i need refactor
+  def strip_whitespace
+    self.tcp_prio_ports= self.tcp_prio_ports.strip
+    self.udp_prio_ports = self.udp_prio_ports.strip
+    self.prio_protos = self.prio_protos.strip
+    self.prio_helpers =self.prio_helpers.strip
+  end
 
 end
