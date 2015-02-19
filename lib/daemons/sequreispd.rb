@@ -42,6 +42,8 @@ require 'command_context'
 
 threads = []
 begin
+#################################################
+#################################################
   if $running
     DaemonTask.descendants.each do |daemon_task|
       daemon = daemon_task.new
@@ -60,4 +62,6 @@ ensure
   end
   threads.map{ |thread| thread.stop }
   threads.map{ |thread| thread.join }
+#################################################
+#################################################
 end
