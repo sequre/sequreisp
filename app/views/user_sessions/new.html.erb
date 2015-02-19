@@ -2,7 +2,7 @@
 <% form_for @user_session, :url => user_session_path do |f| %>
   <%= f.error_messages %>
   <div class="logo"></div>
-  <h4>3.7</h4>
+  <h4>3.6</h4>
   <%= f.text_field :email, :value => @user_session_email || "", :placeholder => t('activerecord.attributes.user.email') %>
   <%= f.password_field :password, :value => @user_session_password || "", :placeholder => t('activerecord.attributes.user.password') %>
   <%= f.submit t('buttons.login') %>
