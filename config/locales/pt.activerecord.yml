@@ -343,7 +343,7 @@ pt:
     audits: "Auditorias"
     always_allowed_sites: "Sites permitidos"
     help: "Ajudar"
-    guides: "Guias SequireISP"
+    guides: "Guias Wispro"
     support: "Apoio"
   buttons:
     export_to_csv: "Exportação para csv"

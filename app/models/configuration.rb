@@ -17,7 +17,7 @@
 
 class Configuration < ActiveRecord::Base
   ACCEPTED_LOCALES = ["es","en","pt"]
-  GUIDES_URL = "http://doc.sequreisp.com/index.php?title=P%C3%A1gina_principal"
+  GUIDES_URL = "http://doc.wispro.co/index.php?title=P%C3%A1gina_principal"
 
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
@@ -32,7 +32,7 @@ class Configuration < ActiveRecord::Base
   include IpAddressCheck
   include ModelsWatcher
   watch_fields :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers,
-               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,               
+               :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3,
                :tc_contracts_per_provider_in_lan, :tc_contracts_per_provider_in_wan,
                :filter_by_mac_address, :clamp_mss_to_pmtu, :use_global_prios, :use_global_prios_strategy,
                :iptables_tree_optimization_enabled,

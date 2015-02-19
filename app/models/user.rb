@@ -33,7 +33,7 @@ class User < ActiveRecord::Base
     :current_login_ip,
     :last_login_ip
   ]
-  
+
   # aegis role
   has_role
   validates_role
@@ -42,7 +42,7 @@ class User < ActiveRecord::Base
   validate_on_update :not_change_if_demo
 
   def not_change_if_demo
-    if SequreispConfig::CONFIG["demo"] and email_was == "admin@sequre.com.ar"
+    if SequreispConfig::CONFIG["demo"] and email_was == "admin@wispro.co"
       errors.add(:password, I18n.t('validations.user.not_allowed_to_change_this_fields_in_demo_mode')) if password_changed?
       errors.add(:email, I18n.t('validations.user.not_allowed_to_change_this_fields_in_demo_mode')) if email_changed?
       errors.add(:role_name, I18n.t('validations.user.not_allowed_to_change_this_fields_in_demo_mode')) if role_name_changed?
@@ -60,7 +60,7 @@ class User < ActiveRecord::Base
     [I18n.t("selects.user.role_name.technical_readonly"),"technical_readonly"],
     [I18n.t("selects.user.role_name.administrative"),"administrative"],
     [I18n.t("selects.user.role_name.administrative_readonly"),"administrative_readonly"]
-    ]  
+    ]
   end
 
   def self.default_paths_for_users

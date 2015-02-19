@@ -92,7 +92,7 @@ class UsersController < ApplicationController
   # DELETE /users/1.xml
   def destroy
     @user = object
-    unless SequreispConfig::CONFIG["demo"] and @user.email == "admin@sequre.com.ar"
+    unless SequreispConfig::CONFIG["demo"] and @user.email == "admin@wispro.co"
       @user.destroy
     end
     respond_to do |format|

@@ -346,7 +346,7 @@ en:
     audits: "Audits"
     always_allowed_sites: "Always allowed sites"
     help: "Help"
-    guides: "SequireISP guides"
+    guides: "Wispro guides"
     support: "Support"
   buttons:
     export_to_csv: "Export to csv"
