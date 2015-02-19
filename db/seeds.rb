@@ -17,7 +17,7 @@ Configuration.do_reload
 
 User.create!(
   :name => "Admin",
-  :email => "admin@sequre.com.ar",
+  :email => "admin@wispro.co",
   :password => "1234",
   :password_confirmation => "1234",
   :role_name => "admin"
