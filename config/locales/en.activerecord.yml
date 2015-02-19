@@ -222,7 +222,7 @@ en:
         web_interface_listen_on_80: "Accept web interface requests on port 80"
         web_interface_listen_on_443: "Accept web interface requests on port 443"
         web_interface_listen_on_8080: "Accept web interface requests on port 8080"
-        mail_relay_manipulated_for_sequreisp: "Manage e-mail configuration with SequreISP"
+        mail_relay_manipulated_for_sequreisp: "Manage e-mail configuration with Wispro"
         mail_relay_used: "Use mail relay"
         mail_relay_option_server: "Server option"
         mail_relay_smtp_server: "SMTP Server"
@@ -419,7 +419,7 @@ en:
     data: 'Data'
     traffic: 'Traffic'
   about:
-    version: "SequreISP version"
+    version: "Wispro version"
     url: "Upgrades, plugins and support available at"
     website_url: "Website"
   dashboard:
@@ -439,7 +439,7 @@ en:
       free: "Free"
       use: "In use"
     name_service:
-      sequreisp_daemon: "SequreISP Daemon"
+      sequreisp_daemon: "Wispro Daemon"
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"
