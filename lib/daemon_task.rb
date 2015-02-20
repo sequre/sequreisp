@@ -38,10 +38,10 @@ class DaemonTask
     begin
       @thread_daemon.exit
     rescue Exception => e
-      log_rescue("Daemon", e)
+      log_rescue("[Daemon] ERROR Thread #{name}", e)
     ensure
       FileUtils.rm(@log_path) if File.exist?(@log_path)
-      log "[SequreISP][Daemon] STOP thread #{name}"
+      log "[Daemon] STOP thread #{name}"
     end
   end
 
@@ -59,7 +59,7 @@ class DaemonTask
   def start
     @thread_daemon = Thread.new do
       @@threads << self
-      log "[SequreISP][Daemon] START Thread #{name}"
+      log "[Daemon] START Thread #{name}"
       Thread.current["name"] = @name
       loop do
         begin
@@ -68,10 +68,10 @@ class DaemonTask
             set_next_exec
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
-            log "[SequreISP][Daemon] EXEC Thread #{name}" if verbose?
+            log "[Daemon] EXEC Thread #{name}" if verbose?
           end
         rescue Exception => e
-          log_rescue("Daemon", e)
+          log_rescue("[Daemon] ERROR Thread #{name}", e)
           log_rescue_file(@log_path, e)
         end
         to_sleep
@@ -191,7 +191,7 @@ class DaemonCheckLink < DaemonTask
         AppMailer.deliver_check_physical_links_email
       end
     rescue => e
-      log_rescue("Daemon", e)
+      log_rescue("[Daemon] ERROR Thread #{name}", e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::check_physical_links e=>#{e.inspect}"
     end
   end
@@ -254,7 +254,7 @@ class DaemonCheckLink < DaemonTask
         AppMailer.deliver_check_links_email
       end
     rescue => e
-      log_rescue("Daemon", e)
+      log_rescue("[Daemon] ERROR Thread #{name}", e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::check_links(AppMailer) e=>#{e.inspect}"
     end
   end
@@ -343,7 +343,7 @@ class DaemonDataCounting < DaemonTask
           end
         end
       rescue => e
-        log_rescue("Daemon", e)
+        log_rescue("[Daemon] ERROR Thread #{name}", e)
         # Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
       ensure
         time_last = Time.now
@@ -369,7 +369,7 @@ class DaemonDataCounting < DaemonTask
           end
         end
       rescue => e
-        log_rescue("Daemon", e)
+        log_rescue("[Daemon] ERROR Thread #{name}", e)
       end
     end
   end

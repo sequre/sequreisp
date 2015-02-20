@@ -16,15 +16,16 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Graph
+  require 'sequreisp_logger'
   RRD_DB_DIR=RAILS_ROOT + "/db/rrd"
   RRD_IMG_DIR=RAILS_ROOT + "/public/images/rrd"
   attr_accessor :element
   def initialize(options)
     @element = nil
-    if options[:element].nil? 
+    if options[:element].nil?
       if (not options[:class].nil?) and (not options[:id].nil?)
         @element = options[:class].constantize.find options[:id]
-      end 
+      end
     else
       @element = options[:element]
     end
@@ -60,7 +61,7 @@ class Graph
       time = "-1y"
       xgrid = "MONTH:1:MONTH:1:MONTH:1:0:\%b"
     end
-    case msize 
+    case msize
     when "small"
       width = 150
       height = 62
@@ -69,11 +70,11 @@ class Graph
     when "medium"
       width = 500
       height = 60
-      graph(time, xgrid, width, height) 
+      graph(time, xgrid, width, height)
     when "large"
-      width = 650 
+      width = 650
       height = 180
-      graph(time, xgrid, width, height) 
+      graph(time, xgrid, width, height)
     end
   end
   def path_rrd
@@ -86,6 +87,7 @@ class Graph
     begin
       eval "RRD::Wrapper.graph!(" + args.collect{ |n| "'" + n +  "'" }.join(",") + ")"
     rescue => e
+      log_rescue("[Model][Graph][rrd_graph]", e)
       Rails.logger.error "ERROR: Graph::grpah #{e.inspect}"
       nil
     end
@@ -99,16 +101,16 @@ class Graph
         "HRULE:#{element.rate_down*1024}#00AA0066",
         "HRULE:#{element.rate_up*1024}#FF000066",
         "--upper-limit=#{element.rate_down*1000}",
-      ] 
+      ]
     when "Provider", "ProviderGroup"
-      args = [ "AREA:down_prio_#00AA00:down" ] 
+      args = [ "AREA:down_prio_#00AA00:down" ]
       args += [ "LINE1:up_prio_#FF0000:up" ]
-      args += 
-      [  
+      args +=
+      [
         "HRULE:#{element.rate_down*1024}#00AA0066",
         "HRULE:#{element.rate_up*1024}#FF000066",
         "--upper-limit=#{element.rate_down*1000}",
-      ] 
+      ]
     when "Contract"
       [
         "AREA:down_prio_#00AA00:down",
@@ -118,7 +120,7 @@ class Graph
         "HRULE:#{element.plan.ceil_down*1024}#00AA0066",
         "HRULE:#{element.plan.ceil_up*1024}#FF000066",
         "--upper-limit=#{element.plan.ceil_down*1000}",
-      ] 
+      ]
     end
   end
   def rrd_default_args(gname, time, xgrid, width, height)

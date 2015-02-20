@@ -18,6 +18,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Contract < ActiveRecord::Base
+  require 'sequreisp_logger'
   acts_as_audited :except => [:netmask,
                               :queue_down_prio, :queue_up_prio, :queue_down_dfl, :queue_up_dfl,
                               :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl, :is_connected]
@@ -280,6 +281,7 @@ class Contract < ActiveRecord::Base
           #end
         end
       rescue => e
+        log_rescue("[Model][Contract][Queue_update_commands]", e)
         Rails.logger.error "ERROR: Contract::queue_update_commands #{e.inspect}"
       end
     end

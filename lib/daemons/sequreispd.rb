@@ -52,7 +52,7 @@ begin
     end
   end
 rescue Exception => e
-  log_rescue("Sequreispd", e)
+  log_rescue("[Daemon][Sequreispd] ERROR GENERAL DAEMON", e)
 ensure
   while($running) do
     threads.each do |thread|
