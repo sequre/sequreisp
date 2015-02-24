@@ -30,7 +30,7 @@ class CommandContext
     end
     @@command_logger.info "#{Time.now}, #{name}, status: #{status}"
     human.puts "#{Time.now.to_formatted_s(:db)}, #{message}, #{status}" if human
-    human.close
+    human.close if human
     status
   end
 

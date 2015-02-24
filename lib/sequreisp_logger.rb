@@ -7,6 +7,7 @@ def log(string)
 end
 
 def log_rescue(origin, exception)
+  Syslog.open if not Syslog.opened?
   Syslog.log(Syslog::LOG_ERR, "[SequreISP]#{origin}: #{exception.message}")
   exception.backtrace.each{ |bt| Syslog.log(Syslog::LOG_ERR, "[SequreISP]#{origin} #{exception.class} #{bt}") }
 end
