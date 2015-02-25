@@ -1,75 +1,138 @@
 <% content_for :title, t('menu.audits') %>
 <% heading t('menu.audits')  %>
 <% content_for :javascript do %>
-  <%= stylesheet_link_tag('/plugin_assets/sequreisp_invoicing/stylesheets/jquery-ui-1.8.14.custom.css') %>
-  <%= javascript_include_tag('/plugin_assets/sequreisp_invoicing/javascripts/jquery.ui.datepicker.js') %>
+  <%= stylesheet_link_tag('jquery-ui-1.8.14.custom.css') %>
+  <%= stylesheet_link_tag('selectize.css') %>
+  <%= stylesheet_link_tag('selectize.legacy.css') %>
+  <%= javascript_include_tag('jquery.ui.datepicker.js') %>
+  <%= javascript_include_tag('selectize.js') %>
   <style>
     #example_attribute_audit_item{ display:none; }
     .attribute_audit>label{
       display:inline;
       font-weight: normal !important;
     }
+    .selectize-control{
+      overflow: initial;
+    }
+    .selectize-dropdown{
+      margin-top: -7px;
+    }
+    .selectize-input{
+      border: 1px solid #6F6F61;
+      border-radius: 0px;
+      min-height: 28px;
+      padding: 0px;
+      padding-top: 3px;
+      padding-left: 5px;
+    }
+    .selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header{
+      padding: 0px 10px;
+      margin: 0px;
+      margin-top: 5px;
+    }
+    .selectize-control.multi .selectize-input.has-items{
+      padding: 0px;
+      padding-top: 1px;
+      padding-left: 2px;
+    }
+    .selectize-control.multi .selectize-input.has-items input{
+      top: -12px;
+    }
+    .selectize-dropdown [data-selectable].active{
+      background: rgba(0,0,0,0.25);
+    }
+    .selectize-control.multi .selectize-input [data-value]{
+      background-color: #A70000;
+      background-image: linear-gradient(to bottom, #A80000, #550000);
+      color: #EEEDE8;
+      border: 1px solid #740000;
+    }
   </style>
   <script type="text/javascript">
     var search_conditions = <%= @search.conditions.to_json %>;
     var attributes_audits = <%= attributes_audits_to_json %>;
+    var select;
 
     datepicker_options = {
-          dateFormat: 'yy-mm-dd',
-          showOn: "button",
-          buttonImage: "/plugin_assets/sequreisp_invoicing/images/calendar.gif",
-          buttonImageOnly: true
-        }
+      dateFormat: 'yy-mm-dd',
+      showOn: "button",
+      buttonImage: "/images/calendar.gif",
+      buttonImageOnly: true
+    }
     $(function(){
-        $('.datepicker').datepicker(datepicker_options);
-        $('#search_auditable_type_is').change(function(){
-          if($(this).val() != ""){
-            var model = $(this).val();
+      $('.datepicker').datepicker(datepicker_options);
 
-            $('.attribute_audit').remove();
+      select = $('#search_changes_like_all').selectize({
+        maxItems: null,
+        valueField: 'id',
+        labelField: 'title',
+        searchField: 'title',
+        options: [],
+        onChange : function(e){
+          $('.check_end').remove();
 
-            for(var i = 0; i < attributes_audits[model].length; i ++){
-              var tmp_item = $('#example_attribute_audit_item').clone().insertBefore('#example_attribute_audit_item');
-              tmp_item.removeAttr('id');
-              tmp_item.addClass('attribute_audit');
-              tmp_item.children('label').html(attributes_audits[model][i][1]);
-              tmp_item.children('input').attr('value', attributes_audits[model][i][0]);
-            }
-
-            $('#search_type').change();
-            $('#changes_select').show();
-          }
-          else{
-            $('.attribute_audit').remove();
-            $('#changes_select').hide();
-          }
-        });
-        $('#search_type').change(function(){
-          var type = $(this).val();
-
-          $('.attribute_audit').each(function(){
-            $(this).children('input').attr('name','search[changes_like_' + type + '][]');
-          });
-        });
-
-        $('#search_auditable_type_is').change();
-        $('#search_type').change();
-
-        if((search_conditions.changes_like_all != undefined) || (search_conditions.changes_like_any != undefined)){
-
-          var data = search_conditions.changes_like_any;
-
-          $('#search_type').children('[value="any"]').attr('selected','selected');
-          if(search_conditions.changes_like_all != undefined){
-            data = search_conditions.changes_like_all;
-            $('#search_type').children('[value="all"]').attr('selected','selected');
+          for(var i in e){
+            var tmp = '<input type="checkbox" value="' + e[i] + '" style="display:none;" class="check_end" checked>';
+            $('form').append(tmp);
           }
 
+          $('#search_type').change();
+        },
+        create: false
+      });
 
-          for(var i = 0; i < data.length; i++){
-            $('.attribute_audit').children('[value="' + data[i] + '"]').attr('checked','checked');
-          }
+      $('#search_auditable_type_is').change(function(){
+        if($(this).val() != ""){
+          var model = $(this).val();
+
+          $('.check_end').remove();
+
+          select[0].selectize.clearOptions();
+
+          $.map(attributes_audits[model],function(a){
+            select[0].selectize.addOption({
+              id : a.id,
+              title : a.name
+            });
+          })
+
+          $('#search_type').change();
+          $('#changes_select').show();
+        }else{
+
+          $('.check_end').remove();
+          select[0].selectize.clearOptions();
+
+          $('.attribute_audit').remove();
+          $('#changes_select').hide();
         }
+      });
+
+      $('#search_type').change(function(){
+        var type = $(this).val();
+
+        $('.check_end').attr('name','search[changes_like_' + type + '][]');
+      });
+
+      $('#search_auditable_type_is').change();
+      $('#search_type').change();
+
+      if((search_conditions.changes_like_all != undefined) || (search_conditions.changes_like_any != undefined)){
+
+        var data = search_conditions.changes_like_any;
+
+        $('#search_type').children('[value="any"]').attr('selected','selected');
+        if(search_conditions.changes_like_all != undefined){
+          data = search_conditions.changes_like_all;
+          $('#search_type').children('[value="all"]').attr('selected','selected');
+        }
+
+        select[0].selectize.setValue(data);
+      }
+      $(".reset").click(function() {
+        $('#search_auditable_type_is').change();
+      });
     });
   </script>
 <% end %>
@@ -98,19 +161,17 @@
         </select>
          <%= t('messages.audits.selected_attributes') %>
       </label>
-      <div id="example_attribute_audit_item">
-        <label></label>
-        <input multiple="multiple" type="checkbox">
-      </div>
       <div class="separador"></div>
+      <%= f.label :changes_like_all, t('activerecord.attributes.audit.changes') %>
+      <select multiple id="search_changes_like_all" placeholder="<%= t("audits.select_changes") %>"></select>
     </li>
     <div sytle="clear: both"></div>
     <li>
-      <%= f.label :created_at_greater_than_or_equal_to, t('activerecord.attributes.search.issued_init_date') %>
+      <%= f.label :created_at_greater_than_or_equal_to, t('audits.audit_init_date') %>
       <%= f.text_field :created_at_greater_than_or_equal_to , { :class => 'datepicker fix_datetime'} %>
     </li>
     <li>
-      <%= f.label :created_at_less_than_or_equal_to, t('activerecord.attributes.search.issued_end_date') %>
+      <%= f.label :created_at_less_than_or_equal_to, t('audits.audit_end_date') %>
       <%= f.text_field :created_at_less_than_or_equal_to , {:class => 'datepicker fix_datetime add_end_of_day_before_submit'} %>
     </li>
     <div sytle="clear: both"></div>

@@ -599,6 +599,9 @@ es:
     any_model: 'Cualquier Modelo'
     all: 'Todos'
     any: 'Cualquier'
+    audit_init_date: "Desde"
+    audit_end_date: "Hasta"
+    select_changes: "Seleccione cambios"
   error_messages:
     not_selected_any_options: 'No se ha selecionado ninguna opción'
     not_repeat_dns_server: 'Existen servidores DNS repetidos'

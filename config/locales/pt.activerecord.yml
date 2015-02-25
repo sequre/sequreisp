@@ -596,6 +596,9 @@ pt:
     any_model: 'Qualquer Modelo'
     all: 'Tudo'
     any: 'Qualquer'
+    audit_init_date: "Desde"
+    audit_end_date: "Hasta"
+    select_changes: "Seleccione cambios"
   error_messages:
     not_selected_any_options: 'Não selecionou nenhum opções'
     not_repeat_dns_server: 'Existe Servidores DNS replicados'

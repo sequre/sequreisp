@@ -46,7 +46,7 @@ module AuditsHelper
   end
 
   def collect_of_auditable_models
-    Audit.audited_classes.collect{|c| [I18n.t("activerecord.models.#{c.name.underscore}.one"),c.name] }.sort
+    Audit.audited_classes.select{|c| I18n.t("activerecord.models.#{c.name.underscore}.one", :default => "").presence }.collect{|c| [I18n.t("activerecord.models.#{c.name.underscore}.one"),c.name] }.sort
   end
 
 
@@ -59,17 +59,12 @@ module AuditsHelper
   end
 
   def attributes_audits_to_json
-    hidden_attributes = {
-      :Client => ['invoicing_bar_code_content_type',
-                  'invoicing_bar_code_file_size']
-    }
     result_hash = {}
     Audit.audited_classes.each do |cl|
+      next unless I18n.t("activerecord.models.#{cl.name.underscore}.one", :default => "").presence
       result_hash[cl] = [];
       cl.audited_columns.each do |a|
-        unless (hidden_attributes.has_key? cl.name.to_sym and hidden_attributes[cl.name.to_sym].include? a.name)
-          result_hash[cl] << [ a.name, I18n.t("activerecord.attributes.#{cl.name.underscore}.#{a.name}") ]
-        end
+        result_hash[cl] << { :id => a.name,:name => I18n.t("activerecord.attributes.#{cl.name.underscore}.#{a.name}") } if I18n.t("activerecord.attributes.#{cl.name.underscore}.#{a.name}", :default => "").presence
       end
     end
     result_hash.to_json

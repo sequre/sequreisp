@@ -599,6 +599,9 @@ en:
     any_model: 'Any Model'
     all: 'All'
     any: 'Any'
+    audit_init_date: "Since date"
+    audit_end_date: "Until date"
+    select_changes: "Select changes"
   error_messages:
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'
