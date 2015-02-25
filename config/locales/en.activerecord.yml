@@ -256,7 +256,7 @@ en:
         physical_link: "Link"
       audit:
         id: "ID"
-        user: "User"
+        user: "User Responsible"
         action: "Action"
         created_at: "Date"
         auditable_type: "Model"
@@ -460,6 +460,9 @@ en:
     new: "Creating %{model}"
     login: "Sign In"
   messages:
+    audits:
+      changes_in: "Changes in"
+      selected_attributes: "selected attributes"
     contracts_online: "%{count} contracts online"
     contracts_with_id_was_updated_successfully: 'contracts with id %{ids} was updated successfully'
     access_denied: "Access denied"
@@ -612,6 +615,14 @@ en:
     go_back: 'Go back to this version'
     successfully_reverted: 'Changes were applied successfully'
     error_on_reversion: 'There was an error when trying to go back to previus version'
+    any_user: 'Any User'
+    any_action: 'Any Action'
+    any_model: 'Any Model'
+    all: 'All'
+    any: 'Any'
+    audit_init_date: "Since date"
+    audit_end_date: "Until date"
+    select_changes: "Select changes"
   error_messages:
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'

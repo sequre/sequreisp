@@ -253,7 +253,7 @@ pt:
         physical_link: "Ligação"
       audit:
         id: "ID"
-        user: "Usuário"
+        user: "Usuário Responsável"
         action: "Ação"
         created_at: "Data"
         auditable_type: "Modelo"
@@ -457,6 +457,9 @@ pt:
     new: "Criando %{model}"
     login: "Aceso"
   messages:
+    audits:
+      changes_in: "Alterações"
+      selected_attributes: "atributo/s seleccionado/s"
     contracts_online: "%{count} contratos online"
     contracts_with_id_was_updated_successfully: 'Contratos com id %{ids} foi atualizado com sucesso'
     access_denied: "Acesso denegado"
@@ -601,6 +604,22 @@ pt:
       seconds: "segundos"
   notifications:
     changes_to_be_applied_notice: "Aviso: Tem sido realizadas mudanças na configuração que aínda não foram aplicadas."
+  audits:
+    create: 'Criar'
+    update: 'Atualizar'
+    destroy: 'Tirar'
+    undefined: 'Não Disponível'
+    go_back: 'Voltar para esta versão'
+    successfully_reverted: 'As alterações são aplicadas corretamente'
+    error_on_reversion: 'Não é possível voltar à versão indicada'
+    any_user: 'Qualquer Usuário'
+    any_action: 'Qualquer Ação'
+    any_model: 'Qualquer Modelo'
+    all: 'Tudo'
+    any: 'Qualquer'
+    audit_init_date: "Desde"
+    audit_end_date: "Hasta"
+    select_changes: "Seleccione cambios"
   error_messages:
     not_selected_any_options: 'Não selecionou nenhum opções'
     not_repeat_dns_server: 'Existe Servidores DNS replicados'
