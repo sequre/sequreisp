@@ -40,7 +40,7 @@ div.horizontal_button_bar div.hbb_container div.hbb_content div.hbb_rotator div.
     line-height: 30px;
     font-weight: bold;
     font-size: 1.1em;
-    background-color: #900;
+    background-color: #01455A;
     color: white;
     display: inline-block;
 }
@@ -67,7 +67,7 @@ div#context_help_bar div.chb_top_bar {
   /*background-color: #E3E2DA;*/
   font-weight: bold;
   font-size: 1.1em;
-  background-color: #900;
+  background-color: #01455A;
   color: white;
   line-height: 41px;
   text-align: left;
