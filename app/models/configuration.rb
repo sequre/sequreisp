@@ -16,12 +16,24 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Configuration < ActiveRecord::Base
+  require 'sequreisp_constants'
+
   ACCEPTED_LOCALES = ["es","en","pt"]
   GUIDES_URL = "http://doc.wispro.co/index.php?title=P%C3%A1gina_principal"
 
   PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"
   PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sasl_passwd"
   PATH_DNS_NAMED_OPTIONS = Rails.env.production? ? "/etc/bind/named.conf.options" : "/tmp/named.conf.options"
+  PATH_COMMAND_LOG = Rails.env.production? ? HUMANIZED_COMMAND_LOG : "/tmp/command_log"
+  APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
+
+  TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
+                   "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
+                   "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
+                   "icmp" => ["-p icmp"],
+                   "sip" => ["-m helper --helper sip"] }
+
+  COUNT_CATEGORIES = ["data_count"]
 
   def self.acts_as_audited_except
     [:daemon_reload]
@@ -38,9 +50,9 @@ class Configuration < ActiveRecord::Base
                :iptables_tree_optimization_enabled,
                :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080,
                :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password,
-               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
+               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server, :traffic_prio
 
-  validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :mtu, :quantum_factor, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
+  validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
   validates_presence_of :notification_timeframe
   validates_presence_of :language
@@ -54,7 +66,15 @@ class Configuration < ActiveRecord::Base
 
   validate :presence_of_dns_server
   validate_ip_format_of :dns_first_server, :dns_second_server, :dns_third_server
+  validate :not_repeat_traffic_prio
 
+  def not_repeat_traffic_prio
+    prios = []
+    traffic_prio.split(",").each do |prio|
+      prios << prio if (default_tcp_prio_ports + default_udp_prio_ports + default_prio_protos + default_prio_helpers).include?(prio)
+    end
+    errors.add_to_base("No se pueden repetir los puertos #{prios.join(',')}") unless prios.empty?
+  end
 
   def presence_of_dns_server
     if dns_use_forwarders and not (dns_first_server.present? or dns_second_server.present? or dns_third_server.present?)
@@ -131,18 +151,6 @@ class Configuration < ActiveRecord::Base
   def self.apply_changes_automatically!
     return if Time.now.hour != apply_changes_automatically_hour
     apply_changes if changes_to_apply?
-  end
-
-  def use_global_prios_strategy_options_for_select
-    [
-      [I18n.t('selects.configuration.use_global_prios_strategy.disabled'), 'disabled'],
-      [I18n.t('selects.configuration.use_global_prios_strategy.provider'), 'provider'],
-      [I18n.t('selects.configuration.use_global_prios_strategy.full'), 'full']
-    ]
-  end
-
-  def use_global_prios_strategy
-    ActiveSupport::StringInquirer.new read_attribute(:use_global_prios_strategy)
   end
 
   # this can be overrided from a plug-in like invocing
@@ -226,4 +234,26 @@ class Configuration < ActiveRecord::Base
     ports
   end
 
+  def self.is_apply_changes?
+    File.exists?(APPLY_CHANGES_LOCK)
+  end
+
+  def include_exclude_files_in_backup(backup)
+    self.files_include_in_backup = backup[:include_files].delete("\r")
+    self.files_exclude_in_backup = backup[:exclude_files].delete("\r")
+    self.save
+  end
+
+  def self.app_version
+    require 'sequreisp_about'
+    SequreISP::Version.to_s
+  end
+
+  # This method is rewrite
+  def self.daemons
+    (Dir.entries("#{DEPLOY_DIR}/tmp") -[".", ".."]).select{|file| file.include?("daemon_")}.sort
+  end
+##############################################################
+#
+##############################################################
 end

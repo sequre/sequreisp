@@ -193,6 +193,7 @@ en:
         tcp: "TCP"
         udp: "UDP"
       configuration:
+        redirect_external_dns_request: "Redirect externar dns request to SequreISP"
         use_external_number_client: 'Use external client_number'
         default_tcp_prio_ports: "High priority TCP ports (global)"
         default_udp_prio_ports: "High priority UDP ports (global)"
@@ -233,6 +234,8 @@ en:
         dns_first_server: "First DNS Server"
         dns_second_server: "Second DNS Server"
         dns_third_server: "Third DNS Server"
+        traffic_prio: "Priority traffic (low latency)"
+        in_safe_mode: "Safe mode"
       user:
         name: "Name"
         email: "User email address"
@@ -253,7 +256,7 @@ en:
         physical_link: "Link"
       audit:
         id: "ID"
-        user: "User"
+        user: "User Responsible"
         action: "Action"
         created_at: "Date"
         auditable_type: "Model"
@@ -322,6 +325,7 @@ en:
         use_global_prios: "Enable only if there is more than 2500 contracts"
         use_external_number_client: "If disabled, internal ids are used as client numbers"
         mail_relay_manipulated_for_sequreisp: "Disable if you want to manually edit /etc/postfix/main.cf"
+        in_safe_mode: "In safe mode, not be apply rules for bandwidth control, ip forwarding, proxy arp and any package filter"
       provider:
         shape_rate_down_on_ingress: "Download traffic shaping is done on the LAN interface; if you enable this option, an extra control will be enabled on ingress that will shape clients' and server's own traffic to the configured download rate"
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"
@@ -340,6 +344,7 @@ en:
     iproutes: "Static routes"
     dashboard: "Dashboard"
     apply_changes: "Apply changes"
+    wait_apply_changes: "Applying changes..."
     backups: "Backups"
     modules: "Plugins"
     about: "About"
@@ -348,6 +353,7 @@ en:
     help: "Help"
     guides: "Wispro guides"
     support: "Support"
+    command_log: "Command log"
   buttons:
     export_to_csv: "Export to csv"
     login: "Login"
@@ -399,6 +405,8 @@ en:
     confirm_restore_button: "Restore"
     confirm_restore_and_reboot_button: "Restore and reboot"
     cancel: "Cancel"
+    include_files: "Include files"
+    exclude_files: "Exclude files"
     notice:
       missing_file: "A backup file must be selected to restore"
       restore_error: "An error has occurred, check the backup file is correct"
@@ -424,6 +432,10 @@ en:
     website_url: "Website"
   dashboard:
     services: "Services"
+    daemons: "Daemons"
+    daemons_table:
+      daemon: "Daemon name"
+      status: "Status"
     cpu: "CPU usage"
     memory: "Memory usage"
     disks: "Disk usage"
@@ -448,6 +460,9 @@ en:
     new: "Creating %{model}"
     login: "Sign In"
   messages:
+    audits:
+      changes_in: "Changes in"
+      selected_attributes: "selected attributes"
     contracts_online: "%{count} contracts online"
     contracts_with_id_was_updated_successfully: 'contracts with id %{ids} was updated successfully'
     access_denied: "Access denied"
@@ -501,6 +516,11 @@ en:
     configuration:
       own: "Server own"
       gmail: "Gmail"
+      length: "Packet size between 0 and 100 byte"
+      ssh: "Server and client SSH"
+      dns: "Server and client DNS"
+      icmp: "Protocol ICMP"
+      sip: "Protocol SIP"
   controllers:
     successfully_updated: "Update operation successful"
     successfully_created: "Create operation successful"
@@ -540,6 +560,8 @@ en:
       not_enough_down_bandwidth: "There's not enough download bandwidth"
       not_enough_up_bandwidth_in_this_plan: "There's not enough upload bandwidth to assign this plan"
       not_enough_up_bandwidth: "There's not enough upload bandwidth"
+      ceil_up_different_to_zero: "The max upload must be different to zero"
+      ceil_down_different_to_zero: "The max download must be different to zero"
     provider:
       provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "Provider group can't be changed, there are contracts using this provider to avoid balancing"
       invalid_avoid_nat_addresses: "Invalid IP address %{invalid_ip}, use CIDR notation"
@@ -559,6 +581,8 @@ en:
       advanced: "Advanced configuration"
       mail_relay: "Mail relay"
       bind_dns: "DNS Configuration"
+      traffic_prio: "Priority traffic (low latency)"
+      in_safe_mode: "Safe mode"
     interface:
       ips: "IPs"
     provider:
@@ -591,7 +615,55 @@ en:
     go_back: 'Go back to this version'
     successfully_reverted: 'Changes were applied successfully'
     error_on_reversion: 'There was an error when trying to go back to previus version'
+    any_user: 'Any User'
+    any_action: 'Any Action'
+    any_model: 'Any Model'
+    all: 'All'
+    any: 'Any'
+    audit_init_date: "Since date"
+    audit_end_date: "Until date"
+    select_changes: "Select changes"
   error_messages:
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'
     define_one_dns_server: 'Define at less one DNS server'
+  command:
+    human:
+      create_tmp_file: "Initialize apply changes process"
+      sequreisp_pre: "Clear cache virtual memory"
+      setup_queued_commands: "Start pending jobs"
+      setup_clock: "Setup time zone"
+      setup_proc: "Setup sysctl general params"
+      setup_nf_modules: "Setup kernel modules"
+      setup_lan_interface: "Setup lan interface in %{dev}"
+      setup_wan_interface: "Setup provider %{kind} in wan interface %{dev}"
+      setup_proxy_arp: "Setup proxy arp in contracts"
+      setup_static_routes: "Setup static routes"
+      setup_ifbs: "Setup virtual interface"
+      setup_ip_ru: "Setup rules"
+      setup_ip_ro: "Setup routes"
+      gen_tc: "Deleted the rules for controlling bandwidth"
+      setup_tc: "Setup rules for controlling bandwidth"
+      setup_iptables_try: "Generate iptables rules"
+      setup_iptables_success: "Setup rules iptables success"
+      setup_iptables_restore_old: "Fail loading iptables, restore the old iptables"
+      setup_mail_relay: "Setup mail relay"
+      bind_reload: "Setup DNS service"
+      sequreisp_post: "Finalize iptables"
+      delete_tmp_file: "Finalize apply changes process"
+      do_port_forwarding: "Do port forwarding"
+      do_port_forwardings_avoid_nat_triangle: "Do port forwardings avoid nat triangle"
+      update_fallback_route: "Update fallback route"
+      update_provider_group_route: "Update provider group route"
+      update_provider_route: "Update provider route"
+      do_provider_up: "Do provider up"
+      do_provider_down: "Do provider down"
+  daemons:
+    name:
+      daemon_apply_change: "Apply changes"
+      daemon_apply_change_automatically: "Apply change automatically"
+      daemon_backup_restore: "backup restore"
+      daemon_check_bind: "bind"
+      daemon_check_link: "Check link providers"
+      daemon_data_counting: "Data count"
+      daemon_rrd_feed: "Generate stats"

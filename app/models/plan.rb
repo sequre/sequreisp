@@ -32,8 +32,18 @@ class Plan < ActiveRecord::Base
   validates_numericality_of :burst_down, :burst_up, :only_integer => true, :greater_than_or_equal_to => 0
   validates_numericality_of :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0, :less_than => 4294967295
 
+  validate :ceil_down_different_to_zero
+  validate :ceil_up_different_to_zero
   validate :remaining_rate_down
   validate :remaining_rate_up
+
+  def ceil_up_different_to_zero
+    errors.add(:ceil_up, I18n.t('validations.plan.ceil_up_different_to_zero')) if ceil_up == 0
+  end
+
+  def ceil_down_different_to_zero
+    errors.add(:ceil_down, I18n.t('validations.plan.ceil_down_different_to_zero')) if ceil_down == 0
+  end
 
   def remaining_rate_down
     if not new_record?
@@ -88,12 +98,5 @@ class Plan < ActiveRecord::Base
   end
   def auditable_name
     "#{self.class.human_name}: #{name}"
-  end
-  def quantum_factor(direction)
-    quantum = (self["ceil_" + direction] + self["rate_" + direction])/Configuration.first.quantum_factor.to_i
-    quantum <= 0 ? 1 : quantum
-  end
-  def quantum_total(direction)
-    Configuration.first.mtu * quantum_factor(direction) * 3
   end
 end

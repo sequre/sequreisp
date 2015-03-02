@@ -44,4 +44,29 @@ module AuditsHelper
       link_to(h(a.auditable_name), a)
     end
   end
+
+  def collect_of_auditable_models
+    Audit.audited_classes.select{|c| I18n.t("activerecord.models.#{c.name.underscore}.one", :default => "").presence }.collect{|c| [I18n.t("activerecord.models.#{c.name.underscore}.one"),c.name] }.sort
+  end
+
+
+  def collect_actions
+    [
+      [I18n.t('audits.create'),"create"],
+      [I18n.t('audits.update'),"update"],
+      [I18n.t('audits.destroy'),"destroy"]
+    ]
+  end
+
+  def attributes_audits_to_json
+    result_hash = {}
+    Audit.audited_classes.each do |cl|
+      next unless I18n.t("activerecord.models.#{cl.name.underscore}.one", :default => "").presence
+      result_hash[cl] = [];
+      cl.audited_columns.each do |a|
+        result_hash[cl] << { :id => a.name,:name => I18n.t("activerecord.attributes.#{cl.name.underscore}.#{a.name}") } if I18n.t("activerecord.attributes.#{cl.name.underscore}.#{a.name}", :default => "").presence
+      end
+    end
+    result_hash.to_json
+  end
 end

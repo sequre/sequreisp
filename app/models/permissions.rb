@@ -116,4 +116,10 @@ class Permissions < Aegis::Permissions
     end
   end
 
+  resource :command_logs do
+    action :command_log_info, :command_logs do
+      allow :administrative, :technical, :administrative_readonly, :technical_readonly
+    end
+  end
+
 end

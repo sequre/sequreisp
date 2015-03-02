@@ -3,8 +3,6 @@ Configuration.create!(
  :default_udp_prio_ports => "",
  :default_prio_protos =>  "udp,icmp,igmp,esp,ah,gre",
  :default_prio_helpers =>  "ftp,irc,sip",
- :mtu => 1500,
- :quantum_factor => "256",
  :nf_conntrack_max => 1048576,
  :gc_thresh1 => 2048,
  :gc_thresh2 => 4096,

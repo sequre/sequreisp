@@ -1,0 +1,40 @@
+<% content_for :javascript do %>
+  <style type="text/css">
+    .status_true{
+    }
+    .status_false{
+      color: red;
+    }
+  </style>
+  <script type="text/javascript">
+    var delta_time = 1000;
+
+    function ajaxCommandLogsRequest(){
+      $.ajax({
+        type : 'GET',
+        url : '/command_logs/command_log_info',
+        complete: function(resp){
+          response = JSON.parse(resp.response);
+          refreshCommandLogsContent(response["command_log_lines"]);
+          setTimeout(function(){ ajaxCommandLogsRequest(); }, delta_time);
+        }
+      });
+    }
+    function refreshCommandLogsContent(command_log_lines){
+      if (command_log_lines != null){
+        processed_command_log_lines = command_log_lines.map(function(line){
+          return "<h5>"+ line["date"] + " " + line["time"] + "<spam class='status_" + line["status"] + "'>" + line["message"] + "</spam> <img src='/images/check_" + line["status"] + ".png'>" + "</h5>"
+        });
+        $('#content_for_command_log').html(processed_command_log_lines.join("\n"));
+      };
+    }
+    ajaxCommandLogsRequest();
+  </script>
+<% end %>
+<% content_for :title, t('menu.command_log') %>
+<% heading t('menu.command_log') %>
+<% link_to({:controller => "configurations", :action => "doreload"}, :class => "button", :style => "float:right") do %>
+  <span><span><%=  t('menu.apply_changes') %></span></span>
+<% end %>
+
+<div id="content_for_command_log"></div>

@@ -80,5 +80,4 @@ module ApplicationHelper
   def support_url
     "http://www.wispro.co/portal/issues/new?locale=#{I18n.locale}"
   end
-
 end

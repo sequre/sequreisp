@@ -1,7 +1,7 @@
 ActionController::Routing::Routes.draw do |map|
-  map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get }
+  map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get, :get_mac_address => :get }
 
-  map.resources :configurations, :collection => {:doreload => :get}
+  map.resources :configurations, :collection => {:doreload => :get, :is_apply_changes => :get }
 
   map.resources :users
 
@@ -25,19 +25,19 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :plans
 
-  # map.resources :disks, :collection => { :scan => :get, :liberate => :put, :assign_for => :put, :clean_cache => :put, :action_for_assigned => :put }
-
-    map.resources :disks, :collection => { :scan => :get, :free_assign_for => :put, :assigned_assign_for => :put }
-
   map.resource :user_session
 
   map.resource :about
 
-  map.resource :dashboard, :collection => { :cpu => :get , :services => :get, :load_average => :get, :reboot => :get, :halt => :get }
+  map.resource :dashboard, :collection => { :cpu => :get , :services => :get, :load_average => :get, :reboot => :get, :halt => :get, :daemons => :get }
 
   map.resources :always_allowed_sites
 
+  map.command_logs '/command_logs/command_log_info', :controller => 'command_logs', :action => 'command_log_info'
+  map.command_logs '/command_logs', :controller => 'command_logs', :action => 'command_logs'
+
   map.backup '/backup', :controller => 'backup', :action => 'index'
+  map.create_full_backup '/create_full', :controller => 'backup', :action => 'create_full', :method => :put
   map.login '/login', :controller => 'user_sessions', :action => 'new'
   map.logout '/logout', :controller => 'user_sessions', :action => 'destroy'
 

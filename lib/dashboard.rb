@@ -49,6 +49,35 @@ module Dashboard
       end
     end
   end
+
+  class Daemon
+    attr_reader :id, :name, :status, :error, :status_html
+
+    def initialize(daemon)
+      @id = daemon[:id]
+      @name = I18n.t("daemons.name.#{daemon[:name]}")
+      @status = daemon[:status]
+
+      color = @status ? '#00aa00' : '#ff0000'
+      word = @status ? "OK" : "ERROR"
+      @status_html = "<span style=\"color: #{color}\">#{word}</span>"
+    end
+
+    def self.load_all
+      id = 1
+      daemons = []
+      Configuration.daemons.each do |daemon|
+        _daemon = {}
+        _daemon[:id] = id
+        _daemon[:name] = daemon
+        _daemon[:status] = File.zero?("#{DEPLOY_DIR}/tmp/#{daemon}") ? true : false
+        daemons << Daemon.new(_daemon)
+        id += 1
+      end
+      daemons
+    end
+  end
+
   class LoadAverage
     attr_reader :now, :min5, :min15
     def initialize

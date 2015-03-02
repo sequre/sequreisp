@@ -1,0 +1,91 @@
+#!/usr/bin/ruby
+
+require 'optparse'
+require 'optparse/time'
+require 'ostruct'
+require 'pp'
+
+options = OpenStruct.new
+options.env = "production"
+options.path = "/opt/sequreisp/deploy/current/"
+options.cmd = ""
+options.log_file = "log/production.log"
+
+ARGV << "-h" if ARGV.empty?
+
+opts = OptionParser.new do |opts|
+
+  opts.banner = "Usage: sequreisp [options]"
+
+  opts.separator ""
+  opts.separator "Specific options:"
+
+  opts.on("-a", "--apply-changes", "Apply changes. Example: sequreisp -a") do
+    options.cmd = "runner"
+    options.extension = "\"require 'sequreisp'; boot\""
+  end
+
+  opts.on("-m", "--manual-apply-changes", "Manual apply changes. Example: sequreisp -m") do
+    options.cmd = "runner"
+    options.extension = "\"require 'sequreisp'; boot\""
+  end
+
+  opts.on("-z", "--safe-mode", "Apply change in safe-mode. Example: sequreisp -z. WARNING Server will continue in save mode after apply change") do
+    options.cmd = "runner"
+    options.extension = "\"conf = Configuration; conf.in_safe_mode = true; conf.save; require 'sequreisp'; boot\""
+  end
+
+  opts.on("-p","--providers", "Show provider status. Example: sequreisp -p") do
+    options.cmd= "runner"
+    options.extension ="\"puts'Providers:\n'; Provider.all.map{|a| puts 'Name: ' + a.name + ', kind: ' + a.kind + ', IP: ' + a.ip + ',rate_down: ' + a.rate_down.to_s + ',rate_up: ' + a.rat\
+e_up.to_s + ', State: ' + a.state + '\n' }\""
+  end
+
+  opts.on("-t", "--tail FILE", "Show tail for production, command, command_human, daemon log. Example sequreisp -t [production|command|command_human|daemon]") do |log_file|
+    options.cmd = "tail"
+    options.extension = "-n80 -F"
+    if log_file == "daemon"
+      options.path = "/"
+      options.log_file = "var/log/syslog | grep [SequreISP][Daemon]"
+    else
+      options.log_file = "log/#{log_file}.log"
+    end
+  end
+
+  opts.on("-v", "--version", "Show version app. Example: sequreisp -v") do
+    options.cmd = "runner"
+    options.extension = "'puts \"version:\" Configuration.app_version'"
+  end
+
+  opts.on("-c", "--console", "Open rails console. Example: sequreisp -c") do
+    options.cmd = "console"
+  end
+
+  opts.on("-e", "--environment ENVIRONMENT", "Define environment. Example sequreisp -e development") do |env|
+    options.env = env
+    options.path = "." if env == "development"
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+  ##########################################################
+  #
+  ##########################################################
+end
+
+opts.parse!
+pp options
+
+if options.cmd
+  case options.cmd
+  when "tail"
+    exec("#{options.cmd} #{options.extension} #{options.path}#{options.log_file}")
+  when "console"
+    exec("#{options.path}script/#{options.cmd} #{options.env}")
+  when "runner"
+    exec("#{options.path}script/#{options.cmd} -e #{options.env} \"#{options.extension}\"")
+  end
+end

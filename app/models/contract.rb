@@ -18,6 +18,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Contract < ActiveRecord::Base
+  require 'sequreisp_logger'
   acts_as_audited :except => [:netmask,
                               :queue_down_prio, :queue_up_prio, :queue_down_dfl, :queue_up_dfl,
                               :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl, :is_connected]
@@ -25,8 +26,6 @@ class Contract < ActiveRecord::Base
     super(attributes)
     self.start_date = Date.today if start_date.nil?
   end
-
-  MIN_RATE = 0.024
 
   belongs_to :client
   belongs_to :plan
@@ -217,7 +216,7 @@ class Contract < ActiveRecord::Base
 
   def clean_proxy_arp_provider_proxy_arp_interface
     self.proxy_arp_interface = nil
-    self.proxy_arp_provider = nil
+    self.proxy_arp_provider_id = nil
     self.proxy_arp_gateway = ""
     self.proxy_arp_use_lan_gateway = false
     self.proxy_arp_lan_gateway = ""
@@ -282,6 +281,7 @@ class Contract < ActiveRecord::Base
           #end
         end
       rescue => e
+        log_rescue("[Model][Contract][Queue_update_commands]", e)
         Rails.logger.error "ERROR: Contract::queue_update_commands #{e.inspect}"
       end
     end
@@ -388,11 +388,9 @@ class Contract < ActiveRecord::Base
   def instant
     latencies = instant_latency
     {
-      :rate_down => instant_rate_down,
-      :rate_up => instant_rate_up,
       :ping_latency => latencies[:ping],
       :arping_latency => latencies[:arping]
-    }
+    }.merge instant_rate
   end
 
   # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
@@ -449,53 +447,82 @@ class Contract < ActiveRecord::Base
     _interface
   end
 
-  def instant_rate_down
-    return rand(plan.ceil_down)*1024 if SequreispConfig::CONFIG["demo"]
-    instant_rate SequreispConfig::CONFIG["ifb_down"]
-
-  end
-  def instant_rate_up
-    return rand(plan.ceil_up)*1024/2 if SequreispConfig::CONFIG["demo"]
-    instant_rate SequreispConfig::CONFIG["ifb_up"]
-  end
-
-  def instant_rate(iface)
-    #return rand(plan.ceil_down)
+  def sent_bits(prefix)
+    iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
     match = false
-    rate = 0
-    unit = ""
+    rate = {}
+    count = 0
+    klass = ""
     IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
       io.each do |line|
-        match = true if (line =~ /class htb \w+:#{class_hex} /) != nil
-        if match and (line =~ /^ rate (\d+)(\w+) /) != nil
-          rate = $~[1].to_i
-          unit = $~[2]
-          break
+        if match and (line =~ /rate (\d+)(\w+) /) != nil
+         Rails.logger.debug "Contract::instant_rate #{line}"
+         _rate = $~[1].to_i
+         unit = $~[2]
+         # from tc manpage (s/unit)
+         # kbps   Kilobytes per second
+         # mbps   Megabytes per second
+         # kbit   Kilobits per second
+         # mbit   Megabits per second
+         # bps or a bare number
+         #        Bytes per second
+         rate[klass] = case unit.downcase
+         when "kbps"
+           _rate *= 1024*8
+         when "mbps"
+           _rate *= 1024*1024*8
+         when "kbit"
+           _rate *= 1024
+         when "mbit"
+           _rate *= 1024*1024
+         when "bit"
+           _rate
+         else # "bps" or a bare number
+           #TODO nunca va a caer aca x "bare number" con w+ como condición de la regexp
+           _rate *= 8
+         end
+         match = false
+         count += 1
+         break if count == 3
+        elsif (line =~ /class hfsc 1:#{class_prio1_hex} parent 1:#{class_hex} /) != nil
+           Rails.logger.debug "Contract::instant_rate #{line}"
+           match = true
+           klass = class_prio1_hex
+        elsif (line =~ /class hfsc 1:#{class_prio2_hex} parent 1:#{class_hex} /) != nil
+           Rails.logger.debug "Contract::instant_rate #{line}"
+           match = true
+           klass = class_prio2_hex
+        elsif (line =~ /class hfsc 1:#{class_prio3_hex} parent 1:#{class_hex} /) != nil
+           Rails.logger.debug "Contract::instant_rate #{line}"
+           match = true
+           klass = class_prio3_hex
         end
       end
     end
-    # from tc manpage (s/unit)
-    # kbps   Kilobytes per second
-    # mbps   Megabytes per second
-    # kbit   Kilobits per second
-    # mbit   Megabits per second
-    # bps or a bare number
-    #        Bytes per second
-    case unit.downcase
-    when "kbps"
-      rate *= 1024*8
-    when "mbps"
-      rate *= 1024*1024*8
-    when "kbit"
-      rate *= 1024
-    when "mbit"
-      rate *= 1024*1024
-    when "bit"
-      rate
-    else # "bps" or a bare number
-      #TODO nunca va a caer aca x "bare number" con w+ como condición de la regexp
-      rate *= 8
+    rate
+  end
+  def instant_rate
+    rate = {}
+    if SequreispConfig::CONFIG["demo"]
+      rate_down = rand(plan.ceil_down)*1024
+      rate[:rate_down_prio1] = rate_down * 0.15
+      rate[:rate_down_prio2] = rate_down * 0.6
+      rate[:rate_down_prio3] = rate_down * 0.25
+      rate_up = rand(plan.ceil_up)*1024 * 0.3
+      rate[:rate_up_prio1] = rate_up * 0.15
+      rate[:rate_up_prio2] = rate_up * 0.6
+      rate[:rate_up_prio3] = rate_up * 0.25
+    else
+      sent = sent_bits "down"
+      rate[:rate_down_prio1] = sent[class_prio1_hex]
+      rate[:rate_down_prio2] = sent[class_prio2_hex]
+      rate[:rate_down_prio3] = sent[class_prio3_hex]
+      sent = sent_bits "up"
+      rate[:rate_up_prio1] = sent[class_prio1_hex]
+      rate[:rate_up_prio2] = sent[class_prio2_hex]
+      rate[:rate_up_prio3] = sent[class_prio3_hex]
     end
+    rate
   end
 
   def self.free_ips(term)
@@ -535,17 +562,17 @@ class Contract < ActiveRecord::Base
     end
   end
 
-  def mangle_chain(prefix)
-    if Configuration.iptables_tree_optimization_enabled?
-      suffix = netmask_suffix
-      value = 28
-      value -= 4 while suffix < value and value > 16
-      _ip = IP.new("#{ip.gsub(/\/.*/, "")}/#{value}").network.to_s
-      "sq.#{prefix}.#{_ip}"
-    else
-      "sequreisp.#{prefix}"
-    end
-  end
+  # def mangle_chain(prefix)
+  #   if Configuration.iptables_tree_optimization_enabled?
+  #     suffix = netmask_suffix
+  #     value = 28
+  #     value -= 4 while suffix < value and value > 16
+  #     _ip = IP.new("#{ip.gsub(/\/.*/, "")}/#{value}").network.to_s
+  #     "sq.#{prefix}.#{_ip}"
+  #   else
+  #     "sequreisp.#{prefix}"
+  #   end
+  # end
 
   def auditable_name
     "#{self.class.human_name}: #{client.name} (#{ip})"
@@ -654,79 +681,73 @@ class Contract < ActiveRecord::Base
     [dates, datas]
   end
 
+def ip_addr
+  require "ipaddr"
+  IPAddr.new(ip)
+end
+
+  # this will be overriden by bw changing plug-ins as time_modifiers and data_accounting
   def bandwidth_rate
     1
   end
 
-  def tc_class_qdisc_filter(o = {})
-    classid = "#{o[:parent_mayor]}:#{o[:current_minor]}"
-    tc_rules = []
-    tc_rules << "class #{o[:action]} dev #{o[:iface]} parent #{o[:parent_mayor]}:#{self.class_hex} classid #{classid} htb rate #{o[:rate]}kbit ceil #{o[:ceil]}kbit prio #{o[:prio]} quantum #{o[:quantum]}"
-    tc_rules << "qdisc add dev #{o[:iface]} parent #{classid} sfq perturb 10" if o[:action] == "add" #saco el handle
-    tc_rules << "filter add dev #{o[:iface]} parent #{o[:parent_mayor]}: protocol all prio 200 handle 0x#{o[:mark]}/0x#{o[:mask]} fw classid #{classid}" if o[:action] == "add"
-    tc_rules
+  def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, rate_factor)
+    tc_rules =[]
+    mask = "0000ffff"
+    rt_prio1 = ""
+    rt_prio2 = ""
+    rt_prio3 = ""
+    ceil = plan["ceil_" + direction] * bandwidth_rate
+    if plan["rate_" + direction] == 0
+      rate_factor = 1 if rate_factor > 1
+      rate = ceil * rate_factor
+      if rate > 0
+        r1 = rate*0.10
+        r2 = rate*0.90
+        rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
+        rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
+      end
+    else
+      rate = plan["rate_" + direction]
+      r1 = rate*0.10
+      r2 = rate*0.85
+      r3 = rate*0.05
+      rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
+      rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
+      rt_prio3 = "rt m1 #{r3/3}kbit d 1s m2 #{r3}kbit"
+    end
+    #padre
+    tc_rules << "##{client.name} - IP: #{ip} ID: #{id} KLASS_NUMBER: #{class_hex}"
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{class_hex} hfsc ls m2 #{ceil}kbit ul m2 #{ceil}kbit"
+    #hijos
+    #prio1
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio1_hex} " +
+            "est 1sec 5sec hfsc #{rt_prio1} ls m2 #{ceil}kbit"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio1_hex}"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio1_hex} sfq perturb 10"
+
+    #prio2
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio2_hex} " +
+            "est 1sec 5sec hfsc #{rt_prio2} ls m2 #{ceil}kbit"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio2_hex}"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio2_hex} sfq perturb 10"
+
+    #prio3
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio3_hex} " +
+            "est 1sec 5sec hfsc #{rt_prio3} ls m1 #{ceil * ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * ceil_dfl_percent / 100}kbit ul m2 #{ceil * ceil_dfl_percent / 100}kbit"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio3_hex}"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10"
   end
 
-  def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, prefix=0)
-    tc_rules = []
-    # prefix == 0 significa que matcheo en las ifb donde tengo los clientes colgados directo del root
-    # prefix != 0 significa que matcheo en las ifaces reales donde tengo un arbol x cada enlace
-    mask = prefix == 0 ? "0000ffff" : "00ffffff"
-    contract_min_rate = Contract::MIN_RATE
-    rate = plan["rate_" + direction] == 0 ?  contract_min_rate : plan["rate_" + direction] * bandwidth_rate
-    rate_prio1 = rate == contract_min_rate ? rate/3 : rate*0.05 * bandwidth_rate
-    rate_prio2 = rate == contract_min_rate ? rate/3 : rate*0.9 * bandwidth_rate
-    rate_prio3 = rate == contract_min_rate ? rate/3 : rate*0.05 * bandwidth_rate
-    ceil = plan["ceil_" + direction] * bandwidth_rate
-    mtu = Configuration.mtu
-    quantum_factor = plan.quantum_factor(direction)
+  def rules_for_up_data_counting
+    macrule = (Configuration.filter_by_mac_address and mac_address.present?) ? "-m mac --mac-source #{mac_address}" : ""
+    [ ":count-up.#{ip_addr.to_cidr} -",
+      "-A count-up.#{ip_addr.to_cidr} #{macrule} -s #{ip} -m comment --comment \"data-count-#{ip}-up-data_count\"" ]
+  end
 
-    #padre
-    tc_rules << "##{client.name}: #{id} #{self.klass.number}"
-    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{self.class_hex} htb rate #{rate}kbit ceil #{ceil}kbit quantum #{plan.quantum_total(direction)}"
-
-    if Configuration.use_global_prios
-      #huérfano, solo el filter
-      tc_rules << "filter add dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_hex(prefix)}/0x#{mask} fw classid #{parent_mayor}:#{self.class_hex}"
-    else
-      #hijos
-      #prio1
-      tc_rules << tc_class_qdisc_filter(:prio => 1,
-                                        :iface => iface,
-                                        :parent_mayor => parent_mayor,
-                                        :current_minor => class_prio1_hex,
-                                        :rate => rate_prio1,
-                                        :ceil => ceil,
-                                        :quantum => mtu * quantum_factor * 3,
-                                        :mark => mark_prio1_hex(prefix),
-                                        :mask => mask,
-                                        :action => action)
-
-      #prio2
-      tc_rules << tc_class_qdisc_filter(:prio => 2,
-                                        :iface => iface,
-                                        :parent_mayor => parent_mayor,
-                                        :current_minor => class_prio2_hex,
-                                        :rate => rate_prio2,
-                                        :ceil => ceil,
-                                        :quantum => mtu * quantum_factor * 2,
-                                        :mark => mark_prio2_hex(prefix),
-                                        :mask => mask,
-                                        :action => action)
-
-      #prio3
-      tc_rules << tc_class_qdisc_filter(:prio => 3,
-                                        :iface => iface,
-                                        :parent_mayor => parent_mayor,
-                                        :current_minor => class_prio3_hex,
-                                        :rate => rate_prio3,
-                                        :ceil => ceil * ceil_dfl_percent / 100,
-                                        :quantum => mtu,
-                                        :mark => mark_prio3_hex(prefix),
-                                        :mask => mask,
-                                        :action => action)
-      tc_rules.flatten
-    end
+  def rules_for_down_data_counting
+    [ ":count-down.#{ip_addr.to_cidr} -",
+      "-A count-down.#{ip_addr.to_cidr} -d #{ip} -m comment --comment \"data-count-#{ip}-down-data_count\"" ]
   end
 
   private

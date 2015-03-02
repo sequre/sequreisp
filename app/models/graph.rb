@@ -16,6 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Graph
+  require 'sequreisp_logger'
   RRD_DB_DIR=RAILS_ROOT + "/db/rrd"
   RRD_IMG_DIR=RAILS_ROOT + "/public/images/rrd"
   attr_accessor :element
@@ -86,6 +87,7 @@ class Graph
     begin
       eval "RRD::Wrapper.graph!(" + args.collect{ |n| "'" + n +  "'" }.join(",") + ")"
     rescue => e
+      log_rescue("[Model][Graph][rrd_graph]", e)
       Rails.logger.error "ERROR: Graph::grpah #{e.inspect}"
       nil
     end
