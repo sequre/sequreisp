@@ -17,7 +17,9 @@
       <div id="heading">
         <%= yield :heading  %>
       </div>
-      <%= yield %>
+      <div class="yield">
+        <%= yield %>
+      </div>
     </div>
     <%= render :partial => "layouts/partials/footer" %>
   </div>

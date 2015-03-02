@@ -82,7 +82,7 @@ a.button:visited {
   /* 
       HEIGHT - Total height of button. 
   */
-  height: 26px; 
+  height: 24px;
 
   /*
       NOTE - You must define the font here otherwise your buttons and links could end up diffrent.
@@ -90,8 +90,11 @@ a.button:visited {
 	font-family: "Helvetica Neue", Helvetica, clean, sans-serif;
 
   font-size: 13px;
-  color: #666666;
+  color: #fff;
   background-color: #ffffff;
+  cursor: pointer !important;
+  border-radius: 2px;
+  background-image: url(/images/bg_button.gif);
 }
 
   button.button_active,
@@ -115,7 +118,6 @@ a.button:visited {
     /*
         We define our background top left and use the 'Sliding Doors' Technique for some fast loading buttons.
     */
-    background: url(../images/bg_button_right.gif) top right;
   }
 
   button span span,
@@ -141,7 +143,6 @@ a.button:visited {
     /*
         We define our background top left and use the 'Sliding Doors' Technique for some fast loading buttons.
     */
-    background: url(../images/bg_button_left.gif) top left;
   }
 
   button:hover,

@@ -48,9 +48,9 @@ please read http://easyframework.com/documentation.php
 	small{font-size:.9em;}
 	sup, sub{font-size:.8em;}
 	em, cite, q{font-style:italic;}
-	img{border:none;}			
-	hr{display:none;}	
-	table{width:100%;border-collapse:collapse;}
+	img{border:none;}
+	hr{display:none;}
+	table{width:100%;}
 	th,caption{text-align:left;}
 	form div{margin:.5em 0;clear:both;}
 	label {
@@ -58,9 +58,10 @@ display:block;
 }
 
 fieldset {
-border:1px solid #C4C4B5;
+border:1px rgba(255,255,255,0.1) solid;
 margin:5px 5px 12px;
 padding:7px;
+background: rgba(0,0,0,0.5);
 }
 	
 	
@@ -98,8 +99,14 @@ padding:7px;
 	body, table, input, textarea, select, li, button{
 		font:1em Helvetica, Arial, Sans-Serif;
 		line-height:1.5em;
-		color:#333;
-		}		
+		color:#fff;
+	}
+	input[type="submit"],input[type="button"]{
+		color: #444;
+	}
+	button{
+
+	}
 	body{
 		font-size:13px;
 		background:#424242;
@@ -127,9 +134,8 @@ padding:7px;
 	dt{font-weight:bold;}
 	th, td{padding:.5em 1em;line-height:1.5em;}		
 	th{background:#eee;}
-	td{border-bottom:1px solid #eee;}
-	caption{font-style:italic;color:#777;margin:.5em 0;}	
-	legend{padding:2px 5px;}	
+	caption{font-style:italic;color:#777;margin:.5em 0;}
+	legend{padding:2px 5px;}
 	form div.col{clear:none;}form div.first{clear:both;}
 	form div{overflow:hidden;}
 	
@@ -140,6 +146,7 @@ line-height:1em;
 margin:3px 0 11px;
 padding:3px;
 width:180px;
+color: rgb(0, 0, 0);
 }
 	select {
 width:auto;
@@ -214,11 +221,13 @@ padding:2px;
 	#footer{
 		position:relative;
 		clear:both;
-		height: 30px;
-		border-bottom: 4px solid #740000;
-		background-color: #e3e2da;
-		}	
-		
+		height: 20px;
+		border-bottom: 4px solid #000;
+		background-color: rgba(0,0,0,0.6);
+		padding-top: 10px;
+		margin-bottom: 50px;
+		}
+
 	.content{
 		clear:both;
 	padding:0px 20px;
@@ -226,8 +235,8 @@ padding:2px;
 /*		height: 407px;*/
 /*		background: url(../images/bg_content.png) no-repeat;*/
 /*		background-color: #f7f7f6;*/
-		
-		background-color: #e3e2da;
+
+		/*background-color: #e3e2da;*/
 		padding-left: 20px;
 		}
 	.main, .secondary, .tertiary, .quaternary{
@@ -235,7 +244,6 @@ padding:2px;
 		display:inline;
 		}
 	.main{width:862px;
-		border-bottom: 1px solid #d4d4d3;
 		}
 	.secondary{width:280px;margin-left:40px;}
 	.tertiary{}
@@ -273,7 +281,10 @@ padding:2px;
 			margin:0;
 			padding:0;
 			list-style:none;
-			}	
+			}
+		.nav{
+			margin-left: 20px;
+		}
 		.nav li{
 			float:left;
 			display:inline;
@@ -303,7 +314,7 @@ padding:2px;
 		border-right: 1px solid #c4c4b5;;
 		margin-right:0.4em;
 		padding-right:0.4em;
-		color: #821010;
+		color: #fff;
 		}
 /* //navigation */
 
@@ -391,11 +402,10 @@ padding:2px;
 /* END Pagination */		
 
 #heading {
-	width: 901px;
+	width: 902px;
 	height: 30px;
-	background-color: #eeede8;
+	background-color: rgba(0,0,0,0.6);
 	margin-left:-20px;
-	margin-bottom: 16px;
 	padding-top: 15px;
 	padding-bottom: 5px;
 }
@@ -408,11 +418,15 @@ padding:2px;
 }
 
 #menu {
-height:23px;
-margin-bottom:14px;
-margin-top:-10px;
+height:30px;
+/* margin-bottom:14px; */
+/* margin-top:-10px; */
 width:902px;
 padding-top: 20px;
+padding-bottom: 20px;
+background: #414649;
+margin-left: -20px;
+background-image: url(/images/back_header_menu.jpg);
 }
 
 #crear_nuevo{
@@ -425,10 +439,10 @@ padding-top: 20px;
 }
 
 .separador {
-	background: url(../images/separador.png) repeat-x;
-	height: 2px;
+	height: 1px;
 	width: 862px;
 	margin-top: 10px;
+	margin-bottom: 10px;
 	clear:both;
 }
 
@@ -450,6 +464,11 @@ a.logout {
 #footer a{
 	margin-left: 800px;
 	color: #898780;
+	text-decoration: none;
+	display: block;
+	background: #000;
+	padding-left: 11px;
+	border-top-left-radius: 5px;
 }
 
 .btn {

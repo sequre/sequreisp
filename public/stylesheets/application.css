@@ -7,6 +7,7 @@ body {
 	min-width: 100%;
 	font-family: "Helvetica Neue", Helvetica, clean, sans-serif;
 	font-size: 13px;
+  background-image: url(/images/back_admin.jpg) !important;
 }
 
 #container {
@@ -35,10 +36,10 @@ Deprecated in favor of foldeable menues
 */
 
 div#apply_changes_banner{
-    background-color: #B6B6B6;
+    background-color: rgba(43,142,172,0.4);
     height: 40px;
     margin: 0 -20px 0 -20px;
-    
+    border-bottom: 2px #347488 solid;
 }
 
 div#apply_changes_banner a{
@@ -47,7 +48,7 @@ div#apply_changes_banner a{
 div#apply_changes_banner span#apply_changes_notice{
     line-height: 40px;
     margin:0 20px;
-    color: #900;
+    color: #fff;
     font-weight: bold;
 }
 
@@ -57,4 +58,15 @@ div#apply_changes_button{
     margin-top: 7px;
 }
 
+div.yield{
+  background: none repeat scroll 0% 0% rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  margin-left: -20px;
+  padding-left: 20px;
+  width: 862px;
+  padding-right: 20px;
+}
 
+div#busqueda{
+  overflow: hidden;
+}
