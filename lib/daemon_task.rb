@@ -41,7 +41,7 @@ class DaemonTask
       log_rescue("[Daemon] ERROR Thread #{name}", e)
     ensure
       FileUtils.rm(@log_path) if File.exist?(@log_path)
-      log "[Wispro][Daemon] STOP thread #{name}"
+      log "[Daemon] STOP thread #{name}"
     end
   end
 
@@ -59,7 +59,7 @@ class DaemonTask
   def start
     @thread_daemon = Thread.new do
       @@threads << self
-      log "[Wispro][Daemon] START Thread #{name}"
+      log "[Daemon] START Thread #{name}"
       Thread.current["name"] = @name
       loop do
         begin
@@ -68,7 +68,7 @@ class DaemonTask
             set_next_exec
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
-            log "[Wispro][Daemon] EXEC Thread #{name}" if verbose?
+            log "[Daemon] EXEC Thread #{name}" if verbose?
           end
         rescue Exception => e
           log_rescue("[Daemon] ERROR Thread #{name}", e)
