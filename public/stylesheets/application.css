@@ -61,6 +61,7 @@ div#wait_apply_changes_button {
     float: right;
     padding-right: 20px;
     margin-top: 7px;
+    margin-right: -220px;
 }
 
 #header_version{

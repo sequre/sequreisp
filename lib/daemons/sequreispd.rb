@@ -42,6 +42,8 @@ require 'command_context'
 
 threads = []
 begin
+#################################################
+#################################################
   if $running
     DaemonTask.descendants.each do |daemon_task|
       daemon = daemon_task.new
@@ -50,7 +52,7 @@ begin
     end
   end
 rescue Exception => e
-  log_rescue("Sequreispd", e)
+  log_rescue("[Daemon][Sequreispd] ERROR GENERAL DAEMON", e)
 ensure
   while($running) do
     threads.each do |thread|
@@ -60,4 +62,6 @@ ensure
   end
   threads.map{ |thread| thread.stop }
   threads.map{ |thread| thread.join }
+#################################################
+#################################################
 end

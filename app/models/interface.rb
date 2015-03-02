@@ -16,6 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Interface < ActiveRecord::Base
+  require 'sequreisp_logger'
   DEFAULT_TX_QUEUE_LEN_FOR_VLAN = 1000
   DEFAULT_TX_QUEUE_LEN_FOR_IFB = 1000
   acts_as_audited
@@ -166,6 +167,7 @@ class Interface < ActiveRecord::Base
     begin
       File.open("/etc/udev/rules.d/70-persistent-net.rules").readlines.join.scan(/NAME="([^"]+)"/).flatten
     rescue => e
+      log_rescue("[Model][Interface][scan]", e)
       Rails.logger.error e.inspect
     end
   end

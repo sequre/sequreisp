@@ -38,7 +38,7 @@ class DaemonTask
     begin
       @thread_daemon.exit
     rescue Exception => e
-      log_rescue("Daemon", e)
+      log_rescue("[Daemon] ERROR Thread #{name}", e)
     ensure
       FileUtils.rm(@log_path) if File.exist?(@log_path)
       log "[Wispro][Daemon] STOP thread #{name}"
@@ -47,7 +47,7 @@ class DaemonTask
 
   def set_next_exec
     if not defined?(@next_exec)
-      @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.new
+      @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.now
       @next_exec += @time_for_exec[:frecuency] if Time.now > @next_exec
     else
       while @next_exec <= Time.now
@@ -71,7 +71,7 @@ class DaemonTask
             log "[Wispro][Daemon] EXEC Thread #{name}" if verbose?
           end
         rescue Exception => e
-          log_rescue("Daemon", e)
+          log_rescue("[Daemon] ERROR Thread #{name}", e)
           log_rescue_file(@log_path, e)
         end
         to_sleep
@@ -191,7 +191,7 @@ class DaemonCheckLink < DaemonTask
         AppMailer.deliver_check_physical_links_email
       end
     rescue => e
-      log_rescue("Daemon", e)
+      log_rescue("[Daemon] ERROR Thread #{name}", e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::check_physical_links e=>#{e.inspect}"
     end
   end
@@ -254,7 +254,7 @@ class DaemonCheckLink < DaemonTask
         AppMailer.deliver_check_links_email
       end
     rescue => e
-      log_rescue("Daemon", e)
+      log_rescue("[Daemon] ERROR Thread #{name}", e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::check_links(AppMailer) e=>#{e.inspect}"
     end
   end
@@ -264,7 +264,7 @@ end
 class DaemonBackupRestore < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10 }
+    @time_for_exec = { :frecuency => 10.seconds }
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_backup_restore }
     super
@@ -295,7 +295,7 @@ end
 class DaemonDataCounting < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10.seconds }
+    @time_for_exec = { :frecuency => 60.seconds }
     @max_current_traffic_count = 1000 / 8 * 1024 * 1024 * 60
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_data_counting }
@@ -343,7 +343,7 @@ class DaemonDataCounting < DaemonTask
           end
         end
       rescue => e
-        log_rescue("Daemon", e)
+        log_rescue("[Daemon] ERROR Thread #{name}", e)
         # Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
       ensure
         time_last = Time.now
@@ -369,7 +369,7 @@ class DaemonDataCounting < DaemonTask
           end
         end
       rescue => e
-        log_rescue("Daemon", e)
+        log_rescue("[Daemon] ERROR Thread #{name}", e)
       end
     end
   end

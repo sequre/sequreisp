@@ -16,6 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Backup
+  require 'sequreisp_logger'
   CONFIG = ActiveRecord::Base.configurations[Rails.env]
   attr_reader :name
 
@@ -42,6 +43,7 @@ class Backup
       end
       $?.exitstatus == 0
     rescue => e
+      log_rescue("[Model][Backup][mysqldump]", e)
       Rails.logger.error e.inspect
     end
   end
