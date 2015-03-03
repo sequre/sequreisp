@@ -70,3 +70,11 @@ div.yield{
 div#busqueda{
   overflow: hidden;
 }
+
+div#notification{
+  background-color: rgba(63, 94, 109, 0.4);
+  margin-left: -20px;
+  width: 882px;
+  padding-left: 20px;
+  overflow: hidden;
+}
