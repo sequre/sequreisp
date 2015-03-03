@@ -41,7 +41,7 @@ class AppMailer < SequreMailer
 
   def set_from
     if Rails.env.development?
-      from "Wispro <noreply@wispro.com.ar"
+      from "Wispro <noreply@wispro.co"
     else
       from "Wispro <noreply>"
     end
