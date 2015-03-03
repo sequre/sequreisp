@@ -316,6 +316,9 @@ padding:2px;
 		padding-right:0.4em;
 		color: #fff;
 		}
+		.yield .nav li a{
+			color: #2C8FAD;
+		}
 /* //navigation */
 
 /* header */
