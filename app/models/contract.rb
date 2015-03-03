@@ -754,10 +754,10 @@ end
 
   #Please i need refactor
   def strip_whitespace
-    self.tcp_prio_ports= self.tcp_prio_ports.strip
-    self.udp_prio_ports = self.udp_prio_ports.strip
-    self.prio_protos = self.prio_protos.strip
-    self.prio_helpers =self.prio_helpers.strip
+    self.tcp_prio_ports = self.tcp_prio_ports.strip unless self.tcp_prio_ports.nil?
+    self.udp_prio_ports = self.udp_prio_ports.strip unless self.udp_prio_ports.nil?
+    self.prio_protos = self.prio_protos.strip unless self.prio_protos.nil?
+    self.prio_helpers = self.prio_helpers.strip unless self.prio_helpers.nil?
   end
 
 end
