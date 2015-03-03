@@ -736,7 +736,7 @@ width:600px;
 .avisos h1{
 	font-family: "Georgia", Times, serif;
 	font-size: 30px;
-	color: #550000;
+	color: rgb(42, 142, 172);
 }
 
 .main_avisos{
@@ -807,7 +807,7 @@ padding-bottom:3px;
 }
 
 .contact_info ul li strong{
-	color: #550000;
+	color: rgb(42, 142, 172);
 }
 
 .logo_foot img{
