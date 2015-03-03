@@ -19,31 +19,31 @@ class AppMailer < SequreMailer
 
   def check_links_email
     set_language
-    recipients Configuration.notification_email.split(",") 
+    recipients Configuration.notification_email.split(",")
     set_from
-    subject "[sequreisp] " + I18n.t('app_mailer.check_links_email.subject')
+    subject "[wispro] " + I18n.t('app_mailer.check_links_email.subject')
     sent_on Time.now
     content_type "text/html"
-    #body {:user => user, :url => "http://example.com/login"} 
+    #body {:user => user, :url => "http://example.com/login"}
   end
 
   def check_physical_links_email
     set_language
-    recipients Configuration.notification_email.split(",") 
+    recipients Configuration.notification_email.split(",")
     set_from
-    subject "[sequreisp] " + I18n.t('app_mailer.check_physical_links_email.subject')
+    subject "[wispro] " + I18n.t('app_mailer.check_physical_links_email.subject')
     sent_on Time.now
     content_type "text/html"
-    #body {:user => user, :url => "http://example.com/login"} 
+    #body {:user => user, :url => "http://example.com/login"}
   end
 
   private
 
   def set_from
     if Rails.env.development?
-      from "Sequre ISP <noreply@sequre.com.ar"
+      from "Wispro <noreply@wispro.com.ar"
     else
-      from "Sequre ISP <noreply>"
+      from "Wispro <noreply>"
     end
   end
 

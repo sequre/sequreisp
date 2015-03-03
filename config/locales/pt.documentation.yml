@@ -173,7 +173,7 @@ pt:
               se recomenda colocar um valor um 5% inferior ao real.
           kind:
             text: >
-              SequreISP suporta todo tipo de fornecedores de Internet, os que se podem resumir
+              Wispro suporta todo tipo de fornecedores de Internet, os que se podem resumir
               em 3 casos:
 
               * *IP fixa*
@@ -454,7 +454,7 @@ pt:
           global_prios:
             level_class: 'help_level_1'
             text: >
-              SequreISP tem um exclusivo sistema de manejo de prioridades segundo o tipo
+              Wispro tem um exclusivo sistema de manejo de prioridades segundo o tipo
               de tráfego.
 
               Isto permite definir um tráfego prioritário que terá um tratamento preferencial

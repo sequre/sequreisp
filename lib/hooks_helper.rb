@@ -62,11 +62,11 @@ module HooksHelper
   end
 
   def link_footer_extension
-  "<a href='http://www.sequreisp.com'>sequreisp.com</a>".html_safe
+  "<a href='http://www.wispro.co'>wispro.co</a>".html_safe
   end
 
   def heading_name
-    "SequreISP"
+    "Wispro"
   end
 
   def massive_settings_form_extensions(form)

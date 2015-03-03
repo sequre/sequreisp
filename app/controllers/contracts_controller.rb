@@ -62,7 +62,7 @@ class ContractsController < ApplicationController
     # send it to the browsah
     send_data Contract.to_csv(@contracts),
             :type => 'text/csv; charset=UTF-8; header=present',
-            :disposition => "attachment; filename=sequreisp_contracts_#{Time.now.strftime("%Y-%m-%d")}.csv"
+            :disposition => "attachment; filename=wispro_contracts_#{Time.now.strftime("%Y-%m-%d")}.csv"
   end
   # GET /contracts/1
   # GET /contracts/1.xml

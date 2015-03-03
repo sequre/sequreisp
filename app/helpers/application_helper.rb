@@ -78,7 +78,7 @@ module ApplicationHelper
   end
 
   def support_url
-    "http://www.sequreisp.com/portal/issues/new?locale=#{I18n.locale}"
+    "http://www.wispro.co/portal/issues/new?locale=#{I18n.locale}"
   end
 
 end

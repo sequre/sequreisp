@@ -223,7 +223,7 @@ es:
         web_interface_listen_on_443: "Escuchar peticiones de la interfaz web en puerto 443(HTTPS)"
         web_interface_listen_on_8080: "Escuchar peticiones de la interfaz web en puerto 8080"
         mail_relay_used: "Usar mail relay"
-        mail_relay_manipulated_for_sequreisp: "Manejar la configuración de envíos de e-mail con SequreISP"
+        mail_relay_manipulated_for_sequreisp: "Manejar la configuración de envíos de e-mail con Wispro"
         mail_relay_option_server: "Servicios"
         mail_relay_smtp_server: "Servidor SMTP"
         mail_relay_smtp_port: "Puerto"
@@ -346,7 +346,7 @@ es:
     audits: "Auditorías"
     always_allowed_sites: "Sitios permitidos"
     help: "Ayuda"
-    guides: "Guías de SequreISP"
+    guides: "Guías de Wispro"
     support: "Soporte"
   buttons:
     export_to_csv: "Exportar a csv"
@@ -419,7 +419,7 @@ es:
     data: 'Datos'
     traffic: 'Trafico'
   about:
-    version: "Versión SequreISP"
+    version: "Versión Wispro"
     url: "Actualizaciones, módulos y soporte disponible en"
     website_url: "Sitio web"
   dashboard:
@@ -439,7 +439,7 @@ es:
       free: "Libre"
       use: "En uso"
     name_service:
-      sequreisp_daemon: "Demonio SequreISP"
+      sequreisp_daemon: "Demonio Wispro"
       bind_dns_server: "Servicio Bind DNS"
       apache_web_server: "Servicio Apache Web"
       mysql_server: "Servicio MySQL"
