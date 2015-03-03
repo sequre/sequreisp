@@ -58,10 +58,10 @@ display:block;
 }
 
 fieldset {
-border:1px rgba(255,255,255,0.1) solid;
-margin:5px 5px 12px;
-padding:7px;
-background: rgba(0,0,0,0.5);
+margin: 5px 5px 12px;
+padding: 7px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+background: none repeat scroll 0% 0% #CCC;
 }
 	
 	
@@ -99,7 +99,7 @@ background: rgba(0,0,0,0.5);
 	body, table, input, textarea, select, li, button{
 		font:1em Helvetica, Arial, Sans-Serif;
 		line-height:1.5em;
-		color:#fff;
+		color:#000;
 	}
 	input[type="submit"],input[type="button"]{
 		color: #444;
@@ -221,9 +221,9 @@ padding:2px;
 	#footer{
 		position:relative;
 		clear:both;
-		height: 20px;
+		height: 19px;
 		border-bottom: 4px solid #000;
-		background-color: rgba(0,0,0,0.6);
+		background: none repeat scroll 0% 0% #C4C4C4;
 		padding-top: 10px;
 		margin-bottom: 50px;
 		}
@@ -404,7 +404,7 @@ padding:2px;
 #heading {
 	width: 902px;
 	height: 30px;
-	background-color: rgba(0,0,0,0.6);
+	background-color: rgba(46, 47, 51, 0.8);
 	margin-left:-20px;
 	padding-top: 15px;
 	padding-bottom: 5px;
@@ -414,7 +414,8 @@ padding:2px;
 	display: inline;
 	margin-left: 46px;
 	margin-top: 19px;
-	color: #a8a7a4;
+	color: #48AEBE;
+	font-size: 22px;
 }
 
 #menu {
@@ -453,8 +454,8 @@ a.logout {
 	top: 8px;
 	margin-right: 15px;
 	float: right;
-	color: #3c0202;
-	text-shadow:0 1px 0 rgba(117, 35, 35, 0.5);
+	color: #2C8FAD;
+	text-shadow:0 1px 0 rgba(0, 0, 0, 0.5);
 }
 
 #filtro a {

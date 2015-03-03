@@ -18,12 +18,13 @@ th, td{
 	text-align:left;
 	padding:.5em;
 	border:1px solid rgba(255,255,255,0.1);
+	border-color: rgba(1, 1, 2, 0.21);
 	border-left: none;
 	border-right: none;
 }
 th{
 	background:transparent repeat-x;
-	color:#fff;
+	color:#000;
 }
 td{
 	background:#e5f1f4;
@@ -32,7 +33,7 @@ td{
 /* tablecloth styles */
 
 tr.even td{background:transparent !important;}
-tr.odd td{background:rgba(0,0,0,0.5) !important; }
+tr.odd td{background:rgba(0,0,0,0.15) !important; }
 
 th.over, tr.even th.over, tr.odd th.over{background:#4a98af;}
 th.down, tr.even th.down, tr.odd th.down{background:#bce774;}
@@ -46,7 +47,7 @@ td.selected, tr.even td.selected, tr.odd td.selected{background:#bce774;color:#5
 td.empty, tr.odd td.empty, tr.even td.empty{background:#fff;}
 
 tr.odd th a{
-	color: #fff;
+	color: #000;
 	text-decoration: underline;
 	cursor: pointer;
 }
