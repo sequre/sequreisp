@@ -40,7 +40,7 @@ div.horizontal_button_bar div.hbb_container div.hbb_content div.hbb_rotator div.
     line-height: 30px;
     font-weight: bold;
     font-size: 1.1em;
-    background-color: #01455A;
+    background-color: #2A8EAC;
     color: white;
     display: inline-block;
 }
@@ -54,7 +54,7 @@ div#context_help_bar {
   position: fixed;
   width: 350px;
   right: -350px;
-  top: 20px;  
+  top: 20px;
   bottom: 20px;
   background-color: #eaeaea;
 }
@@ -67,7 +67,7 @@ div#context_help_bar div.chb_top_bar {
   /*background-color: #E3E2DA;*/
   font-weight: bold;
   font-size: 1.1em;
-  background-color: #01455A;
+  background-color: #2A8EAC;
   color: white;
   line-height: 41px;
   text-align: left;
@@ -84,10 +84,10 @@ div#context_help_bar div.chb_content {
   text-align: left;
   padding-left: 10px;
   padding-top: 10px;
-  padding-right: 5px; 
+  padding-right: 5px;
   position: absolute;
   top: 41px;
-  left: 0px; 
+  left: 0px;
   right: 0px;
   bottom: 0px;
   overflow: scroll;
@@ -97,7 +97,7 @@ div#context_help_bar_ie6 div.chb_content {
   text-align: left;
   padding-left: 10px;
   padding-top: 10px;
-  padding-right: 5px; 
+  padding-right: 5px;
 }
 
 div#context_help_bar div.chb_content h1.help_title,
@@ -109,7 +109,7 @@ div#context_help_bar_ie6 div.chb_content h1.help_title {
 
 div#context_help_bar div.chb_content h1.help_title a,
 div#context_help_bar_ie6 div.chb_content h1.help_title a {
-  
+
   color: #fff;
 }
 

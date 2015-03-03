@@ -451,7 +451,7 @@ es:
       free: "Libre"
       use: "En uso"
     name_service:
-      sequreisp_daemon: "Demonio wispro"
+      sequreisp_daemon: "Demonio Wispro"
       bind_dns_server: "Servicio Bind DNS"
       apache_web_server: "Servicio Apache Web"
       mysql_server: "Servicio MySQL"
