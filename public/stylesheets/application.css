@@ -59,7 +59,7 @@ div#apply_changes_button{
 }
 
 div.yield{
-  background: none repeat scroll 0% 0% rgba(0, 0, 0, 0.6);
+  background: none repeat scroll 0% 0% #C4C4C4;
   overflow: hidden;
   margin-left: -20px;
   padding-left: 20px;
