@@ -193,7 +193,7 @@ en:
         tcp: "TCP"
         udp: "UDP"
       configuration:
-        redirect_external_dns_request: "Redirect externar dns request to SequreISP"
+        redirect_external_dns_request: "Redirect externar dns request to server"
         use_external_number_client: 'Use external client_number'
         default_tcp_prio_ports: "High priority TCP ports (global)"
         default_udp_prio_ports: "High priority UDP ports (global)"
@@ -326,6 +326,7 @@ en:
         use_external_number_client: "If disabled, internal ids are used as client numbers"
         mail_relay_manipulated_for_sequreisp: "Disable if you want to manually edit /etc/postfix/main.cf"
         in_safe_mode: "In safe mode, not be apply rules for bandwidth control, ip forwarding, proxy arp and any package filter"
+        redirect_external_dns_request: "When generate a notifications, the external request dns will be redirect to server"
       provider:
         shape_rate_down_on_ingress: "Download traffic shaping is done on the LAN interface; if you enable this option, an extra control will be enabled on ingress that will shape clients' and server's own traffic to the configured download rate"
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"

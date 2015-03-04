@@ -323,6 +323,7 @@ pt:
         use_external_number_client: "Se desativado, ids internos são usados como números de clientes"
         mail_relay_manipulated_for_sequreisp: "Desativar se você quiser editar manualmente o /etc/postfix/main.cf"
         in_mode_safe: "No modo de segurança, não ser aplicáveis as regras para o controle de largura de banda, o encaminhamento de IP, arp proxy e qualquer filtro de pacote"
+        redirect_external_dns_request: "When generate a notifications, the external request dns will be redirect to server"
       provider:
         shape_rate_down_on_ingress: "O controle de tráfego de baixada se faz na interface LAN; se habilita esta opção se habilitará um controle adicional na interface WAN que garantirá que o tráfego dos clientes mais o do servidor não excedam o limite configurado"
         avoid_nat_addresses: "Um endereço por linha, notação CIDR, como 200.10.20.0/24"
