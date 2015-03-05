@@ -22,70 +22,41 @@ float: left;
 </style>
 <script type="text/javascript">
   $(function(){
-
-   function show_hide_mail_relay() {
-      if ($('#configuration_mail_relay_used').attr('checked')) {
-        $('#mail_relay').show();
-      } else {
-        $('#mail_relay').hide();
-      }
-   }
-
-    show_hide_mail_relay();
-
-   function configuration_apply_changes_automatically() {
-      if ($('#configuration_apply_changes_automatically').attr('checked')) {
+    $('#configuration_apply_changes_automatically').change( function() {
+      if ($('#configuration_apply_changes_automatically').is(':checked')) {
         $('#configuration_apply_changes_automatically_hour_input').show();
       } else {
         $('#configuration_apply_changes_automatically_hour_input').hide();
       }
-    }
-
-   configuration_apply_changes_automatically();
-
-   $('#configuration_apply_changes_automatically').change( function() {
-     configuration_apply_changes_automatically();
-   });
-
+    });
     $('#configuration_mail_relay_used').change( function() {
-      if ($('#configuration_mail_relay_used').attr('checked')) {
+      if ($('#configuration_mail_relay_used').is(':checked')) {
         $('#mail_relay').show();
       } else {
         $('#mail_relay').hide();
       }
     });
-
-    function mail_relay_manipulated_for_sequreisp() {
-      if ($('#configuration_mail_relay_manipulated_for_sequreisp').attr('checked')) {
-        $('#manipulated_for_sequreisp').show();
-      } else {
-        $('#manipulated_for_sequreisp').hide();
-      }
-   }
-
-    mail_relay_manipulated_for_sequreisp();
-
     $('#configuration_mail_relay_manipulated_for_sequreisp').change( function() {
-      if ($('#configuration_mail_relay_manipulated_for_sequreisp').attr('checked')) {
+      if ($('#configuration_mail_relay_manipulated_for_sequreisp').is(':checked')) {
         $('#manipulated_for_sequreisp').show();
       } else {
         $('#manipulated_for_sequreisp').hide();
       }
     });
-
-    function checkbox_dns_use_forwarders() {
+    /*checkbox_dns_use_forwarders*/
+    $('#configuration_dns_use_forwarders').change( function() {
       if ($('#configuration_dns_use_forwarders').attr('checked')) {
         $('#bind_dns').show();
       } else {
         $('#bind_dns').hide();
       }
-    }
-
-   checkbox_dns_use_forwarders();
-    $('#configuration_dns_use_forwarders').change( function() {
-      checkbox_dns_use_forwarders();
     });
-  })
+
+    $('#configuration_mail_relay_used').change();
+    $('#configuration_mail_relay_manipulated_for_sequreisp').change();
+    $('#configuration_apply_changes_automatically').change();
+    $('#configuration_dns_use_forwarders').change();
+  });
 </script>
 <% unless current_user.may_update_configuration?(@configuration) %>
 <script type="text/javascript">
