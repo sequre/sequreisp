@@ -14,6 +14,13 @@
   li.delete_address {
     margin-top: 31px;
   }
+  #get_mac_address{
+    display: none;
+    color: #ff0000;
+  }
+  #mac_address_already_assigned{
+    color: #ff0000;
+    display:none;
   }
 </style>
 <script type="text/javascript">
@@ -63,23 +70,53 @@
     $('#get_interface_mac_address').click(function(){
       $('.mac_loader').show();
       _name = $('#interface_name').val();
+      is_vlan = $('#interface_vlan').is(':checked');
+      id_vlan = $('#interface_vlan').is(':checked') ? $('#interface_vlan_id').val() : undefined;
+      $('#mac_address_already_assigned').hide();
+
+      $('#get_mac_address').hide();
+      if(id_vlan == ""){
+        $('.mac_loader').hide();
+        $('#get_mac_address').show();
+        return false;
+      }
+
       if ($('#interface_vlan_interface_id option:selected').text() != "") {
         _name = $('#interface_vlan_interface_id option:selected').text();
       }
-      $.get('<%= get_mac_address_interfaces_path %>', {name: _name}, function(data){
+      $.get('<%= get_mac_address_interfaces_path %>', {name: _name, id_vlan: id_vlan, interface_id: '<%= @interface.id %>'}, function(data){
         if (data.mac_address) {
           $('#interface_mac_address').val(data.mac_address);
           //$.scrollTo('#contract_mac_address_input', 600);
-	 $('#interface_mac_address').css('background-color', '#00FF00').effect('pulsate', {times: 3}, null, function(){
+   $('#interface_mac_address').css('background-color', '#00FF00').effect('pulsate', {times: 3}, null, function(){
             $('#interface_mac_address').css('background-color', '#FFFFFF');
           })
         } else {
           $('#interface_mac_address').css('background-color', '#FF0000').effect('pulsate', {times: 3}, null, function(){
             $('#interface_mac_address').css('background-color', '#FFFFFF');
           })
-	 /* $('#contract_ip').focus(); */
+   /* $('#contract_ip').focus(); */
         }
         $('.mac_loader').hide();
+
+        if(data.contract_exists != false){
+          $('#mac_address_already_assigned').find('span').html(data.contract_exists);
+          $('#mac_address_already_assigned').find('a').attr('href',"<%= contract_path(0) %>".replace('0',data.contract_exists));
+          $('#mac_address_already_assigned').css({'display' : 'inline'});
+
+          $('#mac_address_already_assigned').find('.lbl').hide();
+          $('#mac_address_already_assigned').find('#contract').show();
+        }
+
+        if(data.interface_exists != false){
+          $('#mac_address_already_assigned').find('span').html(data.interface_exists);
+          $('#mac_address_already_assigned').find('a').attr('href',"<%= interface_path(0) %>".replace('0',data.interface_exists));
+          $('#mac_address_already_assigned').css({'display' : 'inline'});
+
+          $('#mac_address_already_assigned').find('.lbl').hide();
+          $('#mac_address_already_assigned').find('#interface').show();
+        }
+
       },'json');
     });
     $('.mac_loader').hide();
@@ -108,6 +145,14 @@
     <%= form.input :mac_address, :wrapper_html => {:class => "left" } %>
       <a id="get_interface_mac_address" href="javascript:void(null)"><%= I18n.t('buttons.get_arping_mac_address') %></a>
       <%= image_tag "loader_horizontal.gif", :class => 'mac_loader' %>
+      <h5 id="mac_address_already_assigned">
+        * <%= t 'error_messages.mac_address_already_assigned' %>
+        <a href="#" target="_blank">
+        <b id="contract" class="lbl"><%= t 'activerecord.models.contract.one' %></b>
+        <b id="interface" class="lbl"><%= t 'activerecord.models.interface.one' %></b>
+        # <span></span></a>
+      </h5>
+      <h5 id="get_mac_address">* <%= t 'error_messages.vlan_id_is_blank' %></h5>
     <div style="clear: both"></div>
     <% form.inputs :name => t('fieldsets.interface.ips'), :id => "ips" do %>
       <% form.semantic_fields_for :addresses do |address| %>

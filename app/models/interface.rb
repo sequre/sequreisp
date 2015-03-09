@@ -40,6 +40,8 @@ class Interface < ActiveRecord::Base
   validates_numericality_of :vlan_id, :allow_nil => true, :only_integer => true, :greater_than => 1, :less_than => 4095
   validates_uniqueness_of :name
   validates_format_of :name, :with => /^[a-zA-Z0-9]+$/, :message => I18n.t("messages.interface.name_without_space"), :if => 'not vlan'
+  validates_uniqueness_of :mac_address, :if => 'kind == "lan"'
+  validate :uniqueness_mac_address_in_contracts, :if => 'kind == "lan"'
 
   validate :name_cannot_be_changed
   validate_on_create :interface_exist, :if => 'not vlan'
@@ -60,6 +62,12 @@ class Interface < ActiveRecord::Base
 
   named_scope :only_lan, :conditions => { :kind => "lan" }
   named_scope :only_wan, :conditions => { :kind => "wan" }
+
+  def uniqueness_mac_address_in_contracts
+     if (contract = Contract.all(:conditions => { :mac_address => self.mac_address })).presence
+      errors.add(:mac_address, I18n.t('validations.interface.mac_address_taken_in_contract', :contract_id => contract.first.id ) )
+     end
+  end
 
   def set_mac_address
     real_mac_address = Interface.which_is_real_mac_address(name, vlan?)

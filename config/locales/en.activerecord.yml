@@ -254,6 +254,7 @@ en:
         vlan_interface: "Real interface"
         kind: "Kind"
         physical_link: "Link"
+        mac_address: "Mac address"
       audit:
         id: "ID"
         user: "User Responsible"
@@ -536,6 +537,7 @@ en:
       unable_to_change_kind: "Unable to change kind, this interface has a provider assigned"
       name_cannot_be_changed: "The interface name cannot be changed once created"
       name_does_not_exist: "The interface name does not match any of the attached network interfaces"
+      mac_address_taken_in_contract: "existing in <a target='_blank' href='/contracts/%{contract_id}/'>Contract No. %{contract_id}</a>"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "The selected provider does not belong to the group's assigned plan"
       protocol_must_be_specified: "Protocol must be specified"
@@ -552,6 +554,7 @@ en:
       proxy_arp_provider_does_not_belongs_to_plan: "The selected provider does not belong to any of the providers listed in this contract's plan"
       proxy_arp_provider_can_not_be_guessed: "The IP address assigned to this contract does not belongs to any of the providers, you must select a provider"
       unique_provider_does_not_belongs_to_plan: "The assigned provider does not belong to the selected plan"
+      mac_address_taken_in_interface: "existing in <a target='_blank' href='/interface/%{interface_id}/'>Interface No. %{interface_id}</a>"
     configuration:
       notification_email_invalid: "Invalid email address"
       web_interface_listen_at_least_on_one_port: "At least one port must be enabled for web interface requests"
@@ -624,6 +627,8 @@ en:
     audit_end_date: "Until date"
     select_changes: "Select changes"
   error_messages:
+    mac_address_already_assigned: "Dirección MAC already assigned in"
+    vlan_id_is_blank: "ID VLAN required"
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'
     define_one_dns_server: 'Define at less one DNS server'

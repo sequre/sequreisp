@@ -254,6 +254,7 @@ es:
         vlan_interface: "Interfaz real"
         kind: "Tipo"
         physical_link: "Enlace"
+        mac_address: "Dirección MAC"
       audit:
         id: "ID"
         user: "Usuario Responsable"
@@ -536,6 +537,7 @@ es:
       unable_to_change_kind: "No se puede cambiar el tipo, esta interfaz tiene un proveedor asignado"
       name_cannot_be_changed: "El nombre de una interfaz no se puede cambiar una vez creada"
       name_does_not_exist: "El nombre de la interfaz no coincide con ninguna de las placas de red reconocidas"
+      mac_address_taken_in_contract: "existente en <a target='_blank' href='/contracts/%{contract_id}/'>Contrato Nro. %{contract_id}</a>"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "El proveedor seleccionado no pertenece al grupo del plan asignado"
       protocol_must_be_specified: "Debe especificar el protocolo"
@@ -552,6 +554,7 @@ es:
       proxy_arp_provider_does_not_belongs_to_plan: "El proveedor seleccionado no pertenece a ninguno de los proveedores del plan asignado al contrato"
       proxy_arp_provider_can_not_be_guessed: "La IP asignada al contrato no pertenece a ningun proveedor, debe especificar el proveedor"
       unique_provider_does_not_belongs_to_plan: "El proveedor asignado no pertenece al plan seleccionado"
+      mac_address_taken_in_interface: "existente en <a target='_blank' href='/interface/%{interface_id}/'>Interface Nro. %{interface_id}</a>"
     configuration:
       notification_email_invalid: "Dirección de e-mail inválida"
       web_interface_listen_at_least_on_one_port: "Al menos se debe seleccionar un puerto para la interfaz web"
@@ -624,6 +627,8 @@ es:
     audit_end_date: "Hasta"
     select_changes: "Seleccione cambios"
   error_messages:
+    mac_address_already_assigned: "Dirección MAC ya asignada en"
+    vlan_id_is_blank: "Es requerido un id de VLAN"
     not_selected_any_options: 'No se ha selecionado ninguna opción'
     not_repeat_dns_server: 'Existen servidores DNS repetidos'
     define_one_dns_server: 'Definir al menos un servidor DNS'
