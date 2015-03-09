@@ -32,8 +32,8 @@ class Plan < ActiveRecord::Base
   validates_numericality_of :burst_down, :burst_up, :only_integer => true, :greater_than_or_equal_to => 0
   validates_numericality_of :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0, :less_than => 4294967295
 
-  validate :remaining_rate_down
-  validate :remaining_rate_up
+  validate :remaining_rate_down, :if => "!rate_down.nil?"
+  validate :remaining_rate_up, :if => "!rate_up.nil?"
 
   def remaining_rate_down
     if not new_record?
