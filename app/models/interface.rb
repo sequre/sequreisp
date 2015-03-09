@@ -64,7 +64,7 @@ class Interface < ActiveRecord::Base
   named_scope :only_wan, :conditions => { :kind => "wan" }
 
   def uniqueness_mac_address_in_contracts
-     if (contract = Contract.all(:conditions => { :mac_address => self.mac_address })).presence
+     if (contract = Contract.all(:conditions => { :mac_address => self.mac_address })).count > 0
       errors.add(:mac_address, I18n.t('validations.interface.mac_address_taken_in_contract', :contract_id => contract.first.id ) )
      end
   end

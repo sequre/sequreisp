@@ -77,7 +77,7 @@ class Contract < ActiveRecord::Base
   validate :uniqueness_mac_address_in_interfaces_lan
 
   def uniqueness_mac_address_in_interfaces_lan
-    if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).presence
+    if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).count > 0
       errors.add(:mac_address, I18n.t('validations.contract.mac_address_taken_in_interface', :interface_id => interface.first.id ) )
      end
   end
