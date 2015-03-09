@@ -34,8 +34,8 @@ class Plan < ActiveRecord::Base
 
   validate :ceil_down_different_to_zero
   validate :ceil_up_different_to_zero
-  validate :remaining_rate_down
-  validate :remaining_rate_up
+  validate :remaining_rate_down, :if => "!rate_down.nil?"
+  validate :remaining_rate_up, :if => "!rate_up.nil?"
 
   def ceil_up_different_to_zero
     errors.add(:ceil_up, I18n.t('validations.plan.ceil_up_different_to_zero')) if ceil_up == 0
