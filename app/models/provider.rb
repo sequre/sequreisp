@@ -38,7 +38,7 @@ class Provider < ActiveRecord::Base
   include ModelsWatcher
   watch_fields :provider_group_id, :interface_id, :kind, :ip, :netmask, :gateway,
                :rate_down, :rate_up, :pppoe_user, :pppoe_pass, :state,
-               :unique_mac_address, :arp_ignore, :arp_announce, :arp_filter,
+               :arp_ignore, :arp_announce, :arp_filter,
                :shape_rate_down_on_ingress, :dhcp_force_32_netmask, :avoid_nat_addresses,
                :allow_dns_queries
   watch_on_destroy
@@ -276,19 +276,6 @@ class Provider < ActiveRecord::Base
   end
   def mark
     self.klass.number << 16
-  end
-  def mac_address
-    # unique mac_address basado en el nro de classe
-    # primer BYTE terminado en 10 (locally generated && not broadcast)
-    _interface = interface.vlan? ? interface.vlan_interface : interface
-    real_mac = `ip li show dev #{_interface.name} 2>/dev/null`.match(/link\/ether ([0-9a-fA-F:]+)/)[1].split(":")[0..4].join(":") rescue nil
-    # verify that real_mac is valid
-    if real_mac.present? and real_mac.match(/^([0-9A-Fa-f]{2}\:){4}[0-9A-Fa-f]{2}$/)
-      "#{real_mac}:#{class_hex}"
-    else
-      # la morenita...
-      "ca:fe:ca:fe:00:#{class_hex}"
-    end
   end
 
   def self.kinds_for_select
