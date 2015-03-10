@@ -397,8 +397,8 @@ def gen_iptables
       #---------#
       # FILTER  #
       #---------#
-      unless Configuration.first.in_safe_mode?
         f.puts "*filter"
+      unless Configuration.first.in_safe_mode?
         f.puts ":dns-query -"
         f.puts ":sequreisp-enabled - [0:0]"
         f.puts ":sequreisp-allowedsites - [0:0]"
@@ -450,10 +450,11 @@ def gen_iptables
         end
 
         f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
+      end
 
         f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
 
-
+      unless Configuration.first.in_safe_mode?
         BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
 
         Interface.only_lan.each do |i|
