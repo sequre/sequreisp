@@ -223,7 +223,7 @@ class Contract < ActiveRecord::Base
   end
 
   def clean_proxy_arp_provider_proxy_arp_interface
-    self.proxy_arp_interface = nil
+    self.proxy_arp_interface_id = nil
     self.proxy_arp_provider_id = nil
     self.proxy_arp_gateway = ""
     self.proxy_arp_use_lan_gateway = false
