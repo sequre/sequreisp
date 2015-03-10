@@ -251,6 +251,7 @@ pt:
         vlan_interface: "Interface real"
         kind: "Tipo"
         physical_link: "Ligação"
+        mac_address: "endereço Mac"
       audit:
         id: "ID"
         user: "Usuário Responsável"
@@ -535,6 +536,7 @@ pt:
       unable_to_change_kind: "Não se pode mudar o tipo, esta interface tem um fornecedor atribuído"
       name_cannot_be_changed: "O nome da interface não pode ser alterado uma vez criado"
       name_does_not_exist: "O nome da interface não corresponde a nenhuma das interfaces de rede conectadas"
+      mac_address_taken_in_contract: "existente no <a target='_blank' href='/contracts/%{contract_id}/'>Contrato No. %{contract_id}</a>"
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "O fornecedor escolhido não pertence ao grupo do plano atribuído"
       protocol_must_be_specified: "Deve especificar o protocolo"
@@ -551,6 +553,7 @@ pt:
       proxy_arp_provider_does_not_belongs_to_plan: "O provedor selecionado não pertence a nenhum dos fornecedores listados no plano de este contrato"
       proxy_arp_provider_can_not_be_guessed: "O endereço IP atribuído a este contrato não pertence a nenhum dos fornecedores, você deve selecionar um fornecedor"
       unique_provider_does_not_belongs_to_plan: "O fornecedor atribuído não pertence ao plano escolhido"
+      mac_address_taken_in_interface: "existente no <a target='_blank' href='/interface/%{interface_id}/'>Interface No. %{interface_id}</a>"
     configuration:
       notification_email_invalid: "Endereço de e-mail inválido"
       web_interface_listen_at_least_on_one_port: "Pelo menos uma porta deve estar habilitado para pedidos de interface web"
@@ -623,6 +626,8 @@ pt:
     audit_end_date: "Hasta"
     select_changes: "Seleccione cambios"
   error_messages:
+    mac_address_already_assigned: "Endereço Mac já atribuído em"
+    vlan_id_is_blank: "Necessário uma VLAN id"
     not_selected_any_options: 'Não selecionou nenhum opções'
     not_repeat_dns_server: 'Existe Servidores DNS replicados'
     define_one_dns_server: 'Defina pelo menos um servidor DNS'

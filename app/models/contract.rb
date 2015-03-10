@@ -71,8 +71,16 @@ class Contract < ActiveRecord::Base
   validates_numericality_of :ceil_dfl_percent, :only_integer => true, :greater_than => 0, :less_than_or_equal_to => 100
 
   validates_uniqueness_of :ip, :allow_nil => true, :allow_blank => true
+  validates_uniqueness_of :mac_address, :allow_nil => true, :allow_blank => true
 
   validate :state_should_be_included_in_the_list
+  validate :uniqueness_mac_address_in_interfaces_lan
+
+  def uniqueness_mac_address_in_interfaces_lan
+    if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).count > 0
+      errors.add(:mac_address, I18n.t('validations.contract.mac_address_taken_in_interface', :interface_id => interface.first.id ) )
+     end
+  end
 
   def state_should_be_included_in_the_list
     unless AASM::StateMachine[Contract].states.map(&:name).include?(state.to_sym)
