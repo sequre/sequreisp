@@ -31,7 +31,8 @@ class Configuration < ActiveRecord::Base
                    "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
                    "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
                    "icmp" => ["-p icmp"],
-                   "sip" => ["-m helper --helper sip"] }
+                   "sip" => ["-m helper --helper sip"],
+                   "rtp" => ["-p udp –dport 10000:20000"] }
 
   COUNT_CATEGORIES = ["data_count"]
 

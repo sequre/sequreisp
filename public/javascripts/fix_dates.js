@@ -6,6 +6,9 @@ $(function(){
   });
   $('.fix_datetime').each(function(){
     if($(this).val() != ''){
+      if(!navigator.userAgent.match(/chrome/i)){
+        $(this).val( $(this).attr('value').split(' ')[0] );
+      }
       d = new Date( $(this).val() );
       d = d.toLocaleDateString().split('/');
       for(var i = 0; i < d.length; i++){

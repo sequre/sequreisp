@@ -12,16 +12,36 @@
   <%= stylesheet_link_tag "tablecloth" %>
   <%= stylesheet_link_tag "form" %>
   <%= stylesheet_link_tag "simplemodal" %>
-  <%= stylesheet_link_tag "jquery-ui-1.8.13.custom" %>
-  <%= javascript_include_tag "jquery-1.9.0", "jquery-migrate-1.2.1" %>
-  <%= javascript_include_tag "application", "easy", "main", "SimplyButtons", "jquery.cookie", "jquery.simplemodal.1.4.1.min", "jquery-ui-1.8.15.custom.min", "jquery.scrollTo-1.4.2-min", "jquery.jtruncate.pack" %>
-  <%= stylesheet_link_tag "context_help" %>
-  <!-- Chosen Jquery Plugin -->
-  <%= javascript_include_tag "chosen.jquery.min" %>
+  <%= stylesheet_link_tag "jquery-ui.min" %>
+  <%= stylesheet_link_tag "jquery-ui.theme.min" %>
   <%= stylesheet_link_tag "chosen" %>
   <%= stylesheet_link_tag "chosen-changes.css" %>
+  <%= stylesheet_link_tag "context_help" %>
+
+  <%= javascript_include_tag "jquery-1.9.0" %>
+  <%= javascript_include_tag "application", "easy", "main", "SimplyButtons", "jquery.cookie", "jquery-ui.min", "jquery.scrollTo-1.4.2-min", "jquery.jtruncate.pack","jquery.simplemodal.1.4.4.min" %>
+  <!-- Chosen Jquery Plugin -->
+  <%= javascript_include_tag "chosen.jquery.min" %>
   <!-- Autogrow Textarea Plugin -->
   <%= javascript_include_tag "jquery.autogrowtextarea" %>
   <!-- fix dates for search -->
   <%= javascript_include_tag "fix_dates" %>
   <%= yield :javascript %>
+<!--Extract plugins
+  "jquery-ui-1.8.15.custom.min"
+-->
+<!--Extract css
+  jquery-ui-1.8.13.custom
+-->
+<!--Update plugins
+  "jquery.simplemodal.1.4.1.min"
+  jquery.timePicker.min (in plugin time_modifiers)
+-->
+<!--plugin??
+  jquery.jtruncate.pack
+  jquery.timePicker.min
+-->
+<!-- ???
+  backup/_confirm_restore.html_erb (javascript no se entiende)
+  views/self_management/edit_client_portal.html.erb (en modulo self_management)
+-->

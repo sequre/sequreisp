@@ -71,8 +71,16 @@ class Contract < ActiveRecord::Base
   validates_numericality_of :ceil_dfl_percent, :only_integer => true, :greater_than => 0, :less_than_or_equal_to => 100
 
   validates_uniqueness_of :ip, :allow_nil => true, :allow_blank => true
+  validates_uniqueness_of :mac_address, :allow_nil => true, :allow_blank => true
 
   validate :state_should_be_included_in_the_list
+  validate :uniqueness_mac_address_in_interfaces_lan
+
+  def uniqueness_mac_address_in_interfaces_lan
+    if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).count > 0
+      errors.add(:mac_address, I18n.t('validations.contract.mac_address_taken_in_interface', :interface_id => interface.first.id ) )
+     end
+  end
 
   def state_should_be_included_in_the_list
     unless AASM::StateMachine[Contract].states.map(&:name).include?(state.to_sym)
@@ -215,7 +223,7 @@ class Contract < ActiveRecord::Base
   end
 
   def clean_proxy_arp_provider_proxy_arp_interface
-    self.proxy_arp_interface = nil
+    self.proxy_arp_interface_id = nil
     self.proxy_arp_provider_id = nil
     self.proxy_arp_gateway = ""
     self.proxy_arp_use_lan_gateway = false
@@ -754,10 +762,10 @@ end
 
   #Please i need refactor
   def strip_whitespace
-    self.tcp_prio_ports= self.tcp_prio_ports.strip
-    self.udp_prio_ports = self.udp_prio_ports.strip
-    self.prio_protos = self.prio_protos.strip
-    self.prio_helpers =self.prio_helpers.strip
+    self.tcp_prio_ports = self.tcp_prio_ports.strip unless self.tcp_prio_ports.nil?
+    self.udp_prio_ports = self.udp_prio_ports.strip unless self.udp_prio_ports.nil?
+    self.prio_protos = self.prio_protos.strip unless self.prio_protos.nil?
+    self.prio_helpers = self.prio_helpers.strip unless self.prio_helpers.nil?
   end
 
 end

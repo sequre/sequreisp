@@ -139,8 +139,18 @@ class InterfacesController < ApplicationController
 
   def get_mac_address
     mac_address = params[:name].nil? ? nil : Interface.which_is_real_mac_address(params[:name])
+    mac_address = Interface.new(:vlan_id => params[:id_vlan]).generate_internal_mac_address unless params[:id_vlan].blank?
+
+    if_contract_exists = false
+    if_interface_exists = false
+
+    if mac_address
+      if_contract_exists = Contract.all(:conditions => ["mac_address = ?", mac_address ]).first.try(:id) || false
+      if_interface_exists = Interface.only_lan.all(:conditions => ["mac_address = ? AND id <> ?", mac_address, params[:interface_id] ]).first.try(:id) || false
+    end
+
     respond_to do |format|
-      format.json { render :json => {:mac_address => mac_address} }
+      format.json { render :json => {:mac_address => mac_address , :contract_exists => if_contract_exists, :interface_exists => if_interface_exists} }
     end
   end
 

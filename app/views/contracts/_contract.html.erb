@@ -1,13 +1,10 @@
 <% if @contract.new_record? %>
   <% content_for :javascript do %>
-    <%= javascript_include_tag('jquery.ui.datepicker') %>
-    <%= stylesheet_link_tag "/plugin_assets/sequreisp_invoicing/stylesheets/jquery-ui-1.8.14.custom.css" %>
-
     <script type="text/javascript">
       datepicker_options = {
             dateFormat: 'yy-mm-dd',
             showOn: "button",
-            buttonImage: "/plugin_assets/sequreisp_invoicing/images/calendar.gif",
+            buttonImage: "/images/calendar.gif",
             buttonImageOnly: true
           }
       $(function(){
@@ -35,6 +32,10 @@
   }
   #contract_proxy_arp_provider {
     width: 150px
+  }
+  #mac_address_already_assigned{
+    color: #ff0000;
+    display:none;
   }
 </style>
 <script type="text/javascript">
@@ -84,7 +85,27 @@
     $('#contract_client_id').chosen();
     $('#arping_mac_address').click(function(){
       $('.arping_loader').show();
-      $.get('<%= arping_mac_address_contracts_path %>', {ip: $('#contract_ip').val()}, function(data){
+      $.get('<%= arping_mac_address_contracts_path %>', {ip: $('#contract_ip').val(), contract_id: '<%= @contract.id %>' }, function(data){
+        $('#mac_address_already_assigned').hide();
+
+        if(data.contract_exists != false){
+          $('#mac_address_already_assigned').find('span').html(data.contract_exists);
+          $('#mac_address_already_assigned').find('a').attr('href',"<%= contract_path(0) %>".replace('0',data.contract_exists));
+          $('#mac_address_already_assigned').css({'display' : 'inline'});
+
+          $('#mac_address_already_assigned').find('.lbl').hide();
+          $('#mac_address_already_assigned').find('#contract').show();
+        }
+
+        if(data.interface_exists != false){
+          $('#mac_address_already_assigned').find('span').html(data.interface_exists);
+          $('#mac_address_already_assigned').find('a').attr('href',"<%= interface_path(0) %>".replace('0',data.interface_exists));
+          $('#mac_address_already_assigned').css({'display' : 'inline'});
+
+          $('#mac_address_already_assigned').find('.lbl').hide();
+          $('#mac_address_already_assigned').find('#interface').show();
+        }
+
         if (data.mac_address) {
           $('#contract_mac_address').val(data.mac_address);
           //$.scrollTo('#contract_mac_address_input', 600);
@@ -126,6 +147,13 @@
     <li class="arping_mac_address">
       <a id="arping_mac_address" href="javascript:void(null)"><%= I18n.t('buttons.get_arping_mac_address') %></a>
       <%= image_tag "loader_horizontal.gif", :class => 'arping_loader' %>
+      <h5 id="mac_address_already_assigned">
+        * <%= t 'error_messages.mac_address_already_assigned' %>
+        <a href="#" target="_blank">
+        <b id="contract" class="lbl"><%= t 'activerecord.models.contract.one' %></b>
+        <b id="interface" class="lbl"><%= t 'activerecord.models.interface.one' %></b>
+        # <span></span></a>
+      </h5>
     </li>
     <div style="clear:both"></div>
       <%= form.input :start_date, :as => :string, :input_html => { :class => 'datepicker', :disabled => (params[:action] == 'edit')}  %>

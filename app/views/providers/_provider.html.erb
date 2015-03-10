@@ -30,33 +30,33 @@
 <script type="text/javascript">
   $(function(){
     $('input,select,textarea').attr('disabled',true)
-  })  
+  })
 </script>
 <% end %>
 <div id="main">
 <% semantic_form_for @provider do |form| %>
   <%= error_messages @provider %>
   <% form.inputs :name => Provider.human_name do %>
-    <%= form.input :name, :wrapper_html => { :class => "left" } %> 
+    <%= form.input :name, :wrapper_html => { :class => "left" } %>
     <%= form.input :state, :as => :select, :collection => Provider.aasm_states_for_select, :include_blank => false %>
-    <div style="clear: both"></div> 
-    <%= form.input :interface, :wrapper_html => { :class => "left" }, :collection => Interface.find(:all, :conditions => { :kind => "wan" }) %> 
-    <%= form.input :provider_group, :wrapper_html => { :class => "left" }  %> 
-    <div style="clear: both"></div> 
-    <%= form.input :rate_down, :wrapper_html => { :class => "left" } %> 
-    <%= form.input :rate_up, :wrapper_html => { :class => "left" }  %> 
-    <div style="clear: both"></div> 
-    <%= form.input :kind, :as => :select, :collection => Provider.kinds_for_select, :include_blank => false %> 
+    <div style="clear: both"></div>
+    <%= form.input :interface, :wrapper_html => { :class => "left" }, :collection => Interface.find(:all, :conditions => { :kind => "wan" }) %>
+    <%= form.input :provider_group, :wrapper_html => { :class => "left" }  %>
+    <div style="clear: both"></div>
+    <%= form.input :rate_down, :wrapper_html => { :class => "left" } %>
+    <%= form.input :rate_up, :wrapper_html => { :class => "left" }  %>
+    <div style="clear: both"></div>
+    <%= form.input :kind, :as => :select, :collection => Provider.kinds_for_select, :include_blank => false %>
     <% form.inputs :name => t('fieldsets.provider.configuration_static'), :id => "static", :class => :provider_kind do %>
-      <%= form.input :ip, :wrapper_html => { :class => "left" } %> 
-      <%= form.input :netmask, :wrapper_html => { :class => "left" }  %> 
-      <div style="clear: both"></div> 
-      <%= form.input :gateway %> 
+      <%= form.input :ip, :wrapper_html => { :class => "left" } %>
+      <%= form.input :netmask, :wrapper_html => { :class => "left" }  %>
+      <div style="clear: both"></div>
+      <%= form.input :gateway %>
     <% end %>
     <% form.inputs :name => t('fieldsets.provider.configuration_adsl'), :id => "adsl", :class => :provider_kind do %>
-      <%= form.input :pppoe_user, :wrapper_html => { :class => "left" } %> 
-      <%= form.input :pppoe_pass, :wrapper_html => { :class => "left" }  %> 
-      <div style="clear: both"></div> 
+      <%= form.input :pppoe_user, :wrapper_html => { :class => "left" } %>
+      <%= form.input :pppoe_pass, :wrapper_html => { :class => "left" }  %>
+      <div style="clear: both"></div>
     <% end %>
     <% form.inputs :name => t('fieldsets.provider.configuration_dhcp'), :id => "dhcp", :class => :provider_kind do %>
       <%= form.input :dhcp_force_32_netmask, :wrapper_html => { :class => "left" } %>
@@ -75,7 +75,6 @@
     <% form.inputs :name => t('fieldsets.provider.advanced'), :id => "advanced",
                    :context_help => { :path => { :custom => 'plan.fieldsets.advanced' } } do %>
       <%= form.input :shape_rate_down_on_ingress %>
-      <%= form.input :unique_mac_address %>
       <%= form.input :allow_dns_queries %>
       <%= form.input :arp_filter %>
       <%= form.input :arp_ignore %>

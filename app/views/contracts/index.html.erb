@@ -52,7 +52,7 @@
       minLength: 2
     })
     $('input#select_all').change(function(){
-      $('input[name="contracts_ids[]"]').attr("checked", $(this).attr("checked"));
+      $('input[name="contracts_ids[]"]').prop("checked", $(this).is(":checked"));
     });
     $('#massive_setting_client_name').autocomplete({
       delay: 200,
