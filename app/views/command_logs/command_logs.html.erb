@@ -14,7 +14,7 @@
         type : 'GET',
         url : '/command_logs/command_log_info',
         complete: function(resp){
-          response = JSON.parse(resp.response);
+          response = JSON.parse(resp.responseText);
           refreshCommandLogsContent(response["command_log_lines"]);
           setTimeout(function(){ ajaxCommandLogsRequest(); }, delta_time);
         }

@@ -63,7 +63,7 @@
 <!-- <![endif]-->
 <script type="text/javascript">
     $(function() {       
-        if ($.browser.msie && $.browser.version.substr(0,1)<7) {
+        if (navigator.userAgent.match(/msie\/[0-7]/i)) {
           var help = $('div#context_help_bar_ie6');
           $('div#context_help_bar_ie6').detach();
           $('div#container div#footer').before(help);
