@@ -32,7 +32,7 @@ class Configuration < ActiveRecord::Base
                    "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
                    "icmp" => ["-p icmp"],
                    "sip" => ["-m helper --helper sip"],
-                   "rtp" => ["-p udp –dport 10000:20000"] }
+                   "rtp" => ["-p udp --dport 10000:20000"] }
 
   COUNT_CATEGORIES = ["data_count"]
 

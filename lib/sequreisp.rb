@@ -36,8 +36,8 @@ def gen_tc
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
-    commands << "tc qdisc del dev #{IFB_UP} root"
-    commands << "tc qdisc del dev #{IFB_DOWN} root"
+    commands << "tc qdisc del dev #{IFB_UP} root 2> /dev/null"
+    commands << "tc qdisc del dev #{IFB_DOWN} root 2> /dev/null"
     unless Configuration.first.in_safe_mode?
       tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
       tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
@@ -397,8 +397,8 @@ def gen_iptables
       #---------#
       # FILTER  #
       #---------#
-      unless Configuration.first.in_safe_mode?
         f.puts "*filter"
+      unless Configuration.first.in_safe_mode?
         f.puts ":dns-query -"
         f.puts ":sequreisp-enabled - [0:0]"
         f.puts ":sequreisp-allowedsites - [0:0]"
@@ -450,10 +450,11 @@ def gen_iptables
         end
 
         f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
+      end
 
         f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
 
-
+      unless Configuration.first.in_safe_mode?
         BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
 
         Interface.only_lan.each do |i|
