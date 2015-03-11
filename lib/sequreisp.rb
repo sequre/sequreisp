@@ -36,8 +36,8 @@ def gen_tc
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
-    commands << "tc qdisc del dev #{IFB_UP} root 2> /dev/null"
-    commands << "tc qdisc del dev #{IFB_DOWN} root 2> /dev/null"
+    commands << "tc qdisc del dev #{IFB_UP};:"
+    commands << "tc qdisc del dev #{IFB_DOWN};:"
     unless Configuration.first.in_safe_mode?
       tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
       tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
