@@ -482,6 +482,7 @@ class DaemonRrdFeed < DaemonTask
   end
 
   def rrd_update(o, time, down_prio, down_dfl, up_prio, up_dfl)
+    log("[Daemon][RRD][rrd_update] o=#{o}, time=#{time}, down_prio=#{down_prio}, down_dfl=#{down_dfl}, up_prio=#{up_prio}, up_dfl=#{up_dfl}") if verbose?
     rrd_path = RRD_DIR + "/#{o.class.name}.#{o.id.to_s}.rrd"
     rrd_create(rrd_path, time) unless File.exists?(rrd_path)
     RRD::Wrapper.update rrd_path, "-t", "down_prio:down_dfl:up_prio:up_dfl", "#{time.strftime("%s")}:#{down_prio}:#{down_dfl}:#{up_prio}:#{up_dfl}"
