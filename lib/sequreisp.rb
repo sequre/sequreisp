@@ -478,8 +478,8 @@ def gen_iptables
         end
         ######################end
         f.puts "-A sequreisp-enabled -j DROP"
-        f.puts "COMMIT"
       end
+      f.puts "COMMIT"
       #---------#
       # /FILTER #
       #---------#
