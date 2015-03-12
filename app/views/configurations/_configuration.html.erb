@@ -45,7 +45,7 @@ float: left;
     });
     /*checkbox_dns_use_forwarders*/
     $('#configuration_dns_use_forwarders').change( function() {
-      if ($('#configuration_dns_use_forwarders').attr('checked')) {
+      if ($('#configuration_dns_use_forwarders').is(':checked')) {
         $('#bind_dns').show();
       } else {
         $('#bind_dns').hide();
