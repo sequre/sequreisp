@@ -66,7 +66,7 @@ def gen_tc
   # Per provider upload limit, on it's own interface
   Provider.enabled.with_klass_and_interface.each do |p|
     iface = p.link_interface
-    commands << "tc qdisc del dev #{iface} root 2> /dev/null"
+    commands << "tc qdisc del dev #{iface} root;:"
     commands << "tc qdisc show dev #{iface} | grep 'qdisc ingress' > /dev/null && tc qdisc del dev #{iface} ingress"
 #    commands << "tc qdisc del dev #{iface} ingress 2> /dev/null"
     begin
