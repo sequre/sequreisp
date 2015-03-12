@@ -42,7 +42,7 @@ class ConfigurationsController < ApplicationController
   def update
     @configuration = Configuration.first
     respond_to do |format|
-      params[:configuration][:traffic_prio] = params[:traffic_prio].keys.select{|prio| prio != ""}.join(",")
+      params[:configuration][:traffic_prio] = params[:traffic_prio].keys.select{|prio| prio != ""}.join(",") if params.has_key?(:traffic_prio)
       if @configuration.update_attributes(params[:configuration])
         # in case that users change language, we need to override locale from params[:locale]
         # before the redirect
