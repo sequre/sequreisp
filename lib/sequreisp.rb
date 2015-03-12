@@ -36,8 +36,8 @@ def gen_tc
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
-    commands << "tc qdisc del dev #{IFB_UP};:"
-    commands << "tc qdisc del dev #{IFB_DOWN};:"
+    commands << "tc qdisc del dev #{IFB_UP} root;:"
+    commands << "tc qdisc del dev #{IFB_DOWN} root;:"
     unless Configuration.first.in_safe_mode?
       tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
       tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
@@ -89,7 +89,7 @@ def gen_tc
   # Per provider download limit, on LAN interfaces
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
-    commands << "tc qdisc del dev #{iface} root 2> /dev/null"
+    commands << "tc qdisc del dev #{iface} root;:"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         unless Configuration.first.in_safe_mode?
