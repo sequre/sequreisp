@@ -36,7 +36,7 @@ Deprecated in favor of foldeable menues
 */
 
 div#apply_changes_banner{
-    background-color: rgba(43,142,172,0.4);
+    background-color: rgba(38, 112, 135, 0.74);
     height: 40px;
     margin: 0 -20px 0 -20px;
     border-bottom: 2px #347488 solid;
@@ -80,7 +80,6 @@ div#wait_apply_changes_button {
 
 div.yield{
   background: none repeat scroll 0% 0% #C4C4C4;
-  overflow: hidden;
   margin-left: -20px;
   padding-left: 20px;
   width: 862px;
