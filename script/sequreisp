@@ -42,8 +42,7 @@ opts = OptionParser.new do |opts|
 
   opts.on("-p","--providers", "Show provider status. Example: sequreisp -p") do
     options.cmd= "runner"
-    options.extension ="\"puts'Providers:\n'; Provider.all.map{|a| puts 'Name: ' + a.name + ', kind: ' + a.kind + ', IP: ' + a.ip + ',rate_down: ' + a.rate_down.to_s + ',rate_up: ' + a.rat\
-e_up.to_s + ', State: ' + a.state + '\n' }\""
+    options.extension ="Provider.all.map{|a| puts 'Name: ' + a.name + ', kind: ' + a.kind + ', IP: ' + a.ip + ',rate_down: ' + a.rate_down.to_s + ',rate_up: ' + a.rate_up.to_s + ', State: ' + a.state + '\n' }"
   end
 
   opts.on("-t", "--tail FILE", "Show tail for production, command, command_human, daemon log. Example sequreisp -t [production|command|command_human|daemon]") do |log_file|
@@ -59,7 +58,7 @@ e_up.to_s + ', State: ' + a.state + '\n' }\""
 
   opts.on("-v", "--version", "Show version app. Example: sequreisp -v") do
     options.cmd = "runner"
-    options.extension = "'puts \"version:\" Configuration.app_version'"
+    options.extension = "puts 'Version: ' + Configuration.app_version"
   end
 
   opts.on("-c", "--console", "Open rails console. Example: sequreisp -c") do
