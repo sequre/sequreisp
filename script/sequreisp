@@ -22,22 +22,22 @@ opts = OptionParser.new do |opts|
 
   opts.on("-a", "--apply-changes", "Apply changes. Example: sequreisp -a") do
     options.cmd = "runner"
-    options.extension = "\"require 'sequreisp'; boot\""
+    options.extension = "require 'sequreisp'; boot"
   end
 
   opts.on("-m", "--manual-apply-changes", "Manual apply changes. Example: sequreisp -m") do
     options.cmd = "runner"
-    options.extension = "\"require 'sequreisp'; boot\""
+    options.extension = "require 'sequreisp'; boot"
   end
 
   opts.on("-z", "--safe-mode", "Active safe-mode. Example: sequreisp -z.") do
     options.cmd = "runner"
-    options.extension = "\"conf = Configuration; conf.in_safe_mode = true; conf.save\""
+    options.extension = "conf = Configuration; conf.in_safe_mode = true; conf.save"
   end
 
   opts.on("-n", "--no-safe-mode", "Desactive safe-mode. Example: sequreisp -n.") do
     options.cmd = "runner"
-    options.extension = "\"conf = Configuration; conf.in_safe_mode = false; conf.save\""
+    options.extension = "conf = Configuration; conf.in_safe_mode = false; conf.save"
   end
 
   opts.on("-p","--providers", "Show provider status. Example: sequreisp -p") do
