@@ -389,7 +389,7 @@ class DaemonRrdFeed < DaemonTask
   def initialize
     @time_for_exec = { :frecuency => 5.minutes }
     @wait_for_apply_changes = true
-    @proc = Proc.new { exec_daemon_rrd_feed }
+    @proc = Proc.new { exec_daemon_rrd_feed unless Configuration.in_safe_mode? }
     super
   end
 
