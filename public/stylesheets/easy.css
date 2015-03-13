@@ -205,7 +205,8 @@ padding:2px;
 		width:902px;
 		text-align:left;
 		position:relative;
-		}
+		background: none repeat scroll 0% 0% #C4C4C4;
+	}
 	#container.centered {
 	  margin:0 auto;
 	  }

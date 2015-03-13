@@ -13,6 +13,7 @@ table, td{
 table{
 	width:100%;
 	margin:1em 0;
+	background: none repeat scroll 0% 0% #C4C4C4;
 }
 th, td{
 	text-align:left;
