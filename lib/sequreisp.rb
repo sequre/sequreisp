@@ -836,7 +836,7 @@ def setup_interfaces
     commands = []
     commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
     #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
-    commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address}"
+    commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || (ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address})"
     #commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
     commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
     if i.lan?
