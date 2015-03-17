@@ -400,7 +400,6 @@ def gen_iptables
         f.puts "*filter"
       unless Configuration.first.in_safe_mode?
         f.puts ":dns-query -"
-        f.puts ":sequreisp-enabled - [0:0]"
         f.puts ":sequreisp-allowedsites - [0:0]"
         f.puts ":sequreisp-enabled - [0:0]"
 
