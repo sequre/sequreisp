@@ -113,7 +113,7 @@ end
 
 def gen_iptables
   begin
-    File.open("#{IPTABLES_FILE}.tmp", "w") do |f|
+    File.open("#{IPTABLES_FILE}", "w") do |f|
       #--------#
       # MANGLE #
       #--------#
@@ -894,21 +894,20 @@ def setup_ip_ru
 end
 
 def setup_iptables
+  exec_context_commands "setup_iptables",["cp #{IPTABLES_FILE} #{IPTABLES_FILE}.tmp"], I18n.t("command.human.prepare_iptables")
+
   gen_iptables
   status = exec_context_commands "setup_iptables", [
     "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}",
-    "iptables-restore -n < #{IPTABLES_FILE}.tmp",
+    "iptables-restore -n < #{IPTABLES_FILE}",
     "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
   ], I18n.t("command.human.setup_iptables_try")
-  if status
-    exec_context_commands "create_iptables_file", [
-        "mv #{IPTABLES_FILE}.tmp #{IPTABLES_FILE}"
-    ], I18n.t("command.human.setup_iptables_success")
-  else
+
+  if not status
     exec_context_commands "restore_old_iptables", [
-      "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}",
-      "iptables-restore -n < #{IPTABLES_FILE}",
-      "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
+      "mv #{IPTABLES_FILE} #{IPTABLES_FILE}.error",
+      "iptables-restore -n < #{IPTABLES_FILE}.tmp",
+      "mv #{IPTABLES_FILE}.tmp #{IPTABLES_FILE}"
     ], I18n.t("command.human.setup_iptables_restore_old")
   end
 end
