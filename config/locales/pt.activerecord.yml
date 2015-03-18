@@ -633,6 +633,7 @@ pt:
     define_one_dns_server: 'Defina pelo menos um servidor DNS'
   command:
     human:
+      prepare_iptables: "Prepare iptables rules"
       create_tmp_file: "Initialize apply changes process"
       sequreisp_pre: "Memória virtual Limpar cache"
       setup_queued_commands: "Start pending jobs"
