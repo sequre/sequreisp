@@ -65,7 +65,11 @@ opts = OptionParser.new do |opts|
     options.cmd = "console"
   end
 
-  opts.on("-e", "--environment ENVIRONMENT", "Define environment. Example sequreisp -e development") do |env|
+  opts.on("-x", "--console-sandbox", "Open rails console in sandbox mode. WARNING you must used with option -c. Example: sequreisp -c -x.") do
+    options.extension = "-x"
+  end
+
+  opts.on("-e", "--environment ENVIRONMENT", "Define environment by default use production. Example sequreisp -e [production|development|test]") do |env|
     options.env = env
     options.path = "." if env == "development"
   end
@@ -81,14 +85,13 @@ opts = OptionParser.new do |opts|
 end
 
 opts.parse!
-pp options
 
 if options.cmd
   case options.cmd
   when "tail"
     exec("#{options.cmd} #{options.extension} #{options.path}#{options.log_file}")
   when "console"
-    exec("#{options.path}script/#{options.cmd} #{options.env}")
+    exec("#{options.path}script/#{options.cmd} #{options.env} #{options.extension}")
   when "runner"
     exec("#{options.path}script/#{options.cmd} -e #{options.env} \"#{options.extension}\"")
   end
