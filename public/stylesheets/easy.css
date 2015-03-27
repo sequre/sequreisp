@@ -406,7 +406,7 @@ padding:2px;
 #heading {
 	width: 902px;
 	height: 30px;
-	background-color: rgba(46, 47, 51, 0.8);
+	background-color: rgb(32, 65, 78);
 	margin-left:-20px;
 	padding-top: 15px;
 	padding-bottom: 5px;
@@ -416,7 +416,7 @@ padding:2px;
 	display: inline;
 	margin-left: 46px;
 	margin-top: 19px;
-	color: #48AEBE;
+	color: #fff;
 	font-size: 22px;
 }
 
