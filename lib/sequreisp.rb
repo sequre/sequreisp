@@ -763,14 +763,14 @@ def setup_nf_modules
 end
 
 def setup_adsl_interface(p)
+  commands = []
   begin
     File.open("#{PPP_DIR}/peers/#{p.interface.name}", 'w') {|peer| peer.write(p.to_ppp_peer) }
   rescue => e
     log_rescue("[Boot][setup_adsl_interface]", e)
     # Rails.logger.error "ERROR in lib/sequreisp.rb::setup_provider_interface(PPP_DIR) e=>#{e.inspect}"
   end
-
-  commands = "/usr/bin/pgrep -f 'pppd call #{p.interface.name} ' >/dev/null || (ip link list #{p.link_interface} &>/dev/null && /usr/bin/pon #{p.interface.name})"
+  commands << "(/usr/bin/pgrep -fc \"pppd call #{p.interface.name}\" >= 2 &>/dev/null && ip link list #{p.link_interface} &>/dev/null) || /usr/bin/pon #{p.interface.name}"
 
   if p.online?
     p.addresses.each do |a|
@@ -783,7 +783,7 @@ end
 
 def setup_dhcp_interface(p)
   commands = []
-  commmands = "/usr/bin/pgrep -f 'dhclient.#{p.interface.name}' &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
+  commmands = "/usr/bin/pgrep -f \"dhclient.#{p.interface.name}\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
   if p.online?
     p.addresses.each do |a|
       commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address add #{a.ip_in_cidr} dev #{p.link_interface}"
