@@ -188,8 +188,12 @@ en:
         allow_dns_queries: "Allow external DNS queries"
       forwarded_port:
         provider: "Provider"
+        public_init_port: "Public port"
         public_port: "Public port"
         private_port: "Private port"
+        end_port: "End port"
+        is_a_range: "Is a range?"
+        init_port: "Init port"
         tcp: "TCP"
         udp: "UDP"
       configuration:
@@ -543,7 +547,7 @@ en:
     forwarded_port:
       provider_doesnt_belong_to_group_plan: "The selected provider does not belong to the group's assigned plan"
       protocol_must_be_specified: "Protocol must be specified"
-      public_port_cant_be_on_the_prohibited_list: "It is not allowed to forward this port"
+      public_port_cant_be_on_the_prohibited_list: "Ports %{ports} are on the prohibited list"
       cant_forward_port_if_contract_ip_is_single_host: "Can't forward any ports if contract IP address is a network"
     contract:
       proxy_arp_incompatible_if_ip_is_a_network: "Proxy ARP is incompatible if IP address is a network"
@@ -634,6 +638,8 @@ en:
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'
     define_one_dns_server: 'Define at less one DNS server'
+    port_already_taken: "Port %{port} is already forwarded for IP: <a href='/contracts/%{contract_id}/'> %{ip} </a>"
+    ports_already_taken: "Ports %{port} are already forwarded for IP: <a href='/contracts/%{contract_id}/'> %{ip} </a>"
   command:
     human:
       create_tmp_file: "Initialize apply changes process"

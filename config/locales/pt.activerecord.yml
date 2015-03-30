@@ -187,6 +187,9 @@ pt:
         provider: "Fornecedor"
         public_port: "Porta pública"
         private_port: "Porta privada"
+        is_a_range: "é um intervalo?"
+        end_port: "Port final"
+        init_port: "Porta de iniciação"
         tcp: "TCP"
         udp: "UDP"
       configuration:
@@ -631,6 +634,8 @@ pt:
     not_selected_any_options: 'Não selecionou nenhum opções'
     not_repeat_dns_server: 'Existe Servidores DNS replicados'
     define_one_dns_server: 'Defina pelo menos um servidor DNS'
+    port_already_taken: "Porto %{port} já é encaminhado para IP <a href='/contracts/%{contract_id}/'> %{ip} </a>"
+    ports_already_taken: "Portas %{port} já são encaminhados para IP <a href='/contracts/%{contract_id}/'> %{ip} </a>"
   command:
     human:
       create_tmp_file: "Initialize apply changes process"

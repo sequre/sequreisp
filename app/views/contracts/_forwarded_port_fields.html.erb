@@ -7,12 +7,44 @@
   }
   li.down {
     padding-top: 28px;  
-  }
+	}
+	.fields li[id$="_end_port_input"] {
+		display: none;
+	}
 </style>
+
+<script>
+function hideForwardedPortFields(x){
+	if ($(x).is(":checked")) {
+		$(x).parents('.fields').find('[id$="private_port_input"]').hide();
+		$(x).parents('.fields').find('[id$="private_port"]').val('');
+	  $(x).parents('.fields').find('[id$="end_port_input"]').show();
+		$(x).parents('.fields').find('[for$="public_init_port"]').text('<%= t("activerecord.attributes.forwarded_port.init_port") %>');
+	  $(x).parents('.fields').find('[id$="public_init_port"]').val('');
+	} else {
+		$(x).parents('.fields').find('[id$="private_port_input"]').show();
+	  $(x).parents('.fields').find('[id$="end_port_input"]').hide();
+	  $(x).parents('.fields').find('[id$="end_port"]').val('');
+		$(x).parents('.fields').find('[for$="public_init_port"]').text('<%= t("activerecord.attributes.forwarded_port.public_init_port") %>');
+	  $(x).parents('.fields').find('[id$="public_init_port"]').val('');
+	}
+}; 
+</script>
+
+
 <div class="fields">  
   <%= f.input :provider, :wrapper_html => { :class => "left" }, :input_html => { :class => "provider" } %>  
-  <%= f.input :public_port, :wrapper_html => { :class => "left" }, :input_html => { :class => "port" } %>  
+	<!--
+  <li class="boolean optional left down" id="forwarded_port_is_a_range?">    
+    <label>
+      <input id="forwarded_port_is_a_range" value="no" type="checkbox" onClick="hideForwardedPortFields(this)">Is a range?
+    </label>
+	</li>
+	-->
+	<%= f.input :is_a_range, :as => :boolean, :wrapper_html => { :class => "left down" }, :input_html => { :onclick => "hideForwardedPortFields(this)"} %>
+	<%= f.input :public_init_port, :label => "Public port", :wrapper_html => { :class => "left" }, :input_html => { :class => "port" } %>  
   <%= f.input :private_port, :wrapper_html => { :class => "left" }, :input_html => { :class => "port" } %>  
+	<%= f.input :end_port, :wrapper_html => { :class => "left" }, :input_html => { :class => "port" } %>
   <%= f.input :tcp, :wrapper_html => { :class => "left down" } %>  
   <%= f.input :udp, :wrapper_html => { :class => "left down" } %>  
   <li class="left down"><%= link_to_remove_fields t('buttons.delete'), f %></li>

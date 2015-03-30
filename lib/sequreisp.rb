@@ -492,9 +492,9 @@ end
 
 def do_port_forwardings(fp, f=nil, boot=true)
   commands = []
-  unless fp.provider.ip.blank? or fp.contract.nil?
-    commands << "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.tcp
-    commands << "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}:#{fp.private_port}" if fp.udp
+  unless fp.provider.ip.blank? or fp.contract.nil?  
+    commands << "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}#{fp.private_port_wrapper}" if fp.tcp
+    commands << "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}#{fp.private_port_wrapper}" if fp.udp
   end
   f ? f.puts(commands) : exec_context_commands("do_port_forwardings", commands.map{|c| "iptables -t nat " + c }, I18n.t("command.human.do_port_forwarding"), boot)
 end

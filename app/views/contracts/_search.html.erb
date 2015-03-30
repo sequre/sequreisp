@@ -56,8 +56,8 @@
         <%= f.collection_select :forwarded_ports_provider_id_equals, Provider.all, :id, :name, :include_blank => true %>
       </li>
       <li>
-        <%= f.label :forwarded_ports_public_port_equals, t('activerecord.attributes.forwarded_port.public_port') %>
-        <%= f.text_field :forwarded_ports_public_port_equals %>
+        <%= f.label :forwarded_ports_public_init_port_equals, t('activerecord.attributes.forwarded_port.public_port') %>
+        <%= f.text_field :forwarded_ports_public_init_port_equals %>
       </li>
       <li>
         <%= f.label :forwarded_ports_private_port_equals, t('activerecord.attributes.forwarded_port.private_port') %>

@@ -190,6 +190,9 @@ es:
         provider: "Proveedor"
         public_port: "Puerto público"
         private_port: "Puerto privado"
+        end_port: "Puerto Fin"
+        init_port: "Puerto Inicio"
+        is_a_range: "¿Es un rango?"
         tcp: "TCP"
         udp: "UDP"
       configuration:
@@ -634,6 +637,8 @@ es:
     not_selected_any_options: 'No se ha selecionado ninguna opción'
     not_repeat_dns_server: 'Existen servidores DNS repetidos'
     define_one_dns_server: 'Definir al menos un servidor DNS'
+    port_already_taken: "El puerto %{port} ya está redireccionado para la IP: <a href='/contracts/%{contract_id}/'> %{ip} </a>"
+    ports_already_taken: "Los puertos %{port} ya están redireccionados para la IP: <a href='/contracts/%{contract_id}/'> %{ip} </a>"
   command:
     human:
       create_tmp_file: "Inicializando proceso de aplicar cambios"
