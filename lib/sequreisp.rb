@@ -758,7 +758,7 @@ def exec_context_commands context_name, commands, message, boot=true
 end
 
 def setup_nf_modules
-  modules = %w{nf_nat_ftp nf_nat_amanda nf_nat_pptp nf_nat_proto_gre nf_nat_sip nf_nat_irc 8021q}
+  modules = %w{nf_nat_ftp nf_nat_amanda nf_nat_pptp nf_nat_proto_gre nf_nat_sip nf_nat_irc nf_conntrack 8021q}
   exec_context_commands "modprobe", modules.collect{|m| "modprobe #{m}" }, I18n.t("command.human.setup_nf_modules")
 end
 
@@ -930,10 +930,10 @@ def boot(run=true)
     exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.create_tmp_file")
     exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}", I18n.t("command.human.sequreisp_pre")
 
+    setup_nf_modules
     setup_queued_commands
     setup_clock
     setup_proc
-    setup_nf_modules
     setup_interfaces
     setup_dynamic_providers_hooks
     setup_proxy_arp
