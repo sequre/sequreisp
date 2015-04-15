@@ -493,8 +493,8 @@ end
 def do_port_forwardings(fp, f=nil, boot=true)
   commands = []
   unless fp.provider.ip.blank? or fp.contract.nil?  
-    commands << "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}#{fp.private_port_wrapper}" if fp.tcp
-    commands << "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j DNAT --to #{fp.contract.ip}#{fp.private_port_wrapper}" if fp.udp
+    commands << "-A PREROUTING -d #{fp.provider.ip} -p tcp --dport #{fp.public_or_init_port} -j DNAT --to #{fp.contract.ip}#{fp.private_port_wrapper}" if fp.tcp
+    commands << "-A PREROUTING -d #{fp.provider.ip} -p udp --dport #{fp.public_or_init_port} -j DNAT --to #{fp.contract.ip}#{fp.private_port_wrapper}" if fp.udp
   end
   f ? f.puts(commands) : exec_context_commands("do_port_forwardings", commands.map{|c| "iptables -t nat " + c }, I18n.t("command.human.do_port_forwarding"), boot)
 end
@@ -502,8 +502,8 @@ end
 def do_port_forwardings_avoid_nat_triangle(fp, f=nil, boot=true)
   commands = []
   unless fp.provider.ip.blank?
-    commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p tcp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.tcp
-    commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p udp --dport #{fp.public_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.udp
+    commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p tcp --dport #{fp.public_or_init_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.tcp
+    commands << "-A avoid_nat_triangle -d #{fp.provider.ip} -p udp --dport #{fp.public_or_init_port} -j MARK --set-mark 0x01000000/0x01000000" if fp.udp
   end
   f ? f.puts(commands) : exec_context_commands("do_port_forwardings_avoid_nat_triangle", commands.map{|c| "iptables -t mangle " + c }, I18n.t("command.human.do_port_forwardings_avoid_nat_triangle"), boot)
 end
