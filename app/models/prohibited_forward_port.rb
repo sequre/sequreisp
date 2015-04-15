@@ -20,9 +20,9 @@ class ProhibitedForwardPort < ActiveRecord::Base
 
   validates_presence_of :port
 	
-	named_scope :prohibited_ports_to_forward, lambda { |tcp, udp|
-			{ :conditions => (["tcp = ? OR udp = ?", tcp, udp]) }
-	} 
+  named_scope :prohibited_ports_to_forward, lambda { |tcp, udp|
+    { :conditions => (["tcp = ? OR udp = ?", tcp, udp]) }
+  } 
 
   def set_tcp_by_default
     if !self.tcp and !self.udp
