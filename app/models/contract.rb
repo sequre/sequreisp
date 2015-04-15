@@ -130,37 +130,6 @@ class Contract < ActiveRecord::Base
     validate_in_range_or_in_file(:prio_protos, -1,256, :protocol)
     validate_in_range_or_in_file(:prio_helpers, 0, 0, :helper)
 
-    if not plan_id.nil?
-      new_plan = Plan.find(plan_id)
-      old_plan = Plan.find(plan_id_was) rescue nil
-      remaining_rate_down = if new_record?
-        # si es nuevo, entonces el rate actual no está cargado en ningún pg
-        new_plan.provider_group.remaining_rate_down
-      elsif old_plan and new_plan.provider_group_id != old_plan.provider_group_id
-        # si estoy cambiando de pg entonces en el nuevo no está cargado
-        new_plan.provider_group.remaining_rate_down
-      else
-        # mismo pg, puede variar o no el plan, en ambos casos libero el rate_down que estaba contando
-        new_plan.provider_group.remaining_rate_down + old_plan.rate_down
-      end
-      remaining_rate_up = if new_record?
-        # si es nuevo, entonces el rate actual no está cargado en ningún pg
-        new_plan.provider_group.remaining_rate_up
-      elsif old_plan and new_plan.provider_group_id != old_plan.provider_group_id
-        # si estoy cambiando de pg entonces en el nuevo no está cargado
-        new_plan.provider_group.remaining_rate_up
-      else
-        # mismo pg, puede variar o no el plan, en ambos casos libero el rate_up que estaba contando
-        new_plan.provider_group.remaining_rate_up + old_plan.rate_up
-      end
-      logger.debug("plan: #{plan.name} plan_id:#{plan_id} new_plan:#{new_plan.name}")
-      if new_plan.rate_down > remaining_rate_down
-        errors.add(:plan, I18n.t('validations.plan.not_enough_down_bandwidth_in_this_plan'))
-      end
-      if new_plan.rate_up > remaining_rate_up
-        errors.add(:plan, I18n.t('validations.plan.not_enough_up_bandwidth_in_this_plan'))
-      end
-    end
     if not public_address_id.nil?
       in_use = nil
       if self.id.nil?
@@ -615,9 +584,7 @@ class Contract < ActiveRecord::Base
         I18n.t('activerecord.attributes.client.details'),
         I18n.t('activerecord.attributes.contract.plan'),
         I18n.t('activerecord.models.provider_group.one'),
-        I18n.t('activerecord.attributes.plan.rate_down'),
         I18n.t('activerecord.attributes.plan.ceil_down'),
-        I18n.t('activerecord.attributes.plan.rate_up'),
         I18n.t('activerecord.attributes.plan.ceil_up'),
         I18n.t('activerecord.attributes.contract.ip'),
         #I18n.t('activerecord.attributes.contract.forwarded_ports'),
@@ -647,9 +614,7 @@ class Contract < ActiveRecord::Base
           c.client.details,
           c.plan.name,
           c.plan.provider_group.name,
-          c.plan.rate_down,
           c.plan.ceil_down,
-          c.plan.rate_up,
           c.plan.ceil_up,
           c.ip,
           #c.forwarded_ports.collect{ |fp| "[#{fp.provider.name}]#{fp.public_port}=>#{fp.private_port}" }.join("|"),

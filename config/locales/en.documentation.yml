@@ -82,18 +82,10 @@ en:
             title: I18n.activerecord.models.provider_group.one
             text: >
               Defines the group of providers that clients configured with this plan will use to access the Internet.
-          rate_down:
-            text: >
-              Defines the download bandwidth guaranteed by this plan. This value should only be
-              different from zero when you want to create a plan with dedicated bandwidth.
           ceil_down:
             text: >
               Defines the maximum download bandwidth for this plan. This will cap the speed at which
               clients assigned this plan will be able to access the Internet.
-          rate_up:
-            text: >
-              Defines the upload bandwidth guaranteed by this plan. This value should only be
-              different from zero when you want to create a plan with dedicated bandwidth.
           ceil_up:
             text: >
               Defines the maximum upload bandwidth for this plan. This will cap the speed at which

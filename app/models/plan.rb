@@ -21,21 +21,89 @@ class Plan < ActiveRecord::Base
   acts_as_audited
   belongs_to :provider_group
 
+  attr_accessor :how_use_cir
+  attr_accessor :cir_percentage
+  attr_accessor_with_default :value_cir_re_used, "1:1"
+
+  def after_initialize
+    self.cir_percentage = self.cir_up if self.used_cir_percentage
+    self.how_use_cir = default_value_for_which_use_cir if how_use_cir.nil?
+  end
+
+  def default_value_for_which_use_cir
+    return "total_cir" if self.used_total_cir
+    return "percentage" if self.used_cir_percentage
+    "re_used"
+  end
+
   include ModelsWatcher
-  watch_fields :provider_group_id, :rate_down, :ceil_down, :rate_up, :ceil_up,
+  watch_fields :provider_group_id, :ceil_down, :ceil_up,
                :burst_down, :burst_up, :long_download_max, :long_upload_max
 
   validates_uniqueness_of :name
-  validates_presence_of :name, :provider_group, :rate_down, :ceil_down, :rate_up, :ceil_up
+  validates_presence_of :name, :provider_group, :ceil_down, :ceil_up
   validates_length_of :name, :in => 3..128
-  validates_numericality_of :rate_down, :ceil_down, :rate_up, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than_or_equal_to => 0
+  validates_numericality_of :ceil_down, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than_or_equal_to => 0
   validates_numericality_of :burst_down, :burst_up, :only_integer => true, :greater_than_or_equal_to => 0
   validates_numericality_of :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0, :less_than => 4294967295
 
   validate :ceil_down_different_to_zero
   validate :ceil_up_different_to_zero
-  validate :remaining_rate_down, :if => "!rate_down.nil?"
-  validate :remaining_rate_up, :if => "!rate_up.nil?"
+
+  # before_save :set_if_used_cir_percentage_or_used_total_cir
+  # before_save :set_cir, :if => "used_total_cir == false and (used_cir_percentage_changed? and used_cir_percentage == false)"
+  # before_save :set_total_cir, :if => "used_total_cir_changed?"
+
+  before_save :set_cir_and_total_cir
+
+  def set_total_cir
+    self.total_cir_up = self.ceil_up * self.cir_up * self.contracts.count rescue 0
+    self.total_cir_down = self.ceil_down * self.cir_down * self.contracts.count rescue 0
+  end
+
+  def set_cir_and_total_cir
+    self.used_total_cir = false
+    self.used_cir_percentage = false
+    case how_use_cir
+    when "percentage"
+      self.used_cir_percentage = true
+    when "total_cir"
+      self.used_total_cir = true
+    end
+    set_cir
+    set_total_cir unless used_total_cir
+  end
+
+  def set_cir
+    if used_total_cir
+      self.cir_up = self.total_cir_up / (self.ceil_up * self.contracts.count) rescue 0.0001
+      self.cir_down = self.total_cir_down / (self.ceil_down * self.contracts.count) rescue 0.0001
+    else
+      if used_cir_percentage
+        self.cir_up = self.cir_down = self.cir_percentage
+      else
+        self.cir_up = self.cir_down = self.value_cir_re_used
+      end
+    end
+  end
+
+  def real_total_cir_up
+    pg = provider_group
+    pg.rate_down * self.total_cir_down / pg.total_cir_down
+  end
+
+  def real_total_cir_down
+    pg = provider_group
+    pg.rate_up * self.total_cir_up / pg.total_cir_up
+  end
+
+  def rate_up
+    ceil_up * cir_up rescue 0
+  end
+
+  def rate_down
+    ceil_down * cir_down rescue 0
+  end
 
   def ceil_up_different_to_zero
     errors.add(:ceil_up, I18n.t('validations.plan.ceil_up_different_to_zero')) if ceil_up == 0
@@ -45,45 +113,6 @@ class Plan < ActiveRecord::Base
     errors.add(:ceil_down, I18n.t('validations.plan.ceil_down_different_to_zero')) if ceil_down == 0
   end
 
-  def remaining_rate_down
-    if not new_record?
-      if rate_down_changed? or (provider_group_id_changed? and provider_group_id.present?)
-        remaining_rate_down = if provider_group_id_changed?
-          ProviderGroup.find(provider_group_id).remaining_rate_down
-        else
-          provider_group.remaining_rate_down + used_rate_down(rate_down_was)
-        end
-        if used_rate_down > remaining_rate_down
-          errors.add(:rate_down, I18n.t('validations.plan.not_enough_down_bandwidth'))
-        end
-      end
-    end
-  end
-
-  def remaining_rate_up
-    if not new_record?
-      if rate_up_changed? or (provider_group_id_changed? and provider_group_id.present?)
-        remaining_rate_up = if provider_group_id_changed?
-          ProviderGroup.find(provider_group_id).remaining_rate_up
-        else
-          provider_group.remaining_rate_up + used_rate_up(rate_up_was)
-        end
-        if used_rate_up > remaining_rate_up
-          errors.add(:rate_up, I18n.t('validations.plan.not_enough_up_bandwidth'))
-        end
-      end
-    end
-  end
-  def used_rate_down(old_rate_down=nil)
-    rd = old_rate_down.nil? ? rate_down : old_rate_down
-    multiplier = rd == 0 ? 0.008 : rd
-    contracts.count * multiplier
-  end
-  def used_rate_up(old_rate_up=nil)
-    rd = old_rate_up.nil? ? rate_up : old_rate_up
-    multiplier = rd == 0 ? 0.008 : rd
-    contracts.count * multiplier
-  end
   def burst_down_to_bytes
     (burst_down / 8) * 1024
   end

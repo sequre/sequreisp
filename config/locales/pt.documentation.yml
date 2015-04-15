@@ -87,21 +87,11 @@ pt:
             text: >
               Define o grupo de fornecedores que utilizarão para navegar os clientes que
               tenham configurado este plano.
-          rate_down:
-            text: >
-              Define o largo de banda de baixada que garante este plano. Este valor só
-              deve ser diferente de zero quando se quer criar um plano com largo de banda
-              garantido ou dedicado.
           ceil_down:
             text: >
               Define o largo de banda de baixada máximo para este plano. Isto marcará o
               teto de velocidade à qual podem navegar os clientes que tenham configurado
               este plano.
-          rate_up:
-            text: >
-              Define o largo de banda de subida que garante este plano. Este valor só
-              deve ser diferente de zero quando se quer criar um plano com largo de banda
-              garantido ou dedicado.
           ceil_up:
             text: >
               Define o largo de banda de subida máximo para este plano. Isto marcará o
