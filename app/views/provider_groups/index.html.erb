@@ -5,7 +5,7 @@
 <%= render :partial => "shared/empty_submenu" %>
 
 <div class="separador"></div>
-	
+
 <div class="main">
   <table cellspacing="0" cellpadding="0">
     <tbody>
@@ -20,16 +20,18 @@
             "#{t 'activerecord.attributes.provider_group.rate_up'}" +
             " (#{t 'activerecord.attributes.provider_group.concurrency_index'})" %>
         </th>
+	<th><%= "Total de ancho de banda de subida utilizado [kbps]" %></th>
+	<th><%= "Total de ancho de banda de bajada utilizado [kbps]" %></th>
         <th><%=t 'activerecord.attributes.provider_group.state' %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
         <% if current_user.may_update_provider_groups? or current_user.may_index_provider_groups? %>
-        <th></th> 
+        <th></th>
         <% end %>
         <% if current_user.may_destroy_provider_group?(ProviderGroup.new) %>
-        <th></th> 
+        <th></th>
         <% end %>
       </tr>
-    
+
       <% @provider_groups.each_with_index do |provider_group,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
@@ -39,13 +41,15 @@
           </td>
           <td><%=h provider_group.rate_down %> (<%= pretty_currency_index(provider_group.concurrency_index_down) %>%)</td>
           <td><%=h provider_group.rate_up %> (<%= pretty_currency_index(provider_group.concurrency_index_up) %>%)</td>
+	  <td><%= provider_group.total_cir_up %></td>
+	  <td><%= provider_group.total_cir_down %></td>
           <td><%=h t "aasm.provider_group.#{provider_group.state}" %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => provider_group} %>
           <% if current_user.may_update_provider_group?(provider_group) %>
             <td><%= link_to t('buttons.edit'), edit_provider_group_path(provider_group) %></td>
           <% elsif current_user.may_show_provider_group?(provider_group) %>
             <td><%= link_to t('buttons.show'), provider_group_path(provider_group) %></td>
-          <% end %> 
+          <% end %>
           <% if current_user.may_destroy_provider_group?(provider_group) %>
           <td><%= link_to t('buttons.delete'), provider_group, :confirm => t('messages.confirm'), :method => :delete %></td>
           <% end %>

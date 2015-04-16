@@ -89,12 +89,20 @@ class Plan < ActiveRecord::Base
 
   def real_total_cir_up
     pg = provider_group
-    pg.rate_down * self.total_cir_down / pg.total_cir_down
+    [(pg.rate_down * self.total_cir_down / pg.total_cir_down), total_cir_up].min
   end
 
   def real_total_cir_down
     pg = provider_group
-    pg.rate_up * self.total_cir_up / pg.total_cir_up
+    [(pg.rate_up * self.total_cir_up / pg.total_cir_up), total_cir_down].min
+  end
+
+  def cir_factor_up
+    real_total_cir_up / contracts.count
+  end
+
+  def cir_factor_down
+    real_total_cir_down / contracts.count
   end
 
   def rate_up

@@ -156,6 +156,10 @@ en:
         long_download_max: "Large downloads limit [kbytes]"
         long_upload_max: "Large uploads limit [kbytes]"
         number_of_contracts: "Number of contracts"
+        cir_up: "CIR"
+        cir_down: "CIR"
+        total_cir_up: "Total CIR up (kbps)"
+        total_cir_down: "Total CIR down (kbps)"
       provider_group:
         name: "name"
         rate_down: "Download [kbps]"
