@@ -40,7 +40,7 @@ class Plan < ActiveRecord::Base
 
   validate :ceil_down_different_to_zero
   validate :ceil_up_different_to_zero
-  validate :cir_percentage_less_than
+  validate :cir_percentage_less_than, :if => "how_use_cir == 'percentage'"
 
   before_save :set_cir_and_total_cir
 
