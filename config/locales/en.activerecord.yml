@@ -484,7 +484,7 @@ en:
     plan:
       could_not_be_deleted: "This plan has %{count} contracts assigned, therefore it can't be deleted. Delete the corresponding contracts or assign them to another plan and try again."
       re_used: "Re used"
-      percentage: "Percetage"
+      percentage: "Percentage"
       total_cir: "Total CIR [kbps]"
     interface:
       scan_success: "New interfaces have been detected"
