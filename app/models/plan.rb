@@ -23,25 +23,55 @@ class Plan < ActiveRecord::Base
 
   attr_accessor :how_use_cir
   attr_accessor :cir_percentage
-  attr_accessor_with_default :value_cir_re_used, "1:1"
+  attr_accessor :value_cir_re_used
 
-  def after_initialize
-    self.cir_percentage = self.cir_up if self.used_cir_percentage
-    self.how_use_cir = default_value_for_which_use_cir if how_use_cir.nil?
-  end
-
-  def default_value_for_which_use_cir
+  def how_use_cir
     return "total_cir" if self.used_total_cir
     return "percentage" if self.used_cir_percentage
     "re_used"
   end
 
+  def cir_percentage
+    cir_up || 1
+  end
+
+
+   def value_cir_re_used
+     if cir_up.nil?
+       "1:1"
+     else
+       "1:#{(1/self.cir_up).to_i}"
+     end
+   end
+
+  # def after_initialize
+  #   self.cir_percentage = self.cir_up if self.used_cir_percentage
+  #   self.how_use_cir = default_value_for_which_use_cir if how_use_cir.nil?
+  #   self.value_cir_re_used = default_value_for_cir_reused
+  # end
+
+  # def default_value_for_cir_reused
+  #   if value_cir_re_used.nil?
+  #     "1:1"
+  #   else
+  #     "1:#{(1/self.cir_up).to_i}"
+  #   end
+  # end
+
+  # def default_value_for_which_use_cir
+  #   return "total_cir" if self.used_total_cir
+  #   return "percentage" if self.used_cir_percentage
+  #   "re_used"
+  # end
+
   include ModelsWatcher
-  watch_fields :provider_group_id, :ceil_down, :ceil_up,
-               :burst_down, :burst_up, :long_download_max, :long_upload_max
+  watch_fields :provider_group_id, :ceil_down, :ceil_up, :total_cir_down, :total_cir_up, :cir_down, :cir_up, :burst_down, :burst_up, :long_download_max, :long_upload_max
 
   validates_uniqueness_of :name
   validates_presence_of :name, :provider_group, :ceil_down, :ceil_up
+  validates_presence_of :value_cir_re_used, :if => "how_use_cir == 're_used'"
+  validates_presence_of :cir_percentage, :if => "how_use_cir == 'percentage'"
+  validates_presence_of :total_cir_down, :total_cir_up, :if => "how_use_cir == 'total_cir'"
   validates_length_of :name, :in => 3..128
   validates_numericality_of :ceil_down, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than_or_equal_to => 0
   validates_numericality_of :burst_down, :burst_up, :only_integer => true, :greater_than_or_equal_to => 0
@@ -49,10 +79,6 @@ class Plan < ActiveRecord::Base
 
   validate :ceil_down_different_to_zero
   validate :ceil_up_different_to_zero
-
-  # before_save :set_if_used_cir_percentage_or_used_total_cir
-  # before_save :set_cir, :if => "used_total_cir == false and (used_cir_percentage_changed? and used_cir_percentage == false)"
-  # before_save :set_total_cir, :if => "used_total_cir_changed?"
 
   before_save :set_cir_and_total_cir
 
@@ -73,6 +99,8 @@ class Plan < ActiveRecord::Base
     set_cir
     set_total_cir unless used_total_cir
   end
+
+  # NO DEBERIA DE OPERARAR CON LOS CONTRATOS QUE SOLO ESTAN HABILITADOS
 
   def set_cir
     if used_total_cir
