@@ -158,8 +158,11 @@ en:
         number_of_contracts: "Number of contracts"
         cir_up: "CIR"
         cir_down: "CIR"
-        total_cir_up: "Total CIR up (kbps)"
-        total_cir_down: "Total CIR down (kbps)"
+        total_cir_up: "Total CIR up [kbps]"
+        total_cir_down: "Total CIR down [kbps]"
+        how_use_cir: "How use CIR"
+        cir_percentage: "CIR percentage"
+        value_cir_re_used: "Reused value"
       provider_group:
         name: "name"
         rate_down: "Download [kbps]"
@@ -480,6 +483,9 @@ en:
       could_not_be_deleted: "This group has %{count} plans assigned, therefore it can't be deleted. Delete the corresponding plans or assign them to another group and try again."
     plan:
       could_not_be_deleted: "This plan has %{count} contracts assigned, therefore it can't be deleted. Delete the corresponding contracts or assign them to another plan and try again."
+      re_used: "Re used"
+      percentage: "Percetage"
+      total_cir: "Total CIR [kbps]"
     interface:
       scan_success: "New interfaces have been detected"
       scan_fail: "No new interfaces have been detected"

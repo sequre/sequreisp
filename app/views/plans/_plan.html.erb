@@ -43,9 +43,9 @@
         <%= form.input :ceil_down, :wrapper_html => { :class => "left" } %>
         <%= form.input :ceil_up, :wrapper_html => { :class => "left" } %>
         <div style="clear: both"></div>
-	<%= form.input :how_use_cir,  :as => :select, :collection => ["re_used", "percentage", "total_cir"], :include_blank => false %>
-	<%= form.input :value_cir_re_used, :as => :select, :collection => (1..32).map{|val| ["1:#{val}", 1/val.to_f]}, :include_blank => false, :wrapper_html => { :class => "left" } %>
-	<%= form.input :cir_percentage, :wrapper_html => { :class => "left" } %>
+	<%= form.input :how_use_cir,  :as => :select, :collection => select_how_use_cir, :include_blank => false, :selected => @plan.default_value_for_which_use_cir %>
+	<%= form.input :value_cir_re_used, :as => :select, :collection => (1..32).map{|val| ["1:#{val}", (1.0/val).round(7)]}, :include_blank => false, :selected => @plan.default_value_for_cir_reused, :wrapper_html => { :class => "left" } %>
+	<%= form.input :cir_percentage, :input_html => { :value => @plan.cir_up }, :wrapper_html => { :class => "left" } %>
 	<div style="clear: both"></div>
 	<%= form.input :total_cir_up, :wrapper_html => { :class => "left" } %>
 	<%= form.input :total_cir_down, :wrapper_html => { :class => "left" } %>

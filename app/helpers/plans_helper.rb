@@ -16,4 +16,11 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 module PlansHelper
+
+  def select_how_use_cir
+    [ [I18n.t("messages.plan.re_used"), "re_used"],
+      [I18n.t("messages.plan.percentage"), "percentage"],
+      [I18n.t("messages.plan.total_cir"), "total_cir"] ]
+  end
+
 end

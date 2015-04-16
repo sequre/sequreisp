@@ -156,6 +156,13 @@ es:
         long_download_max: "Límite para descargas grandes [kbytes]"
         long_upload_max: "Límite para cargas grandes [kbytes]"
         number_of_contracts: "Cantidad de contratos"
+        cir_up: "CIR"
+        cir_down: "CIR"
+        total_cir_up: "CIR total subida [kbps]"
+        total_cir_down: "CIR total bajada [kbps]"
+        how_use_cir: "Como usar CIR"
+        cir_percentage: "porcentage CIR"
+        value_cir_re_used: "valor de reuso"
       provider_group:
         name: "Nombre"
         rate_down: "Bajada [kbps]"
@@ -476,6 +483,9 @@ es:
       could_not_be_deleted: "Este grupo aún tiene %{count} planes asignados y no puede ser borrado; elimine los planes o cámbielos de grupo e intente nuevamente"
     plan:
       could_not_be_deleted: "Este plan aún tiene %{count} contratos asignados y no puede ser borrado; elimine los contratos o cámbielos de plan e intente nuevamente"
+      re_used: "Re uso"
+      percentage: "Porcentage"
+      total_cir: "Total CIR [kbps]"
     interface:
       scan_success: "Se han detectado nuevas interfaces"
       scan_fail: "No se han detectado nuevas interfaces"

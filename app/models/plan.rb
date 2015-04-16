@@ -25,45 +25,6 @@ class Plan < ActiveRecord::Base
   attr_accessor :cir_percentage
   attr_accessor :value_cir_re_used
 
-  def how_use_cir
-    return "total_cir" if self.used_total_cir
-    return "percentage" if self.used_cir_percentage
-    "re_used"
-  end
-
-  def cir_percentage
-    cir_up || 1
-  end
-
-
-   def value_cir_re_used
-     if cir_up.nil?
-       "1:1"
-     else
-       "1:#{(1/self.cir_up).to_i}"
-     end
-   end
-
-  # def after_initialize
-  #   self.cir_percentage = self.cir_up if self.used_cir_percentage
-  #   self.how_use_cir = default_value_for_which_use_cir if how_use_cir.nil?
-  #   self.value_cir_re_used = default_value_for_cir_reused
-  # end
-
-  # def default_value_for_cir_reused
-  #   if value_cir_re_used.nil?
-  #     "1:1"
-  #   else
-  #     "1:#{(1/self.cir_up).to_i}"
-  #   end
-  # end
-
-  # def default_value_for_which_use_cir
-  #   return "total_cir" if self.used_total_cir
-  #   return "percentage" if self.used_cir_percentage
-  #   "re_used"
-  # end
-
   include ModelsWatcher
   watch_fields :provider_group_id, :ceil_down, :ceil_up, :total_cir_down, :total_cir_up, :cir_down, :cir_up, :burst_down, :burst_up, :long_download_max, :long_upload_max
 
@@ -79,12 +40,18 @@ class Plan < ActiveRecord::Base
 
   validate :ceil_down_different_to_zero
   validate :ceil_up_different_to_zero
+  validate :cir_percentage_less_than
 
   before_save :set_cir_and_total_cir
 
+  def cir_percentage_less_than
+    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_different_to_zero')) if cir_percentage.to_f == 0
+    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_less_than_to_one')) if cir_percentage.to_f >= 0
+  end
+
   def set_total_cir
-    self.total_cir_up = self.ceil_up * self.cir_up * self.contracts.count rescue 0
-    self.total_cir_down = self.ceil_down * self.cir_down * self.contracts.count rescue 0
+    self.total_cir_up = self.ceil_up * self.cir_up * contracts_count rescue 0
+    self.total_cir_down = self.ceil_down * self.cir_down * contracts_count rescue 0
   end
 
   def set_cir_and_total_cir
@@ -100,12 +67,10 @@ class Plan < ActiveRecord::Base
     set_total_cir unless used_total_cir
   end
 
-  # NO DEBERIA DE OPERARAR CON LOS CONTRATOS QUE SOLO ESTAN HABILITADOS
-
   def set_cir
     if used_total_cir
-      self.cir_up = self.total_cir_up / (self.ceil_up * self.contracts.count) rescue 0.0001
-      self.cir_down = self.total_cir_down / (self.ceil_down * self.contracts.count) rescue 0.0001
+      self.cir_up = self.total_cir_up / (self.ceil_up * contracts_count) rescue 0.0001
+      self.cir_down = self.total_cir_down / (self.ceil_down * contracts_count) rescue 0.0001
     else
       if used_cir_percentage
         self.cir_up = self.cir_down = self.cir_percentage
@@ -115,22 +80,26 @@ class Plan < ActiveRecord::Base
     end
   end
 
+  def contracts_count
+    contracts.select { |contract| contract.state != 'disabled' }.count
+  end
+
   def real_total_cir_up
     pg = provider_group
-    [(pg.rate_down * self.total_cir_down / pg.total_cir_down), total_cir_up].min
+    [(pg.rate_down * total_cir_down / pg.total_cir_down), total_cir_up].min
   end
 
   def real_total_cir_down
     pg = provider_group
-    [(pg.rate_up * self.total_cir_up / pg.total_cir_up), total_cir_down].min
+    [(pg.rate_up * total_cir_up / pg.total_cir_up), total_cir_down].min
   end
 
   def cir_factor_up
-    real_total_cir_up / contracts.count
+    real_total_cir_up / contracts_count
   end
 
   def cir_factor_down
-    real_total_cir_down / contracts.count
+    real_total_cir_down / contracts_count
   end
 
   def rate_up
@@ -139,6 +108,16 @@ class Plan < ActiveRecord::Base
 
   def rate_down
     ceil_down * cir_down rescue 0
+  end
+
+  def default_value_for_cir_reused
+    cir_up || 1.0
+  end
+
+  def default_value_for_which_use_cir
+    return "total_cir" if self.used_total_cir
+    return "percentage" if self.used_cir_percentage
+    "re_used"
   end
 
   def ceil_up_different_to_zero
