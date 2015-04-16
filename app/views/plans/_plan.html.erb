@@ -8,23 +8,31 @@
 </style>
 
 <script type="text/javascript">
- function howUseCirSelect (){
+  function clearInput(data) {
+    for (var i = 0; i < arguments.length; i++) {
+      $(arguments[i]).val('');
+      };
+  };
+  function howUseCirSelect (){
    selected = $('#plan_how_use_cir').val();
    if (selected == 'percentage'){
      $('#plan_value_cir_re_used_input').hide();
      $('#plan_total_cir_up_input').hide();
      $('#plan_total_cir_down_input').hide();
      $('#plan_cir_percentage_input').show();
+     clearInput(plan_value_cir_re_used, plan_total_cir_up, plan_total_cir_down);
    } else if (selected == 're_used'){
      $('#plan_value_cir_re_used_input').show();
      $('#plan_total_cir_up_input').hide();
      $('#plan_total_cir_down_input').hide();
      $('#plan_cir_percentage_input').hide();
+     clearInput(plan_cir_percentage, plan_total_cir_up, plan_total_cir_down);
    } else if (selected == 'total_cir'){
      $('#plan_value_cir_re_used_input').hide();
      $('#plan_total_cir_up_input').show();
      $('#plan_total_cir_down_input').show();
      $('#plan_cir_percentage_input').hide();
+     clearInput(plan_cir_percentage, plan_value_cir_re_used);
    };
  };
  $(function(){
