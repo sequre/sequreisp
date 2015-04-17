@@ -363,6 +363,9 @@ en:
     guides: "SequireISP guides"
     support: "Support"
     command_log: "Command log"
+  table_headers:
+    plans:
+      plugins_enabled: 'Plugins enabled'
   buttons:
     export_to_csv: "Export to csv"
     login: "Login"

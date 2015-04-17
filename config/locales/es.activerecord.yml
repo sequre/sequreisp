@@ -363,6 +363,9 @@ es:
     guides: "Guías de SequreISP"
     support: "Soporte"
     command_log: "Log de comandos"
+  table_headers:
+    plans:
+      plugins_enabled: 'Módulos habilitados'
   buttons:
     export_to_csv: "Exportar a csv"
     login: "Entrar"

@@ -360,6 +360,9 @@ pt:
     guides: "Guias SequireISP"
     support: "Apoio"
     command_log: "Log de ​​comando"
+  table_headers:
+    plans:
+      plugins_enabled: 'Módulos habilitados'
   buttons:
     export_to_csv: "Exportação para csv"
     login: "Ingressar"
