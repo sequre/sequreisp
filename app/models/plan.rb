@@ -34,19 +34,17 @@ class Plan < ActiveRecord::Base
   validates_presence_of :cir_percentage, :if => "how_use_cir == 'percentage'"
   validates_presence_of :total_cir_down, :total_cir_up, :if => "how_use_cir == 'total_cir'"
   validates_length_of :name, :in => 3..128
-  validates_numericality_of :ceil_down, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than_or_equal_to => 0
+  validates_numericality_of :ceil_down, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than => 0
   validates_numericality_of :burst_down, :burst_up, :only_integer => true, :greater_than_or_equal_to => 0
   validates_numericality_of :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0, :less_than => 4294967295
 
-  validate :ceil_down_different_to_zero
-  validate :ceil_up_different_to_zero
-  validate :cir_percentage_less_than, :if => "how_use_cir == 'percentage'"
+  validate :cir_percentage_less_than_and_greater_than, :if => "how_use_cir == 'percentage'"
 
   before_save :set_cir_and_total_cir
 
-  def cir_percentage_less_than
-    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_different_to_zero')) if cir_percentage.to_f == 0
-    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_less_than_to_one')) if cir_percentage.to_f >= 0
+  def cir_percentage_less_than_and_greater_than
+    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_greater_than_to_zero')) if cir_percentage.to_f > 0
+    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_less_than_to_one')) if cir_percentage.to_f < 1
   end
 
   def set_total_cir
@@ -72,11 +70,7 @@ class Plan < ActiveRecord::Base
       self.cir_up = self.total_cir_up / (self.ceil_up * contracts_count) rescue 0.0001
       self.cir_down = self.total_cir_down / (self.ceil_down * contracts_count) rescue 0.0001
     else
-      if used_cir_percentage
-        self.cir_up = self.cir_down = self.cir_percentage
-      else
-        self.cir_up = self.cir_down = self.value_cir_re_used
-      end
+      self.cir_up = self.cir_down = used_cir_percentage ? self.cir_percentage : self.value_cir_re_used
     end
   end
 
@@ -118,14 +112,6 @@ class Plan < ActiveRecord::Base
     return "total_cir" if self.used_total_cir
     return "percentage" if self.used_cir_percentage
     "re_used"
-  end
-
-  def ceil_up_different_to_zero
-    errors.add(:ceil_up, I18n.t('validations.plan.ceil_up_different_to_zero')) if ceil_up == 0
-  end
-
-  def ceil_down_different_to_zero
-    errors.add(:ceil_down, I18n.t('validations.plan.ceil_down_different_to_zero')) if ceil_down == 0
   end
 
   def burst_down_to_bytes
