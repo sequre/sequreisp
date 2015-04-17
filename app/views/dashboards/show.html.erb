@@ -254,6 +254,24 @@
 
 <ul>
   <li>
+  <h2>Uptime</h2>
+  <table cellspacing="'" cellpadding="0">
+    <thead>
+      <tr class="odd">
+        <th>Uptime</th>
+        <th>Since</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><%= @uptime[0] %></td>
+        <td><%= @uptime[1] %></td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="clear: both"></div>
+  </li>
+  <li>
   <h2><%=t 'dashboard.cpu' %></h2>
   <div id="cpu" style="height:240px; width: 740px; margin: 20px"></div>
   <div style="clear: both"></div>
