@@ -580,6 +580,8 @@ es:
       not_enough_up_bandwidth: "No hay suficiente ancho de banda de subida"
       ceil_up_different_to_zero: "El maximo de subida debe ser mayor que cero"
       ceil_down_different_to_zero: "El maximo de bajada debe ser mayor que cero"
+      cir_percentage_greater_than_to_zero: "El porcentaje de CIR debe ser mayor a 0"
+      cir_percentage_less_than_to_one: "El porcentaje de CIR debe ser menor a 1"
     provider:
       provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "El grupo de proveedores no puede ser cambiado, existen contratos usando este proveedor para anular el balanceo"
       invalid_avoid_nat_addresses: "Dirección IP inválida %{invalid_ip}, usar notación CIDR"

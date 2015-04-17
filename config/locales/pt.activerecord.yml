@@ -577,6 +577,8 @@ pt:
       not_enough_up_bandwidth: "Não há suficiente largo de banda de subida"
       ceil_up_different_to_zero: "O upload max deve ser diferente de zero"
       ceil_down_different_to_zero: "O download max deve ser diferente de zero"
+      cir_percentage_greater_than_to_zero: "CIR percentage must be greater than to 0"
+      cir_percentage_less_than_to_one: "CIR percentage must be less than to 1"
     provider:
       provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "O grupo de fornecedores não pode ser mudado, há contratos que utilizam este fornecedor para evitar el balanceamento"
       invalid_avoid_nat_addresses: "Endereço IP inválido %{invalid_ip}, use a notação CIDR"
