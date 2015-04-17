@@ -483,6 +483,7 @@ pt:
       could_not_be_deleted: "Este grupo aínda tem %{count} planos atribídos e não pode ser eliminado; elimine os planos ou mude-os de grupo e tente novamente"
     plan:
       could_not_be_deleted: "Este plano aínda tem %{count} contratos atribídos e não pode ser eliminado; elimine os contratos ou mude-os de plano e tente novamente"
+      automatic: "Automatic"
       re_used: "Re used"
       percentage: "Percetage"
       total_cir: "Total CIR [kbps]"

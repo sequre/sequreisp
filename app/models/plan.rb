@@ -21,7 +21,6 @@ class Plan < ActiveRecord::Base
   acts_as_audited
   belongs_to :provider_group
 
-  attr_accessor :how_use_cir
   attr_accessor :cir_percentage
   attr_accessor :value_cir_re_used
 
@@ -47,31 +46,29 @@ class Plan < ActiveRecord::Base
     errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_less_than_to_one')) if cir_percentage.to_f < 1
   end
 
-  def set_total_cir
-    self.total_cir_up = self.ceil_up * self.cir_up * contracts_count rescue 0
-    self.total_cir_down = self.ceil_down * self.cir_down * contracts_count rescue 0
-  end
-
   def set_cir_and_total_cir
-    self.used_total_cir = false
-    self.used_cir_percentage = false
-    case how_use_cir
-    when "percentage"
-      self.used_cir_percentage = true
-    when "total_cir"
-      self.used_total_cir = true
-    end
     set_cir
-    set_total_cir unless used_total_cir
+    set_total_cir if how_use_cir != "total_cir"
   end
 
   def set_cir
-    if used_total_cir
+    case how_use_cir
+    when "percentage"
+      self.cir_up = self.cir_down = self.cir_percentage
+    when "re_used"
+      self.cir_up = self.cir_down = self.value_cir_re_used
+    when "automatic"
+      self.cir_up = provider_group.rate_up / (provider_group.ceil_up) rescue 0.0001
+      self.cir_down = provider_group.rate_down / (provider_group.ceil_down) rescue 0.0001
+    when "total_cir"
       self.cir_up = self.total_cir_up / (self.ceil_up * contracts_count) rescue 0.0001
       self.cir_down = self.total_cir_down / (self.ceil_down * contracts_count) rescue 0.0001
-    else
-      self.cir_up = self.cir_down = used_cir_percentage ? self.cir_percentage : self.value_cir_re_used
     end
+  end
+
+  def set_total_cir
+    self.total_cir_up = self.ceil_up * self.cir_up * contracts_count rescue 0
+    self.total_cir_down = self.ceil_down * self.cir_down * contracts_count rescue 0
   end
 
   def contracts_count
@@ -106,12 +103,6 @@ class Plan < ActiveRecord::Base
 
   def default_value_for_cir_reused
     cir_up || 1.0
-  end
-
-  def default_value_for_which_use_cir
-    return "total_cir" if self.used_total_cir
-    return "percentage" if self.used_cir_percentage
-    "re_used"
   end
 
   def burst_down_to_bytes

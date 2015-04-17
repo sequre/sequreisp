@@ -486,6 +486,7 @@ en:
       could_not_be_deleted: "This group has %{count} plans assigned, therefore it can't be deleted. Delete the corresponding plans or assign them to another group and try again."
     plan:
       could_not_be_deleted: "This plan has %{count} contracts assigned, therefore it can't be deleted. Delete the corresponding contracts or assign them to another plan and try again."
+      automatic: "Automatic"
       re_used: "Re used"
       percentage: "Percentage"
       total_cir: "Total CIR [kbps]"
