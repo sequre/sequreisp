@@ -60,17 +60,8 @@ class Interface < ActiveRecord::Base
   after_update :queue_update_commands
   after_destroy :queue_destroy_commands
 
-	before_destroy :check_associated_iproutes
-
   named_scope :only_lan, :conditions => { :kind => "lan" }
   named_scope :only_wan, :conditions => { :kind => "wan" }
-
-	def check_associated_iproutes
-		unless self.iproutes.empty?
-			errors.add(:iproute, "Interface has associated IProutes")
-			false
-		end		
-	end
 
   def uniqueness_mac_address_in_contracts
      if (contract = Contract.all(:conditions => { :mac_address => self.mac_address })).count > 0
