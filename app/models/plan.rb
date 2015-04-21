@@ -23,11 +23,10 @@ class Plan < ActiveRecord::Base
   CIR_STRATEGY_AUTOMATIC = 'automatic'
 
   acts_as_audited
-  attr_accessor :cir_percentage
   attr_accessor :cir_reuse
 
   include ModelsWatcher
-  watch_fields :provider_group_id, :ceil_down, :ceil_up, :total_cir_down, :total_cir_up, :cir_down, :cir_up, :long_download_max, :long_upload_max
+  watch_fields :provider_group_id, :ceil_down, :ceil_up, :total_cir_down, :total_cir_up, :cir, :long_download_max, :long_upload_max
 
   has_many :contracts, :dependent => :destroy, :include => :klass
   has_many :providers, :through => :provider_group
@@ -36,44 +35,56 @@ class Plan < ActiveRecord::Base
   validates_uniqueness_of :name
   validates_presence_of :name, :provider_group, :ceil_down, :ceil_up
   validates_presence_of :cir_reuse, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_REUSE }
-  validates_presence_of :cir_percentage, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_PERCENTAGE }
+  validates_presence_of :cir, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_PERCENTAGE }
   validates_presence_of :total_cir_down, :total_cir_up, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_PLAN_TOTAL }
   validates_length_of :name, :in => 3..128
   validates_numericality_of :ceil_down, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than => 0
   validates_numericality_of :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0, :less_than => 4294967295
+  validates_numericality_of :cir, :greater_than => 0, :less_than_or_equal_to => 1
 
-  validate :cir_percentage_less_than_and_greater_than, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_PERCENTAGE }
+  before_save :pass_cir_reuse_to_percentage, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_REUSE }
 
-  before_save :set_cir_and_total_cir
 
-  def cir_percentage_less_than_and_greater_than
-    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_greater_than_to_zero')) if cir_percentage.to_f <= 0
-    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_less_than_to_one')) if cir_percentage.to_f > 1
+  def pass_cir_reuse_to_percentage
+    self.cir = self.cir_reuse
   end
 
-  def set_cir_and_total_cir
-    set_cir
-    set_total_cir if cir_strategy != CIR_STRATEGY_PLAN_TOTAL
-  end
-
-  def set_cir
+  def cir_down
     case cir_strategy
-    when CIR_STRATEGY_PERCENTAGE
-      self.cir_up = self.cir_down = self.cir_percentage
-    when CIR_STRATEGY_REUSE
-      self.cir_up = self.cir_down = self.cir_reuse
     when CIR_STRATEGY_AUTOMATIC
-      self.cir_up = provider_group.rate_up / provider_group.ceil_up rescue 0.0001
-      self.cir_down = provider_group.rate_down / provider_group.ceil_down rescue 0.0001
+      (provider_group.rate_down.to_f / provider_group.ceil_down) rescue 0.0001
     when CIR_STRATEGY_PLAN_TOTAL
-      self.cir_up = self.total_cir_up / (self.ceil_up * contracts_count) rescue 0.0001
-      self.cir_down = self.total_cir_down / (self.ceil_down * contracts_count) rescue 0.0001
+      [1 , (self.total_cir_down.to_f / (self.ceil_down * contracts_count) rescue 0.0001)].min
+    else
+      cir
     end
   end
 
-  def set_total_cir
-    self.total_cir_up = self.ceil_up * self.cir_up * contracts_count rescue 0
-    self.total_cir_down = self.ceil_down * self.cir_down * contracts_count rescue 0
+  def cir_up
+    case cir_strategy
+    when CIR_STRATEGY_AUTOMATIC
+      (provider_group.rate_up.to_f / provider_group.ceil_up) rescue 0.0001
+    when CIR_STRATEGY_PLAN_TOTAL
+      [1 , (self.total_cir_up.to_f / (self.ceil_up * contracts_count) rescue 0.0001)].min
+    else
+      cir
+    end
+  end
+
+  def cir_total_up
+    if cir_strategy == CIR_STRATEGY_PLAN_TOTAL
+      total_cir_up
+    else
+      (self.ceil_up * self.cir * contracts_count) rescue 0
+    end
+  end
+
+  def cir_total_down
+    if cir_strategy == CIR_STRATEGY_PLAN_TOTAL
+      total_cir_down
+    else
+      (self.ceil_down * self.cir_down * contracts_count) rescue 0
+    end
   end
 
   def contracts_count
@@ -107,7 +118,7 @@ class Plan < ActiveRecord::Base
   end
 
   def default_value_for_cir_reused
-    cir_up || 1.0
+    cir || 1.0
   end
 
   def long_download_max_to_bytes

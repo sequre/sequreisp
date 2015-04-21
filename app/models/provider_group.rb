@@ -172,10 +172,10 @@ class ProviderGroup < ActiveRecord::Base
   end
 
   def total_cir_up
-    plans.collect(&:total_cir_up).sum rescue 0
+    plans.collect(&:cir_total_up).sum rescue 0
   end
 
   def total_cir_down
-    plans.collect(&:total_cir_down).sum rescue 0
+    plans.collect(&:cir_total_down).sum rescue 0
   end
 end

@@ -34,7 +34,7 @@
         <th><%= order @search, :by => :ceil_down , :as => t('activerecord.attributes.plan.ceil_down') %>/
             <%= order @search, :by => :ceil_up , :as => t('activerecord.attributes.plan.ceil_up') %>
         </th>
-        <th><%= t('activerecord.attributes.plan.cir_up') %></th>
+        <th><%= t('activerecord.attributes.plan.cir') %></th>
         <th>
           <%= t('activerecord.attributes.plan.total_cir_down') %> /
           <%= t('activerecord.attributes.plan.total_cir_up') %>
@@ -58,10 +58,13 @@
             <%=h plan.ceil_down %> /
             <%=h plan.ceil_up %>
           </td>
-          <td><%=h plan.cir_up %></td>
           <td>
-            <%=h plan.total_cir_down %> /
-            <%=h plan.total_cir_up %>
+	    <%=h plan.cir_down %> /
+	    <%=h plan.cir_down %>
+	  </td>
+          <td>
+            <%=h plan.cir_total_down %> /
+            <%=h plan.cir_total_up %>
           </td>
           <td><%=h plan.provider_group.name rescue 'Undefined' %></td>
           <td><%=h plan.contracts.count %></td>
