@@ -156,7 +156,7 @@ pt:
         cir: "CIR (%)"
         total_cir_down: "Total baixada do plano [kbps]"
         total_cir_up: "Total subida do plan [kbps]"
-        cir_strategy: "Largura de banda garantida para o plano"
+        cir_strategy: "Estratégia de largura de banda garantida"
         cir_percentage: "Valor de percentagem"
         cir_reuse: "Valor de reutilização"
       provider_group:

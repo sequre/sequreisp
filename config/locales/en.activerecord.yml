@@ -159,7 +159,7 @@ en:
         cir: "CIR (%)"
         total_cir_down: "Total down rate [kbps]"
         total_cir_up: "Total up rate [kbps]"
-        cir_strategy: "Guaranteed bandwidth for the plan"
+        cir_strategy: "Strategy for guaranteed bandwidth"
         cir_percentage: "Percentage value"
         cir_reuse: "Reuse value"
       provider_group:

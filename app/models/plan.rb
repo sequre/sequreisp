@@ -40,7 +40,7 @@ class Plan < ActiveRecord::Base
   validates_length_of :name, :in => 3..128
   validates_numericality_of :ceil_down, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than => 0
   validates_numericality_of :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0, :less_than => 4294967295
-  validates_numericality_of :cir, :greater_than => 0, :less_than_or_equal_to => 1
+  validates_numericality_of :cir, :greater_than => 0, :less_than_or_equal_to => 1, :allow_nil => true
 
   before_save :pass_cir_reuse_to_percentage, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_REUSE }
 
@@ -49,41 +49,45 @@ class Plan < ActiveRecord::Base
     self.cir = self.cir_reuse
   end
 
-  def cir_down
+  def cir_up
+    @cached_cir_up ||=
     case cir_strategy
     when CIR_STRATEGY_AUTOMATIC
-      (provider_group.rate_down.to_f / provider_group.ceil_down) rescue 0.0001
+      [1, ((provider_group.rate_up.to_f / provider_group.ceil_up) rescue 0.01).round(2)].min
     when CIR_STRATEGY_PLAN_TOTAL
-      [1 , (self.total_cir_down.to_f / (self.ceil_down * contracts_count) rescue 0.0001)].min
+      [1 , (total_cir_up.to_f / (ceil_up * contracts_count) rescue 0.01).round(2)].min
     else
       cir
     end
   end
 
-  def cir_up
+  def cir_down
+    @cached_cir_down ||=
     case cir_strategy
     when CIR_STRATEGY_AUTOMATIC
-      (provider_group.rate_up.to_f / provider_group.ceil_up) rescue 0.0001
+      [1, ((provider_group.rate_down.to_f / provider_group.ceil_down) rescue 0.01).round(2)].min
     when CIR_STRATEGY_PLAN_TOTAL
-      [1 , (self.total_cir_up.to_f / (self.ceil_up * contracts_count) rescue 0.0001)].min
+      [1 , (total_cir_down.to_f / (ceil_down * contracts_count) rescue 0.01).round(2)].min
     else
       cir
     end
   end
 
   def cir_total_up
+    @cached_cir_total_up ||=
     if cir_strategy == CIR_STRATEGY_PLAN_TOTAL
       total_cir_up
     else
-      (self.ceil_up * self.cir * contracts_count) rescue 0
+      (ceil_up * cir_up * contracts_count).to_i
     end
   end
 
   def cir_total_down
+    @cached_cir_total_down ||=
     if cir_strategy == CIR_STRATEGY_PLAN_TOTAL
       total_cir_down
     else
-      (self.ceil_down * self.cir_down * contracts_count) rescue 0
+      (ceil_down * cir_down * contracts_count).to_i
     end
   end
 
@@ -91,30 +95,20 @@ class Plan < ActiveRecord::Base
     contracts.select { |contract| contract.state != 'disabled' }.count
   end
 
-  def real_total_cir_up
-    pg = provider_group
-    [(pg.rate_down * total_cir_down / pg.total_cir_down), total_cir_up].min
+  def cir_up_real
+    provider_group.cir_total_up * cir_up / provider.rate_up
   end
 
-  def real_total_cir_down
-    pg = provider_group
-    [(pg.rate_up * total_cir_up / pg.total_cir_up), total_cir_down].min
-  end
-
-  def cir_factor_up
-    real_total_cir_up / contracts_count
-  end
-
-  def cir_factor_down
-    real_total_cir_down / contracts_count
+  def cir_down_real
+    provider_group.cir_total_down * cir_down / provider.rate_down
   end
 
   def rate_up
-    ceil_up * cir_up rescue 0
+    ceil_up * cir_up_real
   end
 
   def rate_down
-    ceil_down * cir_down rescue 0
+    ceil_down * cir_down_real
   end
 
   def default_value_for_cir_reused

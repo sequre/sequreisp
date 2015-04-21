@@ -33,21 +33,9 @@
    };
  };
 
- function cir_clean_inputs () {
-   selected = $('#plan_cir_strategy').val();
-   if (selected == '<%= Plan::CIR_STRATEGY_PERCENTAGE %>'){
-     $('#plan_cir_input').val('');
-   } else if (selected == '<%= Plan::CIR_STRATEGY_REUSE %>'){
-     $('#plan_cir_reuse').val('');
-   } else if (selected == '<%= Plan::CIR_STRATEGY_PLAN_TOTAL %>'){
-     $('#plan_total_cir_down').val('');
-     $('#plan_total_cir_up').val('');
-   };
- };
  $(function(){
    cir_strategy_select();
    $('#plan_cir_strategy').change(cir_strategy_select);
-   /* $('#plan_cir_strategy').change(cir_clean_inputs); */
  });
 </script>
 
@@ -62,7 +50,7 @@
         <%= form.input :ceil_up, :wrapper_html => { :class => "left" } %>
         <div style="clear: both"></div>
 	<%= form.input :cir_strategy,  :as => :select, :collection => select_cir_strategy, :include_blank => false %>
-	<%= form.input :cir_reuse, :as => :select, :collection => (1..32).map{|val| ["1:#{val}", (1.0/val).round(7)]}, :include_blank => false, :selected => @plan.default_value_for_cir_reused, :wrapper_html => { :class => "left" } %>
+	<%= form.input :cir_reuse, :as => :select, :collection => (1..32).map{|val| ["1:#{val}", (1.0/val).round(2)]}, :include_blank => false, :selected => @plan.default_value_for_cir_reused, :wrapper_html => { :class => "left" } %>
 	<%= form.input :cir, :wrapper_html => { :class => "left" } %>
 	<div style="clear: both"></div>
 	<%= form.input :total_cir_down, :wrapper_html => { :class => "left" } %>

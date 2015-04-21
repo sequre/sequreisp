@@ -48,11 +48,11 @@ def gen_tc
       tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{total_rate_down}kbit ul m2 #{total_rate_down}kbit"
       tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
       ProviderGroup.all.each do |pg|
-        rate_factor_up = pg.rate_factor_up
-        rate_factor_down = pg.rate_factor_down
-        pg.contracts.not_disabled.descend_by_netmask.each do |c|
-          tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", rate_factor_up)
-          tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", rate_factor_down)
+        pg.plans.each do |plan|
+          plan.contracts.not_disabled.descend_by_netmask.each do |c|
+            tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", plan)
+            tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
+          end
         end
       end
     end
