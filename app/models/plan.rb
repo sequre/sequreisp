@@ -17,14 +17,14 @@
 
 class Plan < ActiveRecord::Base
 
-  RE_USED = 're_used'
-  PERCENTAGE = 'percentage'
-  TOTAL_CIR = 'total_cir'
-  AUTOMATIC = 'automatic'
+  CIR_STRATEGY_REUSE = 'reuse'
+  CIR_STRATEGY_PERCENTAGE = 'percentage'
+  CIR_STRATEGY_PLAN_TOTAL = 'plan_total'
+  CIR_STRATEGY_AUTOMATIC = 'automatic'
 
   acts_as_audited
   attr_accessor :cir_percentage
-  attr_accessor :value_cir_re_used
+  attr_accessor :cir_reuse
 
   include ModelsWatcher
   watch_fields :provider_group_id, :ceil_down, :ceil_up, :total_cir_down, :total_cir_up, :cir_down, :cir_up, :long_download_max, :long_upload_max
@@ -35,37 +35,37 @@ class Plan < ActiveRecord::Base
 
   validates_uniqueness_of :name
   validates_presence_of :name, :provider_group, :ceil_down, :ceil_up
-  validates_presence_of :value_cir_re_used, :if => "how_use_cir == #{RE_USED}"
-  validates_presence_of :cir_percentage, :if => "how_use_cir == #{PERCENTAGE}"
-  validates_presence_of :total_cir_down, :total_cir_up, :if => "how_use_cir == #{TOTAL_CIR}"
+  validates_presence_of :cir_reuse, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_REUSE }
+  validates_presence_of :cir_percentage, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_PERCENTAGE }
+  validates_presence_of :total_cir_down, :total_cir_up, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_PLAN_TOTAL }
   validates_length_of :name, :in => 3..128
   validates_numericality_of :ceil_down, :ceil_up, :only_integer => true, :allow_nil => true, :greater_than => 0
   validates_numericality_of :long_download_max, :long_upload_max, :only_integer => true, :greater_than_or_equal_to => 0, :less_than => 4294967295
 
-  validate :cir_percentage_less_than_and_greater_than, :if => "how_use_cir == #{PERCENTAGE}"
+  validate :cir_percentage_less_than_and_greater_than, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_PERCENTAGE }
 
   before_save :set_cir_and_total_cir
 
   def cir_percentage_less_than_and_greater_than
-    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_greater_than_to_zero')) if cir_percentage.to_f > 0
-    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_less_than_to_one')) if cir_percentage.to_f < 1
+    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_greater_than_to_zero')) if cir_percentage.to_f <= 0
+    errors.add(:cir_percentage, I18n.t('validations.plan.cir_percentage_less_than_to_one')) if cir_percentage.to_f > 1
   end
 
   def set_cir_and_total_cir
     set_cir
-    set_total_cir if how_use_cir != TOTA_CIR
+    set_total_cir if cir_strategy != CIR_STRATEGY_PLAN_TOTAL
   end
 
   def set_cir
-    case how_use_cir
-    when PERCENTAGE
+    case cir_strategy
+    when CIR_STRATEGY_PERCENTAGE
       self.cir_up = self.cir_down = self.cir_percentage
-    when RE_USED
-      self.cir_up = self.cir_down = self.value_cir_re_used
-    when AUTOMATIC
+    when CIR_STRATEGY_REUSE
+      self.cir_up = self.cir_down = self.cir_reuse
+    when CIR_STRATEGY_AUTOMATIC
       self.cir_up = provider_group.rate_up / provider_group.ceil_up rescue 0.0001
       self.cir_down = provider_group.rate_down / provider_group.ceil_down rescue 0.0001
-    when TOTAL_CIR
+    when CIR_STRATEGY_PLAN_TOTAL
       self.cir_up = self.total_cir_up / (self.ceil_up * contracts_count) rescue 0.0001
       self.cir_down = self.total_cir_down / (self.ceil_down * contracts_count) rescue 0.0001
     end
