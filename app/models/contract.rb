@@ -600,6 +600,8 @@ class Contract < ActiveRecord::Base
 
       # data rows
       _contracts.each do |c|
+        c.create_traffic_for_this_period
+        c.reload
         csv << [
           c.id,
           I18n.l(c.created_at.to_date),
