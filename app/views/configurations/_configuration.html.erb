@@ -21,8 +21,25 @@ float: left;
 
 </style>
 <script type="text/javascript">
+  function show_or_hide_tcp_length () {
+    if ($("#traffic_prio_tcp-length").is(':checked')) {
+      $('li#configuration_tcp_length_input').show();
+    } else {
+      $('li#configuration_tcp_length_input').hide();
+    }
+  };
+
+  function show_or_hide_udp_length () {
+    if ($("#traffic_prio_udp-length").is(':checked')) {
+      $('li#configuration_udp_length_input').show();
+    } else {
+      $('li#configuration_udp_length_input').hide();
+    }
+  };
+
   $(function(){
-    $('#configuration_apply_changes_automatically').change( function() {
+
+     $('#configuration_apply_changes_automatically').change( function() {
       if ($('#configuration_apply_changes_automatically').is(':checked')) {
         $('#configuration_apply_changes_automatically_hour_input').show();
       } else {
@@ -56,6 +73,13 @@ float: left;
     $('#configuration_mail_relay_manipulated_for_sequreisp').change();
     $('#configuration_apply_changes_automatically').change();
     $('#configuration_dns_use_forwarders').change();
+
+    show_or_hide_tcp_length();
+    show_or_hide_udp_length();
+
+    $('#traffic_prio_tcp-length').change(show_or_hide_tcp_length);
+    $('#traffic_prio_udp-length').change(show_or_hide_udp_length);
+
   });
 </script>
 <% unless current_user.may_update_configuration?(@configuration) %>
@@ -91,13 +115,14 @@ float: left;
     <% form.inputs :name => t('fieldsets.configuration.global_prios'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.global_prios' } } do %>
       <% form.inputs :name => t('fieldsets.configuration.traffic_prio') do %>
-        <% Configuration::TRAFFIC_PRIO.keys.each do |tp| %>
+        <% Configuration::LOW_LATENCY_TRAFFIC_PRIO.each do |tp| %>
           <%= check_box_tag "traffic_prio[#{tp.to_s}]", nil, @configuration.traffic_prio.include?(tp.to_s), :class => "left not_paged" %>
           <%= label_tag "<b>#{tp.to_s}</b>", nil, :class => "left not_paged" %>
 	  <div class="traffic-prio-hints" %>
 	    <%= t("messages.configuration.#{tp.to_s}") %>
 	  </div>
           <div style="clear: both"></div>
+	  <%= show_traffic_prio_input(form, tp) %>
         <% end %>
       <% end %>
       <%= form.input :default_tcp_prio_ports %>

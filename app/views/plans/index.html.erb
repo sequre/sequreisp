@@ -34,8 +34,8 @@
         <th><%= order @search, :by => :ceil_down , :as => t('activerecord.attributes.plan.ceil_down') %>/
             <%= order @search, :by => :ceil_up , :as => t('activerecord.attributes.plan.ceil_up') %>
         </th>
-        <th><%= t('activerecord.attributes.plan.cir_up') %></th>
-        <th>
+        <th><%= t('activerecord.attributes.plan.cir_strategy') %></th>
+        <th><%= t('activerecord.attributes.plan.cir') %> <br/>
           <%= t('activerecord.attributes.plan.total_cir_down') %> /
           <%= t('activerecord.attributes.plan.total_cir_up') %>
         </th>
@@ -54,14 +54,15 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td><%=h plan.name %></td>
-          <td>
-            <%=h plan.ceil_down %> /
-            <%=h plan.ceil_up %>
+          <td style="text-align: center; min-width: 125px">
+            <%= show_human_down_up plan.ceil_down, plan.ceil_up %>
           </td>
-          <td><%=h plan.cir_up %></td>
-          <td>
-            <%=h plan.total_cir_down %> /
-            <%=h plan.total_cir_up %>
+          <td style="text-align: center">
+            <%=h t("messages.plan.#{plan.cir_strategy}") %>
+          </td>
+          <td style="text-align: center; min-width: 125px">
+            <%= show_cir plan %> <br/>
+            <%= show_human_down_up plan.cir_total_down, plan.cir_total_up %>
           </td>
           <td><%=h plan.provider_group.name rescue 'Undefined' %></td>
           <td><%=h plan.contracts.count %></td>

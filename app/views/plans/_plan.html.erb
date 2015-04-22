@@ -8,37 +8,34 @@
 </style>
 
 <script type="text/javascript">
-  function howUseCirSelect (){
-   selected = $('#plan_how_use_cir').val();
-   if (selected == 'percentage'){
-     $('#plan_value_cir_re_used_input').hide();
+  function cir_strategy_select (){
+   selected = $('#plan_cir_strategy').val();
+   if (selected == '<%= Plan::CIR_STRATEGY_PERCENTAGE %>'){
+     $('#plan_cir_reuse_input').hide();
      $('#plan_total_cir_up_input').hide();
      $('#plan_total_cir_down_input').hide();
-     $('#plan_cir_percentage_input').show();
-     $('#plan_cir_percentage').val('');
-   } else if (selected == 'automatic') {
-     $('#plan_value_cir_re_used_input').hide();
+     $('#plan_cir_input').show();
+   } else if (selected == '<%= Plan::CIR_STRATEGY_AUTOMATIC %>') {
+     $('#plan_cir_reuse_input').hide();
      $('#plan_total_cir_up_input').hide();
      $('#plan_total_cir_down_input').hide();
-     $('#plan_cir_percentage_input').hide();
-   } else if (selected == 're_used'){
-     $('#plan_value_cir_re_used_input').show();
+     $('#plan_cir_input').hide();
+   } else if (selected == '<%= Plan::CIR_STRATEGY_REUSE %>'){
+     $('#plan_cir_reuse_input').show();
      $('#plan_total_cir_up_input').hide();
      $('#plan_total_cir_down_input').hide();
-     $('#plan_cir_percentage_input').hide();
-     $('#plan_value_cir_re_used').val('');
-   } else if (selected == 'total_cir'){
-     $('#plan_value_cir_re_used_input').hide();
+     $('#plan_cir_input').hide();
+   } else if (selected == '<%= Plan::CIR_STRATEGY_PLAN_TOTAL %>'){
+     $('#plan_cir_reuse_input').hide();
      $('#plan_total_cir_up_input').show();
      $('#plan_total_cir_down_input').show();
-     $('#plan_cir_percentage_input').hide();
-     $('#plan_total_cir_down').val('');
-     $('#plan_total_cir_up').val('');
+     $('#plan_cir_input').hide();
    };
  };
+
  $(function(){
-   howUseCirSelect();
-   $('#plan_how_use_cir').change(howUseCirSelect);
+   cir_strategy_select();
+   $('#plan_cir_strategy').change(cir_strategy_select);
  });
 </script>
 
@@ -52,12 +49,12 @@
         <%= form.input :ceil_down, :wrapper_html => { :class => "left" } %>
         <%= form.input :ceil_up, :wrapper_html => { :class => "left" } %>
         <div style="clear: both"></div>
-	<%= form.input :how_use_cir,  :as => :select, :collection => select_how_use_cir, :include_blank => false %>
-	<%= form.input :value_cir_re_used, :as => :select, :collection => (1..32).map{|val| ["1:#{val}", (1.0/val).round(7)]}, :include_blank => false, :selected => @plan.default_value_for_cir_reused, :wrapper_html => { :class => "left" } %>
-	<%= form.input :cir_percentage, :input_html => { :value => @plan.cir_up }, :wrapper_html => { :class => "left" } %>
+	<%= form.input :cir_strategy,  :as => :select, :collection => select_cir_strategy, :include_blank => false %>
+	<%= form.input :cir_reuse, :as => :select, :collection => (1..32).map{|val| ["1:#{val}", (1.0/val).round(2)]}, :include_blank => false, :selected => @plan.default_value_for_cir_reused, :wrapper_html => { :class => "left" } %>
+	<%= form.input :cir, :wrapper_html => { :class => "left" } %>
 	<div style="clear: both"></div>
-	<%= form.input :total_cir_up, :wrapper_html => { :class => "left" } %>
 	<%= form.input :total_cir_down, :wrapper_html => { :class => "left" } %>
+	<%= form.input :total_cir_up, :wrapper_html => { :class => "left" } %>
 	<div style="clear: both"></div>
 	<% form.inputs :name => I18n.t('fieldsets.plan.advanced'), :context_help => { :path => { :custom => 'plan.fieldsets.advanced' } } do %>
 	<div style="clear: both"></div>

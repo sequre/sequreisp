@@ -156,13 +156,12 @@ en:
         long_download_max: "Large downloads limit [kbytes]"
         long_upload_max: "Large uploads limit [kbytes]"
         number_of_contracts: "Number of contracts"
-        cir_up: "CIR"
-        cir_down: "CIR"
-        total_cir_up: "Total CIR up [kbps]"
-        total_cir_down: "Total CIR down [kbps]"
-        how_use_cir: "How use CIR"
-        cir_percentage: "CIR percentage"
-        value_cir_re_used: "Reused value"
+        cir: "CIR (%)"
+        total_cir_down: "Total down rate [kbps]"
+        total_cir_up: "Total up rate [kbps]"
+        cir_strategy: "Strategy for guaranteed bandwidth"
+        cir_percentage: "Percentage value"
+        cir_reuse: "Reuse value"
       provider_group:
         name: "name"
         rate_down: "Download [kbps]"
@@ -243,6 +242,8 @@ en:
         dns_third_server: "Third DNS Server"
         traffic_prio: "Priority traffic (low latency)"
         in_safe_mode: "Safe mode"
+        tcp_length: "TCP lenght"
+        udp_length: "UDP lenght"
       user:
         name: "Name"
         email: "User email address"
@@ -487,9 +488,9 @@ en:
     plan:
       could_not_be_deleted: "This plan has %{count} contracts assigned, therefore it can't be deleted. Delete the corresponding contracts or assign them to another plan and try again."
       automatic: "Automatic"
-      re_used: "Re used"
+      reuse: "Reuse"
       percentage: "Percentage"
-      total_cir: "Total CIR [kbps]"
+      plan_total: "Total bandwidth for plan"
     interface:
       scan_success: "New interfaces have been detected"
       scan_fail: "No new interfaces have been detected"
@@ -532,7 +533,8 @@ en:
     configuration:
       own: "Server own"
       gmail: "Gmail"
-      length: "Packet size between 0 and 100 byte"
+      tcp-length: "TCP packet size between 0 and 100 byte"
+      udp-length: "UDP packet size between 0 and 100 byte"
       ssh: "Secure Shell (SSH)"
       dns: "Domain Name System (DNS)"
       icmp: "Internet Control Message Protocol (ICMP)"
@@ -581,8 +583,6 @@ en:
       not_enough_up_bandwidth: "There's not enough upload bandwidth"
       ceil_up_different_to_zero: "The max upload must be different to zero"
       ceil_down_different_to_zero: "The max download must be different to zero"
-      cir_percentage_greater_than_to_zero: "CIR percentage must be greater than to 0"
-      cir_percentage_less_than_to_one: "CIR percentage must be less than to 1"
     provider:
       provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "Provider group can't be changed, there are contracts using this provider to avoid balancing"
       invalid_avoid_nat_addresses: "Invalid IP address %{invalid_ip}, use CIDR notation"
@@ -650,6 +650,7 @@ en:
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'
     define_one_dns_server: 'Define at less one DNS server'
+    cant_repeat_the_ports: 'Cant repeat the ports %{ports}'
   command:
     human:
       prepare_iptables: "Prepare iptables rules"

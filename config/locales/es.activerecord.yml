@@ -156,13 +156,12 @@ es:
         long_download_max: "Límite para descargas grandes [kbytes]"
         long_upload_max: "Límite para cargas grandes [kbytes]"
         number_of_contracts: "Cantidad de contratos"
-        cir_up: "CIR"
-        cir_down: "CIR"
-        total_cir_up: "CIR total subida [kbps]"
-        total_cir_down: "CIR total bajada [kbps]"
-        how_use_cir: "Como usar CIR"
-        cir_percentage: "porcentage CIR"
-        value_cir_re_used: "valor de reuso"
+        cir: "CIR (%)"
+        total_cir_down: "Total de bajada para el plan [kbps]"
+        total_cir_up: "Total de subida para el plan [kbps]"
+        cir_strategy: "Estrategia de ancho de banda garantizado"
+        cir_percentage: "Valor de porcentaje"
+        cir_reuse: "Valor de reuso"
       provider_group:
         name: "Nombre"
         rate_down: "Bajada [kbps]"
@@ -243,6 +242,8 @@ es:
         dns_third_server: "Tercer Server DNS"
         traffic_prio: "Tráfico prioritario de baja latencia"
         in_safe_mode: "Modo seguro"
+        tcp_length: "Tamaño paquetes en bytes (TCP)"
+        udp_length: "Tamaño paquetes en bytes (UDP)"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -487,9 +488,9 @@ es:
     plan:
       could_not_be_deleted: "Este plan aún tiene %{count} contratos asignados y no puede ser borrado; elimine los contratos o cámbielos de plan e intente nuevamente"
       automatic: "Automatico"
-      re_used: "Re uso"
-      percentage: "Porcentage"
-      total_cir: "Total CIR [kbps]"
+      reuse: "Reuso"
+      percentage: "Porcentaje"
+      plan_total: "Ancho de banda total para el plan"
     interface:
       scan_success: "Se han detectado nuevas interfaces"
       scan_fail: "No se han detectado nuevas interfaces"
@@ -532,7 +533,8 @@ es:
     configuration:
       own: "Servidor Propio"
       gmail: "Gmail"
-      length: "Paquetes con tamaño entre 0 y 100 bytes"
+      tcp-length: "Paquetes TCP con tamaño entre 0 y 100 bytes"
+      udp-length: "Paquetes UDP con tamaño entre 0 y 100 bytes"
       ssh: "Secure Shell (SSH)"
       dns: "Sistema de Nombres de Dominio (DNS)"
       icmp: "Protocolo de Mensajes de Control de Internet (ICMP)"
@@ -650,6 +652,7 @@ es:
     not_selected_any_options: 'No se ha selecionado ninguna opción'
     not_repeat_dns_server: 'Existen servidores DNS repetidos'
     define_one_dns_server: 'Definir al menos un servidor DNS'
+    cant_repeat_the_ports: 'No pueden repetirse los puertos: %{ports}'
   command:
     human:
       prepare_iptables: "Preparando reglas de iptables"

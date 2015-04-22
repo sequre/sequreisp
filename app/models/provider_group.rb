@@ -16,7 +16,6 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class ProviderGroup < ActiveRecord::Base
-  HFSC_SATURATION_INDEX=0.80
   acts_as_audited
   has_many :plans, :dependent => :nullify
   has_many :providers, :dependent => :nullify, :include => :interface
@@ -164,18 +163,12 @@ class ProviderGroup < ActiveRecord::Base
   def ceil_up
     contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
   end
-  def rate_factor_up
-    remaining_rate_up*HFSC_SATURATION_INDEX/ceil_up rescue 0
-  end
-  def rate_factor_down
-    remaining_rate_down*HFSC_SATURATION_INDEX/ceil_down rescue 0
+
+  def cir_total_up
+    plans.collect(&:cir_total_up).sum rescue 0
   end
 
-  def total_cir_up
-    plans.collect(&:total_cir_up).sum rescue 0
-  end
-
-  def total_cir_down
-    plans.collect(&:total_cir_down).sum rescue 0
+  def cir_total_down
+    plans.collect(&:cir_total_down).sum rescue 0
   end
 end
