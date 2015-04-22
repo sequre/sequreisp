@@ -156,6 +156,12 @@ en:
         long_download_max: "Large downloads limit [kbytes]"
         long_upload_max: "Large uploads limit [kbytes]"
         number_of_contracts: "Number of contracts"
+        cir: "CIR (%)"
+        total_cir_down: "Total down rate [kbps]"
+        total_cir_up: "Total up rate [kbps]"
+        cir_strategy: "Strategy for guaranteed bandwidth"
+        cir_percentage: "Percentage value"
+        cir_reuse: "Reuse value"
       provider_group:
         name: "name"
         rate_down: "Download [kbps]"
@@ -236,6 +242,8 @@ en:
         dns_third_server: "Third DNS Server"
         traffic_prio: "Priority traffic (low latency)"
         in_safe_mode: "Safe mode"
+        tcp_length: "TCP lenght"
+        udp_length: "UDP lenght"
       user:
         name: "Name"
         email: "User email address"
@@ -356,6 +364,9 @@ en:
     guides: "Wispro guides"
     support: "Support"
     command_log: "Command log"
+  table_headers:
+    plans:
+      plugins_enabled: 'Plugins enabled'
   buttons:
     export_to_csv: "Export to csv"
     login: "Login"
@@ -476,6 +487,10 @@ en:
       could_not_be_deleted: "This group has %{count} plans assigned, therefore it can't be deleted. Delete the corresponding plans or assign them to another group and try again."
     plan:
       could_not_be_deleted: "This plan has %{count} contracts assigned, therefore it can't be deleted. Delete the corresponding contracts or assign them to another plan and try again."
+      automatic: "Automatic"
+      reuse: "Reuse"
+      percentage: "Percentage"
+      plan_total: "Total bandwidth for plan"
     interface:
       scan_success: "New interfaces have been detected"
       scan_fail: "No new interfaces have been detected"
@@ -519,7 +534,8 @@ en:
     configuration:
       own: "Server own"
       gmail: "Gmail"
-      length: "Packet size between 0 and 100 byte"
+      tcp-length: "TCP packet size between 0 and 100 byte"
+      udp-length: "UDP packet size between 0 and 100 byte"
       ssh: "Secure Shell (SSH)"
       dns: "Domain Name System (DNS)"
       icmp: "Internet Control Message Protocol (ICMP)"
@@ -635,6 +651,7 @@ en:
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'
     define_one_dns_server: 'Define at less one DNS server'
+    cant_repeat_the_ports: 'Cant repeat the ports %{ports}'
   command:
     human:
       prepare_iptables: "Prepare iptables rules"

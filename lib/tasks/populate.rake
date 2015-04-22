@@ -4,9 +4,9 @@ namespace :db do
     desc "Populate application"
     task :all => :environment do
       require 'faker'
-      
+
       [Interface,Address,ProviderGroup,Provider,Plan,Client,Contract].each(&:delete_all)
-      
+
       Interface.create! :name => 'eth0', :vlan => false, :kind => 'wan'
       i = Interface.create! :name => 'eth1', :vlan => false, :kind => 'lan'
       i.addresses.create!(:ip => "192.168.1.1", :netmask => "255.255.255.0")
@@ -20,7 +20,7 @@ namespace :db do
       Interface.create! :vlan => true, :vlan_interface => Interface.find_by_name('eth0'), :vlan_id => 13, :kind => 'wan'
       Interface.create! :vlan => true, :vlan_interface => Interface.find_by_name('eth0'), :vlan_id => 14, :kind => 'wan'
       Interface.create! :vlan => true, :vlan_interface => Interface.find_by_name('eth0'), :vlan_id => 15, :kind => 'wan'
-      
+
       ProviderGroup.create!( :name => "ComSat")
       ProviderGroup.create!( :name => "IFX")
       ProviderGroup.create!( :name => "ADSLs")
@@ -100,48 +100,38 @@ namespace :db do
       plan_comsat_simetrico_2m = Plan.create!(
         :name => "Compartido Simetrico hasta 2M",
         :provider_group => ProviderGroup.find_by_name("ComSat"),
-        :rate_down => 0,
         :ceil_down => 2048,
-        :rate_up => 0,
         :ceil_up => 2048
       )
       Plan.create!(
         :name => "Dedicado Simetrico 128kbps",
         :provider_group => ProviderGroup.find_by_name("ComSat"),
-        :rate_down => 128,
         :ceil_down => 128,
-        :rate_up => 128,
         :ceil_up => 128
       )
       Plan.create!(
         :name => "Compartido Simetrico hasta 1M",
         :provider_group => ProviderGroup.find_by_name("IFX"),
-        :rate_down => 0,
         :ceil_down => 1024,
-        :rate_up => 0,
         :ceil_up => 1024
       )
       Plan.create!(
         :name => "Compartido Asimetrico hasta 1024/256kbps",
         :provider_group => ProviderGroup.find_by_name("ADSLs"),
-        :rate_down => 0,
         :ceil_down => 1024,
-        :rate_up => 0,
         :ceil_up => 256
       )
       Plan.create!(
         :name => "Compartido Asimetrico hasta 512/128kbps",
         :provider_group => ProviderGroup.find_by_name("ADSLs"),
-        :rate_down => 0,
         :ceil_down => 512,
-        :rate_up => 0,
         :ceil_up => 128
       )
-      
+
       plans = Plan.all.collect(&:id)
       ip4=2
       ip3=1
-      30.times do 
+      30.times do
         client = Client.create!(:name => Faker::Name.name, :email => Faker::Internet.email, :phone => Faker::PhoneNumber.phone_number)
         Contract.create!(
           :created_at => DateTime.now<<2,

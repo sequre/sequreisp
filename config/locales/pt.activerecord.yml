@@ -153,6 +153,12 @@ pt:
         long_download_max: "Limite para descargas grandes [kbytes]"
         long_upload_max: "Limite para cargas grandes [kbytes]"
         number_of_contracts: "Quantidade de contratos"
+        cir: "CIR (%)"
+        total_cir_down: "Total baixada do plano [kbps]"
+        total_cir_up: "Total subida do plan [kbps]"
+        cir_strategy: "Estratégia de largura de banda garantida"
+        cir_percentage: "Valor de percentagem"
+        cir_reuse: "Valor de reutilização"
       provider_group:
         name: "Nome"
         rate_down: "Baixada [kbps]"
@@ -233,6 +239,8 @@ pt:
         dns_third_server: "Tercer servidor DNS"
         traffic_prio: "Prioridade de tráfego (baixa latência)"
         in_safe_mode: "Modo seguro"
+        tcp_length: "TCP comprimento"
+        udp_length: "UDP comprimento"
       user:
         name: "Nome"
         email: "E-mail do usuário"
@@ -353,6 +361,9 @@ pt:
     guides: "Guias Wispro"
     support: "Apoio"
     command_log: "Log de ​​comando"
+  table_headers:
+    plans:
+      plugins_enabled: 'Módulos habilitados'
   buttons:
     export_to_csv: "Exportação para csv"
     login: "Ingressar"
@@ -473,6 +484,10 @@ pt:
       could_not_be_deleted: "Este grupo aínda tem %{count} planos atribídos e não pode ser eliminado; elimine os planos ou mude-os de grupo e tente novamente"
     plan:
       could_not_be_deleted: "Este plano aínda tem %{count} contratos atribídos e não pode ser eliminado; elimine os contratos ou mude-os de plano e tente novamente"
+      automatic: "Automático"
+      reuse: "Reutilização"
+      percentage: "Porcentagem"
+      plan_total: "Largura de banda total para o plano"
     interface:
       scan_success: "Detectaram-se novas interfaces"
       scan_fail: "Não se detectaram novas interfaces"
@@ -516,7 +531,8 @@ pt:
     configuration:
       own: "Servidor próprio"
       gmail: "Gmail"
-      length: "Tamanho de pacote entre 0 e 100 bytes"
+      tcp-length: "Tamanho de pacote entre 0 e 100 bytes (TCP)"
+      udp-length: "Tamanho de pacote entre 0 e 100 bytes (UDP)"
       ssh: "Secure Shell (SSH)"
       dns: "Domain Name System (DNS)"
       icmp: "Internet Control Message Protocol (ICMP)"
@@ -565,6 +581,8 @@ pt:
       not_enough_up_bandwidth: "Não há suficiente largo de banda de subida"
       ceil_up_different_to_zero: "O upload max deve ser diferente de zero"
       ceil_down_different_to_zero: "O download max deve ser diferente de zero"
+      cir_percentage_greater_than_to_zero: "CIR percentage must be greater than to 0"
+      cir_percentage_less_than_to_one: "CIR percentage must be less than to 1"
     provider:
       provider_group_can_not_be_changed_if_unique_provider_contracts_exists: "O grupo de fornecedores não pode ser mudado, há contratos que utilizam este fornecedor para evitar el balanceamento"
       invalid_avoid_nat_addresses: "Endereço IP inválido %{invalid_ip}, use a notação CIDR"
@@ -632,6 +650,7 @@ pt:
     not_selected_any_options: 'Não selecionou nenhum opções'
     not_repeat_dns_server: 'Existe Servidores DNS replicados'
     define_one_dns_server: 'Defina pelo menos um servidor DNS'
+    cant_repeat_the_ports: 'Não pode repetir os portos %{ports}'
   command:
     human:
       prepare_iptables: "Prepare iptables rules"

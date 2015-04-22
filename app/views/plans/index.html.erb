@@ -25,41 +25,57 @@
 <% end %>
 </div>
 <div class="separador"></div>
-	
+
 <div class="main">
   <table cellspacing="0" cellpadding="0">
     <tbody>
       <tr class="odd">
         <th><%= order @search, :by => :name , :as => t('activerecord.attributes.plan.name') %></th>
-        <th><%= order @search, :by => :ceil_down , :as => t('activerecord.attributes.plan.rate_down') + ' / ' + t('activerecord.attributes.plan.ceil_down') %></th>
-        <th><%= order @search, :by => :ceil_up , :as => t('activerecord.attributes.plan.rate_up') + ' / ' + t('activerecord.attributes.plan.ceil_up') %></th>
-        <th><%= order @search, :by => :burst_down , :as => t('activerecord.attributes.plan.burst_down') %></th>
+        <th><%= order @search, :by => :ceil_down , :as => t('activerecord.attributes.plan.ceil_down') %>/
+            <%= order @search, :by => :ceil_up , :as => t('activerecord.attributes.plan.ceil_up') %>
+        </th>
+        <th><%= t('activerecord.attributes.plan.cir_strategy') %></th>
+        <th><%= t('activerecord.attributes.plan.cir') %> <br/>
+          <%= t('activerecord.attributes.plan.total_cir_down') %> /
+          <%= t('activerecord.attributes.plan.total_cir_up') %>
+        </th>
         <th><%= order @search, :by => :provider_group_name, :as => t('activerecord.attributes.plan.provider_group') %></th>
         <th><%= t('activerecord.attributes.plan.number_of_contracts') %></th>
-        <%= render :partial => "shared/plugins_table_headers" %>
+        <th><%= t('table_headers.plans.plugins_enabled') %></th>
         <% if current_user.may_update_plans? or current_user.may_index_plans? %>
-        <th></th> 
+        <th></th>
         <% end %>
         <% if current_user.may_destroy_plan?(Plan.new) %>
-        <th></th> 
+        <th></th>
         <% end %>
       </tr>
-    
+
       <% @plans.each_with_index do |plan,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td><%=h plan.name %></td>
-          <td><%=h "#{plan.rate_down}/#{plan.ceil_down}" %></td>
-          <td><%=h "#{plan.rate_up}/#{plan.ceil_up}" %></td>
-          <td><%=h "#{plan.burst_down}" %></td>
+          <td style="text-align: center; min-width: 125px">
+            <%= show_human_down_up plan.ceil_down, plan.ceil_up %>
+          </td>
+          <td style="text-align: center">
+            <%=h t("messages.plan.#{plan.cir_strategy}") %>
+          </td>
+          <td style="text-align: center; min-width: 125px">
+            <%= show_cir plan %> <br/>
+            <%= show_human_down_up plan.cir_total_down, plan.cir_total_up %>
+          </td>
           <td><%=h plan.provider_group.name rescue 'Undefined' %></td>
           <td><%=h plan.contracts.count %></td>
-          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => plan} %>
+          <td>
+            <% plugins_table_columns_values(plan).each do |td| %>
+              <%= td %>
+            <% end %>
+          </td>
           <% if current_user.may_update_plan?(plan) %>
             <td><%= link_to t('buttons.edit'), edit_plan_path(plan) %></td>
           <% elsif current_user.may_show_plan?(plan) %>
             <td><%= link_to t('buttons.show'), plan_path(plan) %></td>
-          <% end %> 
+          <% end %>
           <% if current_user.may_destroy_plan?(plan) %>
             <td><%= link_to t('buttons.delete'), plan, :confirm => t('messages.confirm'), :method => :delete %></td>
           <% end %>
@@ -70,4 +86,3 @@
 </div>
 
 <%= will_paginate @plans %>
-

@@ -130,37 +130,6 @@ class Contract < ActiveRecord::Base
     validate_in_range_or_in_file(:prio_protos, -1,256, :protocol)
     validate_in_range_or_in_file(:prio_helpers, 0, 0, :helper)
 
-    if not plan_id.nil?
-      new_plan = Plan.find(plan_id)
-      old_plan = Plan.find(plan_id_was) rescue nil
-      remaining_rate_down = if new_record?
-        # si es nuevo, entonces el rate actual no está cargado en ningún pg
-        new_plan.provider_group.remaining_rate_down
-      elsif old_plan and new_plan.provider_group_id != old_plan.provider_group_id
-        # si estoy cambiando de pg entonces en el nuevo no está cargado
-        new_plan.provider_group.remaining_rate_down
-      else
-        # mismo pg, puede variar o no el plan, en ambos casos libero el rate_down que estaba contando
-        new_plan.provider_group.remaining_rate_down + old_plan.rate_down
-      end
-      remaining_rate_up = if new_record?
-        # si es nuevo, entonces el rate actual no está cargado en ningún pg
-        new_plan.provider_group.remaining_rate_up
-      elsif old_plan and new_plan.provider_group_id != old_plan.provider_group_id
-        # si estoy cambiando de pg entonces en el nuevo no está cargado
-        new_plan.provider_group.remaining_rate_up
-      else
-        # mismo pg, puede variar o no el plan, en ambos casos libero el rate_up que estaba contando
-        new_plan.provider_group.remaining_rate_up + old_plan.rate_up
-      end
-      logger.debug("plan: #{plan.name} plan_id:#{plan_id} new_plan:#{new_plan.name}")
-      if new_plan.rate_down > remaining_rate_down
-        errors.add(:plan, I18n.t('validations.plan.not_enough_down_bandwidth_in_this_plan'))
-      end
-      if new_plan.rate_up > remaining_rate_up
-        errors.add(:plan, I18n.t('validations.plan.not_enough_up_bandwidth_in_this_plan'))
-      end
-    end
     if not public_address_id.nil?
       in_use = nil
       if self.id.nil?
@@ -615,9 +584,7 @@ class Contract < ActiveRecord::Base
         I18n.t('activerecord.attributes.client.details'),
         I18n.t('activerecord.attributes.contract.plan'),
         I18n.t('activerecord.models.provider_group.one'),
-        I18n.t('activerecord.attributes.plan.rate_down'),
         I18n.t('activerecord.attributes.plan.ceil_down'),
-        I18n.t('activerecord.attributes.plan.rate_up'),
         I18n.t('activerecord.attributes.plan.ceil_up'),
         I18n.t('activerecord.attributes.contract.ip'),
         #I18n.t('activerecord.attributes.contract.forwarded_ports'),
@@ -633,6 +600,8 @@ class Contract < ActiveRecord::Base
 
       # data rows
       _contracts.each do |c|
+        c.create_traffic_for_this_period
+        c.reload
         csv << [
           c.id,
           I18n.l(c.created_at.to_date),
@@ -647,9 +616,7 @@ class Contract < ActiveRecord::Base
           c.client.details,
           c.plan.name,
           c.plan.provider_group.name,
-          c.plan.rate_down,
           c.plan.ceil_down,
-          c.plan.rate_up,
           c.plan.ceil_up,
           c.ip,
           #c.forwarded_ports.collect{ |fp| "[#{fp.provider.name}]#{fp.public_port}=>#{fp.private_port}" }.join("|"),
@@ -699,50 +666,32 @@ end
     1
   end
 
-  def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, rate_factor)
+  def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, _plan)
     tc_rules =[]
     mask = "0000ffff"
-    rt_prio1 = ""
-    rt_prio2 = ""
-    rt_prio3 = ""
-    ceil = plan["ceil_" + direction] * bandwidth_rate
-    if plan["rate_" + direction] == 0
-      rate_factor = 1 if rate_factor > 1
-      rate = ceil * rate_factor
-      if rate > 0
-        r1 = rate*0.10
-        r2 = rate*0.90
-        rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
-        rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
-      end
-    else
-      rate = plan["rate_" + direction]
-      r1 = rate*0.10
-      r2 = rate*0.85
-      r3 = rate*0.05
-      rt_prio1 = "rt m1 #{r1*5}kbit d 300ms m2 #{r1}kbit"
-      rt_prio2 = "rt m1 #{r2/2}kbit d 200ms m2 #{r2}kbit"
-      rt_prio3 = "rt m1 #{r3/3}kbit d 1s m2 #{r3}kbit"
-    end
+    ceil = _plan["ceil_" + direction] * bandwidth_rate
+    rate = _plan["rate_" + direction] * bandwidth_rate
+    rate = 1 if rate <= 0
+
     #padre
     tc_rules << "##{client.name} - IP: #{ip} ID: #{id} KLASS_NUMBER: #{class_hex}"
-    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{class_hex} hfsc ls m2 #{ceil}kbit ul m2 #{ceil}kbit"
+    tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{class_hex} hfsc ls m2 #{rate}kbit ul m2 #{ceil}kbit"
     #hijos
     #prio1
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio1_hex} " +
-            "est 1sec 5sec hfsc #{rt_prio1} ls m2 #{ceil}kbit"
+            "est 1sec 5sec hfsc rt m1 #{rate}kbit d 50ms m2 #{rate/2}kbit ls m1 #{ceil} d 50ms m2 #{ceil/2}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio1_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio1_hex} sfq perturb 10"
 
     #prio2
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio2_hex} " +
-            "est 1sec 5sec hfsc #{rt_prio2} ls m2 #{ceil}kbit"
+            "est 1sec 5sec hfsc ls m2 #{ceil}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio2_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio2_hex} sfq perturb 10"
 
     #prio3
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio3_hex} " +
-            "est 1sec 5sec hfsc #{rt_prio3} ls m1 #{ceil * ceil_dfl_percent / 100 / 3}kbit d 3s m2 #{ceil * ceil_dfl_percent / 100}kbit ul m2 #{ceil * ceil_dfl_percent / 100}kbit"
+            "est 1sec 5sec hfsc ls m1 #{ceil * ceil_dfl_percent / 100 / 10}kbit d 3s m2 #{ceil * ceil_dfl_percent / 100}kbit ul m2 #{ceil * ceil_dfl_percent / 100}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio3_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10"
   end

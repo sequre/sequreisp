@@ -87,21 +87,11 @@ es:
             text: >
               Define el grupo de proveedores que utilizarán para navegar los clientes que
               tengan configurado este plan.
-          rate_down:
-            text: >
-              Define el ancho de banda de bajada que garantiza este plan. Este valor sólo
-              debe ser distinto de cero cuando se quiere crear un plan con ancho de banda
-              garantizado o dedicado.
           ceil_down:
             text: >
               Define el ancho de banda de bajada máximo para este plan. Esto marcará el
               techo de velocidad a la cual pueden navegar los clientes que tengan configurado
               este plan.
-          rate_up:
-            text: >
-              Define el ancho de banda de subida que garantiza este plan. Este valor sólo
-              debe ser distinto de cero cuando se quiere crear un plan con ancho de banda
-              garantizado o dedicado.
           ceil_up:
             text: >
               Define el ancho de banda de subida máximo para este plan. Esto marcará el

@@ -16,7 +16,6 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class ProviderGroup < ActiveRecord::Base
-  HFSC_SATURATION_INDEX=0.80
   acts_as_audited
   has_many :plans, :dependent => :nullify
   has_many :providers, :dependent => :nullify, :include => :interface
@@ -27,14 +26,14 @@ class ProviderGroup < ActiveRecord::Base
   include ModelsWatcher
   watch_fields :state
 
-  validates_presence_of :name 
+  validates_presence_of :name
   validates_length_of :name, :in => 3..128
   validates_uniqueness_of :name
- 
+
   include OverflowCheck
   before_save :check_integer_overflow
   after_create :bind_klass
-  
+
   #AASM conf http://github.com/rubyist/aasm
   include AASM
   aasm_column :state
@@ -48,11 +47,11 @@ class ProviderGroup < ActiveRecord::Base
   aasm_event :disable do
     transitions :from => [:enabled], :to => :disabled
   end
-  
+
   def self.aasm_states_for_select
     AASM::StateMachine[self].states.map { |state| [I18n.t("aasm.provider_group.#{state.name.to_s}"),state.name.to_s] }
   end
- 
+
   def bind_klass
     self.klass = ProviderKlass.find(:first, :conditions => "klassable_id is null", :lock => "for update")
     raise "TODO nos quedamos sin clases!" if self.klass.nil?
@@ -62,7 +61,7 @@ class ProviderGroup < ActiveRecord::Base
     online_providers = self.providers.enabled.ready.online
     case online_providers.count
     when 0
-      "" 
+      ""
     when 1
       p = online_providers.first
       "default via #{p.gateway} dev #{p.link_interface}  proto static onlink"
@@ -81,13 +80,13 @@ class ProviderGroup < ActiveRecord::Base
     end
     total
   end
-  def remaining_rate_down(exclude_id=nil)
-    remaining = rate_down
-    plans.each do |plan|
-      remaining -= (plan.contracts.count * plan.rate_down)
-    end
-    remaining
-  end
+  # def remaining_rate_down(exclude_id=nil)
+  #   remaining = rate_down
+  #   plans.each do |plan|
+  #     remaining -= (plan.contracts.count * plan.rate_down)
+  #   end
+  #   remaining
+  # end
   def self.total_rate_down
     all.collect(&:rate_down).sum
   end
@@ -99,13 +98,13 @@ class ProviderGroup < ActiveRecord::Base
     end
     total
   end
-  def remaining_rate_up(exclude_id=nil)
-    remaining = rate_up
-    plans.each do |plan|
-      remaining -= (plan.contracts.count * plan.rate_up)
-    end
-    remaining
-  end
+  # def remaining_rate_up(exclude_id=nil)
+  #   remaining = rate_up
+  #   plans.each do |plan|
+  #     remaining -= (plan.contracts.count * plan.rate_up)
+  #   end
+  #   remaining
+  # end
   def self.total_rate_up
     all.collect(&:rate_up).sum
   end
@@ -114,7 +113,7 @@ class ProviderGroup < ActiveRecord::Base
     self.klass.number
   end
   def class_hex
-    self.klass.number.to_s(16)    
+    self.klass.number.to_s(16)
   end
   def mark_hex
     (self.klass.number << 16).to_s(16)
@@ -125,14 +124,14 @@ class ProviderGroup < ActiveRecord::Base
       rate[:rate_down] = rand(rate_down)*1024
       rate[:rate_up] = rand(rate_up)*1024/2
     else
-      rx = tx = 0 
-      rx2 = tx2 = 0 
-      providers.enabled.each do |p| 
+      rx = tx = 0
+      rx2 = tx2 = 0
+      providers.enabled.each do |p|
         rx += p.interface.rx_bytes
         tx += p.interface.tx_bytes
       end
       sleep 2
-      providers.enabled.each do |p| 
+      providers.enabled.each do |p|
         rx2 += p.interface.rx_bytes
         tx2 += p.interface.tx_bytes
       end
@@ -164,10 +163,12 @@ class ProviderGroup < ActiveRecord::Base
   def ceil_up
     contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
   end
-  def rate_factor_up
-    remaining_rate_up*HFSC_SATURATION_INDEX/ceil_up rescue 0
+
+  def cir_total_up
+    plans.collect(&:cir_total_up).sum rescue 0
   end
-  def rate_factor_down
-    remaining_rate_down*HFSC_SATURATION_INDEX/ceil_down rescue 0
+
+  def cir_total_down
+    plans.collect(&:cir_total_down).sum rescue 0
   end
 end
