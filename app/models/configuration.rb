@@ -27,12 +27,7 @@ class Configuration < ActiveRecord::Base
   PATH_COMMAND_LOG = Rails.env.production? ? HUMANIZED_COMMAND_LOG : "/tmp/command_log"
   APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
 
-  TRAFFIC_PRIO = { "length" => ["-p tcp -m length --length 0:100"],
-                   "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
-                   "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
-                   "icmp" => ["-p icmp"],
-                   "sip" => ["-m helper --helper sip"],
-                   "rtp" => ["-p udp --dport 10000:20000"] }
+  LOW_LATENCY_TRAFFIC_PRIO = [ "tcp-length", "udp-length", "ssh", "dns", "icmp", "sip", "rtp" ]
 
   COUNT_CATEGORIES = ["data_count"]
 
@@ -72,7 +67,7 @@ class Configuration < ActiveRecord::Base
     traffic_prio.split(",").each do |prio|
       prios << prio if (default_tcp_prio_ports + default_udp_prio_ports + default_prio_protos + default_prio_helpers).include?(prio)
     end
-    errors.add_to_base("No se pueden repetir los puertos #{prios.join(',')}") unless prios.empty?
+    errors.add_to_base(I18n.t("error_messages.cant_repeat_the_ports", :ports => prios.join(','))) unless prios.empty?
   end
 
   def presence_of_dns_server
@@ -106,6 +101,20 @@ class Configuration < ActiveRecord::Base
 
   def self.do_reload
     @@c = find(:first)
+  end
+
+  def low_latency_traffic_prio_rules
+    { "tcp-length" => ["-p tcp -m length --length 0:#{tcp_length}"],
+      "udp-length" => ["-p udp -m length --length 0:#{udp_length}"],
+      "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
+      "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
+      "icmp" => ["-p icmp"],
+      "sip" => ["-m helper --helper sip"],
+      "rtp" => ["-p udp --dport 10000:20000"] }
+  end
+
+  def self.parse_traffic_prio(params)
+    params.has_key?(:traffic_prio) ? params[:traffic_prio].keys.select{|prio| prio != ""}.join(",") : ""
   end
 
   def self.method_missing(method, *args)

@@ -242,6 +242,8 @@ en:
         dns_third_server: "Third DNS Server"
         traffic_prio: "Priority traffic (low latency)"
         in_safe_mode: "Safe mode"
+        tcp_length: "TCP lenght"
+        udp_length: "UDP lenght"
       user:
         name: "Name"
         email: "User email address"
@@ -531,7 +533,8 @@ en:
     configuration:
       own: "Server own"
       gmail: "Gmail"
-      length: "Packet size between 0 and 100 byte"
+      tcp-length: "TCP packet size between 0 and 100 byte"
+      udp-length: "UDP packet size between 0 and 100 byte"
       ssh: "Secure Shell (SSH)"
       dns: "Domain Name System (DNS)"
       icmp: "Internet Control Message Protocol (ICMP)"
@@ -647,6 +650,7 @@ en:
     not_selected_any_options: 'No selected any options'
     not_repeat_dns_server: 'Exist DNS Servers replicated'
     define_one_dns_server: 'Define at less one DNS server'
+    cant_repeat_the_ports: 'Cant repeat the ports %{ports}'
   command:
     human:
       prepare_iptables: "Prepare iptables rules"
