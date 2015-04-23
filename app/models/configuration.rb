@@ -44,7 +44,7 @@ class Configuration < ActiveRecord::Base
                :filter_by_mac_address, :clamp_mss_to_pmtu,
                :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080,
                :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password,
-               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server, :traffic_prio
+               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
@@ -64,7 +64,7 @@ class Configuration < ActiveRecord::Base
 
   def not_repeat_traffic_prio
     prios = []
-    traffic_prio.split(",").each do |prio|
+    traffic_prio.each do |prio|
       prios << prio if (default_tcp_prio_ports + default_udp_prio_ports + default_prio_protos + default_prio_helpers).include?(prio)
     end
     errors.add_to_base(I18n.t("error_messages.cant_repeat_the_ports", :ports => prios.join(','))) unless prios.empty?
@@ -103,18 +103,24 @@ class Configuration < ActiveRecord::Base
     @@c = find(:first)
   end
 
+  def traffic_prio
+    traffic = []
+    traffic << "tcp_length" if low_latency_for_tcp_length
+    traffic << "udp_length" if low_latency_for_udp_length
+    traffic << "ssh" if low_latency_for_ssh
+    traffic << "dns" if low_latency_for_dns
+    traffic << "icmp" if low_latency_for_icmp
+    traffic << "sip" if low_latency_for_sip
+    traffic
+  end
+
   def low_latency_traffic_prio_rules
-    { "tcp-length" => ["-p tcp -m length --length 0:#{tcp_length}"],
-      "udp-length" => ["-p udp -m length --length 0:#{udp_length}"],
+    { "tcp_length" => ["-p tcp -m length --length 0:#{tcp_length}"],
+      "udp_length" => ["-p udp -m length --length 0:#{udp_length}"],
       "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
       "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
       "icmp" => ["-p icmp"],
-      "sip" => ["-m helper --helper sip"],
-      "rtp" => ["-p udp --dport 10000:20000"] }
-  end
-
-  def self.parse_traffic_prio(params)
-    params.has_key?(:traffic_prio) ? params[:traffic_prio].keys.select{|prio| prio != ""}.join(",") : ""
+      "sip" => ["-m helper --helper sip"] }
   end
 
   def self.method_missing(method, *args)

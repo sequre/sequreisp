@@ -21,15 +21,4 @@ module ConfigurationsHelper
     [[t("messages.configuration.own"), "own"], [t("messages.configuration.gmail"), "gmail"]]
   end
 
-  def show_traffic_prio_input(form, key)
-    case key
-    when "tcp-length"
-      form.input :tcp_length
-    when "udp-length"
-      form.input :udp_length
-    else
-      ""
-    end
-  end
-
 end
