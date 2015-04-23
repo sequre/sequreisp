@@ -670,7 +670,7 @@ end
     tc_rules =[]
     mask = "0000ffff"
     ceil = _plan["ceil_" + direction] * bandwidth_rate
-    rate = _plan["rate_" + direction] * bandwidth_rate
+    rate = _plan.send("rate_" + direction) * bandwidth_rate
     rate = 1 if rate <= 0
 
     #padre
