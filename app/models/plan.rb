@@ -54,7 +54,7 @@ class Plan < ActiveRecord::Base
     case cir_strategy
     when CIR_STRATEGY_AUTOMATIC
       _cir = provider_group.rate_up.to_f / provider_group.ceil_up
-      [1, ((_cir.infinite? ? 1 : _cir) rescue 0.01).round(2)].min
+      [1, ((_cir.infinite? ? 1.0 : _cir) rescue 0.01).round(2)].min
     when CIR_STRATEGY_PLAN_TOTAL
       [1 , (total_cir_up.to_f / (ceil_up * contracts_count) rescue 0.01).round(2)].min
     else
@@ -67,7 +67,7 @@ class Plan < ActiveRecord::Base
     case cir_strategy
     when CIR_STRATEGY_AUTOMATIC
       _cir = (provider_group.rate_down.to_f / provider_group.ceil_down)
-      [1, ((_cir.infinite? ? 1 : _cir) rescue 0.01).round(2)].min
+      [1, ((_cir.infinite? ? 1.0 : _cir) rescue 0.01).round(2)].min
     when CIR_STRATEGY_PLAN_TOTAL
       [1 , (total_cir_down.to_f / (ceil_down * contracts_count) rescue 0.01).round(2)].min
     else
