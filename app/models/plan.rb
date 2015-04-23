@@ -98,11 +98,11 @@ class Plan < ActiveRecord::Base
   end
 
   def cir_up_real
-    provider_group.cir_total_up * cir_up / provider.rate_up
+    provider_group.cir_total_up * cir_up / provider_group.rate_up
   end
 
   def cir_down_real
-    provider_group.cir_total_down * cir_down / provider.rate_down
+    provider_group.cir_total_down * cir_down / provider_group.rate_down
   end
 
   def rate_up
