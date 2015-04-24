@@ -115,14 +115,15 @@ float: left;
     <% form.inputs :name => t('fieldsets.configuration.global_prios'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.global_prios' } } do %>
       <% form.inputs :name => t('fieldsets.configuration.traffic_prio') do %>
-	<%= form.input :low_latency_for_tcp_length %>
+        <%= form.input :low_latency_for_tcp_length %>
         <%= form.input :tcp_length %>
-	<%= form.input :low_latency_for_udp_length %>
+        <%= form.input :low_latency_for_udp_length %>
         <%= form.input :udp_length %>
-	<%= form.input :low_latency_for_ssh %>
-	<%= form.input :low_latency_for_dns %>
-	<%= form.input :low_latency_for_icmp %>
-	<%= form.input :low_latency_for_sip %>
+        <%= form.input :low_latency_for_ssh %>
+        <%= form.input :low_latency_for_dns %>
+        <%= form.input :low_latency_for_icmp %>
+        <%= form.input :low_latency_for_sip %>
+        <%= form.input :low_latency_for_rdp %>
       <% end %>
       <%= form.input :default_tcp_prio_ports %>
       <%= form.input :default_udp_prio_ports %>

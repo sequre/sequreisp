@@ -27,7 +27,7 @@ class Configuration < ActiveRecord::Base
   PATH_COMMAND_LOG = Rails.env.production? ? HUMANIZED_COMMAND_LOG : "/tmp/command_log"
   APPLY_CHANGES_LOCK = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
 
-  LOW_LATENCY_TRAFFIC_PRIO = [ "tcp-length", "udp-length", "ssh", "dns", "icmp", "sip", "rtp" ]
+  LOW_LATENCY_TRAFFIC_PRIO = [ "tcp-length", "udp-length", "ssh", "dns", "icmp", "sip", "rdp" ]
 
   COUNT_CATEGORIES = ["data_count"]
 
@@ -111,6 +111,7 @@ class Configuration < ActiveRecord::Base
     traffic << "dns" if low_latency_for_dns
     traffic << "icmp" if low_latency_for_icmp
     traffic << "sip" if low_latency_for_sip
+    traffic << "rdp" if low_latency_for_rdp
     traffic
   end
 
@@ -120,7 +121,8 @@ class Configuration < ActiveRecord::Base
       "ssh" => ["-p tcp --dport 22", "-p tcp --sport 22"],
       "dns" => ["-p tcp --dport 53", "-p tcp --sport 53"],
       "icmp" => ["-p icmp"],
-      "sip" => ["-m helper --helper sip"] }
+      "sip" => ["-m helper --helper sip"],
+      "rdp" => ["-p tcp --dport 3389"] }
   end
 
   def self.method_missing(method, *args)

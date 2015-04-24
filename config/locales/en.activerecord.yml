@@ -248,6 +248,7 @@ en:
         low_latency_for_dns: "DNS"
         low_latency_for_icmp: "ICMP"
         low_latency_for_sip: "SIP"
+        low_latency_for_rdp: "RDP"
         tcp_length: "TCP lenght"
         udp_length: "UDP lenght"
       user:
@@ -348,6 +349,7 @@ en:
         low_latency_for_dns: "Domain Name System (DNS)"
         low_latency_for_icmp: "Internet Control Message Protocol (ICMP)"
         low_latency_for_sip: "Session Initiation Protocol (SIP)"
+        low_latency_for_rdp: "Remote Desktop Protocol (RDP)"
       provider:
         shape_rate_down_on_ingress: "Download traffic shaping is done on the LAN interface; if you enable this option, an extra control will be enabled on ingress that will shape clients' and server's own traffic to the configured download rate"
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"

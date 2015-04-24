@@ -248,6 +248,7 @@ es:
         low_latency_for_dns: "DNS"
         low_latency_for_icmp: "ICMP"
         low_latency_for_sip: "SIP"
+        low_latency_for_rdp: "RDP"
         tcp_length: "Tamaño paquetes en bytes (TCP)"
         udp_length: "Tamaño paquetes en bytes (UDP)"
       user:
@@ -348,6 +349,7 @@ es:
         low_latency_for_dns: "Sistema de Nombres de Dominio (DNS)"
         low_latency_for_icmp: "Protocolo de Mensajes de Control de Internet (ICMP)"
         low_latency_for_sip: "Protocolo de Inicio de Sesiones (SIP)"
+        low_latency_for_rdp: "Protocolo de escritorio remoto (RDP)"
       provider:
         shape_rate_down_on_ingress: "El control de tráfico de bajada se hace en la interfaz LAN; si habilita esta opción se habitará un control adicional en la interfaz WAN que asegurará que el tráfico de los clientes más el del servidor no excedan el límite configurado"
         avoid_nat_addresses: "Una dirección por linea, notación CIDR, ejemplo 200.10.20.0/24"
