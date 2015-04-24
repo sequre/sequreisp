@@ -41,8 +41,8 @@
           </td>
           <td><%=h provider_group.rate_down %> (<%= pretty_currency_index(provider_group.concurrency_index_down) %>%)</td>
           <td><%=h provider_group.rate_up %> (<%= pretty_currency_index(provider_group.concurrency_index_up) %>%)</td>
-	  <td><%= provider_group.total_cir_up %></td>
-	  <td><%= provider_group.total_cir_down %></td>
+	  <td><%= provider_group.cir_total_up %></td>
+	  <td><%= provider_group.cir_total_down %></td>
           <td><%=h t "aasm.provider_group.#{provider_group.state}" %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => provider_group} %>
           <% if current_user.may_update_provider_group?(provider_group) %>
