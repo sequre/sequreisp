@@ -60,7 +60,7 @@ display:block;
 fieldset {
 margin: 5px 5px 12px;
 padding: 7px;
-border: 1px solid rgba(255, 255, 255, 0.1);
+border: 1px solid rgba(38, 112, 135, 0.3);
 background: none repeat scroll 0% 0% #CCC;
 }
 
@@ -316,7 +316,7 @@ padding:2px;
 		color: #fff;
 		}
 		.yield .nav li a{
-			color: #FFFFFF;
+			color: rgb(32, 65, 78);
 		}
 /* //navigation */
 
