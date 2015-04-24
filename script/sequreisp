@@ -66,7 +66,7 @@ opts = OptionParser.new do |opts|
   end
 
   opts.on("-x", "--console-sandbox", "Open rails console in sandbox mode. WARNING you must used with option -c. Example: sequreisp -c -x.") do
-    options.extension = "-x"
+    options.extension = "-s"
   end
 
   opts.on("-e", "--environment ENVIRONMENT", "Define environment by default use production. Example sequreisp -e [production|development|test]") do |env|
