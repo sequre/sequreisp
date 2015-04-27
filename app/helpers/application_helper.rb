@@ -65,6 +65,11 @@ module ApplicationHelper
     end
   end
 
+  def show_human_down_up down, up
+     _suffix = suffix [ down, up ].max
+      "#{to_suffix(down, _suffix)} / #{to_suffix(up, _suffix)} #{_suffix}"
+  end
+
   def sequreisp_guides_url
     Configuration::GUIDES_URL + (I18n.locale == :en ? "/en" : "")
   end
@@ -80,4 +85,21 @@ module ApplicationHelper
   def support_url
     "http://www.wispro.co/portal/issues/new?locale=#{I18n.locale}"
   end
+
+  private
+  def suffix number
+    if number < 1024
+      "kbps"
+    else
+      "mbps"
+    end
+  end
+  def to_suffix number, suffix
+    if suffix == "kbps"
+      number
+    else
+      "%g" % (number / 1024.0).round(2)
+    end
+  end
+
 end
