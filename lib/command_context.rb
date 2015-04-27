@@ -35,7 +35,10 @@ class CommandContext
 end
 class BootCommandContext < CommandContext
   def self.clear_boot_file
-    File.open(BOOT_FILE, 'w') {|file| file.truncate(0) }
+    File.open(BOOT_FILE, 'w') do |f|
+      f.truncate 0
+      f.chmod 0755
+    end
   end
 
   def exec_commands
