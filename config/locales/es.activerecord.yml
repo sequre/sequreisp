@@ -156,7 +156,7 @@ es:
         long_download_max: "Límite para descargas grandes [kbytes]"
         long_upload_max: "Límite para cargas grandes [kbytes]"
         number_of_contracts: "Cantidad de contratos"
-        cir: "CIR (%)"
+        cir: "CIR"
         total_cir_down: "Total de bajada para el plan [kbps]"
         total_cir_up: "Total de subida para el plan [kbps]"
         cir_strategy: "Estrategia de ancho de banda garantizado"
@@ -331,6 +331,7 @@ es:
         burst_up: "Cantidad de datos que serán transferidos al inicio de una conexión HTTP/HTTPS sin tener en cuenta el límite de ancho de banda de subida"
         long_download_max: "Tamaño a partir del cual una descarga HTTP/HTTPS pasa a ser clasificada como tráfico P2P"
         long_upload_max: "Tamaño a partir del cual una carga HTTP/HTTPS pasa a ser clasificada como tráfico P2P"
+        cir: "Valor entre 0 y 1"
       interface:
         kind: "WAN si conecta a Internet; LAN si conecta hacia los clientes"
       configuration:

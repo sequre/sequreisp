@@ -51,30 +51,36 @@ class Plan < ActiveRecord::Base
 
   def cir_up
     @cached_cir_up ||=
-    case cir_strategy
+    _cir_up = case cir_strategy
     when CIR_STRATEGY_AUTOMATIC
       _cir = provider_group.rate_up.to_f / provider_group.ceil_up
-      _cir = 1.0 if (_cir.infinite? or _cir_nan?)
-      [1, _cir.round(2)].min
+      _cir = 1.0 if (_cir.infinite? or _cir.nan?)
+      _cir
     when CIR_STRATEGY_PLAN_TOTAL
-      [1 , (total_cir_up.to_f / (ceil_up * contracts_count) rescue 0.01).round(2)].min
+      _cir = (total_cir_up.to_f / (ceil_up * contracts_count))
+      _cir = 1.0 if (_cir.infinite? or _cir.nan?)
+      _cir
     else
       cir
     end
+    _cir_up ? [1 , _cir_up.round(2)].min : @cached_cir_up
   end
 
   def cir_down
     @cached_cir_down ||=
-    case cir_strategy
+    _cir_down = case cir_strategy
     when CIR_STRATEGY_AUTOMATIC
-      _cir = (provider_group.rate_down.to_f / provider_group.ceil_down)
-      _cir = 1.0 if (_cir.infinite? or _cir_nan?)
-      [1, _cir.round(2)].min
+      _cir = provider_group.rate_down.to_f / provider_group.ceil_down
+      _cir = 1.0 if (_cir.infinite? or _cir.nan?)
+      _cir
     when CIR_STRATEGY_PLAN_TOTAL
-      [1 , (total_cir_down.to_f / (ceil_down * contracts_count) rescue 0.01).round(2)].min
+      _cir = (total_cir_down.to_f / (ceil_down * contracts_count))
+      _cir = 1.0 if (_cir.infinite? or _cir.nan?)
+      _cir
     else
       cir
     end
+    _cir_down ? [1 , _cir_down.round(2)].min : @cached_cir_down
   end
 
   def cir_total_up

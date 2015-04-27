@@ -156,7 +156,7 @@ en:
         long_download_max: "Large downloads limit [kbytes]"
         long_upload_max: "Large uploads limit [kbytes]"
         number_of_contracts: "Number of contracts"
-        cir: "CIR (%)"
+        cir: "CIR"
         total_cir_down: "Total down rate [kbps]"
         total_cir_up: "Total up rate [kbps]"
         cir_strategy: "Strategy for guaranteed bandwidth"
@@ -331,6 +331,7 @@ en:
         burst_up: "Amount of data following an HTTP/HTTPS connection to which the upload limit will not be effective"
         long_download_max: "Amount of data above which an HTTP/HTTPS download is clasified as P2P"
         long_upload_max: "Amount of data above which an HTTP/HTTPS upload is clasified as P2P"
+        cir: "Value between 0 and 1"
       interface:
         kind: "WAN: Internet connections; LAN: clients connections"
       configuration:
