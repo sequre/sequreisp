@@ -775,7 +775,7 @@ end
 
 def setup_dhcp_interface(p)
   commands = []
-  commmands = "/usr/bin/pgrep -f \"dhclient.#{p.interface.name}\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
+  commands << "/usr/bin/pgrep -f \"dhclient.#{p.interface.name}\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
   if p.online?
     p.addresses.each do |a|
       commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address add #{a.ip_in_cidr} dev #{p.link_interface}"
@@ -811,7 +811,7 @@ def setup_provider_interface p, boot=true
   when "static"
     commands << setup_static_interface(p)
   end
-  commands
+  commands.flatten
 end
 
 def setup_lan_interface(i)
