@@ -216,8 +216,8 @@ class Contract < ActiveRecord::Base
   end
 
   def clean_proxy_arp_provider_proxy_arp_interface
-    self.proxy_arp_interface = nil
-    self.proxy_arp_provider = nil
+    self.proxy_arp_interface_id = nil
+    self.proxy_arp_provider_id = nil
     self.proxy_arp_gateway = ""
     self.proxy_arp_use_lan_gateway = false
     self.proxy_arp_lan_gateway = ""
@@ -733,10 +733,10 @@ class Contract < ActiveRecord::Base
 
   #Please i need refactor
   def strip_whitespace
-    self.tcp_prio_ports= self.tcp_prio_ports.strip
-    self.udp_prio_ports = self.udp_prio_ports.strip
-    self.prio_protos = self.prio_protos.strip
-    self.prio_helpers =self.prio_helpers.strip
+    self.tcp_prio_ports = self.tcp_prio_ports.strip unless self.tcp_prio_ports.nil?
+    self.udp_prio_ports = self.udp_prio_ports.strip unless self.udp_prio_ports.nil?
+    self.prio_protos = self.prio_protos.strip unless self.prio_protos.nil?
+    self.prio_helpers = self.prio_helpers.strip unless self.prio_helpers.nil?
   end
 
 end
