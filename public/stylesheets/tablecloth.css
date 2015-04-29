@@ -1,19 +1,18 @@
-/* 
+/*
 
-	TableCloth	
+	TableCloth
 	by Alen Grakalic, brought to you by cssglobe.com
-	
+
 */
 
 /* general styles */
 
 table, td{
-	font:100% Arial, Helvetica, sans-serif; 
+	font:100% Arial, Helvetica, sans-serif;
 }
 table{
 	width:100%;
 	margin:1em 0;
-	background: none repeat scroll 0% 0% #C4C4C4;
 }
 th, td{
 	text-align:left;
