@@ -72,4 +72,12 @@ module HooksHelper
   def massive_settings_form_extensions(form)
     ""
   end
+
+  def background_login_extension
+    ""
+  end
+
+  def login_logo_extension
+    "<div class='logo'></div><h4>3.7</h4>".html_safe
+  end
 end
