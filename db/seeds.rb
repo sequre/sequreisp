@@ -1,8 +1,8 @@
 Configuration.create!(
  :default_tcp_prio_ports => "20,21,22,25,80,110,143,443,587,993,995,1755,1863,1864,3128,5222,5223",
  :default_udp_prio_ports => "",
- :default_prio_protos =>  "udp,icmp,igmp,esp,ah,gre",
- :default_prio_helpers =>  "ftp,irc,sip",
+ :default_prio_protos =>  "igmp,esp,ah,gre",
+ :default_prio_helpers =>  "ftp,irc",
  :nf_conntrack_max => 1048576,
  :gc_thresh1 => 2048,
  :gc_thresh2 => 4096,
@@ -78,27 +78,21 @@ ProviderGroup.create!( :name => "Default")
 Plan.create!(
   :name => "256/128",
   :provider_group => ProviderGroup.find_by_name("Default"),
-  :rate_down => 0,
   :ceil_down => 256,
-  :rate_up => 0,
   :ceil_up => 128,
   :transparent_proxy => true
 )
 Plan.create!(
   :name => "512/256",
   :provider_group => ProviderGroup.find_by_name("Default"),
-  :rate_down => 0,
   :ceil_down => 512,
-  :rate_up => 0,
   :ceil_up => 256,
   :transparent_proxy => true
 )
 Plan.create!(
   :name => "1024/512",
   :provider_group => ProviderGroup.find_by_name("Default"),
-  :rate_down => 0,
   :ceil_down => 1024,
-  :rate_up => 0,
   :ceil_up => 512,
   :transparent_proxy => true
 )
