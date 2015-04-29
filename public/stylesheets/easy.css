@@ -116,7 +116,7 @@ background: none repeat scroll 0% 0% #CCC;
 		}	
 	a, a:visited{
 		text-decoration:none;
-		color: #0097B5;
+		color: #288fab;
 		}
 	a:hover{color:#999;}
 	ins{text-decoration:none;color:#900;font-style:italic;}
@@ -223,7 +223,7 @@ padding:2px;
 		clear:both;
 		height: 19px;
 		border-bottom: 4px solid #000;
-		background: none repeat scroll 0% 0% #C4C4C4;
+		background: none repeat scroll 0% 0% #dbdcdb;
 		padding-top: 10px;
 		margin-bottom: 50px;
 		}
