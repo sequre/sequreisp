@@ -78,6 +78,6 @@ module HooksHelper
   end
 
   def login_logo_extension
-    "<div class='logo'></div><h4>3.7</h4>".html_safe
+    "<div class='logo'></div><h4>3.6</h4>".html_safe
   end
 end
