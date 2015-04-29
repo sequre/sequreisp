@@ -19,7 +19,7 @@ Configuration.do_reload
 
 User.create!(
   :name => "Admin",
-  :email => "admin@sequre.com.ar",
+  :email => "admin@wispro.co",
   :password => "1234",
   :password_confirmation => "1234",
   :role_name => "admin"
@@ -43,9 +43,9 @@ Klass.import klass, :optimize=>true
 
 # tc class y ip ro table name de los provider y provider_groups
 # arranco en 10 hasta 250 para no tener conflifctos con /etc/iproute2/rt_tables
-# un máximo de 240 proveedores parece más que suficiente para un solo server 
+# un máximo de 240 proveedores parece más que suficiente para un solo server
 #ProviderKlass.transaction do
-#  for i in 10..250 do  
+#  for i in 10..250 do
 #    ProviderKlass.create!(:number => i)
 #  end
 #end
@@ -66,7 +66,7 @@ Interface.scan.each do |name|
      :netmask => '255.255.255.0'
     )
     first=false
-  else 
+  else
     Interface.create!(
      :name => name,
      :kind => 'wan',
