@@ -57,8 +57,12 @@ class ConfigurationsController < ApplicationController
   end
 
   def doreload
-    Configuration.first.apply_changes
-    flash[:notice] = I18n.t('messages.apply_changes_success')
+    errors = Configuration.first.apply_changes
+    if errors.empty?
+      flash[:notice] = I18n.t('messages.apply_changes_success')
+    else
+      flash[:error] = errors
+    end
     redirect_to :back
   end
 

@@ -60,15 +60,16 @@ class Configuration < ActiveRecord::Base
 
   validate :presence_of_dns_server
   validate_ip_format_of :dns_first_server, :dns_second_server, :dns_third_server
-  validate :not_repeat_traffic_prio
 
-  def not_repeat_traffic_prio
-    prios = []
-    traffic_prio.each do |prio|
-      prios << prio if (default_tcp_prio_ports + default_udp_prio_ports + default_prio_protos + default_prio_helpers).include?(prio)
-    end
-    errors.add_to_base(I18n.t("error_messages.cant_repeat_the_ports", :ports => prios.join(','))) unless prios.empty?
-  end
+  # --------------------TO-DO---------------------------
+  # validate :not_repeat_traffic_prio
+  # def not_repeat_traffic_prio
+  #   prios = []
+  #   traffic_prio.each do |prio|
+  #     prios << prio if (default_tcp_prio_ports + default_udp_prio_ports + default_prio_protos + default_prio_helpers).include?(prio)
+  #   end
+  #   errors.add_to_base(I18n.t("error_messages.cant_repeat_the_ports", :ports => prios.join(','))) unless prios.empty?
+  # end
 
   def presence_of_dns_server
     if dns_use_forwarders and not (dns_first_server.present? or dns_second_server.present? or dns_third_server.present?)
@@ -154,7 +155,7 @@ class Configuration < ActiveRecord::Base
     self.last_changes_applied_at = Time.now
     self.changes_to_apply = false
     self.daemon_reload = true
-    save
+    save ? [] : errors.full_message
   end
 
   def auditable_name
