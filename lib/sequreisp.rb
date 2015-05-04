@@ -161,23 +161,19 @@ def gen_iptables
         end
 
         # sino marko por cliente segun el ProviderGroup al que pertenezca
-        Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ]).each do |c|
+        contracts = Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ])
+        contracts.each do |c|
           if !c.public_address.nil?
             #evito triangulo de NAT si tiene full DNAT
             f.puts "-A avoid_nat_triangle -d #{c.public_address.ip} -j MARK --set-mark 0x01000000/0x01000000"
           end
-
-          mark = if not c.public_address.nil?
-                   c.public_address.addressable.mark_hex
-                 elsif not c.unique_provider.nil?
-                   # marko los contratos que salen por un único provider
-                   c.unique_provider.mark_hex
-                 else
-                   c.plan.provider_group.mark_hex
-                 end
-          f.puts "-A PREROUTING -s #{c.ip} -j MARK --set-mark 0x#{mark}/0x00ff0000"
-          f.puts "-A PREROUTING -s #{c.ip} -j ACCEPT"
+          f.puts c.rules_for_mark_provider
         end
+
+        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "mark.prov", :match => "-s", :prefix_leaf => "mark.prov" }).to_iptables)
+        f.puts("-A PREROUTING -j mark.prov-MAIN")
+
+
         # CONNMARK OUTPUT
         # Evito balanceo para los hosts configurados
         f.puts "-A OUTPUT -j avoid_balancing"
@@ -389,12 +385,10 @@ def gen_iptables
       #---------#
       # FILTER  #
       #---------#
-        f.puts "*filter"
+      f.puts "*filter"
       unless Configuration.first.in_safe_mode?
         f.puts ":dns-query -"
         f.puts ":sequreisp-allowedsites - [0:0]"
-        f.puts ":sequreisp-enabled - [0:0]"
-
         f.puts "-A OUTPUT -o lo -j ACCEPT"
 
         contracts = Contract.descend_by_netmask
@@ -443,7 +437,7 @@ def gen_iptables
         f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
       end
 
-        f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
+      f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
 
       unless Configuration.first.in_safe_mode?
         BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
@@ -455,19 +449,16 @@ def gen_iptables
           end
         end
 
-        providers.each do |p|
-          f.puts "-A FORWARD -o #{p.link_interface} -j sequreisp-enabled"
-        end
-
         ######################if
-        Contract.not_disabled.descend_by_netmask.each do |c|
+        contracts = Contract.not_disabled.descend_by_netmask
+        contracts.each do |c|
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
-          # attribute: state
-          #   estado del cliente enabled/alerted/disabled
           f.puts c.rules_for_enabled
         end
         ######################end
-        f.puts "-A sequreisp-enabled -j DROP"
+        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
+        providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
+        f.puts "-A enabled-MAIN -j DROP"
       end
       f.puts "COMMIT"
       #---------#
