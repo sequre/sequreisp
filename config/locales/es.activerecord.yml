@@ -133,6 +133,7 @@ es:
         created_at: "Fecha de alta"
         taxpayer_identification_number: 'Numero de identificación tributaria'
         national_identification_number: 'Número de identificación personal'
+        additional_information_file: "Archivo de información adicional"
       disk:
         id: "iD"
         serial: "Num de serie"

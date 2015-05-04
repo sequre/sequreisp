@@ -130,6 +130,7 @@ pt:
         created_at: "Data de cadastro"
         taxpayer_identification_number: 'Número Identificación contribuinte'
         national_identification_number: 'Número de identificação nacional'
+        additional_information_file: "Arquivo de informações adicionais"
       disk:
         id: "ID"
         serial: "Número de série"

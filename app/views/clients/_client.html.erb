@@ -32,6 +32,8 @@
     <%= form.input :national_identification_number %>
     <%= form.input :taxpayer_identification_number %>
     <%= form.input :details %>
+    <li><%= link_to @client.additional_information_file_file_name, @client.additional_information_file.url(:original, false) if @client.additional_information_file? %></li>
+    <%= form.input :additional_information_file %>
     <%= form_extensions form %>
   <% end %>
   <% if current_user.may_update_client?(@client) or current_user.may_create_client? %>
