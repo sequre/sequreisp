@@ -464,8 +464,7 @@ def gen_iptables
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
           # attribute: state
           #   estado del cliente enabled/alerted/disabled
-          macrule = (Configuration.filter_by_mac_address and !c.mac_address.blank?) ? "-m mac --mac-source #{c.mac_address}" : ""
-          f.puts "-A sequreisp-enabled #{macrule} -s #{c.ip} -j ACCEPT"
+          f.puts c.rules_for_enabled
         end
         ######################end
         f.puts "-A sequreisp-enabled -j DROP"

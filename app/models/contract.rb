@@ -707,6 +707,11 @@ end
       "-A count-down.#{ip_addr.to_cidr} -d #{ip} -m comment --comment \"data-count-#{ip}-down-data_count\"" ]
   end
 
+  def rules_for_enabled
+    macrule = (Configuration.filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
+    [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j ACCEPT" ]
+  end
+
   private
 
   #Please i need refactor
