@@ -712,11 +712,6 @@ end
     [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j ACCEPT" ]
   end
 
-  def rules_for_enabled
-    macrule = (Configuration.filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
-    [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j ACCEPT" ]
-  end
-
   def rules_for_mark_provider
     [ ":mark.prov.#{ip_addr.to_cidr} -",
       "-A mark.prov.#{ip_addr.to_cidr} -s #{ip} -j MARK --set-mark 0x#{mark_provider}/0x00ff0000",
