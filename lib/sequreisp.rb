@@ -766,7 +766,7 @@ def setup_adsl_interface(p)
 
   if p.online?
     p.addresses.each do |a|
-      commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address replace #{a.ip_in_cidr} dev #{p.link_interface}"
+      commands << "ip address | grep \"#{a.ip_in_cidr} .* #{p.link_interface}\" || ip address replace #{a.ip_in_cidr} dev #{p.link_interface}"
       commands << "ip route replace #{a.network} dev #{p.link_interface}"
     end
   end
@@ -778,7 +778,7 @@ def setup_dhcp_interface(p)
   commands << "/usr/bin/pgrep -f \"dhclient.#{p.interface.name}\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
   if p.online?
     p.addresses.each do |a|
-      commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address add #{a.ip_in_cidr} dev #{p.link_interface}"
+      commands << "ip address | grep \"#{a.ip_in_cidr} .* #{p.link_interface}\" || ip address add #{a.ip_in_cidr} dev #{p.link_interface}"
       commands << "ip route re #{a.network} dev #{p.link_interface}"
     end
   end
@@ -789,7 +789,7 @@ def setup_static_interface(p)
   commands = []
   commands << "ip address | grep \"#{p.ip_in_cidr} .* #{p.link_interface}\" || ip address replace #{p.ip_in_cidr} dev #{p.link_interface}"
   p.addresses.each do |a|
-    commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address replace #{a.ip_in_cidr} dev #{p.link_interface}"
+    commands << "ip address | grep \"#{a.ip_in_cidr} .* #{p.link_interface}\" || ip address replace #{a.ip_in_cidr} dev #{p.link_interface}"
     commands << "ip route replace #{a.network} dev #{p.link_interface} src #{a.ip}"
   end
   commands << "ip route replace #{p.network} dev #{p.link_interface} src #{p.ip}"
