@@ -17,7 +17,7 @@
 
 class BackupController < ApplicationController
   before_filter :require_user
-  before_filter :no_backups, :only => [:upload_db, :upload_full, :create_full, :create_db] if SequreispConfig::CONFIG["demo"]
+  before_filter :no_backups, :only => [:upload_db, :upload_full, :create_full, :create_db] if (SequreispConfig::CONFIG["demo"] and Rails.env.production?)
   permissions :backup
 
   def index
@@ -54,7 +54,7 @@ class BackupController < ApplicationController
 
   def create_full
     Configuration.first.include_exclude_files_in_backup(params[:backup])
-    if file = Backup.new.full(params[:include_graphs])
+    if file = Backup.new.full(params[:backup][:include_graph] == "1")
       send_file file, :type => 'application/x-gzip'
     else
       flash[:error] = t 'backup.notice.create_error'
