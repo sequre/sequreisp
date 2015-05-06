@@ -811,16 +811,17 @@ def setup_provider_interface p, boot=true
   when "static"
     commands << setup_static_interface(p)
   end
-  commands.flatten
+  exec_context_commands("setup_wan_interfaces_#{p.interface.name}", commands.flatten, I18n.t("command.human.setup_wan_interface", :kind => p.interface.kind, :dev => p.interface.name), boot)
 end
 
-def setup_lan_interface(i)
+def setup_lan_interface i, boot=true
   commands = []
   i.addresses.each do |a|
     commands << "ip address | grep \"#{a.ip_in_cidr} .* #{i.name}\" || ip address replace #{a.ip_in_cidr} dev #{i.name}"
     commands << "ip route replace #{a.network} dev #{i.name} src #{a.ip}"
   end
   commands << "initctl emit -n net-device-up \"IFACE=#{i.name}\" \"LOGICAL=#{i.name}\" \"ADDRFAM=inet\" \"METHOD=static\""
+  exec_context_commands("setup_lan_interface_#{i.name}", commands.flatten, I18n.t("command.human.setup_lan_interface", :dev => i.name), boot)
 end
 
 def setup_interfaces
@@ -832,13 +833,9 @@ def setup_interfaces
     #commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
     commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
     if i.lan?
-      commands << setup_lan_interface(i)
-      exec_context_commands("setup_lan_interface_#{i.name}", commands.flatten, I18n.t("command.human.setup_lan_interface", :dev => i.name))
+      setup_lan_interface(i)
     elsif i.wan?
-      if not i.provider.nil?
-        commands << setup_provider_interface(i.provider)
-        exec_context_commands("setup_wan_interfaces_#{i.name}", commands.flatten, I18n.t("command.human.setup_wan_interface", :kind => i.provider.kind, :dev => i.name))
-      end
+      setup_provider_interface(i.provider) if not i.provider.nil?
     end
   end
 end
