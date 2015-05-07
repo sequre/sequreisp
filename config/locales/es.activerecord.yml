@@ -190,7 +190,6 @@ es:
         arp_announce: "Hacer consultas ARP desde direcciones IP locales en la red de destino"
         arp_filter: "Responder consultas ARP sólo por la interfaz por la cual se enruta el tráfico a la dirección consultada"
         current_status_time: "Tiempo en servicio/fuera de servicio"
-        shape_rate_down_on_ingress: "Controlar que no se excedan los límites de ancho de banda de bajada de este proveedor"
         interface_id: "Interfaz"
         avoid_nat_addresses: "Direcciones IP sobre las que no se hará NAT"
         allow_dns_queries: "Permitir consultas de DNS externas"
@@ -354,7 +353,6 @@ es:
         low_latency_for_sip: "Protocolo de Inicio de Sesiones (SIP)"
         low_latency_for_rdp: "Protocolo de escritorio remoto (RDP)"
       provider:
-        shape_rate_down_on_ingress: "El control de tráfico de bajada se hace en la interfaz LAN; si habilita esta opción se habitará un control adicional en la interfaz WAN que asegurará que el tráfico de los clientes más el del servidor no excedan el límite configurado"
         avoid_nat_addresses: "Una dirección por linea, notación CIDR, ejemplo 200.10.20.0/24"
   menu:
     clients: "Clientes"

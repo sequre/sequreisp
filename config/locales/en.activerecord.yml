@@ -190,7 +190,6 @@ en:
         arp_announce: "Do ARP queries from IP addresses that are local in the target network"
         arp_filter: "Reply ARP queries only from the interface through which traffic for the queried address is routed"
         current_status_time: "Uptime/Downtime"
-        shape_rate_down_on_ingress: "Check that download rate limits are not exceeded for this provider"
         interface_id: "Interface"
         avoid_nat_addresses: "IP addresses/ranges that will skip NAT"
         allow_dns_queries: "Allow external DNS queries"
@@ -354,7 +353,6 @@ en:
         low_latency_for_sip: "Session Initiation Protocol (SIP)"
         low_latency_for_rdp: "Remote Desktop Protocol (RDP)"
       provider:
-        shape_rate_down_on_ingress: "Download traffic shaping is done on the LAN interface; if you enable this option, an extra control will be enabled on ingress that will shape clients' and server's own traffic to the configured download rate"
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"
   menu:
     clients: "Clients"
