@@ -67,8 +67,7 @@ def gen_tc
   Provider.enabled.with_klass_and_interface.each do |p|
     iface = p.link_interface
     commands << "tc qdisc del dev #{iface} root;:"
-    commands << "tc qdisc show dev #{iface} | grep 'qdisc ingress' > /dev/null && tc qdisc del dev #{iface} ingress"
-#    commands << "tc qdisc del dev #{iface} ingress 2> /dev/null"
+    commands << "tc qdisc show dev #{iface} | grep '[q]disc ingress' > /dev/null && tc qdisc del dev #{iface} ingress"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         unless Configuration.first.in_safe_mode?
@@ -760,9 +759,8 @@ def setup_adsl_interface(p)
     File.open("#{PPP_DIR}/peers/#{p.interface.name}", 'w') {|peer| peer.write(p.to_ppp_peer) }
   rescue => e
     log_rescue("[Boot][setup_adsl_interface]", e)
-    # Rails.logger.error "ERROR in lib/sequreisp.rb::setup_provider_interface(PPP_DIR) e=>#{e.inspect}"
   end
-  commands << "(/usr/bin/pgrep -fc \"pppd call #{p.interface.name}\" >= 2 &>/dev/null && ip link list #{p.link_interface} &>/dev/null) || /usr/bin/pon #{p.interface.name}"
+  commands << "(/bin/ps x | grep \"[p]ppd call #{p.interface.name}$\" &>/dev/null && ip link list #{p.link_interface} &>/dev/null ) || /usr/bin/pon #{p.interface.name}"
 
   if p.online?
     p.addresses.each do |a|
@@ -775,7 +773,7 @@ end
 
 def setup_dhcp_interface(p)
   commands = []
-  commands << "/usr/bin/pgrep -f \"dhclient.#{p.interface.name}\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
+  commands << "/bin/ps x | grep \"[d]hclient.#{p.interface.name}$\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
   if p.online?
     p.addresses.each do |a|
       commands << "ip address | grep \"#{a.ip_in_cidr} .* #{p.link_interface}\" || ip address add #{a.ip_in_cidr} dev #{p.link_interface}"
@@ -832,6 +830,9 @@ def setup_interfaces
     commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || (ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address})"
     #commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
     commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
+
+    exec_context_commands("setup_interface_#{i.name}", commands.flatten, I18n.t("command.human.setup_interface", :dev => i.name))
+
     if i.lan?
       setup_lan_interface(i)
     elsif i.wan?
