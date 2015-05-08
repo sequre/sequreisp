@@ -669,7 +669,7 @@ en:
       setup_clock: "Setup time zone"
       setup_proc: "Setup sysctl general params"
       setup_nf_modules: "Setup kernel modules"
-      setup_interface: "Setup interface #{dev}"
+      setup_interface: "Setup interface %{dev}"
       setup_lan_interface: "Setup lan in %{dev}"
       setup_wan_interface: "Setup provider %{kind} in %{dev}"
       setup_proxy_arp: "Setup proxy arp in contracts"
