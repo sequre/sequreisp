@@ -671,6 +671,7 @@ es:
       setup_clock: "Configurando zona horario en el servidor"
       setup_proc: "Configurando parametros generales del sistema operativo (sysctl)"
       setup_nf_modules: "Configurando modulos del sistema operativo"
+      setup_interface: "Configurando Interface #{dev}"
       setup_lan_interface: "Configurando red lan en la interfaz %{dev}"
       setup_wan_interface: "Configurando proveedor %{kind} en la interfaz %{dev}"
       setup_proxy_arp: "Configurando proxy ARP en los contratos"

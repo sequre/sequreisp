@@ -830,6 +830,9 @@ def setup_interfaces
     commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || (ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address})"
     #commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
     commands << "ip -o link list #{i.name} | grep -o ',UP' >/dev/null || ip link set dev #{i.name} up"
+
+    exec_context_commands("setup_interface_#{i.name}", commands.flatten, I18n.t("command.human.setup_interface", :dev => i.name))
+
     if i.lan?
       setup_lan_interface(i)
     elsif i.wan?
