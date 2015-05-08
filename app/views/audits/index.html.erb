@@ -4,7 +4,6 @@
   <%= stylesheet_link_tag('jquery-ui-1.8.14.custom.css') %>
   <%= stylesheet_link_tag('selectize.css') %>
   <%= stylesheet_link_tag('selectize.legacy.css') %>
-  <%= javascript_include_tag('jquery.ui.datepicker.js') %>
   <%= javascript_include_tag('selectize.js') %>
   <style>
     #example_attribute_audit_item{ display:none; }
@@ -48,6 +47,9 @@
       color: #EEEDE8;
       border: 1px solid #740000;
     }
+    img, .ui-datepicker-trigger {
+      margin-left: 4px;
+    };
   </style>
   <script type="text/javascript">
     var search_conditions = <%= @search.conditions.to_json %>;
@@ -55,7 +57,7 @@
     var select;
 
     datepicker_options = {
-      dateFormat: 'yy-mm-dd',
+      dateFormat: 'dd-mm-yy',
       showOn: "button",
       buttonImage: "/images/calendar.gif",
       buttonImageOnly: true
@@ -168,11 +170,11 @@
     <div sytle="clear: both"></div>
     <li>
       <%= f.label :created_at_greater_than_or_equal_to, t('audits.audit_init_date') %>
-      <%= f.text_field :created_at_greater_than_or_equal_to , { :class => 'datepicker fix_datetime'} %>
+      <%= f.text_field :created_at_greater_than_or_equal_to, { :class => 'datepicker fix_date'} %>
     </li>
     <li>
       <%= f.label :created_at_less_than_or_equal_to, t('audits.audit_end_date') %>
-      <%= f.text_field :created_at_less_than_or_equal_to , {:class => 'datepicker fix_datetime add_end_of_day_before_submit'} %>
+      <%= f.text_field :created_at_less_than_or_equal_to , {:class => 'datepicker fix_date add_end_of_day_before_submit'} %>
     </li>
     <div sytle="clear: both"></div>
     <li>
@@ -185,7 +187,7 @@
 <% end %>
 </div>
 <div class="separador"></div>
-	
+
 <div class="main">
   <%= page_entries_info @audits %>
   <table cellspacing="0" cellpadding="0">
