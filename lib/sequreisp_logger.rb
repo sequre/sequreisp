@@ -2,7 +2,7 @@ require 'syslog'
 
 def log(string)
   Syslog.open if not Syslog.opened?
-  Syslog.log(Syslog::LOG_INFO, "[SequreISP]#{string}")
+  Syslog.log(Syslog::LOG_INFO, "[Wispro]#{string}")
   # puts string if $stdout.tty?
 end
 
@@ -14,8 +14,12 @@ end
 
 
 def log_rescue_file(path, exception)
-  File.open(path, 'w') do |f|
-    f.puts exception.message
-    exception.backtrace.each{ |bt| f.puts "#{exception.class} #{bt}" }
+  File.open(path, 'a+') do |f|
+    if exception.instance_of? String
+      f.puts exception
+    else
+      f.puts exception.message
+      exception.backtrace.each{ |bt| f.puts "#{exception.class} #{bt}" }
+    end
   end
 end
