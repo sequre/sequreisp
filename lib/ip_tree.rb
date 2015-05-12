@@ -4,6 +4,7 @@ class IPTree
   attr_accessor :parent, :ips, :mask
 
   LIMIT = 5
+  INDENT= 0 # Dejarlo en 0 para produccion
 
   def initialize(argument)
     @parent = argument[:parent]
@@ -14,6 +15,14 @@ class IPTree
     @prefix_leaf = argument[:prefix_leaf]
   end
 
+  def level
+    parent.nil? ? 0 : parent.level+1
+  end
+
+  def indent
+    " "*INDENT*level
+  end
+
   def prefix; @prefix || (parent && parent.prefix) || "PREFIX"; end
   def match; @match || (parent && parent.match) || ""; end
   def prefix_leaf; @prefix_leaf ; end
@@ -22,6 +31,18 @@ class IPTree
 
   def split_mask
     @sm ||= split_mask = 33 - (extremes.first.to_i ^ extremes.last.to_i).to_s(2).size
+  end
+
+  def biggest_network_mask
+    @biggest_network_mask ||= ips.map{|ip| ip.cidr_mask}.min
+  end
+
+  def nets
+    @nets ||= ips.select{|ip| ip.cidr_mask == biggest_network_mask}
+  end
+
+  def need_net_processing?
+    @nnp ||= (split_mask >= biggest_network_mask and biggest_network_mask != 32)
   end
 
   def ch_masks
@@ -41,20 +62,29 @@ class IPTree
 
   def to_iptables
     o=[]
+
+    @ips=@ips-nets if need_net_processing?  # Saco las reded de las IPs a procesar en ramas
+
     if parent.nil? # Cadena del nodo inicial
-      o << ":#{chain} -"
-      o << "-F #{chain}"
+      o << "#{indent}:#{chain} -"
+      o << "#{indent}-F #{chain}"
     end
+
     childs.each do |ch| # cadena de cada hijo, seguida de las iptables de cada hijo
-      o << ":#{ch.chain} -"
-      o << "-F #{ch.chain}"
-      o << "-A #{chain} #{match} #{ch.mask} -j #{ch.chain}"
+      o << "#{indent}:#{ch.chain} -"
+      o << "#{indent}-F #{ch.chain}"
+      o << "#{indent}-A #{chain} #{match} #{ch.mask} -j #{ch.chain}"
       o << ch.to_iptables
     end
     if ips.count <= LIMIT # Si hay LIMIT IPs o menos aplica salto a la ip hoja
       ips.each do |ip|
-        o << "-A #{chain} #{match} #{ip.to_cidr} -j #{prefix_leaf}.#{ip.to_cidr}"
+        o << "#{indent}-A #{chain} #{match} #{ip.to_cidr} -j #{prefix_leaf}.#{ip.to_cidr}"
         # o << "-A #{chain} #{match} #{ip.to_cidr} -j sq.#{ip.to_cidr}"
+      end
+    end
+    if need_net_processing?
+      nets.each do |net|
+        o << "#{indent}-A #{chain} #{match} #{net.to_cidr} -j #{prefix_leaf}.#{net.to_cidr}"
       end
     end
     o
