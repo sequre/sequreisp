@@ -760,7 +760,7 @@ def setup_adsl_interface(p)
   rescue => e
     log_rescue("[Boot][setup_adsl_interface]", e)
   end
-  commands << "(/bin/ps x | grep \"[p]ppd call #{p.interface.name}$\" &>/dev/null && ip link list #{p.link_interface} &>/dev/null ) || /usr/bin/pon #{p.interface.name}"
+  commands << "(/bin/ps x | grep \"[p]ppd call #{p.interface.name}$\" &>/dev/null || ip link list #{p.link_interface} &>/dev/null ) || /usr/bin/pon #{p.interface.name}"
 
   if p.online?
     p.addresses.each do |a|
