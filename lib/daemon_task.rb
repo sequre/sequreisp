@@ -243,10 +243,10 @@ class DaemonCheckLink < DaemonTask
 
     Provider.with_klass_and_interface.each do |p|
       setup_provider_interface p, false if not p.online?
-      update_provider_route p, nil, false, false
+      update_provider_route p, false, false
     end
     ProviderGroup.enabled.each do |pg|
-      update_provider_group_route pg, nil, false, false
+      update_provider_group_route pg, false, false
     end
     update_fallback_route nil, false, false
     begin

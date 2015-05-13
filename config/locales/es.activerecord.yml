@@ -690,9 +690,9 @@ es:
       delete_tmp_file: "Finalizado proceso de aplicar cambios"
       do_port_forwarding: "Do port forwarding"
       do_port_forwardings_avoid_nat_triangle: "Do port forwardings avoid nat triangle"
-      update_fallback_route: "Update fallback route"
-      update_provider_group_route: "Update provider group route"
-      update_provider_route: "Update provider route"
+      update_fallback_route: "Configurando ruta por defecto"
+      update_provider_group_route: "Configurando rutas para el grupo de proveedores %{name} (%{id})"
+      update_provider_route: "Configurando rutas para el proveedor %{name} (%{id})"
       do_provider_up: "Do provider up"
       do_provider_down: "Do provider down"
   daemons:

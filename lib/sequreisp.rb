@@ -524,73 +524,69 @@ def gen_ip_ru
   end
 end
 
-def update_fallback_route(f=nil, force=false, boot=true)
+def update_fallback_route force=false, boot=true
   commands = []
   #tabla default (fallback de todos los enlaces)
   currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
   if (currentroute != Provider.fallback_default_route and currentroute != Provider.fallback_default_route(true)) or force
     if Provider.fallback_default_route != ""
       #TODO por ahora solo cambio si hay ruta, sino no toco x las dudas
-      commands << "ro re table default #{Provider.fallback_default_route}"
+      commands << "ip ro re table default #{Provider.fallback_default_route}"
     end
     #TODO loguear? el cambio de estado en una bitactora
   end
-  if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_fallback_route", commands.map{|c| "ip " + c }, I18n.t("command.human.update_fallback_route"), boot)
-  end
+  exec_context_commands("update_fallback_route", commands, I18n.t("command.human.update_fallback_route"), boot) if commands.any?
 end
 
-def update_provider_group_route pg, f=nil, force=false, boot=true
+def update_provider_group_route pg, force=false, boot=true
   commands = []
   currentroute=`ip -oneline ro li table #{pg.table} | grep default`.gsub("\\\t","  ").strip
   if (currentroute != pg.default_route) or force
     # force could be true, and current_route empty, so all ip ro batch will fail
-    if pg.default_route == "" and currentroute != ""
-      commands << "ro del table #{pg.table} default"
+    if pg.default_route == ""
+      commands << "ip ro del table #{pg.table} default"
     else
-      commands << "ro re table #{pg.table} #{pg.default_route}"
+      commands << "ip ro re table #{pg.table} #{pg.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
-  if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_provider_group_route #{pg.id}", commands.map{|c| "ip " + c }, I18n.t("command.human.update_provider_group_route"), boot)
-  end
+  exec_context_commands("update_provider_group_route #{pg.name} (#{pg.id})", commands, I18n.t("command.human.update_provider_group_route", :name => pg.name, :id => pg.id), boot) if commands.any?
 end
 
-def update_provider_route p, f=nil, force=false, boot=true
+def update_provider_route p, force=false, boot=true
   commands = []
   currentroute=`ip -oneline ro li table #{p.table} | grep default`.gsub("\\\t","  ").strip
   default_route = p.online ? p.default_route : ""
   if (currentroute != default_route) or force
     if default_route == ""
-      commands << "ro del table #{p.table} default"
+      commands << "ip ro del table #{p.table} default"
     else
-      commands << "ro re table #{p.table} #{p.default_route}"
+      commands << "ip ro re table #{p.table} #{p.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
-  if commands.any?
-    f ? f.puts(commands) : exec_context_commands("update_provider_route #{p.id}", commands.map{|c| "ip " + c }, I18n.t("command.human.update_provider_route"), boot)
-  end
+  exec_context_commands("update_provider_route #{p.name} (#{p.id})", commands, I18n.t("command.human.update_provider_route", :name => p.name, :id => p.id), boot) if commands.any?
 end
 
-def gen_ip_ro
+def setup_ip_ro
   begin
-    File.open(IP_RO_FILE, "w") do |f|
-      Provider.enabled.ready.with_klass_and_interface.each do |p|
-        update_provider_route p, f, true
+    # the ';:' is because only work the first time, the other times fail. with ';:' always return status 0
+    exec_context_commands "setup_ip_ro", ["ip route flush table cache", "ip route del default table main 2> /dev/null;:"], I18n.t("command.human.setup_ip_ro")
+
+    Provider.enabled.ready.with_klass_and_interface.each do |p|
+      update_provider_route p, true
+    end
+
+    unless Configuration.first.in_safe_mode?
+      ProviderGroup.enabled.each do |pg|
+        update_provider_group_route pg, true, true
       end
-      unless Configuration.first.in_safe_mode?
-        ProviderGroup.enabled.each do |pg|
-          update_provider_group_route pg, f, true, true
-        end
-        update_fallback_route f, true, true
-        BootHook.run :hook => :gen_ip_ro, :ip_ro_script => f
-      end
+      update_fallback_route true, true
+
+      BootHook.run :hook => :gen_ip_ro
     end
   rescue => e
-    log_rescue("[Boot][gen_ip_ro]", e)
-    # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ro e=>#{e.inspect}"
+    log_rescue("[Boot][setup_ip_ro]", e)
   end
 end
 
@@ -614,7 +610,6 @@ def setup_dynamic_providers_hooks
     end
   rescue => e
     log_rescue("[Boot][setup_dynamic_providers_hooks][ip-down.d]", e)
-    # Rails.logger.error "ERROR in lib/sequreisp.rb::setup_dynamic_providers_hooks(PPP_DIR/ip-down) e=>#{e.inspect}"
   end
 
   begin
@@ -873,11 +868,6 @@ def setup_tc
   exec_context_commands "setup_tc", commands, I18n.t("command.human.setup_tc")
 end
 
-def setup_ip_ro
-  gen_ip_ro
-  # the ';:' is because only work the first time, the other times fail. with ';:' always return status 0
-  exec_context_commands "ip_ro", ["ip route flush table cache", "ip route del default table main 2> /dev/null;:", "ip -batch #{IP_RO_FILE}"], I18n.t("command.human.setup_ip_ro")
-end
 def setup_ip_ru
   gen_ip_ru
   exec_context_commands "ip_ru", "ip -batch #{IP_RU_FILE}", I18n.t("command.human.setup_ip_ru")
