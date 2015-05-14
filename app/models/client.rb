@@ -18,6 +18,7 @@
 class Client < ActiveRecord::Base
   acts_as_audited
   has_many :contracts, :dependent => :destroy
+  has_attached_file :additional_information_file
 
   validates_presence_of :name
   validates_length_of :name, :in => 3..128
