@@ -67,7 +67,7 @@ def gen_tc
   Provider.enabled.with_klass_and_interface.each do |p|
     iface = p.link_interface
     commands << "tc qdisc del dev #{iface} root;:"
-    commands << "tc qdisc show dev #{iface} | grep '[q]disc ingress' > /dev/null && tc qdisc del dev #{iface} ingress"
+    commands << "tc qdisc show dev #{iface} | grep '[q]disc ingress' &>/dev/null && tc qdisc del dev #{iface} ingress"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         unless Configuration.first.in_safe_mode?
