@@ -45,14 +45,14 @@ opts = OptionParser.new do |opts|
     options.extension ="Provider.all.map{|a| puts 'Name: ' + a.name + ', kind: ' + a.kind + ', IP: ' + a.ip + ',rate_down: ' + a.rate_down.to_s + ',rate_up: ' + a.rate_up.to_s + ', State: ' + a.state + '\n' }"
   end
 
-  opts.on("-t", "--tail FILE", "Show tail for production, command, command_human, daemon log. Example sequreisp -t [production|command|command_human|daemon]") do |log_file|
+  opts.on("-t", "--tail FILE", "Show tail for production, command, command_human, daemon log. Example sequreisp -t [production|command|command_human|command_server|daemon]") do |log_file|
     options.cmd = "tail"
     options.extension = "-n80 -F"
     if log_file == "daemon"
       options.path = "/"
-      options.log_file = "var/log/syslog | grep [SequreISP][Daemon]"
+      options.log_file = "var/log/syslog | grep [SequreISP][Daemon] | ccze -A"
     else
-      options.log_file = "log/#{log_file}.log"
+      options.log_file = "log/#{log_file}.log | ccze -A"
     end
   end
 
