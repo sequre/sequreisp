@@ -707,6 +707,28 @@ end
       "-A count-down.#{ip_addr.to_cidr} -d #{ip} -m comment --comment \"data-count-#{ip}-down-data_count\"" ]
   end
 
+  def rules_for_enabled
+    macrule = (Configuration.filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
+    [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j ACCEPT" ]
+  end
+
+  def rules_for_mark_provider
+    [ ":mark.prov.#{ip_addr.to_cidr} -",
+      "-A mark.prov.#{ip_addr.to_cidr} -s #{ip} -j MARK --set-mark 0x#{mark_provider}/0x00ff0000",
+      "-A mark.prov.#{ip_addr.to_cidr} -s #{ip} -j ACCEPT" ]
+  end
+
+  def mark_provider
+    if not public_address.nil?
+      public_address.addressable.mark_hex
+    elsif not unique_provider.nil?
+      # marko los contratos que salen por un único provider
+      unique_provider.mark_hex
+    else
+      plan.provider_group.mark_hex
+    end
+  end
+
   private
 
   #Please i need refactor
