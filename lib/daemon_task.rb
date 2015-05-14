@@ -248,7 +248,7 @@ class DaemonCheckLink < DaemonTask
     ProviderGroup.enabled.each do |pg|
       update_provider_group_route pg, false, false
     end
-    update_fallback_route nil, false, false
+    update_fallback_route false, false
     begin
       if send_notification_mail and Configuration.deliver_notifications
         AppMailer.deliver_check_links_email
