@@ -439,7 +439,7 @@ class Contract < ActiveRecord::Base
     else
       ["up", "down"].each do |prefix|
         ["prio1", "prio2", "prio3"].each do |prio|
-          rate["rate_#{prio}_#{prefix}"] = $redis.hmget("contract:#{id}:#{prio}:#{prefix}", "instant")
+          rate["rate_#{prio}_#{prefix}"] = $redis.hmget("contract:#{id}:#{prio}:#{prefix}", "instant").first.to_i
         end
       end
     end
