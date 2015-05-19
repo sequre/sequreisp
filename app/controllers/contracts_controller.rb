@@ -190,14 +190,6 @@ class ContractsController < ApplicationController
     end
   end
 
-  def redis_instant
-    @contract = object
-    respond_to do |format|
-      format.json { render :json => @contract.redis_instant }
-    end
-  end
-
-
   def free_ips
     respond_to do |format|
       format.json { render :json => Contract.free_ips(params[:term])[0..9] }

@@ -150,11 +150,8 @@ class Interface < ActiveRecord::Base
         rate[:rate_up] = rand(provider.rate_up)*1024/2 rescue 0
       end
     else
-      rx = rx_bytes
-      tx = tx_bytes
-      sleep 2
-      rate[:rate_down] = (rx_bytes-rx)*8*1000/1024/2
-      rate[:rate_up] = (tx_bytes-tx)*8*1000/1024/2
+      rate[:rate_up] = $redis.hmget("interface:#{name}:rate_tx", "instant").first.to_i
+      rate[:rate_down] = $redis.hmget("interface:#{name}:rate_rx", "instant").first.to_i
     end
     rate
   end
