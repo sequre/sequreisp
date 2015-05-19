@@ -424,6 +424,29 @@ class Contract < ActiveRecord::Base
     _interface
   end
 
+
+  def redis_instant
+    rate = {}
+    if SequreispConfig::CONFIG["demo"] or Rails.env.development?
+      rate_down = rand(plan.ceil_down)*1024
+      rate[:rate_prio1_down] = rate_down * 0.15
+      rate[:rate_prio2_down] = rate_down * 0.6
+      rate[:rate_prio3_down] = rate_down * 0.25
+      rate_up = rand(plan.ceil_up)*1024 * 0.3
+      rate[:rate_prio1_up] = rate_up * 0.15
+      rate[:rate_prio2_up] = rate_up * 0.6
+      rate[:rate_prio3_up] = rate_up * 0.25
+    else
+      ["up", "down"].each do |prefix|
+        ["prio1", "prio2", "prio3"].each do |prio|
+          rate["rate_#{prio}_#{prefix}"] = $redis.hmget("contract:#{id}:#{prio}:#{prefix}", "instant")
+        end
+      end
+    end
+    rate
+  end
+
+
   def sent_bits(prefix)
     iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
     match = false

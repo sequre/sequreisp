@@ -540,44 +540,39 @@ class DaemonRedis < DaemonTask
   end
 
   def exec_daemon_redis
-    contracts = Contract.all
     #Get all class in one array, each position is one class in string
     #class hfsc 1:e2 parent 1:e0 leaf 8aa2: ls m1 0bit d 0us m2 2000Kbit
     # Sent 2970546728 bytes 2810819 pkt (dropped 758, overlimits 0 requeues 0)
     # rate 48656bit 9pps backlog 0b 0p requeues 0
     # period 1430082 work 2969504006 bytes level 0
 
-    ["up", "down"].each do |up_or_down|
-      iface = SequreispConfig::CONFIG["ifb_#{up_or_down}"]
+    ["up", "down"].each do |prefix|
+      iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
       hfsc_classes = `/sbin/tc -s class show dev #{iface}`.split("\n\n")
-      contracts.each do |contract|
+      Contract.all.each do |contract|
         ["prio1", "prio2", "prio3"].each do |prio|
           class_prio = contract.send("class_#{prio}_hex")
-          if not $redis.exists("contract:#{contract.id}:#{prio}:#{up_or_down}")
-            # "contract:#{contract.id}:#{prio}:#{up_or_down}" = { "instant" => 0, "accumulated" => 0, "bytes_sent" => 0, "time" => "#{DateTime.now.to_i}" }
-            $redis.hmset("contract:#{contract.id}:#{prio}:#{up_or_down}",
-                         "instant", "0",
-                         "accumulated","0",
-                         "bytes_sent", "0",
-                         "time", "#{DateTime.now.to_i}")
+          if not $redis.exists("contract:#{contract.id}:#{prio}:#{prefix}")
+            # "contract:#{contract.id}:#{prio}:#{prefix}" = { "instant" => 0, "accumulated" => 0, "bytes_sent" => 0, "time" => "#{DateTime.now.to_i}" }
+            $redis.hmset("contract:#{contract.id}:#{prio}:#{prefix}", "instant", "0", "accumulated", "0", "bytes_sent", "0", "time", "#{DateTime.now.to_i}")
           end
 
           contract_class = hfsc_classes.select{ |k| k.include?("class hfsc 1:#{class_prio} parent 1:#{contract.class_hex}")}.first
-          new_bytes_sent = contract_class.split("\n").select{ |k| k.include("Sent ")}.first.split(" ")[1]
-          instant, accumulated, bytes_sent, time = $redis.hmget("contract:#{contract.id}:#{prio}:#{up_or_down}", "instant", "accumulated", "bytes_sent", "time")
+          new_bytes_sent = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
+          instant, accumulated, bytes_sent, time = $redis.hmget("contract:#{contract.id}:#{prio}:#{prefix}", "instant", "accumulated", "bytes_sent", "time")
 
           time_now = DateTime.now.to_i
+          seconds = time_now - time.to_i
 
-          instant, increment = if new_bytes_sent < bytes_sent # sent count bytes restarted
-                                 [ (new_bytes_sent / (time_now - time.to_i)), new_bytes_sent ]
-                               else
-                                 [ ((new_bytes_sent - bytes_sent) / (time_now - time.to_i)), (new_bytes_sent - bytes_sent) ]
-                               end
+          if seconds > 0
+            bytes_to_increment = new_bytes_sent.to_i < bytes_sent.to_i ? new_bytes_sent.to_i : (new_bytes_sent.to_i - bytes_sent.to_i)
+            new_instant = bytes_to_increment / seconds
 
-          $redis.hmset("contract:#{contract.id}:#{prio}:#{up_or_down}", "instant", instant)
-          $redis.hincrby("contract:#{contract.id}:#{prio}:#{up_or_down}", "accumulated", increment)
-          $redis.hmset("contract:#{contract.id}:#{prio}:#{up_or_down}", "bytes_sent", new_bytes_sent)
-          $redis.hmset("contract:#{contract.id}:#{prio}:#{up_or_down}", "time", time_now)
+            $redis.hmset("contract:#{contract.id}:#{prio}:#{prefix}", "instant", new_instant)
+            $redis.hincrby("contract:#{contract.id}:#{prio}:#{prefix}", "accumulated", bytes_to_increment)
+            $redis.hmset("contract:#{contract.id}:#{prio}:#{prefix}", "bytes_sent", new_bytes_sent)
+            $redis.hmset("contract:#{contract.id}:#{prio}:#{prefix}", "time", time_now)
+          end
         end
       end
     end

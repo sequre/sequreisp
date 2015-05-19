@@ -17,7 +17,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :providers, :member => { :graph => :get }
 
-  map.resources :contracts, :member => { :instant => :get, :graph => :get},
+  map.resources :contracts, :member => { :instant => :get, :graph => :get, :redis_instant => :get},
                 :collection => { :free_ips => :get, :ips => :get, :arping_mac_address =>
                 :get, :excel => :get, :massive => :put }
 
