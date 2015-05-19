@@ -6,7 +6,7 @@
   $(document).ready(function() {
     chart_rate = new_chart_rate_prios(<%= Time.zone.utc_offset %>);
     chart_latency = new_chart_latency(<%= Time.zone.utc_offset %>);
-    chart_redis_rate = new_chart_rate_prios(<%= Time.zone.utc_offset %>);
+    chart_redis_rate = new_chart_redis_rate_prios(<%= Time.zone.utc_offset %>);
 
 <% result = @graph.element.data_count_for_last_year %>
 $('#foo').highcharts({
