@@ -583,35 +583,6 @@ class DaemonRedis < DaemonTask
       end
     end
 
-    # ["up", "down"].each do |prefix|
-    #   iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
-    #   hfsc_classes = `/sbin/tc -s class show dev #{iface}`.split("\n\n")
-    #     contracts.each do |contract|
-    #     ["prio1", "prio2", "prio3"].each do |prio|
-    #       class_prio = contract.send("class_#{prio}_hex")
-    #       if not $redis.exists("contract:#{contract.id}:#{prio}:#{prefix}")
-    #         # "contract:#{contract.id}:#{prio}:#{prefix}" = { "instant" => 0, "accumulated" => 0, "bytes_sent" => 0, "time" => "#{DateTime.now.to_i}" }
-    #         $redis.hmset("contract:#{contract.id}:#{prio}:#{prefix}", "instant", "0", "accumulated", "0", "bytes_sent", "0", "time", "#{(DateTime.now.to_f * factor_precision).to_i}")
-    #       end
-
-    #       contract_class = hfsc_classes.select{ |k| k.include?("class hfsc 1:#{class_prio} parent 1:#{contract.class_hex}")}.first
-    #       new_bytes_sent = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
-    #       instant, accumulated, bytes_sent, time = $redis.hmget("contract:#{contract.id}:#{prio}:#{prefix}", "instant", "accumulated", "bytes_sent", "time")
-
-    #       time_now = (DateTime.now.to_f * factor_precision).to_i
-    #       seconds = time_now - time.to_i
-
-    #       if seconds > 0
-    #         bytes_to_increment = new_bytes_sent.to_i < bytes_sent.to_i ? new_bytes_sent.to_i : (new_bytes_sent.to_i - bytes_sent.to_i)
-    #         new_instant = (bytes_to_increment * factor_precision) / seconds
-    #         $redis.hmset("contract:#{contract.id}:#{prio}:#{prefix}", "instant", new_instant)
-    #         $redis.hincrby("contract:#{contract.id}:#{prio}:#{prefix}", "accumulated", bytes_to_increment)
-    #         $redis.hmset("contract:#{contract.id}:#{prio}:#{prefix}", "bytes_sent", new_bytes_sent)
-    #         $redis.hmset("contract:#{contract.id}:#{prio}:#{prefix}", "time", time_now)
-    #       end
-    #     end
-    #   end
-    # end
   end
 
 end

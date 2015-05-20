@@ -119,24 +119,15 @@ class ProviderGroup < ActiveRecord::Base
     (self.klass.number << 16).to_s(16)
   end
   def instant_rate
-    rate = {}
-    if SequreispConfig::CONFIG["demo"]
+    rate = { :rate_down => 0, :rate_up => 0 }
+    if SequreispConfig::CONFIG["demo"] or Rails.env.development?
       rate[:rate_down] = rand(rate_down)*1024
       rate[:rate_up] = rand(rate_up)*1024/2
     else
-      rx = tx = 0
-      rx2 = tx2 = 0
-      providers.enabled.each do |p|
-        rx += p.interface.rx_bytes
-        tx += p.interface.tx_bytes
+      providers.enabled.each do |provider|
+        rate[:rate_up] = $redis.hmget("interface:#{provider.interface.name}:rate_tx", "instant").first.to_i
+        rate[:rate_down] = $redis.hmget("interface:#{provider.interface.name}:rate_rx", "instant").first.to_i
       end
-      sleep 2
-      providers.enabled.each do |p|
-        rx2 += p.interface.rx_bytes
-        tx2 += p.interface.tx_bytes
-      end
-      rate[:rate_down] = (rx2-rx)*8*1000/1024/2
-      rate[:rate_up] = (tx2-tx)*8*1000/1024/2
     end
     rate
   end

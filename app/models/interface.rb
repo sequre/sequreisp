@@ -140,7 +140,7 @@ class Interface < ActiveRecord::Base
   end
   def instant_rate
     rate = {}
-    if SequreispConfig::CONFIG["demo"]
+    if SequreispConfig::CONFIG["demo"] or Rails.env.development?
       if kind == "lan"
         # en lan el down de los providers es el up
         rate[:rate_down] = rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2
