@@ -36,7 +36,7 @@ Deprecated in favor of foldeable menues
 */
 
 div#apply_changes_banner{
-    background-color: rgba(38, 112, 135, 0.74);
+    background-color: rgba(255, 255, 255, 1);
     height: 40px;
     margin: 0 -20px 0 -20px;
     border-bottom: 2px #347488 solid;
@@ -48,7 +48,8 @@ div#apply_changes_banner a{
 div#apply_changes_banner span#apply_changes_notice{
     line-height: 40px;
     margin:0 20px;
-    color: #fff;
+    color: rgba(0, 0, 0, 0.95);
+    opacity: 0.9;
     font-weight: bold;
 }
 
