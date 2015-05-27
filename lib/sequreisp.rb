@@ -47,6 +47,7 @@ def gen_tc
       tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
       tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{total_rate_down}kbit ul m2 #{total_rate_down}kbit"
       tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
+
       ProviderGroup.all.each do |pg|
         pg.plans.each do |plan|
           plan.contracts.not_disabled.descend_by_netmask.each do |c|
@@ -55,12 +56,12 @@ def gen_tc
           end
         end
       end
+      BootHook.run :hook => :tc_hook, :tc_script => tc_ifb_down, :iface => IFB_DOWN
     end
     tc_ifb_up.close
     tc_ifb_down.close
   rescue => e
     log_rescue("[Boot][gen_tc]", e)
-    # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(IFB_UP/IFB_DOWN) e=>#{e.inspect}"
   end
 
   # Per provider upload limit, on it's own interface
@@ -118,6 +119,10 @@ def gen_iptables
       # MANGLE #
       #--------#
       f.puts "*mangle"
+      # Package mark, los bits van de mas significativo a menos significativo.
+      # 2 bits: prio
+      # 14 bits: contrato
+      # 8 bits: proveedor
       unless Configuration.first.in_safe_mode?
         #Chain for unlimitd bandwidth traffic, jump here if you need it
         f.puts ":unlimited_bandwidth - [0:0]"
@@ -181,7 +186,7 @@ def gen_iptables
         f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x8fffffff --ctmask 0x8fffffff"
         f.puts "-A OUTPUT -m mark ! --mark 0x0/0x8fffffff -j ACCEPT"
 
-        BootHook.run :hook => :mangle_after_ouput_hook, :iptables_script => f
+        BootHook.run :hook => :mangle_after_output_hook, :iptables_script => f
       end
 
       # CONNMARK POSTROUTING
@@ -232,9 +237,9 @@ def gen_iptables
         end
 
         Contract.not_disabled.descend_by_netmask.each do |c|
-          mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
-          mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
-          mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
+          mark_prio1 = "0x#{c.mark_prio1_hex}/#{Contract::MASK_CONTRACT_PRIO}"
+          mark_prio2 = "0x#{c.mark_prio2_hex}/#{Contract::MASK_CONTRACT_PRIO}"
+          mark_prio3 = "0x#{c.mark_prio3_hex}/#{Contract::MASK_CONTRACT_PRIO}"
           # una chain por cada cliente
           chain="sq.#{c.ip}"
           # f.puts ":#{chain} - [0:0]"

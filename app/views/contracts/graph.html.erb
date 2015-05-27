@@ -4,11 +4,25 @@
 <% end %>
 <script type="text/javascript">
   $(document).ready(function() {
-    chart_rate = new_chart_rate_prios(<%= Time.zone.utc_offset %>);
     chart_latency = new_chart_latency(<%= Time.zone.utc_offset %>);
+    chart_rate = new_chart_rate_prios(<%= Time.zone.utc_offset %>);
+
+    <% series = Contract.find(@graph.element.id).serie_for_chart_rate_prio %>
+
+    <% series.count.times do |index| %>
+      chart_rate.addSeries({
+        name: <%= series[index.to_s][:name].to_json %>,
+        type: <%= series[index.to_s][:type].to_json %>,
+        color: <%= series[index.to_s][:color].to_json %>,
+        stack: <%= series[index.to_s][:stack].to_json %>,
+        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+      });
+    <% end %>
+
+    chart_rate.redraw();
 
 <% result = @graph.element.data_count_for_last_year %>
-$('#foo').highcharts({
+$('#contract_data_traffic').highcharts({
             chart: {
                 type: 'column'
             },
@@ -50,13 +64,11 @@ $('#foo').highcharts({
   });
   function get_data(){
     $.get('<%= instant_contract_path %>',null,function(data){
-      chart_rate.series[0].addPoint(data.rate_prio1_down, true, true);
-      chart_rate.series[1].addPoint(data.rate_prio2_down, true, true);
-      chart_rate.series[2].addPoint(data.rate_prio3_down, true, true);
-      chart_rate.series[3].addPoint(data.rate_prio1_up + data.rate_prio2_up + data.rate_prio3_up, true, true);
-
-      chart_latency.series[0].addPoint(data.ping_latency, true, true);
-      chart_latency.series[1].addPoint(data.arping_latency, true, true);
+      $.each(data.rates, function( index, rate ) {
+        chart_rate.series[index].addPoint(data.rates[index.toString()].value, true, true);
+      });
+      chart_latency.series[0].addPoint(data.latency.ping, true, true);
+      chart_latency.series[1].addPoint(data.latency.arping, true, true);
     },'json');
   };
   get_data();
@@ -121,7 +133,7 @@ $('#foo').highcharts({
   <br/>
   <br/>
   <h2><%=t 'graph.data_traffic' %></h2>
-  <div id="foo" style="width: 747px; height: 247px"></div>
+  <div id="contract_data_traffic" style="width: 747px; height: 247px"></div>
   <br/>
   <br/>
   <br/>

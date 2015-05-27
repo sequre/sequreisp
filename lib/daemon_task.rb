@@ -561,7 +561,7 @@ class DaemonRedis < DaemonTask
   def exec_daemon_redis
     Interface.all.each do |interface|
       ["rx", "tx"].each do |prefix|
-        generate_sample("interface:#{interface.name}:rate_#{prefix}", interface.send("#{prefix}_bytes"))
+        generate_sample("interface:#{interface.name}:rate_#{prefix}", interface.send("#{prefix}_bytes")) if interface.exist?
       end
     end
 
@@ -570,18 +570,36 @@ class DaemonRedis < DaemonTask
     # Sent 2970546728 bytes 2810819 pkt (dropped 758, overlimits 0 requeues 0)
     # rate 48656bit 9pps backlog 0b 0p requeues 0
     # period 1430082 work 2969504006 bytes level 0
+    # contracts = Contract.all
+    # ["up", "down"].each do |prefix|
+    #   iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
+    #   hfsc_classes = `/sbin/tc -s class show dev #{iface}`.split("\n\n")
+    #   contracts.each do |contract|
+    #     hfsc_class_match = [ { :qdisc => "1", :parent => contract.class_hex, :id => "prio1", :class_hex => contract.class_prio1_hex },
+    #                          { :qdisc => "1", :parent => contract.class_hex, :id => "prio2", :class_hex => contract.class_prio2_hex },
+    #                          { :qdisc => "1", :parent => contract.class_hex, :id => "prio3", :class_hex => contract.class_prio3_hex } ]
+    #     hfsc_class_match << { :qdisc => "2", :parent => "", :id => "supercache", :class_hex => contract.class_hex } if prefix == "down" and contract.transparent_proxy?
+    #     hfsc_class_match.each do |leaf|
+    #       classid = leaf[:qdisc] + ":" + leaf[:class_hex]
+    #       parent = leaf[:qdisc] + ":" + leaf[:parent]
+    #       contract_class = hfsc_classes.select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first rescue nil
+    #       new_total_bytes = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
+    #       generate_sample("contract:#{contract.id}:#{leaf[:id]}:#{prefix}", new_total_bytes)
+    #     end
+    #   end
+    # end
 
-    contracts = Contract.all
-    ["up", "down"].each do |prefix|
-      iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
-      hfsc_classes = `/sbin/tc -s class show dev #{iface}`.split("\n\n")
-      contracts.each do |contract|
-        ["prio1", "prio2", "prio3"].each do |prio|
-          class_prio = contract.send("class_#{prio}_hex")
-          contract_class = hfsc_classes.select{ |k| k.include?("class hfsc 1:#{class_prio} parent 1:#{contract.class_hex}")}.first
-          new_total_bytes = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
-          generate_sample("contract:#{contract.id}:#{prio}:#{prefix}", new_total_bytes)
-        end
+    hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
+                   "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
+
+    Contract.all.each do |c|
+      c.redis_keys.each do |rkey|
+        tc_class = c.send("tc_#{rkey[:sample]}")
+        classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
+        parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
+        contract_class = hfsc_class[rkey[:up_or_down]].select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first
+        new_total_bytes = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
+        generate_sample(rkey[:name], new_total_bytes)
       end
     end
 

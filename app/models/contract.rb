@@ -19,6 +19,10 @@
 
 class Contract < ActiveRecord::Base
   require 'sequreisp_logger'
+
+  # los ultimos 2 bits mas significativos son usados para marcar la prio, y el bit 1 menos significativo son las marcas de hit de supercache
+  MASK_CONTRACT_PRIO = "0000ffff"
+
   acts_as_audited :except => [:netmask,
                               :queue_down_prio, :queue_up_prio, :queue_down_dfl, :queue_up_dfl,
                               :consumption_down_prio, :consumption_up_prio, :consumption_down_dfl, :consumption_up_dfl, :is_connected]
@@ -356,18 +360,32 @@ class Contract < ActiveRecord::Base
   def mark_prio3_hex(prefix=0)
     (self.klass.prio3 | prefix).to_s(16)
   end
-  def proxy_bind_ip
-    # 198.18.0.0/15 reserved for Network Interconnect Device Benchmark Testing [RFC5735]
-    # calculo una sola vez su valor en int para ahorro de computo
-    IP::V4.new(IP.new("198.18.0.0") | self.klass.number).to_s
+
+  # this have an alias_method_chain
+  def serie_for_chart_rate_prio
+    { "0" => { :name => 'down_prio1', :type => 'area', :color => '#00ff00', :stack => 0 },
+      "1" => { :name => 'down_prio2', :type => 'area', :color => '#00aa00', :stack => 0 },
+      "2" => { :name => 'down_prio3', :type => 'area', :color => '#006600', :stack => 0 },
+      "3" => { :name => 'up',         :type => 'line', :color => '#ff0000', :stack => 1 } }
   end
 
   def instant
-    latencies = instant_latency
-    {
-      :ping_latency => latencies[:ping],
-      :arping_latency => latencies[:arping]
-    }.merge instant_rate
+    { :rates => instant_rate,
+      :latency => instant_latency }
+  end
+
+  # this have an alias_method_chain
+  def instant_rate
+    in_production = (SequreispConfig::CONFIG["demo"] or Rails.env.development?)
+    rate_down = rand(plan.ceil_down)*1024
+    rate_up = rand(plan.ceil_up)*1024 * 0.3
+    rate = {}
+    rate["0"] = { :name => "down_prio1", :value => in_production ? $redis.hmget("contract:#{id}:prio1:down", "instant").first.to_i : rate_down * 0.15 }
+    rate["1"] = { :name => "down_prio2", :value => in_production ? $redis.hmget("contract:#{id}:prio2:down", "instant").first.to_i : rate_down * 0.6 }
+    rate["2"] = { :name => "down_prio3", :value => in_production ? $redis.hmget("contract:#{id}:prio3:down", "instant").first.to_i : rate_down * 0.15 }
+    up_value = in_production ? ($redis.hmget("contract:#{id}:prio1:up", "instant").first.to_i + $redis.hmget("contract:#{id}:prio2:up", "instant").first.to_i + $redis.hmget("contract:#{id}:prio3:up", "instant").first.to_i) : rate_up
+    rate["3"] = { :name => "up", :value => up_value }
+    rate
   end
 
   # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
@@ -424,106 +442,6 @@ class Contract < ActiveRecord::Base
     _interface
   end
 
-  def instant_rate
-    rate = {}
-    if SequreispConfig::CONFIG["demo"] or Rails.env.development?
-      rate_down = rand(plan.ceil_down)*1024
-      rate[:rate_prio1_down] = rate_down * 0.15
-      rate[:rate_prio2_down] = rate_down * 0.6
-      rate[:rate_prio3_down] = rate_down * 0.25
-      rate_up = rand(plan.ceil_up)*1024 * 0.3
-      rate[:rate_prio1_up] = rate_up * 0.15
-      rate[:rate_prio2_up] = rate_up * 0.6
-      rate[:rate_prio3_up] = rate_up * 0.25
-    else
-      ["up", "down"].each do |prefix|
-        ["prio1", "prio2", "prio3"].each do |prio|
-          rate["rate_#{prio}_#{prefix}"] = $redis.hmget("contract:#{id}:#{prio}:#{prefix}", "instant").first.to_i
-        end
-      end
-    end
-    rate
-  end
-
-  # def sent_bits(prefix)
-  #   iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
-  #   match = false
-  #   rate = {}
-  #   count = 0
-  #   klass = ""
-  #   IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
-  #     io.each do |line|
-  #       if match and (line =~ /rate (\d+)(\w+) /) != nil
-  #        Rails.logger.debug "Contract::instant_rate #{line}"
-  #        _rate = $~[1].to_i
-  #        unit = $~[2]
-  #        # from tc manpage (s/unit)
-  #        # kbps   Kilobytes per second
-  #        # mbps   Megabytes per second
-  #        # kbit   Kilobits per second
-  #        # mbit   Megabits per second
-  #        # bps or a bare number
-  #        #        Bytes per second
-  #        rate[klass] = case unit.downcase
-  #        when "kbps"
-  #          _rate *= 1024*8
-  #        when "mbps"
-  #          _rate *= 1024*1024*8
-  #        when "kbit"
-  #          _rate *= 1024
-  #        when "mbit"
-  #          _rate *= 1024*1024
-  #        when "bit"
-  #          _rate
-  #        else # "bps" or a bare number
-  #          #TODO nunca va a caer aca x "bare number" con w+ como condición de la regexp
-  #          _rate *= 8
-  #        end
-  #        match = false
-  #        count += 1
-  #        break if count == 3
-  #       elsif (line =~ /class hfsc 1:#{class_prio1_hex} parent 1:#{class_hex} /) != nil
-  #          Rails.logger.debug "Contract::instant_rate #{line}"
-  #          match = true
-  #          klass = class_prio1_hex
-  #       elsif (line =~ /class hfsc 1:#{class_prio2_hex} parent 1:#{class_hex} /) != nil
-  #          Rails.logger.debug "Contract::instant_rate #{line}"
-  #          match = true
-  #          klass = class_prio2_hex
-  #       elsif (line =~ /class hfsc 1:#{class_prio3_hex} parent 1:#{class_hex} /) != nil
-  #          Rails.logger.debug "Contract::instant_rate #{line}"
-  #          match = true
-  #          klass = class_prio3_hex
-  #       end
-  #     end
-  #   end
-  #   rate
-  # end
-
-  # def instant_rate
-  #   rate = {}
-  #   if SequreispConfig::CONFIG["demo"]
-  #     rate_down = rand(plan.ceil_down)*1024
-  #     rate[:rate_down_prio1] = rate_down * 0.15
-  #     rate[:rate_down_prio2] = rate_down * 0.6
-  #     rate[:rate_down_prio3] = rate_down * 0.25
-  #     rate_up = rand(plan.ceil_up)*1024 * 0.3
-  #     rate[:rate_up_prio1] = rate_up * 0.15
-  #     rate[:rate_up_prio2] = rate_up * 0.6
-  #     rate[:rate_up_prio3] = rate_up * 0.25
-  #   else
-  #     sent = sent_bits "down"
-  #     rate[:rate_down_prio1] = sent[class_prio1_hex]
-  #     rate[:rate_down_prio2] = sent[class_prio2_hex]
-  #     rate[:rate_down_prio3] = sent[class_prio3_hex]
-  #     sent = sent_bits "up"
-  #     rate[:rate_up_prio1] = sent[class_prio1_hex]
-  #     rate[:rate_up_prio2] = sent[class_prio2_hex]
-  #     rate[:rate_up_prio3] = sent[class_prio3_hex]
-  #   end
-  #   rate
-  # end
-
   def self.free_ips(term)
     used = free = []
     octets = term.split(".")
@@ -560,18 +478,6 @@ class Contract < ActiveRecord::Base
       nil
     end
   end
-
-  # def mangle_chain(prefix)
-  #   if Configuration.iptables_tree_optimization_enabled?
-  #     suffix = netmask_suffix
-  #     value = 28
-  #     value -= 4 while suffix < value and value > 16
-  #     _ip = IP.new("#{ip.gsub(/\/.*/, "")}/#{value}").network.to_s
-  #     "sq.#{prefix}.#{_ip}"
-  #   else
-  #     "sequreisp.#{prefix}"
-  #   end
-  # end
 
   def auditable_name
     "#{self.class.human_name}: #{client.name} (#{ip})"
@@ -678,10 +584,31 @@ class Contract < ActiveRecord::Base
     [dates, datas]
   end
 
-def ip_addr
-  require "ipaddr"
-  IPAddr.new(ip)
-end
+  def ip_addr
+    require "ipaddr"
+    IPAddr.new(ip)
+  end
+
+  # this have an alias_method_chain
+  def redis_keys
+    keys = []
+    ["up", "down"].each do |prefix|
+      ["prio1", "prio2", "prio3"].each { |k| keys << { :sample => k, :up_or_down => prefix, :name => "contract:#{id}:#{k}:#{prefix}" } }
+    end
+    keys
+  end
+
+  def tc_prio1
+    {:qdisc => "1", :parent => class_hex, :mark => class_prio1_hex }
+  end
+
+  def tc_prio2
+    {:qdisc => "1", :parent => class_hex, :mark => class_prio2_hex }
+  end
+
+  def tc_prio3
+    {:qdisc => "1", :parent => class_hex, :mark => class_prio3_hex }
+  end
 
   # this will be overriden by bw changing plug-ins as time_modifiers and data_accounting
   def bandwidth_rate
@@ -690,7 +617,7 @@ end
 
   def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, _plan)
     tc_rules =[]
-    mask = "0000ffff"
+    mask = "Contract::MASK_CONTRACT_PRIO"
     ceil = _plan["ceil_" + direction] * bandwidth_rate
     rate = _plan.send("rate_" + direction) * bandwidth_rate
     rate = 1 if rate <= 0

@@ -283,6 +283,25 @@ class Provider < ActiveRecord::Base
   end
 
   def to_ppp_peer
+    # <<-EOT
+    #   noipdefault
+    #   nodefaultroute
+    #   hide-password
+    #   lcp-echo-interval 20
+    #   lcp-echo-failure 3
+    #   connect /bin/true
+    #   noauth
+    #   persist
+    #   maxfail 0
+    #   mtu 1492
+    #   noaccomp
+    #   default-asyncmap
+    #   pty "/usr/sbin/pppoe -I #{self.interface.name} -U -T 80 -m 1412"
+    #   user "#{self.pppoe_user}"
+    #   password "#{self.pppoe_pass}"
+    #   ipparam #{self.interface.name}
+    #   unit #{self.klass.number}
+    # EOT
     string = ""
     string += "noipdefault" + "\n"
     string += "nodefaultroute" + "\n"
@@ -308,7 +327,7 @@ class Provider < ActiveRecord::Base
     Time.now - self.online_changed_at
   end
 
-  #ESTO SE PUEDE REFACTORIZAR USANDO SIMPLEMENTE EL HELPER time_ago_in_words(provider.online_changed_at)
+  #ESTO SE PUEDE REFACTORIZAR USANDO SIMPLEMENTE EL HELPER distance_of_time_in_words(Provider.first.online_changed_at.to_time, Time.now, :include_seconds => true)
   def pretty_current_status_time
     cst = current_status_time.to_i
 
