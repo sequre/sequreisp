@@ -361,7 +361,7 @@ class Contract < ActiveRecord::Base
     (self.klass.prio3 | prefix).to_s(16)
   end
 
-  # this have an alias_method_chain
+  # this has an alias_method_chain
   def serie_for_chart_rate_prio
     { "0" => { :name => 'down_prio1', :type => 'area', :color => '#00ff00', :stack => 0 },
       "1" => { :name => 'down_prio2', :type => 'area', :color => '#00aa00', :stack => 0 },
@@ -374,7 +374,7 @@ class Contract < ActiveRecord::Base
       :latency => instant_latency }
   end
 
-  # this have an alias_method_chain
+  # this has an alias_method_chain
   def instant_rate
     in_production = (SequreispConfig::CONFIG["demo"] or Rails.env.development?)
     rate_down = rand(plan.ceil_down)*1024

@@ -565,30 +565,6 @@ class DaemonRedis < DaemonTask
       end
     end
 
-    #Get all class in one array, each position is one class in string
-    #class hfsc 1:e2 parent 1:e0 leaf 8aa2: ls m1 0bit d 0us m2 2000Kbit
-    # Sent 2970546728 bytes 2810819 pkt (dropped 758, overlimits 0 requeues 0)
-    # rate 48656bit 9pps backlog 0b 0p requeues 0
-    # period 1430082 work 2969504006 bytes level 0
-    # contracts = Contract.all
-    # ["up", "down"].each do |prefix|
-    #   iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
-    #   hfsc_classes = `/sbin/tc -s class show dev #{iface}`.split("\n\n")
-    #   contracts.each do |contract|
-    #     hfsc_class_match = [ { :qdisc => "1", :parent => contract.class_hex, :id => "prio1", :class_hex => contract.class_prio1_hex },
-    #                          { :qdisc => "1", :parent => contract.class_hex, :id => "prio2", :class_hex => contract.class_prio2_hex },
-    #                          { :qdisc => "1", :parent => contract.class_hex, :id => "prio3", :class_hex => contract.class_prio3_hex } ]
-    #     hfsc_class_match << { :qdisc => "2", :parent => "", :id => "supercache", :class_hex => contract.class_hex } if prefix == "down" and contract.transparent_proxy?
-    #     hfsc_class_match.each do |leaf|
-    #       classid = leaf[:qdisc] + ":" + leaf[:class_hex]
-    #       parent = leaf[:qdisc] + ":" + leaf[:parent]
-    #       contract_class = hfsc_classes.select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first rescue nil
-    #       new_total_bytes = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
-    #       generate_sample("contract:#{contract.id}:#{leaf[:id]}:#{prefix}", new_total_bytes)
-    #     end
-    #   end
-    # end
-
     hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
                    "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
 
