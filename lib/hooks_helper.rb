@@ -80,4 +80,8 @@ module HooksHelper
   def login_logo_extension
     "<div class='logo'></div><h4>3.7</h4>".html_safe
   end
+
+  def current_consumption_percentage_of contract
+    ""
+  end
 end
