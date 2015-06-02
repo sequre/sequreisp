@@ -316,6 +316,7 @@ class DaemonDataCounting < DaemonTask
       begin
         File.open(File.join(DEPLOY_DIR, "log/data_counting.log"), "a") do |f|
           contracts.each do |c|
+            traffic_current = c.current_traffic || c.create_traffic_for_this_period
             c.is_connected = false
 
             Configuration::COUNT_CATEGORIES.each do |category|
@@ -325,7 +326,6 @@ class DaemonDataCounting < DaemonTask
 
               if data_total != 0
                 c.is_connected = true
-                traffic_current = c.current_traffic || c.create_traffic_for_this_period
                 current_traffic_count = traffic_current.data_count
                 eval("traffic_current.#{category} += data_total") if data_total <= @max_current_traffic_count
 
