@@ -530,14 +530,89 @@ class DaemonCheckBind < DaemonTask
 
 end
 
+class DaemonCompactSamples < DaemonTask
+  # PERIOD   AMPLITUD              TIME_SAMPLE           SAMPLES_SIZE   SAMPLES_SIZE_SATURA
+  # 0        180.min (3.hours)        1.min              300            300 + 5 = 305
+  # 1        1440.min (1.day)         5.min              288            288 + 6 = 294
+  # 2        10080.min (1.week)      30.min              336            336 + 6 = 342
+  # 3        44640.min (1.month)    180.min (3.hours)    348            348 + 8 = 356
+  # 4        525600.min (1.year)   1440.min (24.hours)   365            365
+  def initialize
+    @time_for_exec = { :frecuency => 1.min }
+    @wait_for_apply_changes = true
+    @proc = Proc.new { exec_daemon_compact_samples }
+    @sample_conf = { :period_0 => { :sample_size => 300, :sample_size_cut => 305, :excess_count => 5,   :scope => 180.minutes,    :time_sample => 1,    :period_number => 0,
+                                    :samples => ContractSample.total_for_period(0) },
+                     :period_1 => { :sample_size => 288, :sample_size_cut => 294, :excess_count => 6,   :scope => 1440.minutes,   :time_sample => 5,    :period_number => 1,
+                                    :samples => ContractSample.total_for_period(1) },
+                     :period_2 => { :sample_size => 336, :sample_size_cut => 342, :excess_count => 6,   :scope => 10080.minutes,  :time_sample => 30,   :period_number => 2,
+                                    :samples => ContractSample.total_for_period(2) },
+                     :period_3 => { :sample_size => 348, :sample_size_cut => 356, :excess_count => 8,   :scope => 44640.minutes,  :time_sample => 180,  :period_number => 3,
+                                    :samples => ContractSample.total_for_period(3) },
+                     :period_4 => { :sample_size => 348, :sample_size_cut => nil, :excess_count => nil, :scope => 525600.minutes, :time_sample => 1440, :period_number => 4,
+                                    :samples => ContractSample.total_for_period(4) }
+                   }
+
+    super
+  end
+
+  def compact(period, c, excess)
+    if period < @sample_conf.count
+      transactions = []
+      total_samples_for_this_period = @sample_conf["period_#{period}".to_sym][:samples].select{|sample| sample.id == c.id}.first.total_samples
+      # Me traigo la ultima muestra de period
+      last_sample_period = ContractSample.all(:conditions => { :contract_id => c.id, :period => period } ).last
+      # primeras excess muestras del period -1
+      excess_samples_previous_period = ContractSample.all(:conditions => { :contract_id => c.id, :period => (period-1) } ).limit(excess)
+      # Cantidad de slots necesarios para este periodo, luego tengo que ver los 5 periodos que tengo y agruparlos en los slots que corresponda
+      count_slots = (excess_samples_previous_period.last.created_at.to_i - last_sample_period.created_at.to_i) / @sample_conf["period_#{period}".to_sym][:time_sample]
+      1.upto(count_slots) do |i|
+        new_sample = { :down_prio1 => 0, :down_prio2 => 0, :down_prio3 => 0, :down_supercache => 0, :up_prio1 => 0, :up_prio2 => 0, :up_prio3 => 0 }
+        init_slot = (i * @sample_conf["period_#{period}".to_sym][:time_sample]).minutes
+        end_slot = ((i+1) * @sample_conf["period_#{period}".to_sym][:time_sample]).minutes
+        samples_selected = last_five_samples_period_menos_uno.select{ |k| k.created_at < end_slot and k.created_at >= init_slot }
+        new_sample.each_key { |key| new_sample[:key] += samples_selected.sum(key) }
+        new_sample[:period] = period
+        new_sample[:contract_id] = c.id
+        last_five_samples_period_menos_uno.each {|s| transactions << "#{s.destroy}"}
+        transactions << "ContractSample.create(#{new_sample})"
+        total_samples_for_this_period += 1
+      end
+      if total_samples_for_this_period >= @sample_conf["period_#{period}".to_sym][:sample_size_cut]
+        total_samples_excess = total_samples_for_this_period - @sample_conf["period_#{period}".to_sym][:sample_size]
+        transactions << compact(period+1, c, total_samples_excess)
+      else
+        transactions
+      end
+    else
+      []
+    end
+  end
+
+  def exec_daemon_compact_samples
+    transactions = []
+    Contract.all.each do |c|
+      total_samples_for_this_period = @sample_conf[:period_0][:samples].select{|sample| sample.id == c.id}.first.total_samples
+      # sample = { :down_prio1, :down_prio2, :down_prio3, :down_supercache, :up_prio1, :up_prio2, :up_prio3, :period, :contract_id
+      sample = { :contract_id => c.id, :period => 0 }
+      c.redis_keys.each do |rkey|
+        sample["#{rkey[:up_or_down]}_#{rkey[:sample]}".to_sym] = $redis.exists(rkey[:name]) ? $redis.hmget(rkey[:name], "instant").first.to_i : 0
+
+   end
+      transactions << "ContractSample.create(#{sample})"
+      transactions << compact(1, c, @sample_conf[:period_0][:excess_count]) if (total_samples_for_this_period+1) == @sample_conf[:period_0][:sample_size_cut]
+    end
+    ContractSample.transaction{ transactions.flatten.each {|s| val(s)} }
+  end
+end
+
 class DaemonRedis < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10.seconds }
+    @time_for_exec = { :frecuency => 5.seconds }
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_redis }
     @factor_precision = 100
-    super
   end
 
   def generate_sample(key, new_total_bytes)
@@ -573,8 +648,8 @@ class DaemonRedis < DaemonTask
         tc_class = c.send("tc_#{rkey[:sample]}")
         classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
         parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
-        contract_class = hfsc_class[rkey[:up_or_down]].select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first
-        new_total_bytes = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
+        contract_class = hfsc_class[rkey[:up_or_down]].select{ |k| k.include?("class hfsc #{classid} parent #{parent}") }.first
+        new_total_bytes = contract_class.split("\n").select{ |k| k.include?("Sent ") }.first.split(" ")[1]
         generate_sample(rkey[:name], new_total_bytes)
       end
     end

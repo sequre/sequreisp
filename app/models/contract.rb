@@ -589,7 +589,7 @@ class Contract < ActiveRecord::Base
     IPAddr.new(ip)
   end
 
-  # this have an alias_method_chain
+  # this has an alias_method_chain
   def redis_keys
     keys = []
     ["up", "down"].each do |prefix|
