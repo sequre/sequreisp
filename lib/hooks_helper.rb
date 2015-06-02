@@ -82,4 +82,8 @@ module HooksHelper
     version = "#{SequreISP::Version::RELEASE}.#{SequreISP::Version::MAJOR}"
     "<div class='logo'></div><h4>#{version}</h4>".html_safe
   end
+
+  def current_consumption_percentage_of contract
+    ""
+  end
 end
