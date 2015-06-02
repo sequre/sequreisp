@@ -537,7 +537,7 @@ def update_provider_group_route pg, force=false, boot=true
     if pg.default_route == ""
       commands << "ip ro del table #{pg.table} default"
     else
-      commands << "ip ro re table #{pg.table} #{pg.default_route}"
+      commands << "(ip -oneline ro li table #{pg.table} | grep [d]efault) || ip ro re table #{pg.table} #{pg.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
