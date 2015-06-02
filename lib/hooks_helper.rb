@@ -78,6 +78,8 @@ module HooksHelper
   end
 
   def login_logo_extension
-    "<div class='logo'></div><h4>3.7</h4>".html_safe
+    require 'sequreisp_about'
+    version = "#{SequreISP::Version::RELEASE}.#{SequreISP::Version::MAJOR}"
+    "<div class='logo'></div><h4>#{version}</h4>".html_safe
   end
 end
