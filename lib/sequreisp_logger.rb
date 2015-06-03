@@ -16,9 +16,10 @@ end
 def log_rescue_file(path, exception)
   File.open(path, 'a+') do |f|
     if exception.instance_of? String
-      f.puts exception
+      f.puts DateTime.now
+      f.puts "#{DateTime.now} - #{exception}"
     else
-      f.puts exception.message
+      f.puts "#{DateTime.now} - #{exception.message}"
       exception.backtrace.each{ |bt| f.puts "#{exception.class} #{bt}" }
     end
   end
