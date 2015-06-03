@@ -233,7 +233,7 @@
   <% if current_user.may_reboot_dashboard? %>
   <li>
     <% link_to reboot_dashboard_path, :confirm => t('messages.confirm'), :class => "button" do %>
-      <span><span>
+      <span style="color:white"><span>
         <%= t('buttons.reboot') %>
       </span></span>
     <% end %>
@@ -242,7 +242,7 @@
   <% if current_user.may_halt_dashboard? %>
   <li>
     <% link_to halt_dashboard_path, :confirm => t('messages.confirm'), :class => "button" do %>
-      <span><span>
+      <span style="color:white"><span>
         <%= t('buttons.halt') %>
       </span></span>
     <% end %>
