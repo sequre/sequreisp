@@ -559,24 +559,30 @@ class DaemonRedis < DaemonTask
   end
 
   def exec_daemon_redis
-    Interface.all.each do |interface|
+    Interface.all.each do |i|
+      $redis.set("interface:#{i.id}:counter", 0) unless $redis.exists("interface:#{i.id}:counter")
+      counter = $redis.get("interface:#{i.id}:counter")
       ["rx", "tx"].each do |prefix|
-        generate_sample("interface:#{interface.name}:rate_#{prefix}", interface.send("#{prefix}_bytes")) if interface.exist?
+        generate_sample("interface:#{i.name}:rate_#{prefix}", "interface:#{i.id}:#{counter}", i.send("#{prefix}_bytes")) if i.exist?
       end
+      $redis.incr("interface:#{i.id}:counter")
     end
 
     hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
                    "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
 
     Contract.all.each do |c|
+      $redis.set("contract:#{c.id}:counter", 0) unless $redis.exists("contract:#{c.id}:counter")
+      counter = $redis.get("contract:#{c.id}:counter")
       c.redis_keys.each do |rkey|
         tc_class = c.send("tc_#{rkey[:sample]}")
         classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
         parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
         contract_class = hfsc_class[rkey[:up_or_down]].select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first
         new_total_bytes = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
-        generate_sample(rkey[:name], new_total_bytes)
+        generate_sample("#{rkey[:name]}:#{counter}", new_total_bytes)
       end
+      $redis.incr("contract:#{c.id}:counter")
     end
 
   end
