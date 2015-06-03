@@ -181,17 +181,21 @@ class Contract < ActiveRecord::Base
   after_save :create_traffic_for_this_period
 
   def create_traffic_for_this_period
-    if self.current_traffic.nil?
-      from_date = Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period)
-      attr = {}
-      if Date.today.day < Configuration.first.day_of_the_beginning_of_the_period
-        attr[:from_date] = from_date - 1.month
-        attr[:to_date] = from_date - 1.day
-      else
-        attr[:from_date] = from_date
-        attr[:to_date] = from_date + 1.month - 1.day
+    begin
+      if self.current_traffic.nil?
+        from_date = Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period)
+        attr = {}
+        if Date.today.day < Configuration.first.day_of_the_beginning_of_the_period
+          attr[:from_date] = from_date - 1.month
+          attr[:to_date] = from_date - 1.day
+        else
+          attr[:from_date] = from_date
+          attr[:to_date] = from_date + 1.month - 1.day
+        end
+        traffics.create(attr)
       end
-      traffics.create(attr)
+      rescue Exception => e
+      log_rescue("[Contract] ERROR create_traffic_for_this_period", e)
     end
   end
 

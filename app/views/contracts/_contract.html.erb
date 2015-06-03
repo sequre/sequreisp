@@ -41,20 +41,20 @@
 <script type="text/javascript">
   $(function(){
     function checkbox_proxy_arp() {
-      if ($('#contract_proxy_arp').attr('checked')) {
-        $('#contract_proxy_arp_interface_input').removeAttr("disabled"); 
+      if ($('#contract_proxy_arp').prop('checked')) {
+        $('#contract_proxy_arp_interface_input').removeAttr("disabled");
         $('#contract_proxy_arp_interface_input').fadeIn();
         $('#contract_proxy_arp_provider_input').fadeIn();
         $('#contract_proxy_arp_gateway_input').fadeIn();
         $('#contract_proxy_arp_use_lan_gateway_input').fadeIn();
         checkbox_proxy_arp_use_lan_gateway();
       } else {
-        $('#contract_proxy_arp_interface_input').attr("disabled", true);
+        $('#contract_proxy_arp_interface_input').prop("disabled", true);
         $('#contract_proxy_arp_interface_input').hide();
         $('#contract_proxy_arp_provider_input').hide();
         $('#contract_proxy_arp_gateway_input').hide();
         $('#contract_proxy_arp_use_lan_gateway_input').hide();
-        $('#contract_proxy_arp_lan_gateway_input').attr("disabled", true);
+        $('#contract_proxy_arp_lan_gateway_input').prop("disabled", true);
         $('#contract_proxy_arp_lan_gateway_input').hide();
       }
     }
@@ -63,11 +63,11 @@
       checkbox_proxy_arp();
     });
     function checkbox_proxy_arp_use_lan_gateway() {
-      if ($('#contract_proxy_arp_use_lan_gateway').attr('checked')) {
+      if ($('#contract_proxy_arp_use_lan_gateway').prop('checked')) {
         $('#contract_proxy_arp_lan_gateway_input').removeAttr("disabled");
         $('#contract_proxy_arp_lan_gateway_input').fadeIn();
       } else {
-        $('#contract_proxy_arp_lan_gateway_input').attr("disabled", true);
+        $('#contract_proxy_arp_lan_gateway_input').prop("disabled", true);
         $('#contract_proxy_arp_lan_gateway_input').hide();
       }
     }
@@ -90,7 +90,7 @@
 
         if(data.contract_exists != false){
           $('#mac_address_already_assigned').find('span').html(data.contract_exists);
-          $('#mac_address_already_assigned').find('a').attr('href',"<%= contract_path(0) %>".replace('0',data.contract_exists));
+          $('#mac_address_already_assigned').find('a').prop('href',"<%= contract_path(0) %>".replace('0',data.contract_exists));
           $('#mac_address_already_assigned').css({'display' : 'inline'});
 
           $('#mac_address_already_assigned').find('.lbl').hide();
@@ -99,7 +99,7 @@
 
         if(data.interface_exists != false){
           $('#mac_address_already_assigned').find('span').html(data.interface_exists);
-          $('#mac_address_already_assigned').find('a').attr('href',"<%= interface_path(0) %>".replace('0',data.interface_exists));
+          $('#mac_address_already_assigned').find('a').prop('href',"<%= interface_path(0) %>".replace('0',data.interface_exists));
           $('#mac_address_already_assigned').css({'display' : 'inline'});
 
           $('#mac_address_already_assigned').find('.lbl').hide();
@@ -127,8 +127,8 @@
 <% unless current_user.may_update_contract?(@contract) %>
 <script type="text/javascript">
   $(function(){
-    $('input,select,textarea').attr('disabled',true)
-  })  
+    $('input,select,textarea').prop('disabled',true)
+  })
 </script>
 <% end %>
 <div id="main">
@@ -137,8 +137,8 @@
   <% form.inputs do %>
     <%= form.input :client, :wrapper_html => { :class => "left" } %>
     <div style="clear:both"></div>
-    <%= form.input :plan, :wrapper_html => { :class => "left" }, :hint => false %> 
-    <%= form.input :state, :collection => form.object.aasm_states_for_select, :include_blank => false ,:wrapper_html => { :class => "left" } %> 
+    <%= form.input :plan, :wrapper_html => { :class => "left" }, :hint => false %>
+    <%= form.input :state, :collection => form.object.aasm_states_for_select, :include_blank => false ,:wrapper_html => { :class => "left" } %>
     <div style="clear:both"></div>
     <%= form.input :ip, :wrapper_html => { :class => "left" } %>
     <%= form.input :ceil_dfl_percent, :as => :select, :collection => (30..100).step(10).to_a, :include_blank => false, :wrapper_html => { :class => "left" } %>
@@ -183,15 +183,15 @@
         <%= form.input :proxy_arp_lan_gateway, :wrapper_html => { :class => "left" } %>
       <% end %>
       <div style="clear: both"></div>
-      <%= form.input :public_address %> 
+      <%= form.input :public_address %>
       <%= form.input :unique_provider %>
     <% end %>
-    <% form.inputs :name => t('fieldsets.contract.prio_customization'), :id => "prios", 
+    <% form.inputs :name => t('fieldsets.contract.prio_customization'), :id => "prios",
             :style => "width: 250px", :context_help => { :path => { :custom => 'contract.fieldsets.prios' } } do %>
-      <%= form.input :tcp_prio_ports %> 
-      <%= form.input :udp_prio_ports %> 
-      <%= form.input :prio_protos %> 
-      <%= form.input :prio_helpers %> 
+      <%= form.input :tcp_prio_ports %>
+      <%= form.input :udp_prio_ports %>
+      <%= form.input :prio_protos %>
+      <%= form.input :prio_helpers %>
     <% end %>
     <div style="clear: both"></div>
     <%= form_extensions form %>
@@ -202,4 +202,4 @@
     <% end %>
   <% end %>
 <% end %>
-</div> 
+</div>

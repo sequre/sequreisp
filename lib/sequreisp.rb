@@ -457,8 +457,8 @@ def gen_iptables
         ######################if
         contracts = Contract.not_disabled.descend_by_netmask
         contracts.each do |c|
-          BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
           f.puts c.rules_for_enabled
+          BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
         end
         ######################end
         f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
@@ -542,7 +542,7 @@ def update_provider_group_route pg, force=false, boot=true
     if pg.default_route == ""
       commands << "ip ro del table #{pg.table} default"
     else
-      commands << "ip ro re table #{pg.table} #{pg.default_route}"
+      commands << "(ip -oneline ro li table #{pg.table} | grep [d]efault) || ip ro re table #{pg.table} #{pg.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
