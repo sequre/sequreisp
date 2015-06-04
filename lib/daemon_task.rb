@@ -589,16 +589,41 @@ class DaemonCompactSamples < DaemonTask
     end
   end
 
+  def generate_slots(first, samples)
+    cantidad_de_slots = samples[samples.count-1][:time].to_i - first.to_i
+    1.upto(cantidad_slots) do |i|
+      sum = 0
+      init_time = first.to_i + (1 * i)
+      last_time = first.to_i + (2 * i)
+      samples.keys.each_key do |k|
+        sum += samples[k][:instant].to_i if samples[k][:time].to_i >= init_time and samples[k][:time].to_i < last_time
+      end
+    end
+  end
+
   def exec_daemon_compact_samples
     transactions = []
     Contract.all.each do |c|
+      #Me traigo el ultimo sample de un minuto para ese contrato, ya que necesito saber el tiempo.
+      last_sample_one_minute = ContractSample.last
+      counter = $redis.get("contract:#{c.id}:counter").to_i / 7
+      #(12 * 7) por cada instante hay 7 muestras por contratos, y por minuto cada contrato puede tener 12 capturas, ya que el minuto divido 5 veces, son 12 y por cada prio es 12 * 7
+      if not counter.nil? and counter >= 12
+        c.redis_keys.each do |credis|
+          foo = {}
+          counter.times do |count|
+            instant, time = $redis.hmget("#{credis[:name]}:#{count}", "instant", "time")
+            foo[count] = {:instant => instant, :time => time}
+          end
+        end
+      end
+
       total_samples_for_this_period = @sample_conf[:period_0][:samples].select{|sample| sample.id == c.id}.first.total_samples
       # sample = { :down_prio1, :down_prio2, :down_prio3, :down_supercache, :up_prio1, :up_prio2, :up_prio3, :period, :contract_id
       sample = { :contract_id => c.id, :period => 0 }
       c.redis_keys.each do |rkey|
         sample["#{rkey[:up_or_down]}_#{rkey[:sample]}".to_sym] = $redis.exists(rkey[:name]) ? $redis.hmget(rkey[:name], "instant").first.to_i : 0
-
-   end
+      end
       transactions << "ContractSample.create(#{sample})"
       transactions << compact(1, c, @sample_conf[:period_0][:excess_count]) if (total_samples_for_this_period+1) == @sample_conf[:period_0][:sample_size_cut]
     end
