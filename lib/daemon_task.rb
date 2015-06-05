@@ -640,51 +640,54 @@ class DaemonRedis < DaemonTask
     @factor_precision = 100
   end
 
-  def generate_sample(key, new_total_bytes)
-    $redis.hmset(key, "instant", "0", "accumulated", "0", "total_bytes", "0", "time", "#{(DateTime.now.to_f * @factor_precision).to_i}" ) unless $redis.exists(key)
-    total_bytes, time = $redis.hmget("#{key}", "total_bytes", "time")
-
-    time_now = (DateTime.now.to_f * @factor_precision).to_i
-    seconds = time_now - time.to_i
-
-    if seconds > 0
-      bytes_to_increment = new_total_bytes.to_i < total_bytes.to_i ? new_total_bytes.to_i : (new_total_bytes.to_i - total_bytes.to_i)
-      new_instant = ((bytes_to_increment * @factor_precision) / seconds) * 8
-      #The next line is becouse, in the first moment, no exist previous value to compare then wait for next sample to compare.
-      $redis.hmset(key, "instant", new_instant) unless total_bytes.to_i.zero?
-      $redis.hincrby(key, "accumulated", bytes_to_increment)
-      $redis.hmset(key, "total_bytes", new_total_bytes)
-      $redis.hmset(key, "time", time_now)
-    end
-  end
-
   def exec_daemon_redis
-    Interface.all.each do |i|
-      $redis.set("interface:#{i.id}:counter", 0) unless $redis.exists("interface:#{i.id}:counter")
-      counter = $redis.get("interface:#{i.id}:counter")
-      ["rx", "tx"].each do |prefix|
-        generate_sample("interface:#{i.name}:rate_#{prefix}", "interface:#{i.id}:#{counter}", i.send("#{prefix}_bytes")) if i.exist?
-      end
-      $redis.incr("interface:#{i.id}:counter")
-    end
-
+    # Interface.all.each do |i|
+    #   $redis.set("interface:#{i.id}:counter", 0) unless $redis.exists("interface:#{i.id}:counter")
+    #   counter = $redis.get("interface:#{i.id}:counter")
+    #   ["rx", "tx"].each do |prefix|
+    #     generate_sample("interface:#{i.name}:rate_#{prefix}", "interface:#{i.id}:#{counter}", i.send("#{prefix}_bytes")) if i.exist?
+    #   end
+    #   $redis.incr("interface:#{i.id}:counter")
+    # end
     hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
                    "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
 
     Contract.all.each do |c|
       $redis.set("contract:#{c.id}:counter", 0) unless $redis.exists("contract:#{c.id}:counter")
-      counter = $redis.get("contract:#{c.id}:counter")
+      counter = $redis.get("contract:#{c.id}:counter").to_i
+      catchs = {}
       c.redis_keys.each do |rkey|
         tc_class = c.send("tc_#{rkey[:sample]}")
         classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
         parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
         contract_class = hfsc_class[rkey[:up_or_down]].select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first
-        new_total_bytes = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
-        generate_sample("#{rkey[:name]}:#{counter}", new_total_bytes)
+        catchs["#{rkey[:name]}"] = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
       end
+      generate_sample("contract:#{c.id}:sample", counter, catchs)
       $redis.incr("contract:#{c.id}:counter")
     end
 
+  end
+
+  # key: "object_name:object:id:nuevas_muestras_tc"
+  # id: numero de la nueva muestra. Comienza en cero.
+  # catchs = { "[prio1|prio2|prio3|supercache]:[down|up]" => bytes_leidos_de_tc }
+  def generate_sample(key, id, catchs)
+    new_sample = { :time => (DateTime.now.to_f * @factor_precision).to_i }
+
+    catchs.each_key do |sub_key|
+      new_sample[sub_key] = {}
+      total_bytes, last_accumulated, last_time = $redis.hmget("#{key}:#{id-1}", "#{sub_key}:total_bytes", "#{sub_key}:accumulated", "time") unless id.zero?
+      accumulated = (catchs[sub_key].to_i - total_bytes.to_i) unless id.zero?
+      new_sample[sub_key][:instant] = id.zero? ? "0" : (((accumulated * @factor_precision) / (new_sample[:time] - last_time.to_i)) * 8)
+      new_sample[sub_key][:accumulated] = id.zero? ? "0" : (last_accumulated.to_i + accumulated)
+      new_sample[sub_key][:total_bytes] = catchs[sub_key].to_i
+    end
+
+    catchs.each_key do |k|
+      new_sample[k].each_key { |sub_key| $redis.hmset("#{key}:#{id}", "#{k}:#{sub_key}", new_sample[k][sub_key]) }
+    end
+    $redis.hmset("#{key}:#{id}", "time", new_sample[:time])
   end
 
 end
