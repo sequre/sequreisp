@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # Sequreisp - Copyright 2010, 2011 Luciano Ruete
 #
@@ -597,7 +596,7 @@ class Contract < ActiveRecord::Base
   def redis_keys
     keys = []
     ["up", "down"].each do |prefix|
-      ["prio1", "prio2", "prio3"].each { |k| keys << { :sample => k, :up_or_down => prefix, :name => "contract:#{id}:#{k}:#{prefix}" } }
+      ["prio1", "prio2", "prio3"].each { |k| keys << { :sample => k, :up_or_down => prefix, :name => "#{k}:#{prefix}" } }
     end
     keys
   end
