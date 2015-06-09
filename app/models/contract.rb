@@ -596,7 +596,7 @@ class Contract < ActiveRecord::Base
   def redis_keys
     keys = []
     ["up", "down"].each do |prefix|
-      ["prio1", "prio2", "prio3"].each { |k| keys << { :sample => k, :up_or_down => prefix, :name => "#{k}:#{prefix}" } }
+      ["prio1", "prio2", "prio3"].each { |k| keys << { :sample => k, :up_or_down => prefix, :name => "#{prefix}:#{k}" } }
     end
     keys
   end

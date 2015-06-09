@@ -17,6 +17,7 @@ end
 
 $mutex = Mutex.new
 $resource = ConditionVariable.new
+$redis_mutex = Mutex.new
 
 class DaemonTask
 
@@ -530,107 +531,6 @@ class DaemonCheckBind < DaemonTask
 
 end
 
-class DaemonCompactSamples < DaemonTask
-  # PERIOD   AMPLITUD              TIME_SAMPLE           SAMPLES_SIZE   SAMPLES_SIZE_SATURA
-  # 0        180.min (3.hours)        1.min              300            300 + 5 = 305
-  # 1        1440.min (1.day)         5.min              288            288 + 6 = 294
-  # 2        10080.min (1.week)      30.min              336            336 + 6 = 342
-  # 3        44640.min (1.month)    180.min (3.hours)    348            348 + 8 = 356
-  # 4        525600.min (1.year)   1440.min (24.hours)   365            365
-  def initialize
-    @time_for_exec = { :frecuency => 1.min }
-    @wait_for_apply_changes = true
-    @proc = Proc.new { exec_daemon_compact_samples }
-    @sample_conf = { :period_0 => { :sample_size => 300, :sample_size_cut => 305, :excess_count => 5,   :scope => 180.minutes,    :time_sample => 1,    :period_number => 0,
-                                    :samples => ContractSample.total_for_period(0) },
-                     :period_1 => { :sample_size => 288, :sample_size_cut => 294, :excess_count => 6,   :scope => 1440.minutes,   :time_sample => 5,    :period_number => 1,
-                                    :samples => ContractSample.total_for_period(1) },
-                     :period_2 => { :sample_size => 336, :sample_size_cut => 342, :excess_count => 6,   :scope => 10080.minutes,  :time_sample => 30,   :period_number => 2,
-                                    :samples => ContractSample.total_for_period(2) },
-                     :period_3 => { :sample_size => 348, :sample_size_cut => 356, :excess_count => 8,   :scope => 44640.minutes,  :time_sample => 180,  :period_number => 3,
-                                    :samples => ContractSample.total_for_period(3) },
-                     :period_4 => { :sample_size => 348, :sample_size_cut => nil, :excess_count => nil, :scope => 525600.minutes, :time_sample => 1440, :period_number => 4,
-                                    :samples => ContractSample.total_for_period(4) }
-                   }
-
-    super
-  end
-
-  def compact(period, c, excess)
-    if period < @sample_conf.count
-      transactions = []
-      total_samples_for_this_period = @sample_conf["period_#{period}".to_sym][:samples].select{|sample| sample.id == c.id}.first.total_samples
-      # Me traigo la ultima muestra de period
-      last_sample_period = ContractSample.all(:conditions => { :contract_id => c.id, :period => period } ).last
-      # primeras excess muestras del period -1
-      excess_samples_previous_period = ContractSample.all(:conditions => { :contract_id => c.id, :period => (period-1) } ).limit(excess)
-      # Cantidad de slots necesarios para este periodo, luego tengo que ver los 5 periodos que tengo y agruparlos en los slots que corresponda
-      count_slots = (excess_samples_previous_period.last.created_at.to_i - last_sample_period.created_at.to_i) / @sample_conf["period_#{period}".to_sym][:time_sample]
-      1.upto(count_slots) do |i|
-        new_sample = { :down_prio1 => 0, :down_prio2 => 0, :down_prio3 => 0, :down_supercache => 0, :up_prio1 => 0, :up_prio2 => 0, :up_prio3 => 0 }
-        init_slot = (i * @sample_conf["period_#{period}".to_sym][:time_sample]).minutes
-        end_slot = ((i+1) * @sample_conf["period_#{period}".to_sym][:time_sample]).minutes
-        samples_selected = last_five_samples_period_menos_uno.select{ |k| k.created_at < end_slot and k.created_at >= init_slot }
-        new_sample.each_key { |key| new_sample[:key] += samples_selected.sum(key) }
-        new_sample[:period] = period
-        new_sample[:contract_id] = c.id
-        last_five_samples_period_menos_uno.each {|s| transactions << "#{s.destroy}"}
-        transactions << "ContractSample.create(#{new_sample})"
-        total_samples_for_this_period += 1
-      end
-      if total_samples_for_this_period >= @sample_conf["period_#{period}".to_sym][:sample_size_cut]
-        total_samples_excess = total_samples_for_this_period - @sample_conf["period_#{period}".to_sym][:sample_size]
-        transactions << compact(period+1, c, total_samples_excess)
-      else
-        transactions
-      end
-    else
-      []
-    end
-  end
-
-  def generate_slots(first, samples)
-    cantidad_de_slots = samples[samples.count-1][:time].to_i - first.to_i
-    1.upto(cantidad_slots) do |i|
-      sum = 0
-      init_time = first.to_i + (1 * i)
-      last_time = first.to_i + (2 * i)
-      samples.keys.each_key do |k|
-        sum += samples[k][:instant].to_i if samples[k][:time].to_i >= init_time and samples[k][:time].to_i < last_time
-      end
-    end
-  end
-
-  def exec_daemon_compact_samples
-    transactions = []
-    Contract.all.each do |c|
-      #Me traigo el ultimo sample de un minuto para ese contrato, ya que necesito saber el tiempo.
-      last_sample_one_minute = ContractSample.last
-      counter = $redis.get("contract:#{c.id}:counter").to_i / 7
-      #(12 * 7) por cada instante hay 7 muestras por contratos, y por minuto cada contrato puede tener 12 capturas, ya que el minuto divido 5 veces, son 12 y por cada prio es 12 * 7
-      if not counter.nil? and counter >= 12
-        c.redis_keys.each do |credis|
-          foo = {}
-          counter.times do |count|
-            instant, time = $redis.hmget("#{credis[:name]}:#{count}", "instant", "time")
-            foo[count] = {:instant => instant, :time => time}
-          end
-        end
-      end
-
-      total_samples_for_this_period = @sample_conf[:period_0][:samples].select{|sample| sample.id == c.id}.first.total_samples
-      # sample = { :down_prio1, :down_prio2, :down_prio3, :down_supercache, :up_prio1, :up_prio2, :up_prio3, :period, :contract_id
-      sample = { :contract_id => c.id, :period => 0 }
-      c.redis_keys.each do |rkey|
-        sample["#{rkey[:up_or_down]}_#{rkey[:sample]}".to_sym] = $redis.exists(rkey[:name]) ? $redis.hmget(rkey[:name], "instant").first.to_i : 0
-      end
-      transactions << "ContractSample.create(#{sample})"
-      transactions << compact(1, c, @sample_conf[:period_0][:excess_count]) if (total_samples_for_this_period+1) == @sample_conf[:period_0][:sample_size_cut]
-    end
-    ContractSample.transaction{ transactions.flatten.each {|s| val(s)} }
-  end
-end
-
 class DaemonRedis < DaemonTask
 
   def initialize
@@ -652,26 +552,27 @@ class DaemonRedis < DaemonTask
     hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
                    "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
 
-    Contract.all.each do |c|
-      $redis.set("contract:#{c.id}:counter", 0) unless $redis.exists("contract:#{c.id}:counter")
-      counter = $redis.get("contract:#{c.id}:counter").to_i
-      catchs = {}
-      c.redis_keys.each do |rkey|
-        tc_class = c.send("tc_#{rkey[:sample]}")
-        classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
-        parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
-        contract_class = hfsc_class[rkey[:up_or_down]].select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first
-        catchs["#{rkey[:name]}"] = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
+    $redis_mutex.synchronize {
+      Contract.all.each do |c|
+        $redis.set("contract:#{c.id}:counter", 0) unless $redis.exists("contract:#{c.id}:counter")
+        counter = $redis.get("contract:#{c.id}:counter").to_i
+        catchs = {}
+        c.redis_keys.each do |rkey|
+          tc_class = c.send("tc_#{rkey[:sample]}")
+          classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
+          parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
+          contract_class = hfsc_class[rkey[:up_or_down]].select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first
+          catchs["#{rkey[:name]}"] = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
+        end
+        generate_sample("contract:#{c.id}:sample", counter, catchs)
+        $redis.incr("contract:#{c.id}:counter")
       end
-      generate_sample("contract:#{c.id}:sample", counter, catchs)
-      $redis.incr("contract:#{c.id}:counter")
-    end
-
+    }
   end
 
   # key: "object_name:object:id:nuevas_muestras_tc"
   # id: numero de la nueva muestra. Comienza en cero.
-  # catchs = { "[prio1|prio2|prio3|supercache]:[down|up]" => bytes_leidos_de_tc }
+  # catchs = { "[up|down]:[prio1|prio2|prio3|supercache]" => bytes_leidos_de_tc }
   def generate_sample(key, id, catchs)
     new_sample = { :time => (DateTime.now.to_f * @factor_precision).to_i }
 
@@ -688,6 +589,144 @@ class DaemonRedis < DaemonTask
       new_sample[k].each_key { |sub_key| $redis.hmset("#{key}:#{id}", "#{k}:#{sub_key}", new_sample[k][sub_key]) }
     end
     $redis.hmset("#{key}:#{id}", "time", new_sample[:time])
+  end
+
+end
+
+class DaemonCompactSamples < DaemonTask
+  # PERIOD   AMPLITUD              TIME_SAMPLE           SAMPLES_SIZE   SAMPLES_SIZE_SATURA
+  # 0        180.min (3.hours)        1.min              300            300 + 5 = 305
+  # 1        1440.min (1.day)         5.min              288            288 + 6 = 294
+  # 2        10080.min (1.week)      30.min              336            336 + 6 = 342
+  # 3        44640.min (1.month)    180.min (3.hours)    348            348 + 8 = 356
+  # 4        525600.min (1.year)   1440.min (24.hours)   365            365
+  def initialize
+    @time_for_exec = { :frecuency => 1.minutes }
+    @wait_for_apply_changes = true
+    @proc = Proc.new { exec_daemon_compact_samples }
+    @sample_conf = { :period_0 => { :period_number => 0, :time_sample => 1,    :sample_size => 300, :sample_size_cut => 305, :excess_count => 5,   :scope => 180.minutes },
+                     :period_1 => { :period_number => 1, :time_sample => 5,    :sample_size => 288, :sample_size_cut => 294, :excess_count => 6,   :scope => 1440.minutes },
+                     :period_2 => { :period_number => 2, :time_sample => 30,   :sample_size => 336, :sample_size_cut => 342, :excess_count => 6,   :scope => 10080.minutes },
+                     :period_3 => { :period_number => 3, :time_sample => 180,  :sample_size => 348, :sample_size_cut => 356, :excess_count => 8,   :scope => 44640.minutes },
+                     :period_4 => { :period_number => 4, :time_sample => 1440, :sample_size => 348, :sample_size_cut => nil, :excess_count => nil, :scope => 525600.minutes }
+                   }
+    super
+  end
+
+  def exec_daemon_compact_samples
+    transactions = []
+    #POR CADA EJECUCION DEL DAEMON NECESITO TRAERME EL VALOR ACTUALIZADO DE CUANTOS SAMPLES HAY POR CONTRATO EN CADA UNO DE LOS PERIODOS.
+    @sample_conf.each_key { |key| @sample_conf[key][:samples] = ContractSample.total_for_period(@sample_conf[key][:period_number]) }
+
+    Contract.all.each do |c|
+      #NECESITO QUE ESTO SEA ATOMICO; QUE HAGA TODO ANTES DE QUE SE EJECUTE REDIS.
+      $redis_mutex.synchronize { samples = redis_compact(c) }
+      unless samples.empty?
+        transactions << samples[:create] + samples[:update]
+        # Me traigo la cantidad de samples del periodo 0 en la base de datos.
+        total_samples = @samples_conf[:period_0][:samples].select{|cs| cs.id == c.id}.first.total_samples
+        flag = ((total_samples + samples.count) >= @sample_conf[:period_0][:sample_size_cut]) ? true : false
+        compact_count = (total_samples + samples.count) - @sample_conf[:period_0][:sample_size]
+        # PROCESO ITERATIVO DE COMPACTACIÓN: con el upto evito el periodo 0 que es el de un minuto, que ya compate arriba (REDIS)
+        1.upto(@samples_conf.keys.count-1) do |per|
+          # SI flag ES FALSE NO PUEDO COMPACTAR EL PERIODO, POR LO QUE IMPLICA QUE TAMPOCO VOY A PODER COMPACTAR LOS SUBSIGUIENTES.
+          break if not flag
+          flag = false
+          total_samples = @samples_conf["period_#{per}".to_sym][:samples].select{|cs| cs.id == c.id}.first.total_samples
+          samples = compact(per, compact_count, c)
+          transactions << samples[:create] + samples[:destroy]
+          compact_count = (total_samples + samples[:create].count) - @samples_conf["period_#{per}".to_sym][:sample_size]
+          flag = ((total_samples + samples[:create].count) >= @samples_conf["period_#{per}".to_sym][:sample_size_cut]) ? true : false
+        end
+      end
+    end
+    ContractSample.transaction{ transactions.flatten.each {|s| eval(s)} } unless transactions.empty?
+  end
+
+  def redis_compact(c)
+    samples = { :create => [], :update => [] }
+    if $redis.exists("contract:#{c.id}:counter")
+      # data = { "time" => { "[prio1|prio2|prio3|supercache]:[up|down]" => instant } }
+      data = {}
+      #Cantidad de registros en redis para el contrato.
+      counter = $redis.get("contract:#{c.id}:counter").to_i
+      # Considero el counter nil, si por casualidad se llegara a ejecutar primero este daemon antes que el de redis, quien create el registro counter.
+      # 12 son las cantidad de muestas de 5 segundos que tomo de redis, ya que en teoria esas 12 muestras contemplarian el nuevo minuto.
+      if not counter.nil? and counter >= 12
+        #Me traigo la muestra mas reciente de un minuto que tenga este contrato en la base de datos.
+        last_sample = ContractSample.all( :conditions => { :contract_id => c.id, :period => 0 }).last
+        ######## TO-DO: NECESITO QUE ESTE COUNTER TIMES SEA ATOMICO, NO PUEDE PERMITIR QUE SE CORTE Y SE EJECUTE EL DAEMON DE REDIS
+        counter.times do |x|
+          time = $redis.hmget("contract:#{c.id}:sample:#{x}", "time")
+          data[time] = {}
+          c.redis_keys.each do |rkey|
+            data[time][rkey[:name]] = $redis.hmget("contract:#{c.id}:sample:#{x}", "#{rkey[:name]}:instant").first.to_i
+            $redis.del("contract:#{c.id}:sample:#{x}")
+          end
+        end
+        $redis.set("contract:#{c.id}:counter", 0)
+
+        time_last_sample = last_sample.nil? ? dates_selected.first : last_sample.period_time.to_i
+        unless last_sample.nil?
+          # ME TRAIGO TODAS LAS FECHAS ORDENAS DE LAS MUESTRAS.
+          dates = data.keys.map(&:to_i).sort
+
+          # Caso de que una de las muestras matche con la ultima que tenga y deba actualizarlo.
+          range = (time_last_sample..(time_last_sample + (time_period - 1)))
+          dates_selected = dates.select{|k| range.include?(k)}
+
+          unless dates_selected.empty?
+            dates_selected.each { |date| c.redis_keys.each { |rkey| last_sample[rkey[:name].to_sym] += data[date.to_s][rkey[:name]] } }
+            samples[:update] << "#{last_sample.save}"
+          end
+        end
+
+        samples = create_samples(time_last_sample, data, @sample_conf[:period_0][:time_sample]*60, @sample_conf[:period_0][:period_number], c) #Genero los samples de 1 minuto
+      end
+    end
+    samples
+  end
+
+  # period => periodo al que voy a compactar las samples, :compact_count => cantidad de muestras que debo compactar, c => contrato.
+  def compact(period, compact_count, c)
+    data = {}
+    samples = { :create => [], :destroy => [], :update => [] }
+    last_sample_period = ContractSample.all( :conditions => { :contract_id => c.id, :period => period } ).last
+    samples_to_compact = ContractSample.all( :conditions => { :contract_id => c.id, :period => (period-1) }, :order => "created_at DESC", :limit => compact_count )
+    samples_to_compact.each do |x|
+      time = samples_to_compact.period_time.to_i
+      data[time] = {}
+      c.redis_keys.each do |rkey|
+        data[time][rkey[:name]] = x.send(rkey[:name])
+        samples[:destroy] << "#{x.destroy}"
+      end
+    end
+    time_last_sample = last_sample.nil? ? data.keys.map(&:to_i).sort.first : last_sample.period_time.to_i
+    samples[:create] = create_samples(time_last_sample, data, @sample_conf["period_#{period}"][:time_sample]*60, period, c)
+    samples
+  end
+
+  def create_samples(last_sample, new_data, time_period, period, c)
+    samples = []
+    time_last_sample = last_sample.period_time.to_i
+    # ME TRAIGO TODAS LAS FECHAS ORDENAS DE LAS MUESTRAS.
+    dates = new_data.keys.map(&:to_i).sort
+    # ESTO ME DA LA CANTIDAD DE SLOTS QUE NECESITO DE UN X MINUTES EN FUNCION DE LAS MUESTRAS QUE TENGO.
+    # el count_slots es la cantidad de nuevos slots que debo crear, pero tengo que contemplar un caso mas cuando son samples desde redis, ya que es posible que deba actualizar el ultimo sample de un minuto
+    count_slots = (dates.last - time_last_sample) / time_period
+
+    # count_slots.times do |i|
+    1.upto(count_slots) do |i|
+      # ESTE EL EL RANGO DEL NUEVO SAMPLE i
+      new_sample = {:period => period, :period_time => Time.at((time_last_sample + i*time_period)), :contract_id => c.id }
+      # new_sample = { :down_prio1 => 0, :down_prio2 => 0, :down_prio3 => 0, :down_supercache => 0, :up_prio1 => 0, :up_prio2 => 0, :up_prio3 => 0 }
+      c.redis_keys.each { |rkey| new_sample["#{rkey[:up_or_down]}_#{rkey[:sample]}".to_sym] = 0 }
+      range = ((time_last_sample + i*time_period)..(time_last_sample + ((i+1)*time_period) - 1))
+      dates_selected = dates.select{|k| range.include?(k)}
+      dates_selected.each { |date| c.redis_keys.each { |rkey| new_sample[rkey[:name].to_sym] += new_data[date.to_s][rkey[:name]] } }
+      samples << "#{ContractSample.new(new_sample)}"
+    end
+    samples
   end
 
 end
