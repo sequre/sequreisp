@@ -87,7 +87,7 @@ class Permissions < Aegis::Permissions
     action :index do
       allow :technical, :technical_readonly
     end
-    action :doreload do
+    action :doreload, :is_apply_changes do
       allow :technical, :administrative
     end
   end
