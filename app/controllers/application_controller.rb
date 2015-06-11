@@ -33,6 +33,7 @@ class ApplicationController < ActionController::Base
   
   before_filter :set_time_zone
   before_filter :set_language
+  before_filter :check_for_redirect_to_notification
   # uncomment to be able to see error pages in development
   #alias_method :rescue_action_locally, :rescue_action_in_public
 
@@ -45,8 +46,21 @@ class ApplicationController < ActionController::Base
     { :locale => I18n.locale }
   end
 
-
   private
+
+  def self.redirections_exceptions
+    []
+  end
+
+  def check_for_redirect_to_notification
+    if ["alerted", "disabled"].include?(request.env['SEQUREISP_STATUS']) and not ApplicationController.redirections_exceptions.include?(action_name)
+      redirect_to_notification
+    end
+  end
+
+  # this method has alias_method_chain in traffic_accounting and notification plugins
+  def redirect_to_notification
+  end
 
   def store_request_uri
     # skip if it is not html (ie ajax)
@@ -132,4 +146,5 @@ class ApplicationController < ActionController::Base
       end
     end
   end
+
 end
