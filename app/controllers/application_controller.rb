@@ -46,6 +46,10 @@ class ApplicationController < ActionController::Base
     { :locale => I18n.locale }
   end
 
+  def render_optional_error_file(status_code)
+    super unless status_code == :not_found and check_for_redirect_to_notification
+  end
+
   private
 
   def self.redirections_exceptions
@@ -53,8 +57,11 @@ class ApplicationController < ActionController::Base
   end
 
   def check_for_redirect_to_notification
-    if ["alerted", "disabled"].include?(request.env['SEQUREISP_STATUS']) and not ApplicationController.redirections_exceptions.include?(action_name)
+    if ["alerted", "disabled"].include?(request.env['SEQUREISP_STATUS']) and not ApplicationController.redirections_exceptions.include?(action_name.to_sym) and not request.url.include?(SequreispPlugins.internal_ip)
       redirect_to_notification
+      true
+    else
+      false
     end
   end
 
