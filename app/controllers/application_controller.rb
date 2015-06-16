@@ -52,17 +52,12 @@ class ApplicationController < ActionController::Base
 
   private
 
-  def self.redirections_exceptions
-    []
+  def has_notifications?
+    ["alerted", "disabled"].include?(request.env['SEQUREISP_STATUS'])
   end
 
   def check_for_redirect_to_notification
-    if ["alerted", "disabled"].include?(request.env['SEQUREISP_STATUS']) and not ApplicationController.redirections_exceptions.include?(action_name.to_sym) and not request.url.include?(SequreispPlugins.internal_ip)
-      redirect_to_notification
-      true
-    else
-      false
-    end
+    redirect_to_notification if has_notifications?
   end
 
   # this method has alias_method_chain in traffic_accounting and notification plugins
