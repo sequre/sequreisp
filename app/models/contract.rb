@@ -683,19 +683,19 @@ end
     #hijos
     #prio1
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio1_hex} " +
-            "est 1sec 5sec hfsc rt m1 #{rate}kbit d 50ms m2 #{rate/2}kbit ls m1 #{ceil}kbit d 50ms m2 #{ceil/2}kbit"
+            "est 1sec 5sec hfsc rt m1 #{rate}kbit d 50ms m2 #{rate/2}kbit ls m2 #{rate}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio1_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio1_hex} sfq perturb 10"
 
     #prio2
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio2_hex} " +
-            "est 1sec 5sec hfsc ls m2 #{ceil}kbit"
+            "est 1sec 5sec hfsc ls m2 #{rate}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio2_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio2_hex} sfq perturb 10"
 
     #prio3
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio3_hex} " +
-            "est 1sec 5sec hfsc ls m1 #{ceil * ceil_dfl_percent / 100 / 10}kbit d 3s m2 #{ceil * ceil_dfl_percent / 100}kbit ul m2 #{ceil * ceil_dfl_percent / 100}kbit"
+            "est 1sec 5sec hfsc ls m1 #{(rate / 20).round}kbit d 3s m2 #{(rate / 10).round}kbit ul m2 #{(ceil * ceil_dfl_percent / 100).round}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio3_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10"
   end
