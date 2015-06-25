@@ -132,14 +132,21 @@ def gen_iptables
         # Evito balanceo para los hosts configurados
         f.puts ":avoid_balancing - [0:0]"
         f.puts "-A PREROUTING -j avoid_balancing"
-        AvoidBalancingHost.all.each do |abh|
-          if abh.provider
-            abh.ip_addresses.each do |ip|
-              f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
-              f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
+
+        threads = {}
+        AvoidBalancingHost.all(:include => :provider).each do |abh|
+          threads[abh.id] = Thread.new do
+            if abh.provider
+              abh.ip_addresses.each do |ip|
+                f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
+                f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
+              end
             end
           end
         end
+        # waith for threads
+        threads.each do |k,t| t.join end
+
         # restauro marka en PREROUTING
         f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
 
@@ -326,11 +333,16 @@ def gen_iptables
           end
         end
 
+        threads = {}
         AlwaysAllowedSite.all.each do |site|
-          site.ip_addresses.each do |ip|
-            f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
+          threads[site.id] = Thread.new do
+            site.ip_addresses.each do |ip|
+              f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
+            end
           end
         end
+        # waith for threads
+        threads.each do |k,t| t.join end
 
         BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
       end
@@ -534,10 +546,10 @@ def update_provider_group_route pg, force=false, boot=true
   currentroute=`ip -oneline ro li table #{pg.table} | grep default`.gsub("\\\t","  ").strip
   if (currentroute != pg.default_route) or force
     # force could be true, and current_route empty, so all ip ro batch will fail
-    if pg.default_route == ""
+    if pg.default_route == "" and currentroute != ""
       commands << "ip ro del table #{pg.table} default"
     else
-      commands << "(ip -oneline ro li table #{pg.table} | grep [d]efault) || ip ro re table #{pg.table} #{pg.default_route}"
+      commands << "ip ro re table #{pg.table} #{pg.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end
