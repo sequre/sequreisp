@@ -683,7 +683,7 @@ end
     #hijos
     #prio1
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio1_hex} " +
-            "est 1sec 5sec hfsc rt m1 #{rate}kbit d 50ms m2 #{rate/2}kbit ls m2 #{rate}kbit"
+            "est 1sec 5sec hfsc rt m2 #{rate}kbit ls m2 #{rate}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio1_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio1_hex} sfq perturb 10"
 
