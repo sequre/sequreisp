@@ -228,17 +228,21 @@ def gen_iptables
           f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
         end
 
-        ips = Contract.descend_by_netmask.collect(&:ip_addr)
+        contracts = Contract.not_disabled.descend_by_netmask
+
+        ips = contracts.collect(&:ip_addr)
 
         ips.each { |ip| f.puts ":sq.#{ip.to_cidr} -" } # Create all leaf nodes
 
-        #IP Tree mark mangle optimization
-        [{:prefix => "up", :dir =>"-s"}, {:prefix => "down", :dir => "-d"}].each do |way|
-          f.puts(IPTree.new({ :ip_list => ips, :prefix => "sq-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "sq" }).to_iptables)
-          f.puts("-A sequreisp.#{way[:prefix]} -j sq-#{way[:prefix]}-MAIN")
+        unless contracts.empty?
+          #IP Tree mark mangle optimization
+          [{:prefix => "up", :dir =>"-s"}, {:prefix => "down", :dir => "-d"}].each do |way|
+            f.puts(IPTree.new({ :ip_list => ips, :prefix => "sq-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "sq" }).to_iptables)
+            f.puts("-A sequreisp.#{way[:prefix]} -j sq-#{way[:prefix]}-MAIN")
+          end
         end
 
-        Contract.not_disabled.descend_by_netmask.each do |c|
+        contracts.each do |c|
           mark_prio1 = "0x#{c.mark_prio1_hex}/0x0000ffff"
           mark_prio2 = "0x#{c.mark_prio2_hex}/0x0000ffff"
           mark_prio3 = "0x#{c.mark_prio3_hex}/0x0000ffff"
@@ -412,9 +416,11 @@ def gen_iptables
           f.puts contract.rules_for_down_data_counting
         end # Create all leaf nodes
 
-        [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
-          f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
-          Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
+        unless contracts.empty?
+          [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
+            f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
+            Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
+          end
         end
 
         f.puts "-A FORWARD -j sequreisp-allowedsites"
@@ -468,8 +474,10 @@ def gen_iptables
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
         end
         ######################end
-        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
-        providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
+        unless contracts.empty?
+          f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
+          providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
+        end
         f.puts "-A enabled-MAIN -j DROP"
       end
       f.puts "COMMIT"
