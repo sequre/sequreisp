@@ -177,8 +177,10 @@ def gen_iptables
           f.puts c.rules_for_mark_provider
         end
 
-        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "mark.prov", :match => "-s", :prefix_leaf => "mark.prov" }).to_iptables) unless contracts.empty?
-        f.puts("-A PREROUTING -j mark.prov-MAIN")
+        unless contracts.empty?
+          f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "mark.prov", :match => "-s", :prefix_leaf => "mark.prov" }).to_iptables)
+          f.puts("-A PREROUTING -j mark.prov-MAIN")
+        end
 
 
         # CONNMARK OUTPUT
@@ -477,8 +479,8 @@ def gen_iptables
         unless contracts.empty?
           f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
           providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
+          f.puts "-A enabled-MAIN -j DROP"
         end
-        f.puts "-A enabled-MAIN -j DROP"
       end
       f.puts "COMMIT"
       #---------#
