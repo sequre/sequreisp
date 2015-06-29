@@ -177,7 +177,7 @@ def gen_iptables
           f.puts c.rules_for_mark_provider
         end
 
-        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "mark.prov", :match => "-s", :prefix_leaf => "mark.prov" }).to_iptables)
+        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "mark.prov", :match => "-s", :prefix_leaf => "mark.prov" }).to_iptables) unless contracts.empty?
         f.puts("-A PREROUTING -j mark.prov-MAIN")
 
 
