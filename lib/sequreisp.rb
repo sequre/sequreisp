@@ -43,9 +43,9 @@ def gen_tc
       tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
       total_rate_up = ProviderGroup.total_rate_up
       total_rate_down = ProviderGroup.total_rate_down
-      tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{total_rate_up}kbit ul m2 #{total_rate_up}kbit"
+      tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_up * 0.5).round}kbit ul m2 #{total_rate_up}kbit"
       tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
-      tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{total_rate_down}kbit ul m2 #{total_rate_down}kbit"
+      tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_down * 0.5).round}kbit ul m2 #{total_rate_down}kbit"
       tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
 
       ProviderGroup.all.each do |pg|
@@ -137,14 +137,21 @@ def gen_iptables
         # Evito balanceo para los hosts configurados
         f.puts ":avoid_balancing - [0:0]"
         f.puts "-A PREROUTING -j avoid_balancing"
-        AvoidBalancingHost.all.each do |abh|
-          if abh.provider
-            abh.ip_addresses.each do |ip|
-              f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
-              f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
+
+        threads = {}
+        AvoidBalancingHost.all(:include => :provider).each do |abh|
+          threads[abh.id] = Thread.new do
+            if abh.provider
+              abh.ip_addresses.each do |ip|
+                f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
+                f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
+              end
             end
           end
         end
+        # waith for threads
+        threads.each do |k,t| t.join end
+
         # restauro marka en PREROUTING
         f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
 
@@ -175,8 +182,10 @@ def gen_iptables
           f.puts c.rules_for_mark_provider
         end
 
-        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "mark.prov", :match => "-s", :prefix_leaf => "mark.prov" }).to_iptables)
-        f.puts("-A PREROUTING -j mark.prov-MAIN")
+        unless contracts.empty?
+          f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "mark.prov", :match => "-s", :prefix_leaf => "mark.prov" }).to_iptables)
+          f.puts("-A PREROUTING -j mark.prov-MAIN")
+        end
 
 
         # CONNMARK OUTPUT
@@ -226,20 +235,25 @@ def gen_iptables
           f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
         end
 
-        ips = Contract.descend_by_netmask.collect(&:ip_addr)
+        contracts = Contract.not_disabled.descend_by_netmask
+
+        ips = contracts.collect(&:ip_addr)
 
         ips.each { |ip| f.puts ":sq.#{ip.to_cidr} -" } # Create all leaf nodes
 
-        #IP Tree mark mangle optimization
-        [{:prefix => "up", :dir =>"-s"}, {:prefix => "down", :dir => "-d"}].each do |way|
-          f.puts(IPTree.new({ :ip_list => ips, :prefix => "sq-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "sq" }).to_iptables)
-          f.puts("-A sequreisp.#{way[:prefix]} -j sq-#{way[:prefix]}-MAIN")
+        unless contracts.empty?
+          #IP Tree mark mangle optimization
+          [{:prefix => "up", :dir =>"-s"}, {:prefix => "down", :dir => "-d"}].each do |way|
+            f.puts(IPTree.new({ :ip_list => ips, :prefix => "sq-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "sq" }).to_iptables)
+            f.puts("-A sequreisp.#{way[:prefix]} -j sq-#{way[:prefix]}-MAIN")
+          end
         end
 
         Contract.not_disabled.descend_by_netmask.each do |c|
           mark_prio1 = "0x#{c.mark_prio1_hex}/0x#{Contract::MASK_CONTRACT_PRIO}"
           mark_prio2 = "0x#{c.mark_prio2_hex}/0x#{Contract::MASK_CONTRACT_PRIO}"
           mark_prio3 = "0x#{c.mark_prio3_hex}/0x#{Contract::MASK_CONTRACT_PRIO}"
+
           # una chain por cada cliente
           chain="sq.#{c.ip}"
           # f.puts ":#{chain} - [0:0]"
@@ -331,11 +345,16 @@ def gen_iptables
           end
         end
 
+        threads = {}
         AlwaysAllowedSite.all.each do |site|
-          site.ip_addresses.each do |ip|
-            f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
+          threads[site.id] = Thread.new do
+            site.ip_addresses.each do |ip|
+              f.puts "-A sequreisp-accepted-sites -p tcp -d #{ip} -j ACCEPT"
+            end
           end
         end
+        # waith for threads
+        threads.each do |k,t| t.join end
 
         BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
       end
@@ -405,9 +424,11 @@ def gen_iptables
           f.puts contract.rules_for_down_data_counting
         end # Create all leaf nodes
 
-        [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
-          f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
-          Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
+        unless contracts.empty?
+          [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
+            f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
+            Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
+          end
         end
 
         f.puts "-A FORWARD -j sequreisp-allowedsites"
@@ -461,9 +482,11 @@ def gen_iptables
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
         end
         ######################end
-        f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
-        providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
-        f.puts "-A enabled-MAIN -j DROP"
+        unless contracts.empty?
+          f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
+          providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
+          f.puts "-A enabled-MAIN -j DROP"
+        end
       end
       f.puts "COMMIT"
       #---------#
@@ -539,10 +562,10 @@ def update_provider_group_route pg, force=false, boot=true
   currentroute=`ip -oneline ro li table #{pg.table} | grep default`.gsub("\\\t","  ").strip
   if (currentroute != pg.default_route) or force
     # force could be true, and current_route empty, so all ip ro batch will fail
-    if pg.default_route == ""
+    if pg.default_route == "" and currentroute != ""
       commands << "ip ro del table #{pg.table} default"
     else
-      commands << "(ip -oneline ro li table #{pg.table} | grep [d]efault) || ip ro re table #{pg.table} #{pg.default_route}"
+      commands << "ip ro re table #{pg.table} #{pg.default_route}"
     end
     #TODO loguear el cambio de estado en una bitactora
   end

@@ -42,6 +42,7 @@ class BootCommandContext < CommandContext
   def self.clear_boot_file
     File.open(BOOT_FILE, 'w') do |f|
       f.truncate 0
+      f.puts "#!/bin/bash"
       f.chmod 0755
     end
     File.open(File.join(Rails.root, "log/command_human.log"), 'w') {|file| file.truncate(0) }
