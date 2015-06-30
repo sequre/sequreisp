@@ -592,15 +592,6 @@ class Contract < ActiveRecord::Base
     IPAddr.new(ip)
   end
 
-  # this has an alias_method_chain
-  def redis_keys
-    keys = []
-    ["up", "down"].each do |prefix|
-      ["prio1", "prio2", "prio3"].each { |k| keys << { :sample => k, :up_or_down => prefix, :name => "#{prefix}:#{k}" } }
-    end
-    keys
-  end
-
   def tc_prio1
     {:qdisc => "1", :parent => class_hex, :mark => class_prio1_hex }
   end
@@ -620,7 +611,7 @@ class Contract < ActiveRecord::Base
 
   def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, _plan)
     tc_rules =[]
-    mask = "Contract::MASK_CONTRACT_PRIO"
+    mask = Contract::MASK_CONTRACT_PRIO
     ceil = _plan["ceil_" + direction] * bandwidth_rate
     rate = _plan.send("rate_" + direction) * bandwidth_rate
     rate = 1 if rate <= 0

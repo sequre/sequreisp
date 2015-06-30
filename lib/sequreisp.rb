@@ -237,9 +237,9 @@ def gen_iptables
         end
 
         Contract.not_disabled.descend_by_netmask.each do |c|
-          mark_prio1 = "0x#{c.mark_prio1_hex}/#{Contract::MASK_CONTRACT_PRIO}"
-          mark_prio2 = "0x#{c.mark_prio2_hex}/#{Contract::MASK_CONTRACT_PRIO}"
-          mark_prio3 = "0x#{c.mark_prio3_hex}/#{Contract::MASK_CONTRACT_PRIO}"
+          mark_prio1 = "0x#{c.mark_prio1_hex}/0x#{Contract::MASK_CONTRACT_PRIO}"
+          mark_prio2 = "0x#{c.mark_prio2_hex}/0x#{Contract::MASK_CONTRACT_PRIO}"
+          mark_prio3 = "0x#{c.mark_prio3_hex}/0x#{Contract::MASK_CONTRACT_PRIO}"
           # una chain por cada cliente
           chain="sq.#{c.ip}"
           # f.puts ":#{chain} - [0:0]"

@@ -1,15 +1,17 @@
 class CreateContractSamples < ActiveRecord::Migration
   def self.up
     create_table :contract_samples do |t|
-      t.integer :down_prio1
-      t.integer :down_prio2
-      t.integer :down_prio3
-      t.integer :down_supercache
-      t.integer :up_prio1
-      t.integer :up_prio2
-      t.integer :up_prio3
-      t.integer :period
-      t.integer :contract_id
+      t.integer  :down_prio1
+      t.integer  :down_prio2
+      t.integer  :down_prio3
+      t.integer  :down_supercache
+      t.integer  :up_prio1
+      t.integer  :up_prio2
+      t.integer  :up_prio3
+      t.integer  :period
+      t.datetime :sample_time
+      t.string   :sample_number
+      t.integer  :contract_id
       t.timestamps
     end
   end

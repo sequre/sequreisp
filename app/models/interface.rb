@@ -217,4 +217,5 @@ class Interface < ActiveRecord::Base
   def wan?
     kind == "wan"
   end
+
 end

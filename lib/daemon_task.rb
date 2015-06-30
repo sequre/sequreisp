@@ -538,197 +538,289 @@ class DaemonRedis < DaemonTask
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_redis }
     @factor_precision = 100
+    @sample_count = 1.minutes / @time_for_exec[:frecuency] #Cantidad de muestras de redis que contemplan 1.minutes
+    super
   end
 
   def exec_daemon_redis
-    # Interface.all.each do |i|
-    #   $redis.set("interface:#{i.id}:counter", 0) unless $redis.exists("interface:#{i.id}:counter")
-    #   counter = $redis.get("interface:#{i.id}:counter")
-    #   ["rx", "tx"].each do |prefix|
-    #     generate_sample("interface:#{i.name}:rate_#{prefix}", "interface:#{i.id}:#{counter}", i.send("#{prefix}_bytes")) if i.exist?
-    #   end
-    #   $redis.incr("interface:#{i.id}:counter")
-    # end
-    hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
-                   "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
+    begin
+      interfaces_to_redis
+      contracts_to_redis
+    rescue Exception => e
+      log_rescue("[#{self.class.name}][#{(__method__).to_s}]", e)
+    end
+  end
 
-    $redis_mutex.synchronize {
-      Contract.all.each do |c|
-        $redis.set("contract:#{c.id}:counter", 0) unless $redis.exists("contract:#{c.id}:counter")
-        counter = $redis.get("contract:#{c.id}:counter").to_i
+  def interfaces_to_redis
+    begin
+      @compact_keys = InterfaceSample.compact_keys
+      counter_key = "interface_counters"
+      transactions = { :create => [], :update => []}
+      last_samples = {}
+      InterfaceSample.last_sample(0).each { |is| last_samples[is.interface_id.to_s] = is }
+
+      Interface.all.each do |i|
+        @relation = i
+        @last_db_sample = last_samples[i.id.to_s]
+        @redis_key  = "interface_#{i.id}_sample"
+        $redis.hset(counter_key, i.id.to_s, 0) unless $redis.hexists(counter_key, i.id.to_s)
+        round_robin()
+        counter = $redis.hget(counter_key, i.id.to_s)
         catchs = {}
-        c.redis_keys.each do |rkey|
+        ["rx", "tx"].each { |prefix| catchs[prefix] = i.send("#{prefix}_bytes") }
+        generate_sample(catchs) if i.exist?
+        $redis.hincrby(counter_key, i.id.to_s, 1)
+        if counter == @sample_count # @sample_count SON LAS MUESTRAS POR MINUTO
+          samples = compact_to_db()
+          transactions[:create] += samples[:create]
+          transactions[:update] += samples[:update]
+          $redis.hset(counter_key, i.id_to_s, 0)
+        end
+      end
+
+      InterfaceSample.transaction{
+        transactions[:update].each do |transaction|
+          last_samples[transaction[:interface_id].to_s].update_attributes(transaction)
+          sample = last_samples[transaction[:contract_id].to_s]
+          log("[#{self.class.name}][#{(__method__).to_s}][InterfaceTransactions][#{@relation.class.name}:#{@relation.id}][UPDATE] #{sample.inspect}") if verbose? and not transactions[:create].empty?
+        end
+        transactions[:create].each do |transaction|
+          sample = InterfaceSample.create(transaction)
+          log("[#{self.class.name}][#{(__method__).to_s}][InterfaceTransactions][#{@relation.class.name}:#{@relation.id}][CREATE] #{sample.inspect}") if verbose? and not transactions[:create].empty?
+        end
+      }
+    rescue Exception => e
+      log_rescue("[#{self.class.name}][#{(__method__).to_s}]", e)
+    end
+  end
+
+  def contracts_to_redis
+    begin
+      transactions = { :create => [], :update => [] }
+      last_samples = {}
+      @compact_keys = ContractSample.compact_keys
+      counter_key = "contract_counters"
+      hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
+                     "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
+
+      ContractSample.last_sample(0).each { |cs| last_samples[cs.contract_id.to_s] = cs }
+
+      Contract.all.each do |c|
+        @relation = c
+        @last_db_sample = last_samples[c.id.to_s]
+        @redis_key  = "contract_#{c.id}_sample"
+        $redis.hset(counter_key, c.id.to_s, 0) unless $redis.hexists(counter_key, c.id.to_s)
+        round_robin()
+        catchs = {}
+        @compact_keys.each do |rkey|
           tc_class = c.send("tc_#{rkey[:sample]}")
           classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
           parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
-          contract_class = hfsc_class[rkey[:up_or_down]].select{ |k| k.include?("class hfsc #{classid} parent #{parent}")}.first
-          catchs["#{rkey[:name]}"] = contract_class.split("\n").select{ |k| k.include?("Sent ")}.first.split(" ")[1]
+          contract_class = hfsc_class[rkey[:up_or_down]].select{|k| k.include?("class hfsc #{classid} parent #{parent}")}.first
+          catchs["#{rkey[:name]}"] = contract_class.split("\n").select{|k| k.include?("Sent ")}.first.split(" ")[1]
         end
-        generate_sample("contract:#{c.id}:sample", counter, catchs)
-        $redis.incr("contract:#{c.id}:counter")
+        counter = $redis.hget(counter_key, c.id.to_s).to_i
+        generate_sample(catchs)
+        $redis.hincrby(counter_key, c.id.to_s, 1)
+        if counter == @sample_count # @sample_count SON LAS MUESTRAS POR MINUTO
+          samples = compact_to_db()
+          transactions[:create] += samples[:create]
+          transactions[:update] += samples[:update]
+          $redis.hset(counter_key, c.id.to_s, 0)
+        end
       end
-    }
+
+      ContractSample.transaction{
+        transactions[:update].each do |transaction|
+          last_samples[transaction[:contract_id].to_s].update_attributes(transaction)
+          sample = last_samples[transaction[:contract_id].to_s]
+          log("[#{self.class.name}][#{(__method__).to_s}][ContractTransactions][#{@relation.class.name}:#{@relation.id}][UPDATE] #{sample.inspect}") if verbose? and not transactions[:update].empty?
+        end
+        transactions[:create].each do |transaction|
+          sample = ContractSample.create(transaction)
+          log("[#{self.class.name}][#{(__method__).to_s}][ContractTransactions][#{@relation.class.name}:#{@relation.id}][CREATE] #{sample.inspect}") if verbose? and not transactions[:create].empty?
+        end
+      }
+    rescue Exception => e
+      log_rescue("[#{self.class.name}][#{(__method__).to_s}]", e)
+    end
   end
 
-  # key: "object_name:object:id:nuevas_muestras_tc"
-  # id: numero de la nueva muestra. Comienza en cero.
-  # catchs = { "[up|down]:[prio1|prio2|prio3|supercache]" => bytes_leidos_de_tc }
-  def generate_sample(key, id, catchs)
-    new_sample = { :time => (DateTime.now.to_f * @factor_precision).to_i }
-
-    catchs.each_key do |sub_key|
-      new_sample[sub_key] = {}
-      total_bytes, last_accumulated, last_time = $redis.hmget("#{key}:#{id-1}", "#{sub_key}:total_bytes", "#{sub_key}:accumulated", "time") unless id.zero?
-      accumulated = (catchs[sub_key].to_i - total_bytes.to_i) unless id.zero?
-      new_sample[sub_key][:instant] = id.zero? ? "0" : (((accumulated * @factor_precision) / (new_sample[:time] - last_time.to_i)) * 8)
-      new_sample[sub_key][:accumulated] = id.zero? ? "0" : (last_accumulated.to_i + accumulated)
-      new_sample[sub_key][:total_bytes] = catchs[sub_key].to_i
-    end
-
-    catchs.each_key do |k|
-      new_sample[k].each_key { |sub_key| $redis.hmset("#{key}:#{id}", "#{k}:#{sub_key}", new_sample[k][sub_key]) }
-    end
-    $redis.hmset("#{key}:#{id}", "time", new_sample[:time])
+  def round_robin
+    date_keys =$redis.keys("#{@redis_key}_*").sort
+    $redis.del(date_keys.first) if date_keys.count == @sample_count
   end
 
+  def generate_sample(catchs)
+    begin
+      new_sample = { :time => (DateTime.now.to_f * @factor_precision).to_i }
+      new_key = "#{@redis_key}_#{new_sample[:time]}"
+      last_key = $redis.keys("#{@redis_key}_*").sort.last
+
+      catchs.each_key do |sub_key|
+        new_sample[sub_key] = {}
+        # total_bytes, last_accumulated, last_time = $redis.hmget("#{last_key}", "#{sub_key}_total_bytes", "#{sub_key}_accumulated", "time") unless last_key.nil?
+        total_bytes, last_time = $redis.hmget("#{last_key}", "#{sub_key}_total_bytes", "time") unless last_key.nil?
+        accumulated = (catchs[sub_key].to_i < total_bytes.to_i ? total_bytes.to_i : (catchs[sub_key].to_i - total_bytes.to_i) ) unless last_key.nil?
+        new_sample[sub_key][:instant] = last_key.nil? ? "0" : (((accumulated * @factor_precision) / (new_sample[:time] - last_time.to_i)) * 8)
+        #new_sample[sub_key][:accumulated] = last_key.nil? ? "0" : (last_accumulated.to_i + accumulated)
+        new_sample[sub_key][:total_bytes] = catchs[sub_key].to_i
+      end
+      catchs.each_key { |k| new_sample[k].each_key { |sub_key| $redis.hmset("#{new_key}", "#{k}_#{sub_key}", new_sample[k][sub_key]) } }
+      $redis.hmset("#{new_key}", "time", new_sample[:time])
+    rescue Exception => e
+      log_rescue("[#{self.class.name}][#{(__method__).to_s}]", e)
+    end
+  end
+
+  def compact_to_db
+    begin
+      samples = { :create => [], :update => [] }
+      data = {}
+      time_period = 60
+      period = 0
+      # ME TRAIGO TODAS LAS KEYS DE REDIS ORDENAS.
+      date_keys = $redis.keys("#{@redis_key}_*").sort
+
+      date_keys.each do |key|
+        time = $redis.hget("#{key}", "time")
+        data[time] = {}
+        @compact_keys.each { |rkey| data[time][rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
+      end
+
+      time_samples = data.keys.map(&:to_i).sort
+
+      if verbose?
+        time_samples.each do |key|
+          log("[#{self.class.name}][#{(__method__).to_s}][SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}] #{key} (#{Time.at(key / @factor_precision)}) ---> #{data[key.to_s].inspect}")
+        end
+      end
+
+      #DIVIDO POR EL FACTOR PRECISION PARA OBTENER LA HORA POSTA PERO EN ENTERO.
+      # CHEQUEO QUE EN EL UTIMO SAMPLE DE UN MINUTO QUE TENGO, SI HAY ALGUN SAMPLE DE REDIS QUE DEBA METER PARA ACTUALIZAR ESA MUESTRA.
+      unless @last_db_sample.nil?
+        init_time_last_sample = @last_db_sample.sample_number.to_i
+        end_time_last_sample  = init_time_last_sample + ((time_period*@factor_precision)-1)
+        range = (init_time_last_sample..(end_time_last_sample))
+        dates_selected = time_samples.select{|k| range.include?(k.to_i)}
+        log("[#{self.class.name}][#{(__method__).to_s}][LastSample][Range] (#{init_time_last_sample} - #{end_time_last_sample}) ---> #{Time.at(init_time_last_sample / @factor_precision)} - #{Time.at(end_time_last_sample / @factor_precision)}") if verbose?
+        unless dates_selected.empty?
+          new_sample = {"#{@relation.class.name.downcase}_id".to_sym => @relation.id}
+          @compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] = @last_db_sample[rkey[:name].to_sym] }
+          log("[#{self.class.name}][#{(__method__).to_s}][LastSample][#{@relation.class.name}:#{@relation.id}] #{@last_db_sample.inspect}") if verbose?
+          dates_selected.each do |date|
+            log("[#{self.class.name}][#{(__method__).to_s}][LastSample][DataSelect][#{@relation.class.name}:#{@relation.id}] (#{date}) ---> #{Time.at(date / @factor_precision)}") if verbose?
+            @compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] += data[date.to_s][rkey[:name]] }
+          end
+          samples[:update] << new_sample
+        end
+      end
+
+      init_time_new_sample = @last_db_sample.nil? ? (Time.at(time_samples.first / @factor_precision).change(:sec => 0).to_f * @factor_precision).to_i : @last_db_sample.sample_number.to_i + (time_period * @factor_precision)
+
+      i = 0
+      while init_time_new_sample < time_samples.last
+        end_time_new_sample  = init_time_new_sample + ((time_period*@factor_precision)-1)
+        range = (init_time_new_sample..end_time_new_sample)
+        log("[#{self.class.name}][#{(__method__).to_s}][NewSample][Range][#{@relation.class.name}:#{@relation.id}] (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample / @factor_precision)} - #{Time.at(end_time_new_sample / @factor_precision)}") if verbose?
+        sample_time = Time.at(init_time_new_sample.to_f / @factor_precision).change(:sec => 0)
+        new_sample = {:period => period, :sample_time => sample_time, :sample_number => init_time_new_sample.to_s, "#{@relation.class.name.downcase}_id".to_sym => @relation.id }
+        @compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] = 0 }
+        time_samples.select{|k| range.include?(k)}.each do |date|
+          log("[#{self.class.name}][#{(__method__).to_s}][NewSample][DataSelect][#{@relation.class.name}:#{@relation.id}] (#{date}) ---> #{Time.at(date / @factor_precision)}") if verbose?
+          @compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] += data[date.to_s][rkey[:name]] }
+        end
+        samples[:create] << new_sample
+        i += 1
+        init_time_new_sample = init_time_new_sample + (i*time_period*@factor_precision)
+      end
+      samples
+    rescue Exception => e
+      log_rescue("[#{self.class.name}][#{(__method__).to_s}]", e)
+    end
+  end
 end
 
 class DaemonCompactSamples < DaemonTask
-  # PERIOD   AMPLITUD              TIME_SAMPLE           SAMPLES_SIZE   SAMPLES_SIZE_SATURA
-  # 0        180.min (3.hours)        1.min              300            300 + 5 = 305
-  # 1        1440.min (1.day)         5.min              288            288 + 6 = 294
-  # 2        10080.min (1.week)      30.min              336            336 + 6 = 342
-  # 3        44640.min (1.month)    180.min (3.hours)    348            348 + 8 = 356
-  # 4        525600.min (1.year)   1440.min (24.hours)   365            365
+
   def initialize
-    @time_for_exec = { :frecuency => 1.minutes }
+    @time_for_exec = { :frecuency => 20.seconds }
     @wait_for_apply_changes = true
+    @factor_precision = 100
     @proc = Proc.new { exec_daemon_compact_samples }
-    @sample_conf = { :period_0 => { :period_number => 0, :time_sample => 1,    :sample_size => 300, :sample_size_cut => 305, :excess_count => 5,   :scope => 180.minutes },
-                     :period_1 => { :period_number => 1, :time_sample => 5,    :sample_size => 288, :sample_size_cut => 294, :excess_count => 6,   :scope => 1440.minutes },
-                     :period_2 => { :period_number => 2, :time_sample => 30,   :sample_size => 336, :sample_size_cut => 342, :excess_count => 6,   :scope => 10080.minutes },
-                     :period_3 => { :period_number => 3, :time_sample => 180,  :sample_size => 348, :sample_size_cut => 356, :excess_count => 8,   :scope => 44640.minutes },
-                     :period_4 => { :period_number => 4, :time_sample => 1440, :sample_size => 348, :sample_size_cut => nil, :excess_count => nil, :scope => 525600.minutes }
-                   }
     super
   end
 
   def exec_daemon_compact_samples
-    transactions = []
-    #POR CADA EJECUCION DEL DAEMON NECESITO TRAERME EL VALOR ACTUALIZADO DE CUANTOS SAMPLES HAY POR CONTRATO EN CADA UNO DE LOS PERIODOS.
-    @sample_conf.each_key { |key| @sample_conf[key][:samples] = ContractSample.total_for_period(@sample_conf[key][:period_number]) }
-
-    Contract.all.each do |c|
-      #NECESITO QUE ESTO SEA ATOMICO; QUE HAGA TODO ANTES DE QUE SE EJECUTE REDIS.
-      $redis_mutex.synchronize { samples = redis_compact(c) }
-      unless samples.empty?
-        transactions << samples[:create] + samples[:update]
-        # Me traigo la cantidad de samples del periodo 0 en la base de datos.
-        total_samples = @samples_conf[:period_0][:samples].select{|cs| cs.id == c.id}.first.total_samples
-        flag = ((total_samples + samples.count) >= @sample_conf[:period_0][:sample_size_cut]) ? true : false
-        compact_count = (total_samples + samples.count) - @sample_conf[:period_0][:sample_size]
-        # PROCESO ITERATIVO DE COMPACTACIÓN: con el upto evito el periodo 0 que es el de un minuto, que ya compate arriba (REDIS)
-        1.upto(@samples_conf.keys.count-1) do |per|
-          # SI flag ES FALSE NO PUEDO COMPACTAR EL PERIODO, POR LO QUE IMPLICA QUE TAMPOCO VOY A PODER COMPACTAR LOS SUBSIGUIENTES.
-          break if not flag
-          flag = false
-          total_samples = @samples_conf["period_#{per}".to_sym][:samples].select{|cs| cs.id == c.id}.first.total_samples
-          samples = compact(per, compact_count, c)
-          transactions << samples[:create] + samples[:destroy]
-          compact_count = (total_samples + samples[:create].count) - @samples_conf["period_#{per}".to_sym][:sample_size]
-          flag = ((total_samples + samples[:create].count) >= @samples_conf["period_#{per}".to_sym][:sample_size_cut]) ? true : false
-        end
-      end
-    end
-    ContractSample.transaction{ transactions.flatten.each {|s| eval(s)} } unless transactions.empty?
-  end
-
-  def redis_compact(c)
-    samples = { :create => [], :update => [] }
-    if $redis.exists("contract:#{c.id}:counter")
-      # data = { "time" => { "[prio1|prio2|prio3|supercache]:[up|down]" => instant } }
-      data = {}
-      #Cantidad de registros en redis para el contrato.
-      counter = $redis.get("contract:#{c.id}:counter").to_i
-      # Considero el counter nil, si por casualidad se llegara a ejecutar primero este daemon antes que el de redis, quien create el registro counter.
-      # 12 son las cantidad de muestas de 5 segundos que tomo de redis, ya que en teoria esas 12 muestras contemplarian el nuevo minuto.
-      if not counter.nil? and counter >= 12
-        #Me traigo la muestra mas reciente de un minuto que tenga este contrato en la base de datos.
-        last_sample = ContractSample.all( :conditions => { :contract_id => c.id, :period => 0 }).last
-        ######## TO-DO: NECESITO QUE ESTE COUNTER TIMES SEA ATOMICO, NO PUEDE PERMITIR QUE SE CORTE Y SE EJECUTE EL DAEMON DE REDIS
-        counter.times do |x|
-          time = $redis.hmget("contract:#{c.id}:sample:#{x}", "time")
-          data[time] = {}
-          c.redis_keys.each do |rkey|
-            data[time][rkey[:name]] = $redis.hmget("contract:#{c.id}:sample:#{x}", "#{rkey[:name]}:instant").first.to_i
-            $redis.del("contract:#{c.id}:sample:#{x}")
+    begin
+      models_to_compact.each do |model|
+        @klass = "#{model}_sample".camelize.constantize
+        transactions = { :create => [], :destroy => [] }
+        @sample_conf = @klass.sample_conf
+        (@sample_conf.count - 1).times do |i|
+          @sample_conf["period_#{i}".to_sym][:samples].each_key do |c_id|
+            sample = @sample_conf["period_#{i}".to_sym][:samples][c_id]
+            @relation = sample.object #ESTA EN UN INCLUDE NO CUESTA NADA TRAERLO
+            excess = @sample_conf["period_#{i}".to_sym][:sample_size_cut]
+            if sample.total_samples.to_i >= excess
+              log("[#{self.class.name}][#{(__method__).to_s}][NeedCompact] (#{@klass.name} => #{@relation.id}) #{sample.total_samples} > #{excess}") if verbose?
+              last_sample_period = @sample_conf["period_#{i.next}".to_sym][:samples][c_id]
+              data = @sample_conf["period_#{i}".to_sym][:excess_samples][@relation.id.to_s]
+              samples = compact(i.next, data, last_sample_period)
+              @sample_conf["period_#{i.next}".to_sym][:samples][c_id].total_samples = (@sample_conf["period_#{i.next}".to_sym][:samples][c_id].total_samples.to_i + samples[:create].size) unless @sample_conf["period_#{i.next}".to_sym][:samples][c_id].nil?
+              transactions[:create] += samples[:create]
+              transactions[:destroy] += samples[:destroy]
+            end
           end
         end
-        $redis.set("contract:#{c.id}:counter", 0)
-
-        time_last_sample = last_sample.nil? ? dates_selected.first : last_sample.period_time.to_i
-        unless last_sample.nil?
-          # ME TRAIGO TODAS LAS FECHAS ORDENAS DE LAS MUESTRAS.
-          dates = data.keys.map(&:to_i).sort
-
-          # Caso de que una de las muestras matche con la ultima que tenga y deba actualizarlo.
-          range = (time_last_sample..(time_last_sample + (time_period - 1)))
-          dates_selected = dates.select{|k| range.include?(k)}
-
-          unless dates_selected.empty?
-            dates_selected.each { |date| c.redis_keys.each { |rkey| last_sample[rkey[:name].to_sym] += data[date.to_s][rkey[:name]] } }
-            samples[:update] << "#{last_sample.save}"
+        @klass.transaction {
+          transactions[:destroy].each do |transaction|
+            log("[#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{@relation.class.name}:#{@relation.id}][DESTROY] #{transaction.inspect}") if (verbose? and not transactions[:destroy].empty?)
+            transaction.delete
           end
+          transactions[:create].each do |transaction|
+            sample = @klass.create(transaction)
+            @sample_conf["period_#{transaction[:period]}".to_sym][:samples][transaction[:contract_id]] = sample
+            log("[#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{@relation.class.name}:#{@relation.id}][CREATE] #{sample.inspect}") if (verbose? and not transactions[:create].empty?)
+          end
+        }
+      end
+    rescue Exception => e
+      log_rescue("[#{self.class.name}][#{(__method__).to_s}]", e)
+    end
+  end
+
+  private
+
+  def models_to_compact
+    ["contract"]
+  end
+
+  def compact(period, data, last_sample_period=nil)
+    begin
+      samples = { :create => [], :destroy => [] }
+      time_period = (60 * @sample_conf["period_#{period}".to_sym][:time_sample])
+      time_samples = data.collect(&:sample_number).map(&:to_i).sort
+      init_time_new_sample = last_sample_period.nil? ? time_samples.first : (last_sample_period.sample_number.to_i + (time_period * @factor_precision))
+      end_time_new_sample = init_time_new_sample + ((time_period*@factor_precision)-1)
+      range = (init_time_new_sample..end_time_new_sample)
+      sample_time = Time.at(init_time_new_sample.to_f / @factor_precision).change(:sec => 0)
+      log("[#{self.class.name}][#{(__method__).to_s}][Range] (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample / @factor_precision)} - #{Time.at(end_time_new_sample / @factor_precision)}") if verbose?
+      data.each do |k|
+        if range.include?(k.sample_number.to_i)
+          samples[:destroy] << k
+          log("[#{self.class.name}][#{(__method__).to_s}][DataSelected][#{@relation.class.name}:#{@relation.id}][Compact] (#{@klass.name} => #{relation.id}) #{k.sample_number} --> #{k.inspect}") if verbose?
+        else
+          log("[#{self.class.name}][#{(__method__).to_s}][DataSelected][#{@relation.class.name}:#{@relation.id}][NoCompact] (#{@klass.name} => #{relation.id}) #{k.sample_number} --> #{k.inspect}") if verbose?
         end
-
-        samples = create_samples(time_last_sample, data, @sample_conf[:period_0][:time_sample]*60, @sample_conf[:period_0][:period_number], c) #Genero los samples de 1 minuto
       end
+      new_sample = @klass.compact(samples[:destroy])
+      samples[:create] << new_sample.merge({:period => period, :sample_time => sample_time, :sample_number => init_time_new_sample.to_s, "#{relation.class.name.downcase}_id".to_sym => relation.id })
+      samples
+    rescue Exception => e
+      log_rescue("[#{self.class.name}][#{(__method__).to_s}]", e)
     end
-    samples
   end
-
-  # period => periodo al que voy a compactar las samples, :compact_count => cantidad de muestras que debo compactar, c => contrato.
-  def compact(period, compact_count, c)
-    data = {}
-    samples = { :create => [], :destroy => [], :update => [] }
-    last_sample_period = ContractSample.all( :conditions => { :contract_id => c.id, :period => period } ).last
-    samples_to_compact = ContractSample.all( :conditions => { :contract_id => c.id, :period => (period-1) }, :order => "created_at DESC", :limit => compact_count )
-    samples_to_compact.each do |x|
-      time = samples_to_compact.period_time.to_i
-      data[time] = {}
-      c.redis_keys.each do |rkey|
-        data[time][rkey[:name]] = x.send(rkey[:name])
-        samples[:destroy] << "#{x.destroy}"
-      end
-    end
-    time_last_sample = last_sample.nil? ? data.keys.map(&:to_i).sort.first : last_sample.period_time.to_i
-    samples[:create] = create_samples(time_last_sample, data, @sample_conf["period_#{period}"][:time_sample]*60, period, c)
-    samples
-  end
-
-  def create_samples(last_sample, new_data, time_period, period, c)
-    samples = []
-    time_last_sample = last_sample.period_time.to_i
-    # ME TRAIGO TODAS LAS FECHAS ORDENAS DE LAS MUESTRAS.
-    dates = new_data.keys.map(&:to_i).sort
-    # ESTO ME DA LA CANTIDAD DE SLOTS QUE NECESITO DE UN X MINUTES EN FUNCION DE LAS MUESTRAS QUE TENGO.
-    # el count_slots es la cantidad de nuevos slots que debo crear, pero tengo que contemplar un caso mas cuando son samples desde redis, ya que es posible que deba actualizar el ultimo sample de un minuto
-    count_slots = (dates.last - time_last_sample) / time_period
-
-    # count_slots.times do |i|
-    1.upto(count_slots) do |i|
-      # ESTE EL EL RANGO DEL NUEVO SAMPLE i
-      new_sample = {:period => period, :period_time => Time.at((time_last_sample + i*time_period)), :contract_id => c.id }
-      # new_sample = { :down_prio1 => 0, :down_prio2 => 0, :down_prio3 => 0, :down_supercache => 0, :up_prio1 => 0, :up_prio2 => 0, :up_prio3 => 0 }
-      c.redis_keys.each { |rkey| new_sample["#{rkey[:up_or_down]}_#{rkey[:sample]}".to_sym] = 0 }
-      range = ((time_last_sample + i*time_period)..(time_last_sample + ((i+1)*time_period) - 1))
-      dates_selected = dates.select{|k| range.include?(k)}
-      dates_selected.each { |date| c.redis_keys.each { |rkey| new_sample[rkey[:name].to_sym] += new_data[date.to_s][rkey[:name]] } }
-      samples << "#{ContractSample.new(new_sample)}"
-    end
-    samples
-  end
-
 end
 
 #########################################################
