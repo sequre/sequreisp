@@ -4,24 +4,21 @@
 <% end %>
 <script type="text/javascript">
   $(document).ready(function() {
-    chart_latency = new_chart_latency(<%= Time.zone.utc_offset %>);
-    chart_rate = new_chart_rate_prios(<%= Time.zone.utc_offset %>);
-
+    //chart_latency = new_chart_latency(<%= Time.zone.utc_offset %>);
+    //chart_rate = new_chart_rate_prios(<%= Time.zone.utc_offset %>);
+    chart_latency = createChart(<%= options_hash('instant_latency', '', 'latency(Ms)', 'datetime').to_json %>);
+    chart_rate = createChart(<%= options_hash('instant', '', 'bps(bits/seconds)', 'datetime').to_json %>);
     <% series = Contract.find(@graph.element.id).serie_for_chart_rate_prio %>
-
     <% series.count.times do |index| %>
       chart_rate.addSeries({
-        name: <%= series[index.to_s][:name].to_json %>,
-        type: <%= series[index.to_s][:type].to_json %>,
-        color: <%= series[index.to_s][:color].to_json %>,
-        stack: <%= series[index.to_s][:stack].to_json %>,
+        <%= series[index.to_s].map { |key, value| "#{key.to_json}: #{value.to_json},"} %>
         data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
       });
     <% end %>
 
     chart_rate.redraw();
 
-<% result = @graph.element.data_count_for_last_year %>
+    <% result = @graph.element.data_count_for_last_year %>
 $('#contract_data_traffic').highcharts({
             chart: {
                 type: 'column'
