@@ -419,17 +419,17 @@ def gen_iptables
         providers = Provider.enabled.with_klass_and_interface
         lan_interfaces = Interface.only_lan
 
-        contracts.each do |contract|
-          f.puts contract.rules_for_up_data_counting
-          f.puts contract.rules_for_down_data_counting
-        end # Create all leaf nodes
+        # contracts.each do |contract|
+        #   f.puts contract.rules_for_up_data_counting
+        #   f.puts contract.rules_for_down_data_counting
+        # end # Create all leaf nodes
 
-        unless contracts.empty?
-          [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
-            f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
-            Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
-          end
-        end
+        # unless contracts.empty?
+        #   [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
+        #     f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
+        #     Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
+        #   end
+        # end
 
         f.puts "-A FORWARD -j sequreisp-allowedsites"
 

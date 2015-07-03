@@ -65,7 +65,6 @@ class ContractSample < ActiveRecord::Base
     keys
   end
 
-
   def object
     contract
   end
