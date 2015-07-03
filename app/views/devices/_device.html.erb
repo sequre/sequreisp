@@ -1,0 +1,11 @@
+<% semantic_form_for @device do |form| %>
+  <%= error_messages @device%>
+  <% form.inputs do %>
+    <%= form.input :host %>
+    <%= form.input :name %>
+    <%= form.input :description %>
+    <%= form.input :kind, :collection => devices_kinds_for_select %>
+    <%= form_extensions form %>
+  <% end %>
+  <%= form.buttons %>
+<% end %>

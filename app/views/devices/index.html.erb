@@ -1,0 +1,31 @@
+<% content_for :title, t('menu.devices') %>
+<% heading t('menu.devices') %>
+
+<% render_new_button_for :device %>
+<div class="separador"></div>
+<%= render :partial => "search" %>
+<div class="main">
+  <%= page_entries_info @devices %>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= t 'activerecord.attributes.device.host' %></th>
+        <th><%= t 'activerecord.attributes.device.name' %></th>
+        <th><%= t 'activerecord.attributes.device.description' %></th>
+        <th><%= t 'activerecord.attributes.device.snmp_version' %></th>
+        <th><%= t 'activerecord.attributes.device.snmp_community' %></th>
+      </tr>
+      <% @devices.each_with_index do |device,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%= device.host %></td>
+          <td><%= device.name %></td>
+          <td><%= truncate device.description %></td>
+          <td><%= device.snmp_version %></td>
+          <td><%= device.snmp_community %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @devices %>
+</div>

@@ -302,6 +302,13 @@ en:
         id: 'Id'
         name: 'Ip or site name'
         detail: 'Detail'
+      device:
+        kinds:
+          cpe: 'CPE'
+          ap: 'AP'
+          switch: 'Switch'
+          server: 'Server'
+          router: 'Router'
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
