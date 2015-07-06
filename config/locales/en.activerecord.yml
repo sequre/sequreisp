@@ -316,6 +316,8 @@ en:
           switch: 'Switch'
           server: 'Server'
           router: 'Router'
+      device_brand:
+        name: "Name"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
@@ -395,6 +397,7 @@ en:
     support: "Support"
     command_log: "Command log"
     devices: "Devices"
+    device_brands: "Device Brands"
   table_headers:
     plans:
       plugins_enabled: 'Plugins enabled'
