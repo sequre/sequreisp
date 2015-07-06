@@ -1,6 +1,13 @@
 <script type="text/javascript">
   $(function(){
-    $('#device_contract_id').chosen();
+    $('#device_host').autocomplete({
+      delay: 100,
+      source: '<%= ips_contracts_path %>',
+      search: function(event, ui) {
+        //trigger only if 3 octets and a dot are typed
+        return (this.value.split(".").length == 3)
+      }
+    })
   })
 </script>
 <% semantic_form_for @device do |form| %>

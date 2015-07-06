@@ -1,6 +1,6 @@
 class DevicesController < ApplicationController
   def index
-    @search = Device.search(params[:search])
+    @search = Device.search(params[:devices_search])
     @devices = @search.paginate(:page => params[:page], :per_page => 20)
     respond_to do |format|
       format.html # index.html.erb
@@ -18,6 +18,7 @@ class DevicesController < ApplicationController
 
   def create
     @device = Device.new(params[:device])
+    @device.contract = Contract.find_by_ip(@device.host)
     respond_to do |format|
       if @device.save
         flash[:notice] = t 'controllers.successfully_created'
@@ -32,8 +33,10 @@ class DevicesController < ApplicationController
 
   def update
     @device = object
+    @device.attributes = params[:device]
+    @device.contract = Contract.find_by_ip(@device.host)
     respond_to do |format|
-      if @device.update_attributes(params[:device])
+      if @device.save
         flash[:notice] = t 'controllers.successfully_updated'
         format.html { redirect_back_from_edit_or_to(devices_path) }
         format.xml  { head :ok }
@@ -65,5 +68,9 @@ class DevicesController < ApplicationController
 
   def object
     Device.find(params[:id])
+  end
+
+  def set_contract
+    
   end
 end
