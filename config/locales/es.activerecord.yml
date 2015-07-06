@@ -305,6 +305,7 @@ es:
         id: 'Id'
         name: 'Ip o nombre de sitio'
         detail: 'Detail'
+<<<<<<< HEAD
       device:
         host: 'Host'
         description: 'Descripción'
@@ -316,6 +317,10 @@ es:
           switch: 'Switch'
           server: 'Servidor'
           router: 'Router'
+=======
+      device_brand:
+        name: "Nombre"
+>>>>>>> 0970a00730ba453adaf2becc828f27721a687aa2
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -395,6 +400,7 @@ es:
     support: "Soporte"
     command_log: "Log de comandos"
     devices: "Dispositivos"
+    device_brands: "Marcas de dispositivo"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'
