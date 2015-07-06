@@ -1,0 +1,21 @@
+<% content_for :title, t('menu.device_brands') %>
+<% render_new_button_for :device_brand %>
+
+<div class="separador"></div>
+<div class="main">
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= t 'activerecord.attributes.device_brand.name' %></th>
+        <th></th>
+      </tr>
+      <% @device_brands.each_with_index do |brand,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>">
+          <td><%= brand.name %></td>
+          <td><%= link_to t("buttons.delete"), device_brand_path(brand), :method => :delete  %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
