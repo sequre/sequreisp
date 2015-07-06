@@ -302,6 +302,8 @@ es:
         id: 'Id'
         name: 'Ip o nombre de sitio'
         detail: 'Detail'
+      device_brand:
+        name: "Nombre"
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -380,6 +382,7 @@ es:
     guides: "Guías de wispro"
     support: "Soporte"
     command_log: "Log de comandos"
+    device_brands: "Marcas de dispositivo"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'

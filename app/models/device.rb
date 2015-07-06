@@ -11,4 +11,5 @@ class Device < ActiveRecord::Base
   # validates_format_of :mac_address, :with => /^([0-9A-Fa-f]{2}\:){5}[0-9A-Fa-f]{2}$/, :allow_blank => true
   belongs_to :device
   belongs_to :contract
+  belongs_to :device_brand
 end

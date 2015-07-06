@@ -1,4 +1,6 @@
 ActionController::Routing::Routes.draw do |map|
+  map.resources :device_brands
+
   map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get, :get_mac_address => :get }
 
   map.resources :configurations, :collection => {:doreload => :get, :is_apply_changes => :get }
@@ -32,6 +34,8 @@ ActionController::Routing::Routes.draw do |map|
   map.resource :dashboard, :collection => { :cpu => :get , :services => :get, :load_average => :get, :reboot => :get, :halt => :get, :daemons => :get }
 
   map.resources :always_allowed_sites
+
+  map.resources :device_brand
 
   map.command_logs '/command_logs/command_log_info', :controller => 'command_logs', :action => 'command_log_info'
   map.command_logs '/command_logs', :controller => 'command_logs', :action => 'command_logs'

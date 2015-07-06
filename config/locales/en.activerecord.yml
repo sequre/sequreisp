@@ -309,6 +309,8 @@ en:
           switch: 'Switch'
           server: 'Server'
           router: 'Router'
+      device_brand:
+        name: "Name"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
@@ -387,6 +389,7 @@ en:
     guides: "Wispro guides"
     support: "Support"
     command_log: "Command log"
+    device_brands: "Device Brands"
   table_headers:
     plans:
       plugins_enabled: 'Plugins enabled'
