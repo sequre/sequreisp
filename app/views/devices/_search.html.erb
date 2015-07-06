@@ -2,13 +2,8 @@
   <% fields_for :search do %>
     <%= label_tag t('activerecord.attributes.device.host'), nil, :style => "display:inline;" %>
     <%= text_field_tag "devices_search[host]" %>
-    <%= label_tag t('activerecord.attributes.device.snmp_community'), nil, :style => "display:inline;" %>
-    <%= text_field_tag "devices_search[snmp_community]" %>
     <%= label_tag t('activerecord.attributes.device.kind'), nil, :style => "display:inline;" %>
-    <%= select_tag "devices_search[kind]", options_for_select(devices_kinds_for_select) %>
-    <%= label_tag t('activerecord.attributes.device.snmp_version'), nil, :style => "display:inline;" %>
-    <%= select_tag "devices_search[snmp_version]", options_for_select(devices_snmp_versions_for_select) %>
-    <%= label_tag t('activerecord.attributes.search.not_paged'), nil, :style => "display:inline;" %>
+    <%= select_tag "devices_search[kind]", options_for_select([[], devices_kinds_for_select]) %>
     <%= check_box_tag 'search[not_paged]' %>
   <% end %>
   <%= submit_tag t('buttons.search') %>

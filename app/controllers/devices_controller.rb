@@ -52,6 +52,15 @@ class DevicesController < ApplicationController
     end
   end
 
+  def destroy
+    @device = object
+    @device.destroy
+    respond_to do |format|
+      format.html { redirect_back_from_edit_or_to(devices_path) }
+      format.xml  { head :ok }
+    end
+  end
+
   private
 
   def object

@@ -77,6 +77,9 @@ es:
       always_allowed_site:
         one: 'Sitio permitido'
         other: 'Sitios permitidos'
+      device:
+        one: 'Dispositivo'
+        other: 'Dispositivos'
     attributes:
       name: "Nombre"
       ip: "Dirección IP"
@@ -302,6 +305,17 @@ es:
         id: 'Id'
         name: 'Ip o nombre de sitio'
         detail: 'Detail'
+      device:
+        host: 'Host'
+        description: 'Descripción'
+        kind: 'Tipo'
+        name: 'Nombre'
+        kinds:
+          cpe: 'CPE'
+          ap: 'AP'
+          switch: 'Switch'
+          server: 'Servidor'
+          router: 'Router'
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -380,6 +394,7 @@ es:
     guides: "Guías de wispro"
     support: "Soporte"
     command_log: "Log de comandos"
+    devices: "Dispositivos"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'

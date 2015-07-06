@@ -12,8 +12,8 @@
         <th><%= t 'activerecord.attributes.device.host' %></th>
         <th><%= t 'activerecord.attributes.device.name' %></th>
         <th><%= t 'activerecord.attributes.device.description' %></th>
-        <th><%= t 'activerecord.attributes.device.snmp_version' %></th>
-        <th><%= t 'activerecord.attributes.device.snmp_community' %></th>
+        <th></th>
+        <th></th>
       </tr>
       <% @devices.each_with_index do |device,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
@@ -21,8 +21,8 @@
           <td><%= device.host %></td>
           <td><%= device.name %></td>
           <td><%= truncate device.description %></td>
-          <td><%= device.snmp_version %></td>
-          <td><%= device.snmp_community %></td>
+          <td><%= link_to t("buttons.edit"), edit_device_path(device) %></td>
+          <td><%= link_to t("buttons.delete"), device, :confirm => t('messages.confirm'), :method => :delete %></td>
         </tr>
       <% end %>
     </tbody>

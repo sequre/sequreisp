@@ -1,10 +1,15 @@
+<script type="text/javascript">
+  $(function(){
+    $('#device_contract_id').chosen();
+  })
+</script>
 <% semantic_form_for @device do |form| %>
-  <%= error_messages @device%>
+  <%= error_messages @device %>
   <% form.inputs do %>
     <%= form.input :host %>
     <%= form.input :name %>
     <%= form.input :description %>
-    <%= form.input :kind, :collection => devices_kinds_for_select %>
+    <%= form.input :kind, :collection => devices_kinds_for_select, :allow_blank => false %>
     <%= form_extensions form %>
   <% end %>
   <%= form.buttons %>

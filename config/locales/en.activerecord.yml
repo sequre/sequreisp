@@ -77,6 +77,9 @@ en:
       always_allowed_site:
         one: 'Allowed site'
         other: 'Allowed sites'
+      device:
+        one: 'Device'
+        other: 'Devices'
     attributes:
       name: "Name"
       ip: "IP Address"
@@ -303,6 +306,10 @@ en:
         name: 'Ip or site name'
         detail: 'Detail'
       device:
+        host: 'Host'
+        description: 'Description'
+        kind: 'Kind'
+        name: 'Name'
         kinds:
           cpe: 'CPE'
           ap: 'AP'
@@ -387,6 +394,7 @@ en:
     guides: "Wispro guides"
     support: "Support"
     command_log: "Command log"
+    devices: "Devices"
   table_headers:
     plans:
       plugins_enabled: 'Plugins enabled'
