@@ -1,0 +1,28 @@
+<% content_for :title, t('menu.devices') %>
+<% heading Device.human_name %>
+
+<div class="main">
+  <table cellspacing="" cellpadding="">
+    <caption>Device information</caption>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th><%= t 'activerecord.attributes.device.host' %></th>
+        <th><%= t 'activerecord.attributes.device.name' %></th>
+        <th><%= t 'activerecord.attributes.device.description' %></th>
+        <th><%= t 'activerecord.attributes.device.kind' %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><%= @device.id %></td>
+        <td><%= @device.host %></td>
+        <td><%= @device.name %></td>
+        <td><%= @device.description %></td>
+        <td><%= @device.kind %></td>
+      </tr>
+    </tbody>
+  </table>
+  <%= view_extensions %>
+</div>
+
