@@ -4,6 +4,10 @@ class Device < ActiveRecord::Base
   KIND_SWITCH = "switch"
   KIND_SERVER = "server"
   KIND_ROUTER = "router"
+  BRAND_UBIQUITI = "ubiquiti"
+  BRAND_MIKROTIK = "mikrotik"
+  BRAND_CISCO = "cisco"
+  BRAND_OTHER = "other"
   named_scope :aps, :conditions => "kind = KIND_AP"
   named_scope :need_update, lambda {  { :conditions => ["updated_at <= ?", 5.minutes.ago]} }
   validates_presence_of :host, :kind, :brand
