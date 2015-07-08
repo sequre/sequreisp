@@ -16,8 +16,7 @@
     <%= form.input :host %>
     <%= form.input :name %>
     <%= form.input :description %>
-    <%= form.input :brand, :collection => devices_brands_for_select, :allow_blank => false %>
-    <%= form.input :kind, :collection => devices_kinds_for_select, :allow_blank => false%>
+    <%= form.input :kind, :collection => devices_kinds_for_select, :allow_blank => false %>
     <%= form_extensions form %>
   <% end %>
   <%= form.buttons %>
