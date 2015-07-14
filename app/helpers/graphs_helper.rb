@@ -17,10 +17,10 @@
 
 module GraphsHelper
   def instant_rate_path
-    case @graph.element.class.to_s 
+    case @graph.element.class.to_s
     when "Contract"
       instant_rate_contract_path(@graph.element)
-    when "Provider" 
+    when "Provider"
       instant_rate_interface_path(@graph.element.interface)
     when "ProviderGroup"
       instant_rate_provider_group_path(@graph.element)
@@ -28,4 +28,74 @@ module GraphsHelper
       instant_rate_interface_path(@graph.element)
     end
   end
+
+  def default_options_graphs options={}
+    options[:type] ||= 'line'
+
+    { :credits     => { :enabled => false },
+      :chart       => { :renderTo => options[:render_to] },
+      :exporting   => { :enabled => true },
+      :legend      => { :enabled => true, :verticalAlign => 'down' },
+      :title       => { :text => options[:title] },
+      :xAxis       => { :type => "datetime" },
+      :yAxis       => { :title => { :text => options[:ytitle] }},
+      :plotOptions => { options[:type].to_sym => { :stacking => options[:stacking] } },
+      :series      => options[:series]
+    }
+
+  end
+
+  def contract_rate_graph(obj)
+    date_keys = $redis.keys("contract_#{obj.id}_sample_*").sort
+
+    graph = { :title => 'BuenasBuenas',
+      :type => 'area',
+      :render_to => 'instant',
+      :stacking => 'normal',
+      :ytitle => 'bps(bits/second)',
+      :series => [] }
+
+    ContractSample.compact_keys.each do |rkey|
+      data = []
+      times = []
+      date_keys.each do |key|
+        data << $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
+        data << $redis.hget("#{key}", "time").to_i
+      end
+      graph[:series] << { :name => rkey[:name], :type=> "up", :stack => 1, :data => data*-1 } if rkey[:name].include? "up"
+      graph[:series] << { :name => rkey[:name], :type=> "down", :stack => 0, :data => data } if rkey[:name].include? "down"
+    end
+
+    { :instant => default_options_graphs(graph) }
+  end
+
+  def contract_rate_graph_for_periods(obj)
+    graphs = []
+    samples_by_period = ContractSample.all(:conditions => { :contract_id => obj.id} ).group_by(&:period)
+    samples_by_period.each do |period, samples|
+      foo = { :title => "Samples for period #{period}",
+        :render_to => "contract_rate_period_#{period}",
+        :ytitle => "bps(bits/second)",
+        :series => [] }
+
+      ContractSample.compact_keys.each do |rkey|
+        data = []
+        period_samples.each { |pp| data << pp[rkey[:name].to_sym] }
+
+        foo[:series] << { :name => rkey[:name], :type=> "line", :stack => 1, :data => data } if rkey[:name].include? "up"
+        foo[:series] << { :name => rkey[:name], :type=> "area", :stack => 0, :data => data } if rkey[:name].include? "down"
+      end
+      graphs << foo
+    end
+    graphs
+  end
+
+
+  def device_memory_graph(obj)
+  end
+
+
+  def device_memory_graph_for_periods(obj)
+  end
+
 end
