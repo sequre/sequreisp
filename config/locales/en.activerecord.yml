@@ -502,6 +502,7 @@ en:
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"
+      redis_server: "Redis Server"
   actions:
     edit: "Editing %{model}"
     new: "Creating %{model}"
