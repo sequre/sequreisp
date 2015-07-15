@@ -801,13 +801,13 @@ class DaemonCompactSamples < DaemonTask
         end
         @klass.transaction {
           transactions[:destroy].each do |transaction|
-            log("[#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{@relation.class.name}:#{@relation.id}][DESTROY] #{transaction.inspect}") if (verbose? and not transactions[:destroy].empty?)
+            log("[#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{@relation.class.name}:#{@relation.id}][DELETE] #{transaction.inspect}") if verbose?
             transaction.delete
           end
           transactions[:create].each do |transaction|
             sample = @klass.create(transaction)
-            @sample_conf["period_#{transaction[:period]}".to_sym][:samples][transaction[:contract_id]] = sample
-            log("[#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{@relation.class.name}:#{@relation.id}][CREATE] #{sample.inspect}") if (verbose? and not transactions[:create].empty?)
+            @sample_conf["period_#{transaction[:period]}".to_sym][:samples]["#{@relation.class.name.downcase}_id".to_sym] = sample
+            log("[#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{@relation.class.name}:#{@relation.id}][CREATE] #{sample.inspect}") if verbose?
           end
         }
       end
@@ -815,8 +815,6 @@ class DaemonCompactSamples < DaemonTask
       log_rescue("[#{self.class.name}][#{(__method__).to_s}]", e)
     end
   end
-
-  private
 
   def models_to_compact
     ["contract"]

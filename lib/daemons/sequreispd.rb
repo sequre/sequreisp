@@ -35,7 +35,7 @@ Signal.trap("INT") { $running = false }
 $running = true
 
 require 'sequreisp_constants'
-require 'daemon_task'
+# require 'daemon_task'
 require "sequreisp_logger"
 require 'command_context'
 #Thread::abort_on_exception = true

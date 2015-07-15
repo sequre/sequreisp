@@ -2,19 +2,18 @@ class ContractSample < ActiveRecord::Base
   belongs_to :contract
 
   named_scope :last_sample, lambda{ |period| { :select => 'COUNT(*) as total_samples, contract_samples.*',
-                                                    :include => 'contract',
-                                                    :group  => 'contract_id',
-                                                    :conditions => "contract_samples.sample_number IN (SELECT MAX(contract_samples.sample_number)
-                                                                                                       FROM contract_samples
-                                                                                                       WHERE contract_samples.period = #{period}
-                                                                                                       GROUP BY contract_samples.contract_id)" } }
+                                               :include => 'contract',
+                                               :group  => 'contract_id',
+                                               :conditions => "contract_samples.sample_number IN (SELECT MAX(contract_samples.sample_number)
+                                                                                                  FROM contract_samples
+                                                                                                  WHERE contract_samples.period = #{period}
+                                                                                                  GROUP BY contract_samples.contract_id)" } }
 
   named_scope :total_samples_for_period, lambda { |period| { :select => 'COUNT(*) as total_samples, contract_samples.*',
                                                              :group => 'contract_id',
                                                              :conditions => "contract_samples.period = #{period}" } }
 
   named_scope :samples_to_compact, lambda { |id, period, limit| { :conditions => "contract_samples.contract_id = #{id} and contract_samples.period = #{period}",
-                                                                  :group => "contract_samples.contract_id",
                                                                   :limit => limit } }
 
   def self.sample_conf
