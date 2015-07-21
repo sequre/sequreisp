@@ -11,10 +11,10 @@ module DevicesHelper
 
   def devices_brands_for_select
     [
-     ["Ubiquiti", Device::UBIQUITI],
-     ["MikroTik", Device::MIKROTIK],
-     ["Cisco", Device::CISCO],
-     ["Other", Device::OTHER]
+     ["Ubiquiti", Device::BRAND_UBIQUITI],
+     ["MikroTik", Device::BRAND_MIKROTIK],
+     ["Cisco", Device::BRAND_CISCO],
+     ["Other", Device::BRAND_OTHER]
     ]
   end
 end
