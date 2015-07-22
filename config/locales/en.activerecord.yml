@@ -583,6 +583,7 @@ en:
       proxy_arp_provider_can_not_be_guessed: "The IP address assigned to this contract does not belongs to any of the providers, you must select a provider"
       unique_provider_does_not_belongs_to_plan: "The assigned provider does not belong to the selected plan"
       mac_address_taken_in_interface: "existing in <a target='_blank' href='/interface/%{interface_id}/'>Interface No. %{interface_id}</a>"
+      do_not_set_mask_if_is_not_a_network: "Do not set the mask if it's not a network"
     configuration:
       notification_email_invalid: "Invalid email address"
       web_interface_listen_at_least_on_one_port: "At least one port must be enabled for web interface requests"

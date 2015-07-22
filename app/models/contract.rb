@@ -75,6 +75,7 @@ class Contract < ActiveRecord::Base
 
   validate :state_should_be_included_in_the_list
   validate :uniqueness_mac_address_in_interfaces_lan
+  validate :ip_without_netmask, :if => "ip_changed?"
 
   def uniqueness_mac_address_in_interfaces_lan
     if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).count > 0
@@ -85,6 +86,14 @@ class Contract < ActiveRecord::Base
   def state_should_be_included_in_the_list
     unless AASM::StateMachine[Contract].states.map(&:name).include?(state.to_sym)
       errors.add(:state, I18n.t('activerecord.errors.messages.inclusion'))
+    end
+  end
+
+  def ip_without_netmask
+    _ip = IP.new(ip)
+    # check that the mask is set only for networks
+    if _ip.mask > 0 and _ip != _ip.network
+      errors.add(:ip, I18n.t('validations.contract.do_not_set_mask_if_is_not_a_network'))
     end
   end
 

@@ -580,6 +580,7 @@ pt:
       proxy_arp_provider_can_not_be_guessed: "O endereço IP atribuído a este contrato não pertence a nenhum dos fornecedores, você deve selecionar um fornecedor"
       unique_provider_does_not_belongs_to_plan: "O fornecedor atribuído não pertence ao plano escolhido"
       mac_address_taken_in_interface: "existente no <a target='_blank' href='/interface/%{interface_id}/'>Interface No. %{interface_id}</a>"
+      do_not_set_mask_if_is_not_a_network: "Não defina a máscara se não é uma rede"
     configuration:
       notification_email_invalid: "Endereço de e-mail inválido"
       web_interface_listen_at_least_on_one_port: "Pelo menos uma porta deve estar habilitado para pedidos de interface web"
