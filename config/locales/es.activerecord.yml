@@ -667,7 +667,7 @@ es:
     human:
       prepare_iptables: "Preparando reglas de iptables"
       create_tmp_file: "Inicializando proceso de aplicar cambios"
-      sequreisp_pre: "Eliminado cache de memoria virtual"
+      sequreisp_pre: "Scripts previo a la aplicación de cambios"
       setup_queued_commands: "Realizando tareas pendientes"
       setup_clock: "Configurando zona horario en el servidor"
       setup_proc: "Configurando parametros generales del sistema operativo (sysctl)"
@@ -687,7 +687,7 @@ es:
       setup_iptables_restore_old: "Fallo en las reglas de iptables, restaurando archivo backup de iptables"
       setup_mail_relay: "Configurando Mail Relay"
       bind_reload: "Configurando servidor DNS"
-      sequreisp_post: "Estableciendo reglas de iptables manuales"
+      sequreisp_post: "Scripts luego de la finalización de aplicar cambios"
       delete_tmp_file: "Finalizado proceso de aplicar cambios"
       do_port_forwarding: "Do port forwarding"
       do_port_forwardings_avoid_nat_triangle: "Do port forwardings avoid nat triangle"

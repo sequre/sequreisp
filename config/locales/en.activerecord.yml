@@ -665,7 +665,7 @@ en:
     human:
       prepare_iptables: "Prepare iptables rules"
       create_tmp_file: "Initialize apply changes process"
-      sequreisp_pre: "Clear cache virtual memory"
+      sequreisp_pre: "scripts pre apply changes"
       setup_queued_commands: "Start pending jobs"
       setup_clock: "Setup time zone"
       setup_proc: "Setup sysctl general params"
@@ -685,7 +685,7 @@ en:
       setup_iptables_restore_old: "Fail loading iptables, restore the old iptables"
       setup_mail_relay: "Setup mail relay"
       bind_reload: "Setup DNS service"
-      sequreisp_post: "Finalize iptables"
+      sequreisp_post: "scripts post apply changes"
       delete_tmp_file: "Finalize apply changes process"
       do_port_forwarding: "Do port forwarding"
       do_port_forwardings_avoid_nat_triangle: "Do port forwardings avoid nat triangle"
