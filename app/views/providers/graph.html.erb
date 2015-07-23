@@ -25,13 +25,12 @@
     <tbody>
       <tr class="odd">
         <th><%=t 'activerecord.attributes.provider.interface' %></th>
-        <th><%=t 'activerecord.attributes.provider.rate_down' %></th>
-        <th><%=t 'activerecord.attributes.provider.rate_up' %></th>
+        <th><%=t 'activerecord.attributes.provider.rate_down' %> /
+            <%=t 'activerecord.attributes.provider.rate_up' %></th>
       </tr>
       <tr class="odd" >
         <td><%= @graph.element.interface.name rescue 'Undefined' %></td>
-        <td><%= @graph.element.rate_down %></td>
-        <td><%= @graph.element.rate_up %></td>
+        <td><%= show_human_down_up @graph.element.rate_down, @graph.element.rate_up %></td>
       </tr>
     </tbody>
   </table>
