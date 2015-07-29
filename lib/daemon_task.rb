@@ -493,7 +493,7 @@ class DaemonRrdFeed < DaemonTask
     pklass=nil
     cklass=nil
     sent=false
-    IO.popen("/sbin/tc -s class show dev #{iface}", "r").each do |line|
+    tc = IO.popen("/sbin/tc -s class show dev #{iface}", "r").each do |line|
       #puts line
       if (line =~ /class hfsc (\w+):(\w+)/) != nil
         #puts "pklass = #{$~[1]} cklass =  #{$~[2]}"
@@ -509,6 +509,7 @@ class DaemonRrdFeed < DaemonTask
         sent = false
       end
     end
+    tc.close unless tc.closed?
     #puts "karray = #{karray.inspect}"
     karray
   end
