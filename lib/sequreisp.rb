@@ -473,7 +473,7 @@ def gen_iptables
         end
 
         ######################if
-        contracts = Contract.not_disabled.descend_by_netmask
+        contracts = Contract.descend_by_netmask
         contracts.each do |c|
           f.puts c.rules_for_enabled
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
