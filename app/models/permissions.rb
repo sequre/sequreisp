@@ -90,6 +90,9 @@ class Permissions < Aegis::Permissions
     action :doreload do
       allow :technical, :administrative
     end
+    action :is_apply_changes do
+      allow :technical, :administrative
+    end
   end
 
   resource :backup do
