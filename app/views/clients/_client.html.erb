@@ -38,7 +38,7 @@
   <% end %>
   <% if current_user.may_update_client?(@client) or current_user.may_create_client? %>
     <% form.buttons do %>
-      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+      <%= form.commit_button @commit_text, :button_html => {:disable_with => t('buttons.please_wait')} %>
     <% end %>
   <% end %>
 <% end %>
