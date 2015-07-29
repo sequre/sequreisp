@@ -583,6 +583,7 @@ es:
       proxy_arp_provider_can_not_be_guessed: "La IP asignada al contrato no pertenece a ningun proveedor, debe especificar el proveedor"
       unique_provider_does_not_belongs_to_plan: "El proveedor asignado no pertenece al plan seleccionado"
       mac_address_taken_in_interface: "existente en <a target='_blank' href='/interface/%{interface_id}/'>Interface Nro. %{interface_id}</a>"
+      do_not_set_mask_if_is_not_a_network: "No establezca máscara si no es una red"
     configuration:
       notification_email_invalid: "Dirección de e-mail inválida"
       web_interface_listen_at_least_on_one_port: "Al menos se debe seleccionar un puerto para la interfaz web"
