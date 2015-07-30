@@ -684,6 +684,7 @@ end
     mask = "0000ffff"
     ceil = _plan["ceil_" + direction] * bandwidth_rate
     rate = _plan.send("rate_" + direction) * bandwidth_rate
+    ceil = 1 if ceil <= 0
     rate = 1 if rate <= 0
 
     ls_m1_prio3 = [ (rate / 20).round, 1 ].max
