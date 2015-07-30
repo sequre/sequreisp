@@ -82,8 +82,8 @@ $('#foo').highcharts({
       <tr class="even" >
         <td><%= @graph.element.ip %></td>
         <td><%= @graph.element.plan.name rescue 'Undefined' %></td>
-        <td><%= show_human_down_up @graph.element.plan.rate_down, @graph.element.plan.ceil_down rescue 'Undefined' %></td>
-        <td><%= show_human_down_up @graph.element.plan.rate_up, @graph.element.plan.ceil_up rescue 'Undefined' %></td>
+        <td><%= show_human_down_up @graph.element.plan.rate_down, @graph.element.plan.rate_up rescue 'Undefined' %></td>
+        <td><%= show_human_down_up @graph.element.plan.ceil_down, @graph.element.plan.ceil_up rescue 'Undefined' %></td>
       </tr>
     <% elsif @graph.element.class.to_s == "Provider" %>
       <tr class="odd">
