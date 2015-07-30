@@ -558,9 +558,10 @@ def update_provider_group_route pg, force=false, boot=true
   commands = []
   currentroute=`ip -oneline ro li table #{pg.table} | grep default`.gsub("\\\t","  ").strip
   if (currentroute != pg.default_route) or force
-    # force could be true, and current_route empty, so all ip ro batch will fail
-    if pg.default_route == "" and currentroute != ""
-      commands << "ip ro del table #{pg.table} default"
+    # force could be true, and current_route empty
+    if pg.default_route == ""
+      # empty default_route so remove current if not empty, else do nothing
+      commands << "ip ro del table #{pg.table} default" if currentroute != ""
     else
       commands << "ip ro re table #{pg.table} #{pg.default_route}"
     end
