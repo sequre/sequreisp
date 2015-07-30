@@ -12,10 +12,8 @@ class AvoidBalancingHost < ActiveRecord::Base
     require 'resolv'
 
     begin
-      Timeout::timeout(3) do
-        Resolv::DNS.open(:nameserver => ["127.0.0.1"]) do |dns|
-          dns.getaddresses(name).map(&:to_s).select { |a| IP.new(a).is_a?(IP::V4) }
-        end
+      Timeout::timeout(10) do
+        Resolv.getaddresses(name).select do |a| IP.new(a).is_a?(IP::V4) end
       end
     rescue Timeout::Error => e
       log_rescue("[Model][AvoidBalancingHost] timeout for ip_addresses #{name}", e)
