@@ -75,6 +75,7 @@ class Contract < ActiveRecord::Base
 
   validate :state_should_be_included_in_the_list
   validate :uniqueness_mac_address_in_interfaces_lan
+  validate :ip_without_netmask, :if => "ip_changed?"
 
   def uniqueness_mac_address_in_interfaces_lan
     if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).count > 0
@@ -85,6 +86,14 @@ class Contract < ActiveRecord::Base
   def state_should_be_included_in_the_list
     unless AASM::StateMachine[Contract].states.map(&:name).include?(state.to_sym)
       errors.add(:state, I18n.t('activerecord.errors.messages.inclusion'))
+    end
+  end
+
+  def ip_without_netmask
+    _ip = IP.new(ip)
+    # check that the mask is set only for networks
+    if _ip.mask > 0 and _ip != _ip.network
+      errors.add(:ip, I18n.t('validations.contract.do_not_set_mask_if_is_not_a_network'))
     end
   end
 
@@ -675,7 +684,12 @@ end
     mask = "0000ffff"
     ceil = _plan["ceil_" + direction] * bandwidth_rate
     rate = _plan.send("rate_" + direction) * bandwidth_rate
+    ceil = 1 if ceil <= 0
     rate = 1 if rate <= 0
+
+    ls_m1_prio3 = [ (rate / 20).round, 1 ].max
+    ls_m2_prio3 = [ (rate / 10).round, 1 ].max
+    ul_m2_prio3 = [ (ceil * ceil_dfl_percent / 100).round, 1 ].max
 
     #padre
     tc_rules << "##{client.name} - IP: #{ip} ID: #{id} KLASS_NUMBER: #{class_hex}"
@@ -695,7 +709,7 @@ end
 
     #prio3
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio3_hex} " +
-            "est 1sec 5sec hfsc ls m1 #{(rate / 20).round}kbit d 3s m2 #{(rate / 10).round}kbit ul m2 #{(ceil * ceil_dfl_percent / 100).round}kbit"
+            "est 1sec 5sec hfsc ls m1 #{ls_m1_prio3}kbit d 3s m2 #{ls_m2_prio3}kbit ul m2 #{ul_m2_prio3}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio3_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10"
   end
@@ -713,7 +727,8 @@ end
 
   def rules_for_enabled
     macrule = (Configuration.filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
-    [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j ACCEPT" ]
+    target = enabled? ? "ACCEPT" : "DROP"
+    [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j #{target}" ]
   end
 
   def rules_for_mark_provider

@@ -104,11 +104,11 @@ class Plan < ActiveRecord::Base
   end
 
   def cir_up_real
-    @cached_cir_up_real ||= [ ((provider_group.rate_up / provider_group.cir_total_up) * cir_up ), cir_up ].min
+    @cached_cir_up_real ||= [ ((provider_group.rate_up.to_f / provider_group.cir_total_up) * cir_up ), cir_up ].min
   end
 
   def cir_down_real
-    @cached_cir_down_real ||= [ ((provider_group.rate_down / provider_group.cir_total_down) * cir_down ), cir_down ].min
+    @cached_cir_down_real ||= [ ((provider_group.rate_down.to_f / provider_group.cir_total_down) * cir_down ), cir_down ].min
   end
 
   def rate_up

@@ -19,6 +19,8 @@ gem 'acts_as_audited', '=1.1.1'
 gem 'RedCloth', '=4.2.9'
 gem "context_help", '=0.0.9'
 gem 'open4', '=1.3.3'
+gem 'interactive_editor', '=0.0.10'
+gem 'awesome_print', '=1.1.0'
 
 group :development, :test do
    gem 'faker', '=1.0.1'
