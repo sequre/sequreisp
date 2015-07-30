@@ -74,18 +74,16 @@ $('#foo').highcharts({
       <tr class="odd">
         <th><%=t 'activerecord.attributes.contract.ip' %></th>
         <th><%=t 'activerecord.attributes.contract.plan' %></th>
-        <th><%=t 'activerecord.attributes.plan.rate_down' %></th>
-        <th><%=t 'activerecord.attributes.plan.ceil_down' %></th>
-        <th><%=t 'activerecord.attributes.plan.rate_up' %></th>
-        <th><%=t 'activerecord.attributes.plan.ceil_up' %></th>
+        <th><%=t 'activerecord.attributes.plan.rate_down' %> /
+        <%=t 'activerecord.attributes.plan.rate_up' %></th>
+        <th><%=t 'activerecord.attributes.plan.ceil_down' %> /
+        <%=t 'activerecord.attributes.plan.ceil_up' %></th>
       </tr>
       <tr class="even" >
         <td><%= @graph.element.ip %></td>
         <td><%= @graph.element.plan.name rescue 'Undefined' %></td>
-        <td><%= @graph.element.plan.rate_down rescue 'Undefined' %></td>
-        <td><%= @graph.element.plan.ceil_down rescue 'Undefined' %></td>
-        <td><%= @graph.element.plan.rate_up rescue 'Undefined' %></td>
-        <td><%= @graph.element.plan.ceil_up rescue 'Undefined' %></td>
+        <td><%= show_human_down_up @graph.element.plan.rate_down, @graph.element.plan.ceil_down rescue 'Undefined' %></td>
+        <td><%= show_human_down_up @graph.element.plan.rate_up, @graph.element.plan.ceil_up rescue 'Undefined' %></td>
       </tr>
     <% elsif @graph.element.class.to_s == "Provider" %>
       <tr class="odd">

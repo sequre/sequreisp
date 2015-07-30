@@ -75,7 +75,7 @@
         <th></th> 
         <% end %>
       </tr>
-    
+
       <% @providers.each_with_index do |provider,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
@@ -95,7 +95,7 @@
             <%=h provider.ip %><br/>
             <%= provider.addresses.collect{ |a| a.ip}.join(" <br/>") %>
           </td>
-          <td><%=h provider.rate_down %>/<%=h provider.rate_up %></td>
+          <td><%= show_human_down_up provider.rate_down, provider.rate_up %></td>
           <td><%=h provider.provider_group.name rescue 'Undefined' %></td>
           <td><%=h t "aasm.provider.#{provider.state}" %></td>
           <td <%= provider.online ? 'class="enable_color"' : 'class="disable_color"' %>>
@@ -107,7 +107,7 @@
             <td><%= link_to t('buttons.edit'), edit_provider_path(provider) %></td>
           <% elsif current_user.may_show_provider?(provider) %>
             <td><%= link_to t('buttons.show'), provider_path(provider) %></td>
-          <% end %> 
+          <% end %>
           <% if current_user.may_destroy_provider?(provider) %>
           <td><%= link_to t('buttons.delete'), provider, :confirm => t('messages.confirm'), :method => :delete %></td>
           <% end %>
