@@ -112,6 +112,11 @@ float: left;
     <% form.inputs :name => t('fieldsets.configuration.users') do %>
       <%= form.input :logged_in_timeout %>
     <% end %>
+    <% form.inputs :name => "Firewall" do %>
+        <%= form.input :firewall_enabled %>
+        <%= form.input :firewall_open_tcp_ports %>
+        <%= form.input :firewall_open_udp_ports %>
+    <% end %>
     <% form.inputs :name => t('fieldsets.configuration.global_prios'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.global_prios' } } do %>
       <% form.inputs :name => t('fieldsets.configuration.traffic_prio') do %>

@@ -4,13 +4,10 @@ class CommandContext
   attr_accessor :commands
   attr_accessor :name
   attr_accessor :message
-
-  def self.run= _run
-    @@run = _run
-  end
+  cattr_accessor :run
 
   def initialize name, commands, message=nil
-    @@run = true
+    @@run = true if @@run.nil?
     @@command_logger = Logger.new File.join Rails.root, "log/command.log"
     @commands = []
     @name = name

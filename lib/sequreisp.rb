@@ -38,7 +38,7 @@ def gen_tc
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
     commands << "tc qdisc del dev #{IFB_UP} root;:"
     commands << "tc qdisc del dev #{IFB_DOWN} root;:"
-    unless Configuration.first.in_safe_mode?
+    unless Configuration.in_safe_mode?
       tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
       tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
       total_rate_up = ProviderGroup.total_rate_up
@@ -74,7 +74,7 @@ def gen_tc
     commands << "tc qdisc del dev #{iface} ingress;:"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
-        unless Configuration.first.in_safe_mode?
+        unless Configuration.in_safe_mode?
           tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
           tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
@@ -95,7 +95,7 @@ def gen_tc
     commands << "tc qdisc del dev #{iface} root;:"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
-        unless Configuration.first.in_safe_mode?
+        unless Configuration.in_safe_mode?
           tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
           tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
@@ -121,7 +121,7 @@ def gen_iptables
       # MANGLE #
       #--------#
       f.puts "*mangle"
-      unless Configuration.first.in_safe_mode?
+      unless Configuration.in_safe_mode?
         #Chain for unlimitd bandwidth traffic, jump here if you need it
         f.puts ":unlimited_bandwidth - [0:0]"
         f.puts "-A unlimited_bandwidth -j MARK --set-mark 0x0/0xffffff"
@@ -198,7 +198,7 @@ def gen_iptables
 
       # CONNMARK POSTROUTING
       f.puts ":sequreisp_connmark - [0:0]"
-      unless Configuration.first.in_safe_mode?
+      unless Configuration.in_safe_mode?
         f.puts ":sequreisp.down - [0:0]"
         f.puts ":sequreisp.up - [0:0]"
 
@@ -213,7 +213,7 @@ def gen_iptables
         f.puts "-A sequreisp_connmark  -o #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
       end
 
-      unless Configuration.first.in_safe_mode?
+      unless Configuration.in_safe_mode?
         # si tiene marka de ProviderGroup voy a sequreisp_connmark
         ProviderGroup.enabled.with_klass.each do |pg|
           f.puts "-A POSTROUTING -m mark --mark 0x#{pg.mark_hex}/0x00ff0000 -j sequreisp_connmark"
@@ -223,7 +223,7 @@ def gen_iptables
       # si no tiene ninguna marka de ruteo también va a sequreisp_connmark (lo de OUTPUT hit'ea aquí ej. bind DNS query)
       f.puts "-A POSTROUTING -m mark --mark 0x00000000/0x00ff0000 -j sequreisp_connmark"
 
-      unless Configuration.first.in_safe_mode?
+      unless Configuration.in_safe_mode?
         #speed-up MARKo solo si no estaba a restore'ada x CONNMARK
         mark_if="-m mark --mark 0x0/0xffff"
         Interface.all(:conditions => { :kind => "lan" }).each do |interface|
@@ -322,7 +322,7 @@ def gen_iptables
         end
       end
 
-      unless Configuration.first.in_safe_mode?
+      unless Configuration.in_safe_mode?
         # attribute: forwarded_ports
         #   forward de ports por Provider
         ForwardedPort.all(:include => [ :contract, :provider ]).each do |fp|
@@ -407,7 +407,7 @@ def gen_iptables
       # FILTER  #
       #---------#
       f.puts "*filter"
-      unless Configuration.first.in_safe_mode?
+      unless Configuration.in_safe_mode?
         f.puts ":dns-query -"
         f.puts ":sequreisp-allowedsites - [0:0]"
         f.puts "-A OUTPUT -o lo -j ACCEPT"
@@ -435,7 +435,21 @@ def gen_iptables
             f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
           end
         end
-
+        if Configuration.firewall_enabled?
+          f.puts "-A INPUT -i lo  -j ACCEPT"
+          f.puts "-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT"
+          # app redirects, and ssh
+          f.puts "-A INPUT -m multiport -p tcp --destination-ports 81,82,22000 -j ACCEPT"
+          # dhcp
+          f.puts "-A INPUT -m multiport -p udp --destination-ports 67,68,69 -j ACCEPT"
+          f.puts "-A INPUT -p icmp -j ACCEPT"
+          Configuration.firewall_open_tcp_ports_array.uniq.each_slice(15).to_a.each do |group|
+             f.puts "-A INPUT -p tcp -m multiport --dports #{group.join(',')} -j ACCEPT"
+          end
+          Configuration.firewall_open_udp_ports_array.uniq.each_slice(15).to_a.each do |group|
+             f.puts "-A INPUT -p udp -m multiport --dports #{group.join(',')} -j ACCEPT"
+          end
+        end
         f.puts "-A INPUT -p udp --dport 53 -j dns-query"
 
         lan_interfaces.each do |i|
@@ -462,7 +476,7 @@ def gen_iptables
 
       f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
 
-      unless Configuration.first.in_safe_mode?
+      unless Configuration.in_safe_mode?
         BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
 
         Interface.only_lan.each do |i|
@@ -519,7 +533,7 @@ def gen_ip_ru
     File.open(IP_RU_FILE, "w") do |f|
       f.puts "rule flush"
       f.puts "rule add prio 10 lookup main"
-      unless Configuration.first.in_safe_mode?
+      unless Configuration.in_safe_mode?
         ProviderGroup.enabled.with_klass.each do |pg|
           f.puts "rule add fwmark 0x#{pg.mark_hex}/0x00ff0000 table #{pg.table} prio 200"
         end
@@ -532,7 +546,7 @@ def gen_ip_ru
         f.puts "rule add from #{p.ip}/32 table #{p.check_link_table} prio 90" if p.ip and not p.ip.empty?
       end
       f.puts "rule add prio 32767 from all lookup default"
-      BootHook.run(:hook => :gen_ip_ru, :ip_ru_script => f) unless Configuration.first.in_safe_mode?
+      BootHook.run(:hook => :gen_ip_ru, :ip_ru_script => f) unless Configuration.in_safe_mode?
     end
   rescue => e
     log_rescue("[Boot][gen_ip_ru]", e)
@@ -594,7 +608,7 @@ def setup_ip_ro
       update_provider_route p, true
     end
 
-    unless Configuration.first.in_safe_mode?
+    unless Configuration.in_safe_mode?
       ProviderGroup.enabled.each do |pg|
         update_provider_group_route pg, true, true
       end
@@ -894,25 +908,35 @@ def setup_iptables
   exec_context_commands "setup_iptables",["cp #{IPTABLES_FILE} #{IPTABLES_FILE}.tmp"], I18n.t("command.human.prepare_iptables")
 
   gen_iptables
-  status = exec_context_commands "setup_iptables", [
-    "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}",
-    "iptables-restore -n < #{IPTABLES_FILE}",
-    "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
-  ], I18n.t("command.human.setup_iptables_try")
+  commands = []
+  status = false
+  if Configuration.firewall_enabled
+    status = exec_context_commands "setup_iptables", "iptables-restore < #{IPTABLES_FILE}", I18n.t("command.human.setup_iptables_try")
+  else
+    exec_context_commands "setup_iptables_pre", "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}", I18n.t("command.human.setup_iptables_try")
+    status = exec_context_commands "setup_iptables", "iptables-restore -n < #{IPTABLES_FILE}", I18n.t("command.human.setup_iptables_try")
+  end
+  exec_context_commands "setup_iptables_post", "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}", I18n.t("command.human.setup_iptables_try")
 
   if not status
-    exec_context_commands "restore_old_iptables", [
-      "mv #{IPTABLES_FILE} #{IPTABLES_FILE}.error",
-      "iptables-restore -n < #{IPTABLES_FILE}.tmp",
-      "mv #{IPTABLES_FILE}.tmp #{IPTABLES_FILE}"
-    ], I18n.t("command.human.setup_iptables_restore_old")
+    commands = []
+    commands << "mv #{IPTABLES_FILE} #{IPTABLES_FILE}.error"
+    commands << "mv #{IPTABLES_FILE}.tmp #{IPTABLES_FILE}"
+    if Configuration.firewall_enabled
+      commands << "iptables-restore < #{IPTABLES_FILE}"
+    else
+      commands << "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}"
+      commands << "iptables-restore -n < #{IPTABLES_FILE}"
+    end
+    commands << "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
+    exec_context_commands "restore_old_iptables", commands, I18n.t("command.human.setup_iptables_restore_old"), boot=false
   end
 end
 
 def setup_mail_relay
-  if Configuration.first.mail_relay_manipulated_for_sequreisp?
+  if Configuration.mail_relay_manipulated_for_sequreisp?
     commands = []
-    commands << "postmap #{PATH_SASL_PASSWD}" if Configuration.first.generate_postfix_main
+    commands << "postmap #{PATH_SASL_PASSWD}" if Configuration.generate_postfix_main
     commands << "service postfix restart"
     exec_context_commands("setup_mail_relay_create", commands, I18n.t("command.human.setup_mail_relay"))
   end
@@ -945,7 +969,7 @@ def boot(run=true)
     begin
       #General configuration hook, plugins seems to use it to write updated conf files
       BootHook.run :hook => :general
-      Configuration.first.generate_bind_dns_named_options
+      Configuration.generate_bind_dns_named_options
       exec_context_commands "bind_reload", "service bind9 reload", I18n.t("command.human.bind_reload")
 
       #Service restart hook
