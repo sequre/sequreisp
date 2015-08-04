@@ -32,9 +32,9 @@ end
 
 def gen_tc
   def qdisc_add_safe file, iface, command
-    file.puts "qdisc re dev #{command}"
+    file.puts "qdisc re dev #{iface} #{command}"
     file.puts "qdisc del dev #{iface} root"
-    file.puts "qdisc re dev #{command}"
+    file.puts "qdisc re dev #{iface} #{command}"
   end
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
