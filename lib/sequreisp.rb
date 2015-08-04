@@ -31,16 +31,18 @@ def create_dirs_if_not_present
 end
 
 def gen_tc
-  commands = []
+  def qdisc_add_safe file, iface, command
+    file.puts "qdisc re dev #{command}"
+    file.puts "qdisc del dev #{iface} root"
+    file.puts "qdisc re dev #{command}"
+  end
   begin
     tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
     tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
-    commands << "tc qdisc del dev #{IFB_UP} root;:"
-    commands << "tc qdisc del dev #{IFB_DOWN} root;:"
     unless Configuration.in_safe_mode?
-      tc_ifb_up.puts "qdisc add dev #{IFB_UP} root handle 1 hfsc default fffe"
-      tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
+      qdisc_add_safe tc_ifb_up, IFB_UP, "root handle 1 hfsc default fffe"
+      qdisc_add_safe tc_ifb_down, IFB_DOWN, "root handle 1 hfsc default fffe"
       total_rate_up = ProviderGroup.total_rate_up
       total_rate_down = ProviderGroup.total_rate_down
       tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_up * 0.90).round}kbit ul m2 #{total_rate_up}kbit"
@@ -69,13 +71,10 @@ def gen_tc
   # Per provider upload limit, on it's own interface
   Provider.enabled.with_klass_and_interface.each do |p|
     iface = p.link_interface
-    commands << "tc qdisc del dev #{iface} root;:"
-#    commands << "tc qdisc show dev #{iface} | grep '[q]disc ingress' &>/dev/null && tc qdisc del dev #{iface} ingress"
-    commands << "tc qdisc del dev #{iface} ingress;:"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         unless Configuration.in_safe_mode?
-          tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+          qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
           tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
           tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
@@ -92,11 +91,10 @@ def gen_tc
   # Per provider download limit, on LAN interfaces
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
-    commands << "tc qdisc del dev #{iface} root;:"
     begin
       File.open(TC_FILE_PREFIX + iface, "w") do |tc|
         unless Configuration.in_safe_mode?
-          tc.puts "qdisc add dev #{iface} root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+          qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
           tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
           tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
@@ -111,7 +109,6 @@ def gen_tc
       # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider download limit in #{iface}) e=>#{e.inspect}"
     end
   end
-  exec_context_commands "setup_tc", commands, I18n.t("command.human.gen_tc")
 end
 
 def gen_iptables
