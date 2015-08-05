@@ -176,7 +176,7 @@ class Contract < ActiveRecord::Base
   include OverflowCheck
   before_save :check_integer_overflow
   before_create :bind_klass
-  before_update :clean_proxy_arp_provider_proxy_arp_interface, :if => "proxy_arp_changed? and proxy_arp == false"
+  before_save :clean_proxy_arp_provider_proxy_arp_interface, :if => "proxy_arp_changed? and proxy_arp == false"
   after_save :create_traffic_for_this_period
 
   def create_traffic_for_this_period
