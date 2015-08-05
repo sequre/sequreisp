@@ -21,7 +21,6 @@ class Backup
   attr_reader :name
 
   BASE_DIR = SequreispConfig::CONFIG["base_dir"]
-  BACKUP_FILE_INCLUDE = "#{BASE_DIR}/backup_files_include"
   DATABASE_DUMP_PATH = "#{BASE_DIR}/sequreisp.sql"
 
   def initialize
@@ -49,10 +48,10 @@ class Backup
   end
 
   def backup_include_files(include_graphs)
-    paths = ["#{DATABASE_DUMP_PATH}", "#{BASE_DIR}/scripts"]
+    paths = ["#{DATABASE_DUMP_PATH}", "#{BASE_DIR}/scripts", "#{BASE_DIR}/etc"]
     paths << "#{BASE_DIR}/deploy/shared/db/rrd" if include_graphs
     paths << Configuration.first.files_include_in_backup.split("\n") rescue []
-    paths.flatten.uniq
+    paths.flatten.uniq.delete_if do |path| not File.exists?(path) end
   end
 
   def backup_exclude_files
