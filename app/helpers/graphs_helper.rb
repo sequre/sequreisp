@@ -31,18 +31,18 @@ module GraphsHelper
 
   def default_options_graphs options={}
     options[:type] ||= 'line'
+    options[:xtype] ||= 'datetime'
+    options[:legend] = true unless options.has_key?(:legend)
 
     { :credits     => { :enabled => false },
-      :chart       => { :renderTo => options[:render_to] },
+      :chart       => { :renderTo => options[:render_to], :zoomType => 'x' },
       :exporting   => { :enabled => true },
-      :legend      => { :enabled => true, :verticalAlign => 'down' },
+      :legend      => { :enabled => options[:legend], :verticalAlign => 'bottom' },
       :title       => { :text => options[:title] },
-      :xAxis       => { :type => "datetime" },
-      :yAxis       => { :title => { :text => options[:ytitle] }},
+      :xAxis       => { :type => options[:xtype] },
+      :yAxis       => { :title => { :text => options[:ytitle] } },
       :plotOptions => { options[:type].to_sym => { :stacking => options[:stacking] } },
-      :series      => options[:series]
-    }
-
+      :series      => options[:series] }
   end
 
   def contract_rate_graph(obj)
@@ -89,13 +89,4 @@ module GraphsHelper
     end
     graphs
   end
-
-
-  def device_memory_graph(obj)
-  end
-
-
-  def device_memory_graph_for_periods(obj)
-  end
-
 end
