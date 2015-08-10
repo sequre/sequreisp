@@ -1,15 +1,24 @@
 require 'syslog'
 
 def log(string)
-  Syslog.open if not Syslog.opened?
-  Syslog.log(Syslog::LOG_INFO, "[Wispro]#{string}")
-  # puts string if $stdout.tty?
+  if Rails.env.production?
+    Syslog.open if not Syslog.opened?
+    Syslog.log(Syslog::LOG_INFO, "[Wispro]#{string}")
+    # puts string if $stdout.tty?
+  else
+    Rails.logger.error("[Wispro]#{string}")
+  end
 end
 
 def log_rescue(origin, exception)
-  Syslog.open if not Syslog.opened?
-  Syslog.log(Syslog::LOG_ERR, "[Wispro]#{origin}: #{exception.message}")
-  exception.backtrace.each{ |bt| Syslog.log(Syslog::LOG_ERR, "[Wispro]#{origin} #{exception.class} #{bt}") }
+  if Rails.env.production?
+    Syslog.open if not Syslog.opened?
+    Syslog.log(Syslog::LOG_ERR, "[Wispro]#{origin}: #{exception.message}")
+    exception.backtrace.each{ |bt| Syslog.log(Syslog::LOG_ERR, "[Wispro]#{origin} #{exception.class} #{bt}") }
+  else
+    Rails.logger.error "[Wispro]#{origin}: #{exception.message}"
+    exception.backtrace.each{ |bt| Rails.logger.error("[Wispro]#{origin} #{exception.class} #{bt}") }
+  end
 end
 
 
