@@ -69,12 +69,11 @@ class Graph
   def default_options_graphs options={}
     options[:type] ||= 'line'
     options[:xtype] ||= 'datetime'
-    options[:legend] = true unless options.has_key?(:legend)
 
     { :credits     => { :enabled => false },
       :chart       => { :renderTo => @render, :zoomType => 'x' },
       :exporting   => { :enabled => true },
-      :legend      => { :enabled => options[:legend], :verticalAlign => 'bottom' },
+      :legend      => { :enabled => @minimal? false : true, :verticalAlign => 'bottom' },
       :title       => { :text => @minimal? '' : options[:title] },
       :xAxis       => { :type => options[:xtype] },
       :yAxis       => { :title => { :text => @minimal? '' : options[:ytitle] } },
@@ -90,10 +89,12 @@ class Graph
     hash[:keys].each do |key, value|
       fake[key] = []
       hash[:size].times do |i|
-        date = date_time_now - (i * 1000)
+        date = date_time_now - (i * 5000)
         fake[key] << [ date, value.zero? ? 0 : rand(value) ]
       end
     end
+
+    fake.each_key { |key| fake[key].reverse! }
 
     fake
   end

@@ -374,29 +374,28 @@ class Contract < ActiveRecord::Base
 
   def instant
     { :rates   => foo_instant_rate,
-      :latency => foo_instant_latency }
+      :latency => instant_latency }
   end
 
   def foo_instant_rate
     data = {}
+    total_up = 0
+    total_down = 0
+
+    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
     ContractSample.compact_keys.each do |key|
-      data[key[:name]] = in_production ? $redis.hmget("contract:#{id}:prio1:down", "instant").first.to_i : rate_down * 0.15
+      data[key[:name]] = [ date_time_now, rand(1024) ]
     end
 
-    { :rate_prio1_up => x,
-      :rate_prio2_up => x,
-      :rate_prio3_up => x,
-      :rate_prio1_down => x,
-      :rate_prio2_down => x,
-      :rate_prio3_down => x,
-      :rate_supercache_down => x,
-      :total_up => x,
-      :total_down => x }
-  end
+    data.each do |key, value|
+      total_up += value.last if key.include?("up")
+      total_down += value.last if key.include?("down")
+    end
 
-  def foo_instant_latency
-    { :ping => x,
-      :arping => x }
+    data[:total_up] = total_up
+    data[:total_down] = total_down
+
+    data
   end
 
   # this has an alias_method_chain

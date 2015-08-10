@@ -220,33 +220,24 @@ class ContractsController < ApplicationController
   end
   def graph
     @contract = object
-    ContractGraph::GRAPHS.select{|cg| ! cg.include?("instant")}
-    @graphs = []
-    ContractGraph::GRAPHS.select{|cg| ! cg.include?("instant")}.each do |cg|
-      @graphs << ContractGraph.new(@contract, cg)
-    end
+    @periods = ContractSample::CONF_PERIODS.size
+    @graphs = {}
 
-    @graph_latency = ContractGraph.new(@contract, "latency_instant")
-    @graph_rate_up = ContractGraph.new(@contract, "rate_up_instant")
-    @graph_rate_down = ContractGraph.new(@contract, "rate_down_instant")
-    @graph_total_rate = ContractGraph.new(@contract, "total_rate")
-    @graph_data_count = ContractGraph.new(@contract, "data_count")
-
-    @graph_rate_down_period_0 = ContractGraph.new(@contract, "rate_down_period_0")
-    @graph_rate_up_period_0 = ContractGraph.new(@contract, "rate_up_period_0")
-
-    @graph_rate_down_period_1 = ContractGraph.new(@contract, "rate_down_period_1")
-    @graph_rate_up_period_1 = ContractGraph.new(@contract, "rate_up_period_1")
-
-    @graph_rate_down_period_2 = ContractGraph.new(@contract, "rate_down_period_2")
-    @graph_rate_up_period_2 = ContractGraph.new(@contract, "rate_up_period_2")
-
-    @graph_rate_down_period_3 = ContractGraph.new(@contract, "rate_down_period_3")
-    @graph_rate_up_period_3 = ContractGraph.new(@contract, "rate_up_period_3")
-
-    @graph_rate_down_period_4 = ContractGraph.new(@contract, "rate_down_period_4")
-    @graph_rate_up_period_4 = ContractGraph.new(@contract, "rate_up_period_4")
-
+    @graphs[:latency] = ContractGraph.new(@contract, "latency_instant")
+    @graphs[:rate_up] = ContractGraph.new(@contract, "rate_up_instant")
+    @graphs[:rate_down] = ContractGraph.new(@contract, "rate_down_instant")
+    @graphs[:total_rate] = ContractGraph.new(@contract, "total_rate")
+    @graphs[:data_count] = ContractGraph.new(@contract, "data_count")
+    @graphs[:rate_down_period_0] = ContractGraph.new(@contract, "rate_down_period_0")
+    @graphs[:rate_down_period_1] = ContractGraph.new(@contract, "rate_down_period_1")
+    @graphs[:rate_down_period_2] = ContractGraph.new(@contract, "rate_down_period_2")
+    @graphs[:rate_down_period_3] = ContractGraph.new(@contract, "rate_down_period_3")
+    @graphs[:rate_down_period_4] = ContractGraph.new(@contract, "rate_down_period_4")
+    @graphs[:rate_up_period_0] = ContractGraph.new(@contract, "rate_up_period_0")
+    @graphs[:rate_up_period_1] = ContractGraph.new(@contract, "rate_up_period_1")
+    @graphs[:rate_up_period_2] = ContractGraph.new(@contract, "rate_up_period_2")
+    @graphs[:rate_up_period_3] = ContractGraph.new(@contract, "rate_up_period_3")
+    @graphs[:rate_up_period_4] = ContractGraph.new(@contract, "rate_up_period_4")
 
     respond_to do |format|
       format.html # show.html.erb

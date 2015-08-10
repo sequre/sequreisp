@@ -53,8 +53,8 @@ class ContractGraph < Graph
 
         data = {}
         ContractSample.compact_keys.each do |rkey|
-          data[rkey[:name]] = []
           if rkey[:up_or_down] == up_or_down
+            data[rkey[:name]] = []
             samples.each do |sample|
               # value = rkey[:name].include?("up")? sample[rkey[:name].to_sym]*-1 : sample[rkey[:name].to_sym]
               data[rkey[:name]] << [ ((sample.sample_number.to_i + Time.now.utc_offset) * 1000), sample[rkey[:name].to_sym] ]
@@ -106,7 +106,6 @@ class ContractGraph < Graph
 
     graph = { :title => I18n.t("graphs.titles.total_rate"),
               :ytitle => 'bps(bits/second)',
-              :legend => false,
               :series => series }
 
     default_options_graphs(graph)
@@ -123,11 +122,11 @@ class ContractGraph < Graph
 
     data = faker_values({ :size => 12, :keys => { :ping => 3, :arping => 3 } }) unless Rails.env.production?
 
-    series = [ { :name => 'ping',   :color => GREEN, :type => 'spline', :data => data[:ping].reverse },
-               { :name => 'arping', :color => RED,   :type => 'spline', :data => data[:arping].reverse } ]
+    series = [ { :name => 'ping',   :color => GREEN, :type => 'spline', :data => data[:ping] },
+               { :name => 'arping', :color => RED,   :type => 'spline', :data => data[:arping] } ]
 
     graph = { :title => I18n.t("graphs.titles.latency"),
-              :ytitle => I18n.t('graph.data'),
+              :ytitle => "Miliseconds",
               :series => series }
 
     default_options_graphs(graph)
