@@ -45,6 +45,8 @@ class ContractsController < ApplicationController
 
     @contracts = @search.uniq.paginate(:page => params[:page],:per_page => per_page)
 
+    @graphs = @contracts.map{ |c| ContractGraph.new(c, "total_rate")}
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @contracts }
@@ -217,7 +219,35 @@ class ContractsController < ApplicationController
     end
   end
   def graph
-    @graph = Graph.new(:class => object.class.name, :id => object.id)
+    @contract = object
+    ContractGraph::GRAPHS.select{|cg| ! cg.include?("instant")}
+    @graphs = []
+    ContractGraph::GRAPHS.select{|cg| ! cg.include?("instant")}.each do |cg|
+      @graphs << ContractGraph.new(@contract, cg)
+    end
+
+    @graph_latency = ContractGraph.new(@contract, "latency_instant")
+    @graph_rate_up = ContractGraph.new(@contract, "rate_up_instant")
+    @graph_rate_down = ContractGraph.new(@contract, "rate_down_instant")
+    @graph_total_rate = ContractGraph.new(@contract, "total_rate")
+    @graph_data_count = ContractGraph.new(@contract, "data_count")
+
+    @graph_rate_down_period_0 = ContractGraph.new(@contract, "rate_down_period_0")
+    @graph_rate_up_period_0 = ContractGraph.new(@contract, "rate_up_period_0")
+
+    @graph_rate_down_period_1 = ContractGraph.new(@contract, "rate_down_period_1")
+    @graph_rate_up_period_1 = ContractGraph.new(@contract, "rate_up_period_1")
+
+    @graph_rate_down_period_2 = ContractGraph.new(@contract, "rate_down_period_2")
+    @graph_rate_up_period_2 = ContractGraph.new(@contract, "rate_up_period_2")
+
+    @graph_rate_down_period_3 = ContractGraph.new(@contract, "rate_down_period_3")
+    @graph_rate_up_period_3 = ContractGraph.new(@contract, "rate_up_period_3")
+
+    @graph_rate_down_period_4 = ContractGraph.new(@contract, "rate_down_period_4")
+    @graph_rate_up_period_4 = ContractGraph.new(@contract, "rate_up_period_4")
+
+
     respond_to do |format|
       format.html # show.html.erb
       format.xml  { render :xml => @graph }

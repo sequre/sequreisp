@@ -74,11 +74,12 @@ class ProviderGroup < ActiveRecord::Base
     end
   end
   def rate_down
-    total=0
-    providers.enabled.each do |p|
-      total+=p.rate_down
-    end
-    total
+    @cached_rate_down ||= providers.enabled.collect(&:rate_down).sum
+    # total=0
+    # providers.enabled.each do |p|
+    #   total+=p.rate_down
+    # end
+    # total
   end
   # def remaining_rate_down(exclude_id=nil)
   #   remaining = rate_down
@@ -88,15 +89,16 @@ class ProviderGroup < ActiveRecord::Base
   #   remaining
   # end
   def self.total_rate_down
-    all.collect(&:rate_down).sum
+    @cached_total_rate_down ||= all.collect(&:rate_down).sum
   end
 
   def rate_up
-    total=0
-    providers.enabled.each do |p|
-      total+=p.rate_up
-    end
-    total
+    @cached_rate_up ||= providers.enabled.collect(&:rate_up).sum
+    # total=0
+    # providers.enabled.each do |p|
+    #   total+=p.rate_up
+    # end
+    # total
   end
   # def remaining_rate_up(exclude_id=nil)
   #   remaining = rate_up
@@ -106,7 +108,7 @@ class ProviderGroup < ActiveRecord::Base
   #   remaining
   # end
   def self.total_rate_up
-    all.collect(&:rate_up).sum
+    @cached_total_rate_up ||= all.collect(&:rate_up).sum
   end
 
   def table
@@ -149,17 +151,17 @@ class ProviderGroup < ActiveRecord::Base
     end
   end
   def ceil_down
-    contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_down }.sum
+    @cached_ceil_down ||= contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_down }.sum
   end
   def ceil_up
-    contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
+    @cached_ceil_up ||= contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
   end
 
   def cir_total_up
-    plans.collect(&:cir_total_up).sum rescue 0
+    @cached_cir_total_up ||= plans.collect(&:cir_total_up).sum rescue 0
   end
 
   def cir_total_down
-    plans.collect(&:cir_total_down).sum rescue 0
+    @cached_cir_total_down ||= plans.collect(&:cir_total_down).sum rescue 0
   end
 end

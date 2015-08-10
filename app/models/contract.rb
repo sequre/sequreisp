@@ -373,8 +373,30 @@ class Contract < ActiveRecord::Base
   end
 
   def instant
-    { :rates => instant_rate,
-      :latency => instant_latency }
+    { :rates   => foo_instant_rate,
+      :latency => foo_instant_latency }
+  end
+
+  def foo_instant_rate
+    data = {}
+    ContractSample.compact_keys.each do |key|
+      data[key[:name]] = in_production ? $redis.hmget("contract:#{id}:prio1:down", "instant").first.to_i : rate_down * 0.15
+    end
+
+    { :rate_prio1_up => x,
+      :rate_prio2_up => x,
+      :rate_prio3_up => x,
+      :rate_prio1_down => x,
+      :rate_prio2_down => x,
+      :rate_prio3_down => x,
+      :rate_supercache_down => x,
+      :total_up => x,
+      :total_down => x }
+  end
+
+  def foo_instant_latency
+    { :ping => x,
+      :arping => x }
   end
 
   # this has an alias_method_chain
@@ -391,30 +413,35 @@ class Contract < ActiveRecord::Base
     rate
   end
 
-  # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
+ # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
   def instant_latency
-    return { :ping => rand(890)+10, :arping => rand(100)+50 } if SequreispConfig::CONFIG["demo"]
-    time = {:ping => nil, :arping => nil}
-    if _ip = get_address? # si es ip/32
-      thread_ping = Thread.new do
-        IO.popen("/bin/ping -c 1 -n -W 4 #{_ip}", "r") do |io|
-          io.each do |line|
-            if line.include?("time=")
-              time[:ping] = line.split("time=")[1].split(" ")[0].to_f
+    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+    time = {}
+    if Rails.env.production?
+      if _ip = get_address? # si es ip/32
+        thread_ping = Thread.new do
+          IO.popen("/bin/ping -c 1 -n -W 4 #{_ip}", "r") do |io|
+            io.each do |line|
+              if line.include?("time=")
+                        time[:ping] = [ date_time_now, line.split("time=")[1].split(" ")[0].to_f ]
+              end
             end
           end
         end
-      end
-      if iface = arping_interface
-        IO.popen("sudo arping -c 1 -I #{iface} #{_ip}", "r") do |io|
-          io.each do |line|
-            if line.include?("ms")
-              time[:arping] = line.split(" ").last.chomp.delete("ms").to_f
+        if iface = arping_interface
+          IO.popen("sudo arping -c 1 -I #{iface} #{_ip}", "r") do |io|
+            io.each do |line|
+              if line.include?("ms")
+                time[:arping] = [ date_time_now, line.split(" ").last.chomp.delete("ms").to_f ]
+              end
             end
           end
         end
+        thread_ping.join
       end
-      thread_ping.join
+    else
+      time[:ping] = [ date_time_now, rand(890)+10 ]
+      time[:arping] = [ date_time_now, rand(100)+50 ]
     end
     time
   end
@@ -577,15 +604,24 @@ class Contract < ActiveRecord::Base
   end
 
   def data_count_for_last_year
-    dates = []
     datas = []
     _traffics = Traffic.for_contract(self.id).for_date(Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 12.month)
     _traffics.each do |traffic|
-      dates << traffic.from_date.strftime("%m-%Y")
-      datas << traffic.data_count
+      datas << [ traffic.from_date.strftime("%m-%Y"), traffic.data_count ]
     end
-    [dates, datas]
+    datas
   end
+
+  # def data_count_for_last_year
+  #   dates = []
+  #   datas = []
+  #   _traffics = Traffic.for_contract(self.id).for_date(Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 12.month)
+  #   _traffics.each do |traffic|
+  #     dates << traffic.from_date.strftime("%m-%Y")
+  #     datas << traffic.data_count
+  #   end
+  #   [dates, datas]
+  # end
 
   def ip_addr
     require "ipaddr"

@@ -104,9 +104,10 @@ class ProviderGroupsController < ApplicationController
     @provider_group = object
     respond_to do |format|
       format.json { render :json => @provider_group.instant_rate }
-    end 
+    end
   end
   def graph
+    @provider_group = object
     @graph = Graph.new(:class => object.class.name, :id => object.id)
     respond_to do |format|
       format.html # show.html.erb

@@ -102,6 +102,7 @@ class ProvidersController < ApplicationController
     end
   end
   def graph
+    @provider = object
     @graph = Graph.new(:class => object.class.name, :id => object.id)
     respond_to do |format|
       format.html # show.html.erb

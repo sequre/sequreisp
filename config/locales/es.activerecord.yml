@@ -473,6 +473,23 @@ es:
     data_traffic: 'Trafico de datos'
     data: 'Datos'
     traffic: 'Trafico'
+  graphs:
+    titles:
+      latency: 'Latencia'
+      total_rate: 'Instantaneo total (UP/DOWN)'
+      instant_rate_up: 'Instantaneo (UP)'
+      instant_rate_down: 'Instantaneo (DOWN)'
+      rate_up_period_0: 'Ultimas 3 horas (UP)'
+      rate_down_period_0: 'Ultimas 3 horas (DOWN)'
+      rate_up_period_1: 'Ultimos dias (UP)'
+      rate_down_period_1: 'Ultimos dias (DOWN)'
+      rate_up_period_2: 'Ultimas semanas (UP)'
+      rate_down_period_2: 'Ultimas semanas (DOWN)'
+      rate_up_period_3: 'Ultimos meses (UP)'
+      rate_down_period_3: 'Ultimos meses (DOWN)'
+      rate_up_period_4: 'Ulitmos años (UP)'
+      rate_down_period_4: 'Ulitmos años (DOWN)'
+      data_count: 'Conteo de datos'
   about:
     version: "Versión wispro"
     url: "Actualizaciones, módulos y soporte disponible en"
@@ -699,7 +716,7 @@ es:
       setup_ifbs: "Configurando interfaces virtuales"
       setup_ip_ru: "Configurando reglas de ruteo"
       setup_ip_ro: "Configurando rutas"
-      gen_tc: "Eliminados las reglas de control de ancho de banda"
+      gen_tc: "Eliminando reglas de control de ancho de banda"
       setup_tc: "Configurando reglas de control de ancho de banda"
       setup_iptables_try: "Generando reglas de iptables"
       setup_iptables_success: "Estableciendo reglas de iptables"

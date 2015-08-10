@@ -1,3 +1,8 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "highcharts" %>
+  <%= javascript_include_tag "sequreispcharts" %>
+<% end %>
+
 <style type="text/css">
   #search_client_name_like, #search_ip_like {
   }
@@ -29,7 +34,7 @@
 </style>
 <script type="text/javascript">
   $(function(){
-      initMoreToggle('#massive_setting', '#form_massive_setting', 'toggle_form_massive_setting');
+    initMoreToggle('#massive_setting', '#form_massive_setting', 'toggle_form_massive_setting');
     initMoreToggle('#search_more', '#search_advanced', 'toggle_contracts_search_advanced');
     $('#search_client_name_like').autocomplete({
       delay: 200,
@@ -65,6 +70,11 @@
       minLength: 2
     })
   })
+  $(document).ready(function() {
+    <% @graphs.each do |g| %>
+     new Highcharts.Chart(<%= g.minimal_graph.to_json %>);
+    <% end %>
+  });
 </script>
 <% content_for :title, t('menu.contracts') %>
 <% heading (t 'menu.contracts') %>
@@ -147,8 +157,6 @@
 
 <div class="separador"></div>
 
-
-
 <div class="main">
   <div style="float: right;">
     <h3><%= t('messages.contracts_online', :count => Contract.how_many_connected.count) %></h3>
@@ -171,13 +179,14 @@
         <% end %>
       </tr>
       <% @contracts.each_with_index do |contract,i| %>
+	<% graph = @graphs.find{ |g| g.model.id == contract.id } %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td><%= check_box_tag "contracts_ids[]", contract.id %></td>
           <td><%= contract.id %></td>
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
-            <%= link_to Graph.new(:element => contract).img("day", "small"), graph_contract_path(contract) %>
+	    <div id="<%= graph.render %>" style="width: 231px; height: 126px"></div>
           </td>
           <td><%=link_to h(contract.plan.name), plan_path(contract.plan) %></td>
           <td>
@@ -205,7 +214,10 @@
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => contract} %>
           <% if current_user.may_update_contract?(contract) or current_user.may_destroy_contract?(contract) %>
             <td>
+              <%= link_to t('buttons.graphs'), route_path(graph.path) %>
               <% if current_user.may_update_contract?(contract) %>
+                <br/>
+                <br/>
                 <%= link_to t('buttons.edit'), edit_contract_path(contract) %>
               <% end %>
               <% if current_user.may_destroy_contract?(contract) %>
