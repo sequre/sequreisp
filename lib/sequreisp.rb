@@ -19,17 +19,17 @@ require 'sequreisp_constants'
 require 'command_context'
 require 'ip_tree'
 require 'sequreisp_logger'
+require 'fileutils'
 
 def create_dirs_if_not_present
-  [BASE_SCRIPTS, DHCPD_DIR, PPP_DIR, DEPLOY_DIR, "#{PPP_DIR}/ip-up.d", "#{PPP_DIR}/ip-down.d", "#{DHCPD_DIR}/dhclient-enter-hooks.d",  "#{DHCPD_DIR}/dhclient-exit-hooks.d", "#{PPP_DIR}/peers"].each do |dir|
-    dir.split("/").inject do |path, dir|
-      new_dir = "#{path}/#{dir}"
-      Dir.mkdir(new_dir) if not File.exist? new_dir
-      new_dir
-    end
+  [BASE_SCRIPTS, BASE_SCRIPTS_TMP, DHCPD_DIR, PPP_DIR, DEPLOY_DIR, "#{PPP_DIR}/ip-up.d", "#{PPP_DIR}/ip-down.d", "#{DHCPD_DIR}/dhclient-enter-hooks.d",  "#{DHCPD_DIR}/dhclient-exit-hooks.d", "#{PPP_DIR}/peers"].each do |dir|
+    FileUtils.mkdir_p(dir) unless File.exist?(dir)
   end
 end
-
+def close_file_and_move_to_scripts f
+  f.close
+  FileUtils.cp f.path, BASE_SCRIPTS
+end
 def gen_tc
   def qdisc_add_safe file, iface, command
     file.puts "qdisc re dev #{iface} #{command}"
@@ -61,8 +61,8 @@ def gen_tc
       # end
       BootHook.run :hook => :tc_hook, :tc_script => tc_ifb_down, :iface => IFB_DOWN
     end
-    tc_ifb_up.close
-    tc_ifb_down.close
+    close_file_and_move_to_scripts tc_ifb_up
+    close_file_and_move_to_scripts tc_ifb_down
   rescue => e
     log_rescue("[Boot][gen_tc]", e)
     # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(IFB_UP/IFB_DOWN) e=>#{e.inspect}"
@@ -72,7 +72,7 @@ def gen_tc
   Provider.enabled.with_klass_and_interface.each do |p|
     iface = p.link_interface
     begin
-      File.open(TC_FILE_PREFIX + iface, "w") do |tc|
+      tc = File.open(TC_FILE_PREFIX + iface, "w")
         unless Configuration.in_safe_mode?
           qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
@@ -81,7 +81,7 @@ def gen_tc
           tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_up}kbit ul m2 #{p.rate_up}kbit"
           tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
         end
-      end
+      close_file_and_move_to_scripts tc
     rescue => e
       log_rescue("[Boot][gen_tc][provider_interface]", e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider upload limit in #{iface}) e=>#{e.inspect}"
@@ -92,7 +92,7 @@ def gen_tc
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
     begin
-      File.open(TC_FILE_PREFIX + iface, "w") do |tc|
+      tc = File.open(TC_FILE_PREFIX + iface, "w")
         unless Configuration.in_safe_mode?
           qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
@@ -103,7 +103,7 @@ def gen_tc
             tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
           end
         end
-      end
+      close_file_and_move_to_scripts tc
     rescue => e
       log_rescue("[Boot][gen_tc][lan_interface]", e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider download limit in #{iface}) e=>#{e.inspect}"
@@ -113,7 +113,7 @@ end
 
 def gen_iptables
   begin
-    File.open("#{IPTABLES_FILE}", "w") do |f|
+    f = File.open("#{IPTABLES_FILE}", "w")
       #--------#
       # MANGLE #
       #--------#
@@ -501,7 +501,7 @@ def gen_iptables
       # /FILTER #
       #---------#
       # close iptables file
-    end
+    close_file_and_move_to_scripts f
   rescue => e
     log_rescue("[Boot][setup_iptables]", e)
   end
@@ -527,7 +527,7 @@ end
 
 def gen_ip_ru
   begin
-    File.open(IP_RU_FILE, "w") do |f|
+    f = File.open(IP_RU_FILE, "w")
       f.puts "rule flush"
       f.puts "rule add prio 10 lookup main"
       unless Configuration.in_safe_mode?
@@ -544,7 +544,7 @@ def gen_ip_ru
       end
       f.puts "rule add prio 32767 from all lookup default"
       BootHook.run(:hook => :gen_ip_ru, :ip_ru_script => f) unless Configuration.in_safe_mode?
-    end
+    close_file_and_move_to_scripts f
   rescue => e
     log_rescue("[Boot][gen_ip_ru]", e)
     # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
@@ -940,9 +940,9 @@ def setup_mail_relay
 end
 
 def boot(run=true)
+  create_dirs_if_not_present
   BootCommandContext.run = run
   BootCommandContext.clear_boot_file
-  create_dirs_if_not_present if Rails.env.development?
   Configuration.do_reload
     I18n.locale = Configuration.language
     exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.create_tmp_file")
@@ -974,6 +974,7 @@ def boot(run=true)
 
       exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}", I18n.t("command.human.sequreisp_post")
       exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.delete_tmp_file")
+      FileUtils.cp BOOT_FILE, BASE_SCRIPTS if File.exists?(BOOT_FILE)
     rescue => e
       log_rescue("[Boot][general_hook_and_service_restart]", e)
     end
