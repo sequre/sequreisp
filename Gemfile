@@ -20,6 +20,8 @@ gem 'RedCloth', '=4.2.9'
 gem "context_help", '=0.0.9'
 gem 'open4', '=1.3.3'
 gem 'redis', '=3.2.1'
+gem 'interactive_editor', '=0.0.10'
+gem 'awesome_print', '=1.1.0'
 
 group :development, :test do
    gem 'faker', '=1.0.1'
@@ -34,8 +36,6 @@ group :development do
    gem 'ruby-debug', '=0.10.4'
    gem 'annotate', '=2.5.0'
    gem 'wirble', '=0.1.3'
-   gem 'interactive_editor', '=0.0.10'
-   gem 'awesome_print', '=1.1.0'
 end
 
 group :test do

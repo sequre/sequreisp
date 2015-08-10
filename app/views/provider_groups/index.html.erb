@@ -1,3 +1,23 @@
+<% graphs = {} %>
+<% @provider_groups.each do |provider_group| %>
+  <% rate_graph = provider_group_rate_graph(provider_group) %>
+  <% graphs[provider_group.id] = { :render => rate_graph.keys.first, :graph => rate_graph.values.first } %>
+<% end %>
+
+<% content_for :javascript do %>
+  <%= javascript_include_tag "highcharts" %>
+  <%= javascript_include_tag "sequreispcharts" %>
+<% end %>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+  <% graphs.each_key do |key| %>
+    new Highcharts.Chart(<%= graphs[key][:graph].to_json.to_json %>);
+  <% end %>
+  });
+</script>
+
+
 <% content_for :title, t('menu.provider_groups') %>
 <% heading t('menu.provider_groups') %>
 <% render_new_button_for :provider_group %>
@@ -38,13 +58,15 @@
         <tr class="<%= css_class %>" >
           <td>
             <%= provider_group.name %><br/>
-            <%= link_to Graph.new(:element => provider_group).img("day", "small"), graph_provider_group_path(provider_group) %>
+            <% link_to Graph.new(:element => provider_group).img("day", "small"), graph_provider_group_path(provider_group) %>
+	    <div id=<%= "provider_group_#{provider_group.id}_rate" %> style="width: 231px; height: 126px"></div>
           </td>
           <td><%=h provider_group.rate_down %> (<%= pretty_currency_index(provider_group.concurrency_index_down) %>%)</td>
           <td><%=h provider_group.rate_up %> (<%= pretty_currency_index(provider_group.concurrency_index_up) %>%)</td>
           <td><%= show_human_down_up provider_group.cir_total_down, provider_group.cir_total_up %></td>
           <td><%=h t "aasm.provider_group.#{provider_group.state}" %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => provider_group} %>
+          <td><%= link_to t('buttons.graphs'), graph_provider_group_path(provider_group) %></td>
           <% if current_user.may_update_provider_group?(provider_group) %>
             <td><%= link_to t('buttons.edit'), edit_provider_group_path(provider_group) %></td>
           <% elsif current_user.may_show_provider_group?(provider_group) %>

@@ -18,7 +18,7 @@
 class InterfacesController < ApplicationController
   before_filter :require_user
   permissions :interfaces
- 
+
   # GET /interfaces
   # GET /interfaces.xml
   def index
@@ -77,7 +77,7 @@ class InterfacesController < ApplicationController
   # PUT /interfaces/1.xml
   def update
     @interface = object
-    
+
     respond_to do |format|
       if @interface.update_attributes(params[:interface])
         flash[:notice] = t 'controllers.successfully_updated'
@@ -115,7 +115,7 @@ class InterfacesController < ApplicationController
     @interface = object
     respond_to do |format|
       format.json { render :json => @interface.instant_rate }
-    end 
+    end
   end
   def scan
     count=0
@@ -133,6 +133,7 @@ class InterfacesController < ApplicationController
     redirect_to :back
   end
   def graph
+    @interface = object
     @graph = Graph.new(:class => object.class.name, :id => object.id)
     respond_to do |format|
       format.html # show.html.erb

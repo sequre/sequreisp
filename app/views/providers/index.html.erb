@@ -1,11 +1,14 @@
-<style type="text/css">
-  span.status_time{
-    font-weight: normal;
-    color: #555;
-    font-size:11px;
-    font-style: italic;
-  }
-</style>
+<% graphs = {} %>
+<% @providers.each do |provider| %>
+  <% rate_graph = interface_rate_graph(provider.interface) %>
+  <% graphs[provider.id] = { :render => rate_graph.keys.first, :graph => rate_graph.values.first } %>
+<% end %>
+
+<% content_for :javascript do %>
+  <%= javascript_include_tag "highcharts" %>
+  <%= javascript_include_tag "sequreispcharts" %>
+<% end %>
+
 <script type="text/javascript">
   $(function(){
     $('.truncate').jTruncate({
@@ -14,7 +17,24 @@
       lessText: '<%= I18n.t('buttons.less') %>'
     })
   })
+
+  $(document).ready(function() {
+    <% graphs.each_key do |p| %>
+      new Highcharts.Chart(<%= graphs[key][:graph].to_json %>);
+    <% end %>
+  });
 </script>
+
+
+<style type="text/css">
+  span.status_time{
+    font-weight: normal;
+    color: #555;
+    font-size:11px;
+    font-style: italic;
+  }
+</style>
+
 <% content_for :title, t('menu.providers') %>
 <% heading t('menu.providers') %>
 <% render_new_button_for :provider %>
@@ -23,7 +43,7 @@
 
 <div id="busqueda">
 <% form_for @search do |f| %>
-  <ul> 
+  <ul>
     <li>
       <%= f.label :name_like, t('activerecord.attributes.provider.name') %>
       <%= f.text_field :name_like %>
@@ -54,7 +74,7 @@
 </div>
 
 <div class="separador"></div>
-  
+
 <div class="main">
   <%= page_entries_info @providers %>
   <table cellspacing="0" cellpadding="0">
@@ -69,19 +89,20 @@
         <th><%=t 'activerecord.attributes.provider.online' %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
         <% if current_user.may_update_providers? or current_user.may_index_providers? %>
-        <th></th> 
+        <th></th>
         <% end %>
         <% if current_user.may_destroy_provider?(Provider.new) %>
-        <th></th> 
+        <th></th>
         <% end %>
       </tr>
-    
+
       <% @providers.each_with_index do |provider,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td>
             <%= display_name(provider) %><br/>
-            <%= link_to Graph.new(:element => provider).img("day", "small"), graph_provider_path(provider) %>
+            <% link_to Graph.new(:element => provider).img("day", "small"), graph_provider_path(provider) %>
+	    <div id=<%= graphs[contract.id][:render] %> style="width: 231px; height: 126px"></div>
           </td>
           <td>
             <% if provider.interface %>
@@ -103,11 +124,12 @@
             <span class="status_time"> Hace <%=h provider.pretty_current_status_time -%> </span>
           </td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => provider} %>
+          <td><%= link_to t('buttons.graphs'), graph_provider_path(provider) %></td>
           <% if current_user.may_update_provider?(provider) %>
             <td><%= link_to t('buttons.edit'), edit_provider_path(provider) %></td>
           <% elsif current_user.may_show_provider?(provider) %>
             <td><%= link_to t('buttons.show'), provider_path(provider) %></td>
-          <% end %> 
+          <% end %>
           <% if current_user.may_destroy_provider?(provider) %>
           <td><%= link_to t('buttons.delete'), provider, :confirm => t('messages.confirm'), :method => :delete %></td>
           <% end %>
@@ -117,4 +139,3 @@
   </table>
   <%= will_paginate @providers %>
 </div>
-

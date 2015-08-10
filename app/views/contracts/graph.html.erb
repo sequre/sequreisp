@@ -2,87 +2,56 @@
   <%= javascript_include_tag "highcharts" %>
   <%= javascript_include_tag "sequreispcharts" %>
 <% end %>
+
 <script type="text/javascript">
-  $(document).ready(function() {
-    chart_latency = new_chart_latency(<%= Time.zone.utc_offset %>);
-    chart_rate = new_chart_rate_prios(<%= Time.zone.utc_offset %>);
+//  function get_data(){
+//    $.get('<%= instant_contract_path %>',null,function(data){
+//      $.each(data.rates, function( index, rate ) {
+//        chart_rate.series[index].addPoint(data.rates[index.toString()].value, true, true);
+//      });
+//      chart_latency.series[0].addPoint(data.latency.ping, true, true);
+//      chart_latency.series[1].addPoint(data.latency.arping, true, true);
+     /* foo_latency.series[0].addPoint(data.latency.ping, true, true);
+	foo_latency.series[1].addPoint(data.latency.arping, true, true);
+	},'json');
+	}; */
 
-    <% series = Contract.find(@graph.element.id).serie_for_chart_rate_prio %>
-
-    <% series.count.times do |index| %>
-      chart_rate.addSeries({
-        name: <%= series[index.to_s][:name].to_json %>,
-        type: <%= series[index.to_s][:type].to_json %>,
-        color: <%= series[index.to_s][:color].to_json %>,
-        stack: <%= series[index.to_s][:stack].to_json %>,
-        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-      });
-    <% end %>
-
-    chart_rate.redraw();
-
-<% result = @graph.element.data_count_for_last_year %>
-$('#contract_data_traffic').highcharts({
-            chart: {
-                type: 'column'
-            },
-            colors: ['#00aa00'],
-            title: {
-                text: ''
-            },
-            xAxis: {
-                categories: <%=  result[0].to_json %>
-            },
-            yAxis: {
-                min: 0,
-                title: {
-                    text: <%= t('graph.data').to_json %>
-                }
-            },
-            tooltip: {
-                headerFormat:
-            '<span style="font-size:10px">{point.key}</span><table>',
-                pointFormat:
-            '<tr><td style="color:{series.color};padding:0">{series.name}: </td>'
-            + '<td style="padding:0"><b>{point.y} bytes</b></td></tr>',
-                footerFormat: '</table>',
-                shared: true,
-                useHTML: true
-            },
-            plotOptions: {
-                column: {
-                    pointPadding: 0.2,
-                    borderWidth: 0
-                }
-            },
-            series: [{
-                name: <%= t('graph.traffic').to_json %>,
-                data: <%=  result[1].to_json %>
-            }]
-        });
-
+  $(function() {
+    $( "#tabs" ).tabs();
   });
-  function get_data(){
-    $.get('<%= instant_contract_path %>',null,function(data){
-      $.each(data.rates, function( index, rate ) {
-        chart_rate.series[index].addPoint(data.rates[index.toString()].value, true, true);
-      });
-      chart_latency.series[0].addPoint(data.latency.ping, true, true);
-      chart_latency.series[1].addPoint(data.latency.arping, true, true);
-    },'json');
-  };
-  get_data();
-  setInterval(function() {
-    get_data();
-  }, 5000);
+
+  $(document).ready(function() {
+    latency = new Highcharts.Chart(<%= @graph_latency.graph! %>);
+    rate_up = new Highcharts.Chart(<%= @graph_rate_up.graph! %>);
+    rate_down = new Highcharts.Chart(<%= @graph_rate_down.graph! %>);
+    new Highcharts.Chart(<%= @graph_total_rate.graph! %>);
+    new Highcharts.Chart(<%= @graph_data_count.graph! %>);
+
+    new Highcharts.Chart(<%= @graph_rate_down_period_0.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_up_period_0.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_down_period_1.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_up_period_1.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_down_period_2.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_up_period_2.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_down_period_3.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_up_period_3.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_down_period_4.graph! %>);
+    new Highcharts.Chart(<%= @graph_rate_up_period_4.graph! %>);
+
+   /* get_data();
+      setInterval(function() {
+      get_data();
+      }, 5000); */
+  });
 </script>
 
-<% heading t('graph.heading', :name => @graph.name) %>
+<% heading t('graph.statistics') %>
+
 <div class="separador"></div>
+
 <div id="main">
   <table style="width: 747px;" cellspacing="0" cellpadding="0">
     <tbody>
-    <% if @graph.element.class.to_s == "Contract" %>
       <tr class="odd">
         <th><%=t 'activerecord.attributes.contract.ip' %></th>
         <th><%=t 'activerecord.attributes.contract.plan' %></th>
@@ -92,50 +61,63 @@ $('#contract_data_traffic').highcharts({
         <th><%=t 'activerecord.attributes.plan.ceil_up' %></th>
       </tr>
       <tr class="even" >
-        <td><%= @graph.element.ip %></td>
-        <td><%= @graph.element.plan.name rescue 'Undefined' %></td>
-        <td><%= @graph.element.plan.rate_down rescue 'Undefined' %></td>
-        <td><%= @graph.element.plan.ceil_down rescue 'Undefined' %></td>
-        <td><%= @graph.element.plan.rate_up rescue 'Undefined' %></td>
-        <td><%= @graph.element.plan.ceil_up rescue 'Undefined' %></td>
+        <td><%= @contract.ip %></td>
+        <td><%= @contract.plan.name rescue 'Undefined' %></td>
+        <td><%= @contract.plan.rate_down rescue 'Undefined' %></td>
+        <td><%= @contract.plan.ceil_down rescue 'Undefined' %></td>
+        <td><%= @contract.plan.rate_up rescue 'Undefined' %></td>
+        <td><%= @contract.plan.ceil_up rescue 'Undefined' %></td>
       </tr>
-    <% elsif @graph.element.class.to_s == "Provider" %>
-      <tr class="odd">
-        <th><%=t 'activerecord.attributes.provider.interface' %></th>
-        <th><%=t 'activerecord.attributes.provider.rate_down' %></th>
-        <th><%=t 'activerecord.attributes.provider.rate_up' %></th>
-      </tr>
-      <tr class="odd" >
-        <td><%= @graph.element.interface.name rescue 'Undefined' %></td>
-        <td><%= @graph.element.rate_down %></td>
-        <td><%= @graph.element.rate_up %></td>
-      </tr>
-    <% elsif @graph.element.class.to_s == "ProviderGroup" %>
-      <tr class="odd">
-        <th><%=t 'activerecord.attributes.provider_group.rate_down' %></th>
-        <th><%=t 'activerecord.attributes.provider_group.rate_up' %></th>
-      </tr>
-      <tr class="odd" >
-        <td><%= @graph.element.rate_down %></td>
-        <td><%= @graph.element.rate_up %></td>
-      </tr>
-    <% end %>
     </tbody>
   </table>
-  <h2><%=t 'graph.latency' %></h2>
-  <div id="instant_latency" style="width: 747px; height: 247px"></div>
-  <br/>
-  <br/>
-  <br/>
-  <h2><%=t 'graph.instant' %></h2>
-  <div id="instant" style="width: 747px; height: 247px"></div>
-  <br/>
-  <br/>
-  <br/>
-  <h2><%=t 'graph.data_traffic' %></h2>
-  <div id="contract_data_traffic" style="width: 747px; height: 247px"></div>
-  <br/>
-  <br/>
-  <br/>
-  <%= render :partial => 'shared/graph_history' %>
 </div>
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div style="clear: both"></div>
+
+<div id=<%= @graph_latency.render %> style="height:247px; width:430px; float:left;"></div>
+<div id=<%= @graph_total_rate.render %> style="height:247px; width:430px; float:left;"></div>
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div id=<%= @graph_rate_up.render %> style="height:247px; width:430px; float:left;"></div>
+<div id=<%= @graph_rate_down.render %> style="height:247px; width:430px; float:left;"></div>
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div id=<%= @graph_data_count.render %> style="height:247px; width:860px; float:left;"></div>
+
+<div class="separador" style='margin-bottom: 5px;'></div>
+
+<% content_tag(:div, "", :id => "tabs") do %>
+  <ul>
+    <li><a href="#tabs-0">Period 0</a></li>
+    <li><a href="#tabs-1">Period 1</a></li>
+    <li><a href="#tabs-2">Period 2</a></li>
+    <li><a href="#tabs-3">Period 3</a></li>
+    <li><a href="#tabs-4">Period 4</a></li>
+  </ul>
+  <% content_tag(:div, "", :id => "tabs-0" ) do %>
+    <div id=<%= @graph_rate_down_period_0.render %> style="height:247px; width:400px; float:left;"></div>
+    <div id=<%= @graph_rate_up_period_0.render %> style="height:247px; width:400px; float:left;"></div>
+    <div class="separador" style='margin-bottom: 5px;'></div>
+  <% end %>
+  <% content_tag(:div, "", :id => "tabs-1" ) do %>
+    <div id=<%= @graph_rate_down_period_1.render %> style="height:247px; width:400px; float:left;"></div>
+    <div id=<%= @graph_rate_up_period_1.render %> style="height:247px; width:400px; float:left;"></div>
+    <div class="separador" style='margin-bottom: 5px;'></div>
+  <% end %>
+
+  <% content_tag(:div, "", :id => "tabs-2" ) do %>
+    <div id=<%= @graph_rate_down_period_2.render %> style="height:247px; width:400px; float:left;"></div>
+    <div id=<%= @graph_rate_up_period_2.render %> style="height:247px; width:400px; float:left;"></div>
+    <div class="separador" style='margin-bottom: 5px;'></div>
+  <% end %>
+
+  <% content_tag(:div, "", :id => "tabs-3" ) do %>
+    <div id=<%= @graph_rate_down_period_3.render %> style="height:247px; width:400px; float:left;"></div>
+    <div id=<%= @graph_rate_up_period_3.render %> style="height:247px; width:400px; float:left;"></div>
+    <div class="separador" style='margin-bottom: 5px;'></div>
+  <% end %>
+
+  <% content_tag(:div, "", :id => "tabs-4" ) do %>
+    <div id=<%= @graph_rate_down_period_4.render %> style="height:247px; width:400px; float:left;"></div>
+    <div id=<%= @graph_rate_up_period_4.render %> style="height:247px; width:400px; float:left;"></div>
+    <div class="separador" style='margin-bottom: 5px;'></div>
+  <% end %>
+<% end %>
