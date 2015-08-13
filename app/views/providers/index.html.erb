@@ -19,8 +19,8 @@
   })
 
   $(document).ready(function() {
-    <% graphs.each_key do |p| %>
-      new Highcharts.Chart(<%= graphs[key][:graph].to_json %>);
+    <% @graphs.each do |g| %>
+      new Highcharts.Chart(<%= g.minimal_graph %>);
     <% end %>
   });
 </script>
@@ -88,11 +88,8 @@
         <th><%=t 'activerecord.attributes.provider.state' %></th>
         <th><%=t 'activerecord.attributes.provider.online' %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
-        <% if current_user.may_update_providers? or current_user.may_index_providers? %>
-        <th></th>
-        <% end %>
-        <% if current_user.may_destroy_provider?(Provider.new) %>
-        <th></th>
+        <% if current_user.may_update_providers? or current_user.may_index_providers? or current_user.may_destroy_provider?(Provider.new) %>
+          <th></th>
         <% end %>
       </tr>
 
@@ -101,8 +98,7 @@
         <tr class="<%= css_class %>" >
           <td>
             <%= display_name(provider) %><br/>
-            <% link_to Graph.new(:element => provider).img("day", "small"), graph_provider_path(provider) %>
-	    <div id=<%= graphs[contract.id][:render] %> style="width: 231px; height: 126px"></div>
+	    <div id=<%= @graphs.find{ |g| g.model.id == provider.interface.id }.render  %> style="width: 231px; height: 126px"></div>
           </td>
           <td>
             <% if provider.interface %>
@@ -124,15 +120,23 @@
             <span class="status_time"> Hace <%=h provider.pretty_current_status_time -%> </span>
           </td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => provider} %>
-          <td><%= link_to t('buttons.graphs'), graph_provider_path(provider) %></td>
-          <% if current_user.may_update_provider?(provider) %>
-            <td><%= link_to t('buttons.edit'), edit_provider_path(provider) %></td>
-          <% elsif current_user.may_show_provider?(provider) %>
-            <td><%= link_to t('buttons.show'), provider_path(provider) %></td>
-          <% end %>
-          <% if current_user.may_destroy_provider?(provider) %>
-          <td><%= link_to t('buttons.delete'), provider, :confirm => t('messages.confirm'), :method => :delete %></td>
-          <% end %>
+	  <td>
+	    <% if current_user.may_show_provider?(provider) %>
+	      <br/>
+	      <br/>
+              <td><%= link_to t('buttons.show'), provider_path(provider) %></td>
+            <% end %>
+	    <% if current_user.may_update_provider?(provider) %>
+	      <br/>
+	      <br/>
+              <td><%= link_to t('buttons.edit'), edit_provider_path(provider) %></td>
+	    <% end %>
+            <% if current_user.may_destroy_provider?(provider) %>
+	      <br/>
+	      <br/>
+              <td><%= link_to t('buttons.delete'), provider, :confirm => t('messages.confirm'), :method => :delete %></td>
+            <% end %>
+	  </td>
         </tr>
       <% end %>
     </tbody>

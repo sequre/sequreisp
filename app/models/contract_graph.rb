@@ -1,12 +1,6 @@
 class ContractGraph < Graph
   GRAPHS = [ "rate_up_instant", "rate_down_instant", "total_rate", "latency_instant", "data_count" ]
 
-  ContractSample::CONF_PERIODS.each_value do |key|
-    ["up", "down"].each do |up_or_down|
-      GRAPHS << "rate_#{up_or_down}_period_#{key[:period_number]}"
-    end
-  end
-
   # Dynamic method for up and down
   ["up", "down"].each do |up_or_down|
     define_method("rate_#{up_or_down}_instant") do
@@ -47,6 +41,7 @@ class ContractGraph < Graph
 
     # Dynamic method for each period
     ContractSample::CONF_PERIODS.each_value do |key|
+      GRAPHS << "rate_#{up_or_down}_period_#{key[:period_number]}"
       define_method("rate_#{up_or_down}_period_#{key[:period_number]}") do
         period = key[:period_number]
         samples = ContractSample.all(:conditions => { :contract_id => @model.id, :period => period } )
@@ -101,8 +96,19 @@ class ContractGraph < Graph
 
     series = []
 
-    series << { :name => "up",   :type=> "spline", :color => RED,   :marker => { :enabled => false }, :stack => "up",   :data => data[:up]   }
-    series << { :name => "down", :type=> "spline", :color => GREEN, :marker => { :enabled => false }, :stack => "down", :data => data[:down] }
+    series << { :name   => "up",
+                :type   => "spline",
+                :color  => RED,
+                :marker => { :enabled => false },
+                :stack  => "up",
+                :data   => data[:up] }
+
+    series << { :name   => "down",
+                :type   => "spline",
+                :color  => GREEN,
+                :marker => { :enabled => false },
+                :stack  => "down",
+                :data   => data[:down] }
 
     graph = { :title => I18n.t("graphs.titles.total_rate"),
               :ytitle => 'bps(bits/second)',

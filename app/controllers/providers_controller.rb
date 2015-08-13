@@ -26,6 +26,8 @@ class ProvidersController < ApplicationController
     @search = Provider.search(params[:search])
     @providers = @search.paginate(:page => params[:page],:per_page => 30)
 
+    @graphs = @providers.map{ |p| InterfaceGraph.new(p.interface, "instant") }
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @providers }
@@ -36,7 +38,10 @@ class ProvidersController < ApplicationController
   # GET /providers/1.xml
   def show
     @provider = object
-    render :action => "edit"
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => @provider }
+    end
   end
 
   # GET /providers/new
