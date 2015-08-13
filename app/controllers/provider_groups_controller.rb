@@ -24,6 +24,8 @@ class ProviderGroupsController < ApplicationController
   def index
     @provider_groups = ProviderGroup.all(:order => "name ASC")
 
+    @graphs = @provider_groups.map{ |pg| InterfaceGraph.new(pg, "interface_group_instant") }
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @provider_groups }
@@ -34,7 +36,10 @@ class ProviderGroupsController < ApplicationController
   # GET /provider_groups/1.xml
   def show
     @provider_group = object
-    render :action => "edit"
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => @provider_group }
+    end
   end
 
   # GET /provider_groups/new

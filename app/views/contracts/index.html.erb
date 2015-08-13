@@ -32,6 +32,7 @@
     color: green;
   }
 </style>
+
 <script type="text/javascript">
   $(function(){
     initMoreToggle('#massive_setting', '#form_massive_setting', 'toggle_form_massive_setting');
@@ -72,7 +73,7 @@
   })
   $(document).ready(function() {
     <% @graphs.each do |g| %>
-     new Highcharts.Chart(<%= g.minimal_graph.to_json %>);
+      new Highcharts.Chart(<%= g.minimal_graph %>);
     <% end %>
   });
 </script>
@@ -174,19 +175,16 @@
         <th><%= order @search, :by => :state, :as => t('activerecord.attributes.contract.state') %></th>
         <th><%= order @search, :by => :current_traffic_data_count, :as => t('activerecord.attributes.traffic.data_count') %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
-        <% if current_user.may_update_contracts? or current_user.may_index_contracts? or current_user.may_destroy_contract?(Contract.new)%>
         <th></th>
-        <% end %>
       </tr>
       <% @contracts.each_with_index do |contract,i| %>
-	<% graph = @graphs.find{ |g| g.model.id == contract.id } %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td><%= check_box_tag "contracts_ids[]", contract.id %></td>
           <td><%= contract.id %></td>
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
-	    <div id="<%= graph.render %>" style="width: 231px; height: 126px"></div>
+	    <div id="<%= @graphs.find{ |g| g.model.id == contract.id }.render %>" style="width: 231px; height: 126px"></div>
           </td>
           <td><%=link_to h(contract.plan.name), plan_path(contract.plan) %></td>
           <td>
@@ -212,23 +210,23 @@
           </td>
           <td><%= show_traffic(contract) rescue 0 %> <%= current_consumption_percentage_of contract %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => contract} %>
-          <% if current_user.may_update_contract?(contract) or current_user.may_destroy_contract?(contract) %>
-            <td>
-              <%= link_to t('buttons.graphs'), route_path(graph.path) %>
-              <% if current_user.may_update_contract?(contract) %>
-                <br/>
-                <br/>
-                <%= link_to t('buttons.edit'), edit_contract_path(contract) %>
-              <% end %>
-              <% if current_user.may_destroy_contract?(contract) %>
-                <br/>
-                <br/>
-                <%= link_to t('buttons.delete'), contract, :confirm => t('messages.confirm'), :method => :delete %>
-              <% end %>
-            </td>
-          <% elsif current_user.may_show_contract?(contract) %>
-            <td><%= link_to t('buttons.show'), contract_path(contract) %></td>
-          <% end %>
+          <td>
+	    <% if current_user.may_show_contract?(contract) %>
+              <br/>
+              <br/>
+              <%= link_to t('buttons.show'), contract_path(contract) %>
+	    <% end %>
+            <% if current_user.may_update_contract?(contract) %>
+              <br/>
+              <br/>
+              <%= link_to t('buttons.edit'), edit_contract_path(contract) %>
+            <% end %>
+            <% if current_user.may_destroy_contract?(contract) %>
+              <br/>
+              <br/>
+              <%= link_to t('buttons.delete'), contract, :confirm => t('messages.confirm'), :method => :delete %>
+            <% end %>
+          </td>
         </tr>
       <% end %>
     </tbody>

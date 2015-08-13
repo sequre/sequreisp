@@ -1,9 +1,3 @@
-<% graphs = {} %>
-<% @provider_groups.each do |provider_group| %>
-  <% rate_graph = provider_group_rate_graph(provider_group) %>
-  <% graphs[provider_group.id] = { :render => rate_graph.keys.first, :graph => rate_graph.values.first } %>
-<% end %>
-
 <% content_for :javascript do %>
   <%= javascript_include_tag "highcharts" %>
   <%= javascript_include_tag "sequreispcharts" %>
@@ -11,12 +5,11 @@
 
 <script type="text/javascript">
   $(document).ready(function() {
-  <% graphs.each_key do |key| %>
-    new Highcharts.Chart(<%= graphs[key][:graph].to_json.to_json %>);
-  <% end %>
+    <% @graphs.each do |g| %>
+      new Highcharts.Chart(<%= g.minimal_graph %>);
+    <% end %>
   });
 </script>
-
 
 <% content_for :title, t('menu.provider_groups') %>
 <% heading t('menu.provider_groups') %>
@@ -45,11 +38,8 @@
 	</th>
         <th><%=t 'activerecord.attributes.provider_group.state' %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
-        <% if current_user.may_update_provider_groups? or current_user.may_index_provider_groups? %>
-        <th></th>
-        <% end %>
-        <% if current_user.may_destroy_provider_group?(ProviderGroup.new) %>
-        <th></th>
+        <% if current_user.may_update_provider_groups? or current_user.may_index_provider_groups? or current_user.may_destroy_provider_group?(ProviderGroup.new) %>
+          <th></th>
         <% end %>
       </tr>
 
@@ -58,24 +48,31 @@
         <tr class="<%= css_class %>" >
           <td>
             <%= provider_group.name %><br/>
-            <% link_to Graph.new(:element => provider_group).img("day", "small"), graph_provider_group_path(provider_group) %>
-	    <div id=<%= "provider_group_#{provider_group.id}_rate" %> style="width: 231px; height: 126px"></div>
+	    <div id=<%= @graphs.find{ |g| g.model.id == provider_group.id }.render %> style="width: 231px; height: 126px"></div>
           </td>
           <td><%=h provider_group.rate_down %> (<%= pretty_currency_index(provider_group.concurrency_index_down) %>%)</td>
           <td><%=h provider_group.rate_up %> (<%= pretty_currency_index(provider_group.concurrency_index_up) %>%)</td>
           <td><%= show_human_down_up provider_group.cir_total_down, provider_group.cir_total_up %></td>
           <td><%=h t "aasm.provider_group.#{provider_group.state}" %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => provider_group} %>
-          <td><%= link_to t('buttons.graphs'), graph_provider_group_path(provider_group) %></td>
-          <% if current_user.may_update_provider_group?(provider_group) %>
-            <td><%= link_to t('buttons.edit'), edit_provider_group_path(provider_group) %></td>
-          <% elsif current_user.may_show_provider_group?(provider_group) %>
-            <td><%= link_to t('buttons.show'), provider_group_path(provider_group) %></td>
-          <% end %>
-          <% if current_user.may_destroy_provider_group?(provider_group) %>
-          <td><%= link_to t('buttons.delete'), provider_group, :confirm => t('messages.confirm'), :method => :delete %></td>
-          <% end %>
-        </tr>
+	  <td>
+            <% if current_user.may_show_provider_group?(provider_group) %>
+	      <br/>
+	      <br/>
+              <td><%= link_to t('buttons.show'), provider_group_path(provider_group) %></td>
+            <% end %>
+            <% if current_user.may_update_provider_group?(provider_group) %>
+	      <br/>
+	      <br/>
+              <td><%= link_to t('buttons.edit'), edit_provider_group_path(provider_group) %></td>
+            <% end %>
+            <% if current_user.may_destroy_provider_group?(provider_group) %>
+	      <br/>
+	      <br/>
+              <td><%= link_to t('buttons.delete'), provider_group, :confirm => t('messages.confirm'), :method => :delete %></td>
+            <% end %>
+	  </td>
+	</tr>
       <% end %>
     </tbody>
   </table>

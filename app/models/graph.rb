@@ -39,7 +39,7 @@ class Graph
   def initialize(model, method, options={})
     @model = model
     @method = method
-    @render = "#{@method}_#{@model.id}"
+    @render = "#{@model.class.name.downcase}_#{@model.id}_#{@method}"
     @minimal = false
   end
 
@@ -50,6 +50,10 @@ class Graph
     _graph = graph!
     @minimal = false
     _graph
+  end
+
+  def hash_graph
+    JSON.parse(graph!)
   end
 
   def name; @model.class.name; end
@@ -70,15 +74,19 @@ class Graph
     options[:type] ||= 'line'
     options[:xtype] ||= 'datetime'
 
-    { :credits     => { :enabled => false },
-      :chart       => { :renderTo => @render, :zoomType => 'x' },
-      :exporting   => { :enabled => true },
-      :legend      => { :enabled => @minimal? false : true, :verticalAlign => 'bottom' },
-      :title       => { :text => @minimal? '' : options[:title] },
-      :xAxis       => { :type => options[:xtype] },
-      :yAxis       => { :title => { :text => @minimal? '' : options[:ytitle] } },
-      :plotOptions => { options[:type].to_sym => { :stacking => options[:stacking] } },
-      :series      => options[:series] }
+    { :credits       => { :enabled => false },
+      :chart         => { :renderTo => @render,
+                          :zoomType => 'x' },
+      :rangeSelector => { :selected => 1 },
+      :exporting     => { :enabled => true },
+      :legend        => { :enabled => @minimal? false : true,
+                          :verticalAlign => 'bottom' },
+      :title         => { :text => @minimal? '' : options[:title] },
+      :xAxis         => { :type => options[:xtype] },
+      :yAxis         => { :title => { :text => @minimal? '' : options[:ytitle],
+                          :align => "low" } },
+      :plotOptions   => { options[:type].to_sym => { :stacking => options[:stacking] } },
+      :series        => options[:series] }
   end
 
   def faker_values hash=nil
@@ -100,116 +108,7 @@ class Graph
   end
 
 
-  # def interface_rate_graph(@model)
-  #   render_to = "interface_#{@model.id}_rate"
-  #   speed = @model.speed.map {|x| x[/\d+/]}.first.to_i
-  #   data = {:tx => [], :rx => []}
 
-  #   date_keys = $redis.keys("interface_#{@model.id}_sample_*").sort
-  #   data = faker_values({:size => 12, :keys => {:rx => Rails.env.production? ? 0: speed * 0.99, :tx => Rails.env.production? ? 0 : speed * 0.99}}) if date_keys.empty?
-
-  #   InterfaceSample.compact_keys.each do |rkey|
-  #     date_keys.each do |key|
-  #       time = $redis.hget("#{key}", "time").to_i * 1000
-  #       value = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
-  #       data[rkey[:name].to_sym] << [ time, value ]
-  #     end
-  #   end
-
-  #   series = []
-  #   series << { :name => "rx", :type=> "spline", :color=> GREEN, :marker => { :enabled=> false }, :stack => "rx", :data => data[:rx].sort }
-  #   series << { :name => "tx", :type=> "spline", :color=> RED,   :marker => { :enabled=> false }, :stack => "tx", :data => data[:tx].sort }
-
-  #   graph = { :title =>'',
-  #             :render_to => render_to,
-  #             :ytitle => '',
-  #             :legend => false,
-  #             :series => series }
-
-  #   { render_to => default_options_graphs(graph) }
-  # end
-
-  # def interface_rate_graph_for_periods(@model)
-  #   speed = @model.speed.map {|x| x[/\d+/]}.first.to_i
-  #   graphs = {}
-  #   samples_by_period = InterfaceSample.all(:conditions => { :interface_id => @model.id} ).group_by(&:period)
-  #   samples_by_period.each do |period, samples|
-  #     data = {}
-  #     if Rails.env.production?
-  #       InterfaceSample.compact_keys.each do |rkey|
-  #         data[rkey[:name]] = []
-  #         samples.each do |sample|
-  #           data[rkey[:name]] << [ (sample.sample_number.to_i * 1000), sample[rkey[:name].to_sym] ]
-  #         end
-  #       end
-  #     else
-  #       hash = {:size => InterfaceSample::CONF_PERIODS[period.to_sym][:sample_size], :keys => {}}
-  #       InterfaceSample.compact_keys.each { |rkey| hash[:keys][:name] = speed * 0.99 }
-  #       data = faker_values(hash)
-  #     end
-
-  #     graph = { :title => I18n.t("graphs.titles.instant_period_#{period}"),
-  #               :type => 'areaspline',
-  #               :render_to => "contract_rate_period_#{period}",
-  #               :stacking => 'normal',
-  #               :ytitle => 'bps(bits/second)',
-  #               :series => [] }
-
-  #     data.each do |key, value|
-  #       graph[:series] << { :name => key, :type=> "areaspline", :stack => "rx", :data => value } if key.include? "rx"
-  #       graph[:series] << { :name => key, :type=> "areaspline", :stack => "tx", :data => value } if key.include? "tx"
-  #     end
-
-  #     graphs["interface_#{@model.id}_rate_period_#{period}"] = default_options_graphs(graph)
-  #   end
-  #   graphs
-  # end
-
-  # def provider_group_rate_graph(@model)
-  #   render_to = "provider_group_#{@model.id}_rate"
-  #   interfaces = @model.providers.map{ |p| p.interface }
-  #   datas = []
-
-  #   datas << faker_values({:size => 12, :keys => {:rx => Rails.env.production? ? 0: 100 * 0.99, :tx => Rails.env.production? ? 0 : 100 * 0.99}}) if interfaces.empty?
-
-  #   interfaces.each do |i|
-  #     speed = i.speed.map {|x| x[/\d+/]}.first.to_i
-  #     data = {:tx => [], :rx => []}
-  #     date_keys = $redis.keys("interface_#{i.id}_sample_*").sort
-  #     data = faker_values({:size => 12, :keys => {:rx => Rails.env.production? ? 0: speed * 0.99, :tx => Rails.env.production? ? 0 : speed * 0.99}}) if date_keys.empty?
-
-  #     date_keys.each do |key|
-  #       time = $redis.hget("#{key}", "time").to_i* 1000
-  #       value_up = 0
-  #       value_down = 0
-  #       rkey_down.each do |rkey|
-  #         value_rx += $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
-  #       end
-  #       rkey_up.each do |rkey|
-  #         value_tx += $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
-  #       end
-  #       data[:rx] << [time, value_rx]
-  #       data[:tx] << [time, value_tx]
-  #     end
-  #     datas << data
-  #   end
-
-  #   series = []
-
-  #   unless datas.empty?
-  #     datas = datas.sum
-  #     series << { :name => "rx", :type=> "spline", :color=> GREEN, :marker => { :enabled=> false }, :stack => "rx", :data => datas[:rx].sort }
-  #     series << { :name => "tx", :type=> "spline", :color=> RED,   :marker => { :enabled=> false }, :stack => "tx", :data => datas[:tx].sort }
-  #   end
-
-  #   graph = { :title =>'',
-  #             :render_to => render_to,
-  #             :ytitle => '',
-  #             :legend => false,
-  #             :series => series }
-
-  #   { render_to => default_options_graphs(graph) }
-  # end
 
 
 

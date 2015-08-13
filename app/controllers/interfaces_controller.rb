@@ -26,6 +26,7 @@ class InterfacesController < ApplicationController
     params[:search][:order] ||= 'ascend_by_name'
     @search = Interface.search(params[:search])
     @interfaces = @search.paginate(:page => params[:page],:per_page => 30)
+    @graphs = @interfaces.map{ |i| InterfaceGraph.new(i, "instant") }
 
     respond_to do |format|
       format.html # index.html.erb
@@ -37,7 +38,16 @@ class InterfacesController < ApplicationController
   # GET /interfaces/1.xml
   def show
     @interface = object
-    render :action => "edit"
+    @periods = InterfaceSample::CONF_PERIODS.size
+    @graphs = {}
+
+    @graphs["instant"] = InterfaceGraph.new(@interface, "instant")
+    @periods.times { |i| @graphs["interface_period_#{i}"] = InterfaceGraph.new(@interface, "interface_period_#{i}") }
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => @interface }
+    end
   end
 
   # GET /interfaces/new
