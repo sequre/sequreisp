@@ -38,6 +38,13 @@ class ProvidersController < ApplicationController
   # GET /providers/1.xml
   def show
     @provider = object
+    @periods = InterfaceSample::CONF_PERIODS.size
+    @graphs = {}
+
+    InterfaceGraph.supported_graph(@provider.interface).each do |graph_name|
+      @graphs[graph_name] = InterfaceGraph.new(@provider.interface, graph_name)
+    end
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @provider }

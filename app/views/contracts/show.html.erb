@@ -1,6 +1,6 @@
 <% content_for :javascript do %>
-  <%= javascript_include_tag "highcharts" %>
-  <%= javascript_include_tag "sequreispcharts" %>
+  <%= javascript_include_tag "highstock" %>
+  <%= javascript_include_tag "exporting" %>
 <% end %>
 
 <style type="text/css">
@@ -39,21 +39,21 @@
   };
 
   $(document).ready(function() {
-    latency = new Highcharts.Chart(<%= @graphs[:latency].graph! %>);
-    rate_up = new Highcharts.Chart(<%= @graphs[:rate_up].graph! %>);
-    rate_down = new Highcharts.Chart(<%= @graphs[:rate_down].graph! %>);
-    total_rate = new Highcharts.Chart(<%= @graphs[:total_rate].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:data_count].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_down_period_0].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_down_period_1].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_down_period_2].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_down_period_3].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_down_period_4].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_up_period_0].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_up_period_1].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_up_period_2].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_up_period_3].graph! %>);
-    new Highcharts.Chart(<%= @graphs[:rate_up_period_4].graph! %>);
+    latency = new Highcharts.Chart(<%= @graphs["latency_instant"].graph! %>);
+    rate_up = new Highcharts.Chart(<%= @graphs["rate_up_instant"].graph! %>);
+    rate_down = new Highcharts.Chart(<%= @graphs["rate_down_instant"].graph! %>);
+    total_rate = new Highcharts.Chart(<%= @graphs["total_rate"].graph! %>);
+    new Highcharts.Chart(<%= @graphs["data_count"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_down_period_0"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_down_period_1"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_down_period_2"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_down_period_3"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_down_period_4"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_up_period_0"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_up_period_1"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_up_period_2"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_up_period_3"].graph! %>);
+    new Highcharts.StockChart(<%= @graphs["rate_up_period_4"].graph! %>);
 
     get_data();
 
@@ -121,13 +121,13 @@
 
 <div class="separador" style='margin-bottom: 5px;'></div>
 <div style="clear: both"></div>
-<div id=<%= @graphs[:latency].render %> style="height:247px; width:430px; float:left;"></div>
-<div id=<%= @graphs[:total_rate].render %> style="height:247px; width:430px; float:left;"></div>
+<div id=<%= @graphs["latency_instant"].render %> style="height:247px; width:430px; float:left;"></div>
+<div id=<%= @graphs["total_rate"].render %> style="height:247px; width:430px; float:left;"></div>
 <div class="separador" style='margin-bottom: 5px;'></div>
-<div id=<%= @graphs[:rate_up].render %> style="height:247px; width:430px; float:left;"></div>
-<div id=<%= @graphs[:rate_down].render %> style="height:247px; width:430px; float:left;"></div>
+<div id=<%= @graphs["rate_up_instant"].render %> style="height:247px; width:430px; float:left;"></div>
+<div id=<%= @graphs["rate_down_instant"].render %> style="height:247px; width:430px; float:left;"></div>
 <div class="separador" style='margin-bottom: 5px;'></div>
-<div id=<%= @graphs[:data_count].render %> style="height:247px; width:860px; float:left;"></div>
+<div id=<%= @graphs["data_count"].render %> style="height:247px; width:860px; float:left;"></div>
 <div class="separador" style='margin-bottom: 5px;'></div>
 
 <% content_tag(:div, "", :id => "tabs") do %>
@@ -139,8 +139,8 @@
 
   <% @periods.times do |period| %>
     <% content_tag(:div, "", :id => "tabs-#{period}" ) do %>
-      <div id=<%= @graphs["rate_down_period_#{period}".to_sym].render %> style="height:247px; width:400px; float:left;"></div>
-      <div id=<%= @graphs["rate_up_period_#{period}".to_sym].render %> style="height:247px; width:400px; float:left;"></div>
+      <div id=<%= @graphs["rate_down_period_#{period}"].render %> style="height:247px; width:400px; float:left;"></div>
+      <div id=<%= @graphs["rate_up_period_#{period}"].render %> style="height:247px; width:400px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
     <% end %>
   <% end %>

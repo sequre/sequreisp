@@ -1,6 +1,6 @@
 <% content_for :javascript do %>
   <%= javascript_include_tag "highstock" %>
-  <%= javascript_include_tag "sequreispcharts" %>
+  <%= javascript_include_tag "exporting" %>
 <% end %>
 
 <script type="text/javascript">
@@ -9,17 +9,17 @@
   });
 
   $(document).ready(function() {
-    instant = new Highcharts.Chart(<%= @graphs["instant"].graph! %>);
+    instant = new Highcharts.Chart(<%= @graphs["interface_instant"].graph! %>);
    <% @periods.times do |i| %>
      new Highcharts.StockChart(<%= @graphs["interface_period_#{i}"].graph! %>);
    <% end %>
   });
 </script>
 
-<%= heading "#{@interface.name} [#{@interface.mac_address}] #{@interface.kind}" %>
+<%= heading "#{@interface.name} [#{@interface.mac_address}] #{@interface.kind} #{@interface.speed}" %>
 <% content_for :title, @interface.name %>
 
-<div id=<%= @graphs["instant"].render %> style="height:247px; width:860px; float:left;"></div>
+<div id=<%= @graphs["interface_instant"].render %> style="height:247px; width:860px; float:left;"></div>
 <div class="separador" style='margin-bottom: 5px;'></div>
 
 <% content_tag(:div, "", :id => "tabs") do %>
@@ -31,7 +31,7 @@
 
   <% @periods.times do |period| %>
     <% content_tag(:div, "", :id => "tabs-#{period}" ) do %>
-      <div id=<%= @graphs["interface_period_#{period}"].render %> style="height:450px; width:800px; float:left;"></div>
+      <div id=<%= @graphs["interface_period_#{period}"].render %> style="height:450px; width:840px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
     <% end %>
   <% end %>

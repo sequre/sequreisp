@@ -4,37 +4,36 @@ class ContractGraph < Graph
   # Dynamic method for up and down
   ["up", "down"].each do |up_or_down|
     define_method("rate_#{up_or_down}_instant") do
+      series = []
       data = {}
       plan = @model.plan
       date_keys = $redis.keys("contract_#{@model.id}_sample_*").sort
 
       ContractSample.compact_keys.select{ |k| k[:up_or_down] == up_or_down }.each do |rkey|
-        data[rkey[:name]] = []
+        data = []
         if Rails.env.production?
           date_keys.each do |key|
             time = $redis.hget("#{key}", "time").to_i * 1000
             value = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
-            data[rkey[:name]] << [ time, value ]
+            data << [ time, value ]
           end
         else
           date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
           12.times do |i|
             date = date_time_now - (i * 1000)
             value = plan.send("ceil_#{rkey[:up_or_down]}") * rand(0.99)
-            data[rkey[:name]] << [ date, value ]
+            data << [ date, value ]
           end
         end
+        series << { :name  => rkey[:name],
+                    :type  => "areaspline",
+                    :stack => rkey[:up_or_down],
+                    :data  => data }
       end
 
-      graph = { :title => I18n.t("graphs.titles.instant_rate_#{up_or_down}"),
-                :type => 'areaspline',
-                :stacking => 'normal',
+      graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
-                :series => [] }
-
-      data.each do |key, value|
-        graph[:series] << { :name => key, :type=> "areaspline", :stack => up_or_down, :data => value }
-      end
+                :series => series }
 
       default_options_graphs(graph)
     end
@@ -43,29 +42,29 @@ class ContractGraph < Graph
     ContractSample::CONF_PERIODS.each_value do |key|
       GRAPHS << "rate_#{up_or_down}_period_#{key[:period_number]}"
       define_method("rate_#{up_or_down}_period_#{key[:period_number]}") do
+        series = []
         period = key[:period_number]
-        samples = ContractSample.all(:conditions => { :contract_id => @model.id, :period => period } )
+        samples = ContractSample.all(:conditions => { :contract_id => @model.id,
+                                                      :period => period } )
 
-        data = {}
-        ContractSample.compact_keys.each do |rkey|
-          if rkey[:up_or_down] == up_or_down
-            data[rkey[:name]] = []
-            samples.each do |sample|
-              # value = rkey[:name].include?("up")? sample[rkey[:name].to_sym]*-1 : sample[rkey[:name].to_sym]
-              data[rkey[:name]] << [ ((sample.sample_number.to_i + Time.now.utc_offset) * 1000), sample[rkey[:name].to_sym] ]
-            end
+        ContractSample.compact_keys.select{ |k| k[:up_or_down] == up_or_down }.each do |rkey|
+          data = []
+          samples.each do |sample|
+            time = (sample.sample_number.to_i + Time.now.utc_offset) * 1000
+            value = sample[rkey[:name].to_sym]
+            data << [ time, value ]
           end
+
+          series << { :name  => rkey[:name],
+                      :type  => "areaspline",
+                      :stack => rkey[:up_or_down],
+                      :data  => data }
         end
 
-        graph = { :title => I18n.t("graphs.titles.rate_#{up_or_down}_period_#{period}"),
-                  :type => 'areaspline',
-                  :stacking => 'normal',
+        graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
                   :ytitle => 'bps(bits/second)',
-                  :series => [] }
+                  :series => series }
 
-        data.each do |key, value|
-          graph[:series] << { :name => key, :type=> "areaspline", :stack => up_or_down, :data => value }
-        end
         default_options_graphs(graph)
       end
     end
@@ -78,7 +77,10 @@ class ContractGraph < Graph
     rkey_down = ContractSample.compact_keys.select{ |a| a[:up_or_down] == "down" }
     rkey_up   = ContractSample.compact_keys.select{ |a| a[:up_or_down] == "up" }
 
-    data = faker_values({ :size => 12, :keys => { :up =>   Rails.env.production? ? 0 : plan.ceil_up, :down => Rails.env.production? ? 0 : plan.ceil_down } }) if date_keys.empty?
+    data = faker_values({ :size => 12,
+                          :time => (5 * 1000),
+                          :keys => { :up   => Rails.env.production? ? 0 : plan.ceil_up,
+                                     :down => Rails.env.production? ? 0 : plan.ceil_down } }) if date_keys.empty?
 
     date_keys.sort.each do |key|
       time = $redis.hget("#{key}", "time").to_i * 1000
@@ -94,23 +96,21 @@ class ContractGraph < Graph
       data[:up] << [time, value_up]
     end
 
-    series = []
+    series = [ { :name   => "up",
+                 :type   => "spline",
+                 :color  => RED,
+                 :marker => { :enabled => false },
+                 :stack  => "up",
+                 :data   => data[:up] },
 
-    series << { :name   => "up",
-                :type   => "spline",
-                :color  => RED,
-                :marker => { :enabled => false },
-                :stack  => "up",
-                :data   => data[:up] }
+               { :name   => "down",
+                 :type   => "spline",
+                 :color  => GREEN,
+                 :marker => { :enabled => false },
+                 :stack  => "down",
+                 :data   => data[:down] } ]
 
-    series << { :name   => "down",
-                :type   => "spline",
-                :color  => GREEN,
-                :marker => { :enabled => false },
-                :stack  => "down",
-                :data   => data[:down] }
-
-    graph = { :title => I18n.t("graphs.titles.total_rate"),
+    graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
               :series => series }
 
@@ -120,32 +120,42 @@ class ContractGraph < Graph
   def latency_instant
     data = { :ping => [], :arping => [] }
 
-    # date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
-    # 12.times do |i|
-    #   data[:ping] << [date_time_now - (i * 1000), 0]
-    #   data[:arping] << [date_time_now - (i * 1000), 0]
-    # end
+    data = faker_values({ :size => 12,
+                          :time => (5 * 1000),
+                          :keys => { :ping => 3,
+                                     :arping => 3 } }) unless Rails.env.production?
 
-    data = faker_values({ :size => 12, :keys => { :ping => 3, :arping => 3 } }) unless Rails.env.production?
+    series = [ { :name  => 'ping',
+                 :color => GREEN,
+                 :type  => 'spline',
+                 :data  => data[:ping] },
+               { :name  => 'arping',
+                 :color => RED,
+                 :type  => 'spline',
+                 :data  => data[:arping] } ]
 
-    series = [ { :name => 'ping',   :color => GREEN, :type => 'spline', :data => data[:ping] },
-               { :name => 'arping', :color => RED,   :type => 'spline', :data => data[:arping] } ]
-
-    graph = { :title => I18n.t("graphs.titles.latency"),
-              :ytitle => "Miliseconds",
+    graph = { :title  => I18n.t("graphs.titles.latency"),
+              :ytitle => "Milliseconds",
               :series => series }
 
     default_options_graphs(graph)
   end
 
   def data_count
-    series = [{ :name => I18n.t('graph.traffic'), :type => 'column', :data => @model.data_count_for_last_year }]
+    series = [{ :name => I18n.t('graph.traffic'),
+                :type => 'column',
+                :data => @model.data_count_for_last_year }]
 
-    graph = { :title => I18n.t("graphs.titles.data_count"),
+    graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
               :ytitle => I18n.t('graph.data'),
-              :xtype => 'category',
+              :xtype  => 'category',
               :series => series }
 
     default_options_graphs(graph)
   end
+
+  def self.supported_graphs
+    GRAPHS
+  end
+
 end

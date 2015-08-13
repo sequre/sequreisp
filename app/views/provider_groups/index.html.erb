@@ -59,17 +59,17 @@
             <% if current_user.may_show_provider_group?(provider_group) %>
 	      <br/>
 	      <br/>
-              <td><%= link_to t('buttons.show'), provider_group_path(provider_group) %></td>
+              <%= link_to t('buttons.show'), provider_group_path(provider_group) %>
             <% end %>
             <% if current_user.may_update_provider_group?(provider_group) %>
 	      <br/>
 	      <br/>
-              <td><%= link_to t('buttons.edit'), edit_provider_group_path(provider_group) %></td>
+              <%= link_to t('buttons.edit'), edit_provider_group_path(provider_group) %>
             <% end %>
             <% if current_user.may_destroy_provider_group?(provider_group) %>
 	      <br/>
 	      <br/>
-              <td><%= link_to t('buttons.delete'), provider_group, :confirm => t('messages.confirm'), :method => :delete %></td>
+              <%= link_to t('buttons.delete'), provider_group, :confirm => t('messages.confirm'), :method => :delete %>
             <% end %>
 	  </td>
 	</tr>

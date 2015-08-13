@@ -1,22 +1,24 @@
 class InterfaceGraph < Graph
-  GRAPHS = [ "instant", "interface_group_instant" ]
+  GRAPHS = [ "interface_instant", "provider_group_instant" ]
 
   InterfaceSample::CONF_PERIODS.each_value do |key|
     GRAPHS << "interface_period_#{key[:period_number]}"
-    GRAPHS << "interface_group_period_#{key[:period_number]}"
+    GRAPHS << "provider_group_period_#{key[:period_number]}"
 
     define_method("interface_period_#{key[:period_number]}") do
+      series = []
       period = key[:period_number]
       speed = @model.speed.map {|x| x[/\d+/]}.first.to_i
-      samples = InterfaceSample.all( :conditions => { :interface_id => @model.id, :period => period } )
+      samples = InterfaceSample.all( :conditions => { :interface_id => @model.id,
+                                                      :period => period } )
 
-      series = []
       InterfaceSample.compact_keys.each do |rkey|
         data = if Rails.env.production?
                  samples.map { |s| [ (s.sample_number.to_i * 1000), s[rkey[:name].to_sym] ] }
                else
                  faker_values({ :size => key[:sample_size],
-                                :keys => { rkey[:name].to_sym => speed * 0.99 } })[rkey[:name].to_sym]
+                                :time => (key[:scope] * 1000),
+                                :keys => { rkey[:name] => speed * 0.99 } })[rkey[:name]]
                end
 
         series << { :name  => rkey[:name],
@@ -25,20 +27,20 @@ class InterfaceGraph < Graph
                     :data  => data }
       end
 
-      graph = { :title         => I18n.t("graphs.titles.instant_period_#{period}"),
-                :ytitle        => 'bps(bits/second)',
-                :series        => series }
+      graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
+                :ytitle => 'bps(bits/second)',
+                :series => series }
 
       default_options_graphs(graph)
     end
 
-    define_method("interface_group_period_#{key[:period_number]}") do
+    define_method("provider_group_period_#{key[:period_number]}") do
       series = []
       period = key[:period_number]
       interfaces = @model.providers.map{ |p| p.interface }
 
       InterfaceSample.compact_keys.each do |rkey|
-        data = interfaces.empty? ? faker_values({ :size => key[:sample_size], :keys => { rkey[:name].to_sym => Rails.env.production? ? 0 : (100 * 0.99) } }) : {}
+        data = interfaces.empty? ? faker_values({ :size => key[:sample_size], :time => (key[:scope] * 1000), :keys => { rkey[:name] => Rails.env.production? ? 0 : (100 * 0.99) } })[rkey[:name]] : {}
         InterfaceSample.all( :conditions => { :interface_id => interfaces.map(&:id), :period => period } ).each do |s|
           data[s[:sample_number]] = 0 unless data.has_key?(s[:sample_number])
           data[s[:sample_number]] += data[rkey[:name]]
@@ -50,21 +52,23 @@ class InterfaceGraph < Graph
                     :data  => data.to_a }
       end
 
-      graph = { :title    => I18n.t("graphs.titles.interface_group_period_#{period}"),
-                :ytitle   => 'bps(bits/second)',
-                :series   => series }
+      graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
+                :ytitle => 'bps(bits/second)',
+                :series => series }
 
       default_options_graphs(graph)
     end
   end
 
-  def instant
+  def interface_instant
     series = []
     speed = @model.speed.map {|x| x[/\d+/]}.first.to_i
     date_keys = $redis.keys("interface_#{@model.id}_sample_*").sort
 
     InterfaceSample.compact_keys.each do |rkey|
-      data = date_keys.empty? ? faker_values({ :size => 12, :keys => {rkey[:name].to_sym => Rails.env.production? ? 0: speed * 0.99}})[rkey[:name].to_sym] : []
+      data = date_keys.empty? ? faker_values({ :size => 12,
+                                               :time => (5 * 1000),
+                                               :keys => {rkey[:name] => Rails.env.production? ? 0: speed * 0.99}})[rkey[:name]] : []
 
       if Rails.env.production?
         date_keys.each do |key|
@@ -81,19 +85,21 @@ class InterfaceGraph < Graph
                   :data   => data }
     end
 
-    graph = { :title  => I18n.t("graphs.titles.interface_instant"),
+    graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
               :series => series }
 
     default_options_graphs(graph)
   end
 
-  def interface_group_instant
+  def provider_group_instant
     interfaces = @model.providers.map{ |p| p.interface }
     series = []
 
     InterfaceSample.compact_keys.each do |rkey|
-      data = interfaces.empty? ? faker_values({ :size => 12, :keys => {rkey[:name].to_sym => Rails.env.production? ? 0: 100 * 0.99}}) : {}
+      data = interfaces.empty? ? faker_values({ :size => 12,
+                                                :time => (5 * 1000),
+                                                :keys => {rkey[:name] => Rails.env.production? ? 0: 100 * 0.99}})[rkey[:name]] : {}
       interfaces.each do |i|
         date_keys = $redis.keys("interface_#{i.id}_sample_*").sort
         date_keys.each do |key|
@@ -111,11 +117,15 @@ class InterfaceGraph < Graph
                   :data   => data.to_a }
     end
 
-    graph = { :title => I18n.t("graphs.titles.interface_group_instant"),
+    graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
               :series => series }
 
     default_options_graphs(graph)
+  end
+
+  def self.supported_graph(obj)
+    GRAPHS.select{|g| g.include?(obj.class.name.underscore)}
   end
 
 end

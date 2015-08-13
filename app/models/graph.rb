@@ -78,13 +78,12 @@ class Graph
       :chart         => { :renderTo => @render,
                           :zoomType => 'x' },
       :rangeSelector => { :selected => 1 },
-      :exporting     => { :enabled => true },
+      :exporting     => { :enabled => @minimal? false : true },
       :legend        => { :enabled => @minimal? false : true,
                           :verticalAlign => 'bottom' },
       :title         => { :text => @minimal? '' : options[:title] },
       :xAxis         => { :type => options[:xtype] },
-      :yAxis         => { :title => { :text => @minimal? '' : options[:ytitle],
-                          :align => "low" } },
+      :yAxis         => { :title => { :text => @minimal? '' : options[:ytitle] } },
       :plotOptions   => { options[:type].to_sym => { :stacking => options[:stacking] } },
       :series        => options[:series] }
   end
