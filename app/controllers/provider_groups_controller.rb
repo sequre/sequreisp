@@ -115,7 +115,7 @@ class ProviderGroupsController < ApplicationController
   def instant
     @provider_group = object
     respond_to do |format|
-      format.json { render :json => @provider_group.instant_rate }
+      format.json { render :json => @provider_group.instant }
     end
   end
   def graph

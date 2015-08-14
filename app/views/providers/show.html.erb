@@ -9,7 +9,7 @@
   });
 
   function get_data(){
-    $.get('<%= instant_interface_path %>', null, function(data) {
+    $.get('<%= instant_interface_path(@provider.interface.id) %>', null, function(data) {
       instant.series[0].addPoint(data.rx, true, true);
       instant.series[1].addPoint(data.tx, true, true);
     },'json');
@@ -29,8 +29,8 @@
   });
 </script>
 
-<%= heading "#{@interface.name} [#{@interface.mac_address}] #{@interface.kind} #{@interface.speed}" %>
-<% content_for :title, @interface.name %>
+<%= heading "#{@provider.name} #{@provider.interface.name} [#{@provider.provider_group.name}]" %>
+<% content_for :title, @provider.name %>
 
 <div id=<%= @graphs["interface_instant"].render %> style="height:247px; width:860px; float:left;"></div>
 <div class="separador" style='margin-bottom: 5px;'></div>
@@ -44,7 +44,7 @@
 
   <% @periods.times do |period| %>
     <% content_tag(:div, "", :id => "tabs-#{period}" ) do %>
-      <div id=<%= @graphs["interface_period_#{period}"].render %> style="height:450px; width:840px; float:left;"></div>
+      <div id=<%= @graphs["interface_period_#{period}"].render %> style="height:450px; width:800px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
     <% end %>
   <% end %>

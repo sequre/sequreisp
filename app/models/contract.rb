@@ -373,43 +373,35 @@ class Contract < ActiveRecord::Base
   end
 
   def instant
-    { :rates   => foo_instant_rate,
+    { :rates   => instant_rate,
       :latency => instant_latency }
   end
 
-  def foo_instant_rate
+  def redis_key
+    "contract_#{id}_sample"
+  end
+
+  def instant_rate
     data = {}
     total_up = 0
     total_down = 0
-
     date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+    date_keys = $redis.keys("#{redis_key}_*").sort
+
     ContractSample.compact_keys.each do |key|
-      data[key[:name]] = [ date_time_now, rand(1024) ]
+      value = if Rails.env.production?
+                date_keys.empty? ? 0 : $redis.hmget(date_keys.last, "#{rkey[:name]}_instant").first.to_i
+              else
+                rand(1024)
+              end
+      total_up += value if key[:name].include?("up")
+      total_down += value if key[:name].include?("down")
+      data[key[:name].to_sym] = [ date_time_now, value ]
     end
 
-    data.each do |key, value|
-      total_up += value.last if key.include?("up")
-      total_down += value.last if key.include?("down")
-    end
-
-    data[:total_up] = total_up
-    data[:total_down] = total_down
-
+    data[:total_up] = [ date_time_now, total_up ]
+    data[:total_down] = [ date_time_now, total_down ]
     data
-  end
-
-  # this has an alias_method_chain
-  def instant_rate
-    in_production = (SequreispConfig::CONFIG["demo"] or Rails.env.development?)
-    rate_down = rand(plan.ceil_down)*1024
-    rate_up = rand(plan.ceil_up)*1024 * 0.3
-    rate = {}
-    rate["0"] = { :name => "down_prio1", :value => in_production ? $redis.hmget("contract:#{id}:prio1:down", "instant").first.to_i : rate_down * 0.15 }
-    rate["1"] = { :name => "down_prio2", :value => in_production ? $redis.hmget("contract:#{id}:prio2:down", "instant").first.to_i : rate_down * 0.6 }
-    rate["2"] = { :name => "down_prio3", :value => in_production ? $redis.hmget("contract:#{id}:prio3:down", "instant").first.to_i : rate_down * 0.15 }
-    up_value = in_production ? ($redis.hmget("contract:#{id}:prio1:up", "instant").first.to_i + $redis.hmget("contract:#{id}:prio2:up", "instant").first.to_i + $redis.hmget("contract:#{id}:prio3:up", "instant").first.to_i) : rate_up
-    rate["3"] = { :name => "up", :value => up_value }
-    rate
   end
 
  # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp

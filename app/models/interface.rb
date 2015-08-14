@@ -138,22 +138,29 @@ class Interface < ActiveRecord::Base
   def tx_bytes
     File.open("/sys/class/net/#{name}/statistics/tx_bytes").read.chomp.to_i rescue 0
   end
-  def instant_rate
-    rate = {}
-    if SequreispConfig::CONFIG["demo"] or Rails.env.development?
-      if kind == "lan"
-        # en lan el down de los providers es el up
-        rate[:rate_down] = rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2
-        rate[:rate_up] = rand(ProviderGroup.all.collect(&:rate_down).sum)*1024
-      else
-        rate[:rate_down] = rand(provider.rate_down)*1024 rescue 0
-        rate[:rate_up] = rand(provider.rate_up)*1024/2 rescue 0
+  def redis_key
+    "interface_#{id}_sample"
+  end
+  def instant
+    data = {}
+    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+    if Rails.env.production?
+      date_keys = $redis.keys("#{redis_key}_*").sort
+      InterfaceSample.compact_keys.each do |rkey|
+        value = date_keys.empty? ? 0 : $redis.hmget(date_keys.last, "#{rkey[:name]}_instant").first.to_i
+        data[rkey[:name].to_sym] = [ date_time_now, value ]
       end
     else
-      rate[:rate_up] = $redis.hmget("interface:#{name}:rate_tx", "instant").first.to_i
-      rate[:rate_down] = $redis.hmget("interface:#{name}:rate_rx", "instant").first.to_i
+      if kind == "lan"
+        # en lan el down de los providers es el up
+        data[:tx] = [ date_time_now, rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2 ]
+        data[:rx] = [ date_time_now, rand(ProviderGroup.all.collect(&:rate_down).sum)*1024 ]
+      else
+        data[:tx] = [ date_time_now, (rand(provider.rate_up)*1024/2 rescue 0) ]
+        data[:rx] = [ date_time_now, (rand(provider.rate_down)*1024 rescue 0) ]
+      end
     end
-    rate
+    data
   end
   def physical_link
     self.vlan? ? vlan_interface.physical_link : read_attribute(:physical_link)

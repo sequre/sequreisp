@@ -566,7 +566,7 @@ class DaemonRedis < DaemonTask
    counter_key = "interface_counters"
    Interface.all.each do |i|
      @relation = i
-     @redis_key  = "interface_#{i.id}_sample"
+     @redis_key  = i.redis_key
      $redis.hset(counter_key, i.id.to_s, 0) unless $redis.hexists(counter_key, i.id.to_s)
      round_robin()
      catchs = {}
@@ -606,7 +606,7 @@ class DaemonRedis < DaemonTask
      next if c.disabled?
      @relation = c
      @last_db_sample = last_samples[c.id.to_s]
-     @redis_key  = "contract_#{c.id}_sample"
+     @redis_key  = c.redis_key
      $redis.hset(counter_key, c.id.to_s, 0) unless $redis.hexists(counter_key, c.id.to_s)
      round_robin()
      catchs = {}

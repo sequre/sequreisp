@@ -22,19 +22,19 @@
 
   function get_data(){
     $.get('<%= instant_contract_path %>', null, function(data) {
-      $(rate_up.series).each( function(i, serie) {
-        serie.addPoint(data.rates[serie.name], true, true);
-      });
+     $(rate_up.series).each( function(i, serie) {
+       serie.addPoint(data.rates[serie.name], true, true);
+     });
 
-      $(rate_down.series).each( function(i, serie) {
-        serie.addPoint(data.rates[serie.name], true, true);
-      });
+     $(rate_down.series).each( function(i, serie) {
+       serie.addPoint(data.rates[serie.name], true, true);
+     });
 
-      total_rate.series[0].addPoint(data.rates.total_up, true, true);
-      total_rate.series[1].addPoint(data.rates.total_down, true, true);
+     total_rate.series[0].addPoint(data.rates.total_up, true, true);
+     total_rate.series[1].addPoint(data.rates.total_down, true, true);
 
-      latency.series[0].addPoint(data.latency.ping, true, true);
-      latency.series[1].addPoint(data.latency.arping, true, true);
+     latency.series[0].addPoint(data.latency.ping, true, true);
+     latency.series[1].addPoint(data.latency.arping, true, true);
     },'json');
   };
 
@@ -130,17 +130,18 @@
 <div id=<%= @graphs["data_count"].render %> style="height:247px; width:860px; float:left;"></div>
 <div class="separador" style='margin-bottom: 5px;'></div>
 
-<% content_tag(:div, "", :id => "tabs") do %>
+<% content_tag(:div, "tab_periods", :id => "tabs") do %>
   <ul>
     <% @periods.times do |period| %>
-      <li><a href=<%="#tabs-#{period}"%>><%= "Period #{period}" %></a></li>
+      <li><a href=<%="#tabs_#{period}"%>><%= "Period #{period}" %></a></li>
     <% end %>
   </ul>
 
   <% @periods.times do |period| %>
-    <% content_tag(:div, "", :id => "tabs-#{period}" ) do %>
-      <div id=<%= @graphs["rate_down_period_#{period}"].render %> style="height:247px; width:400px; float:left;"></div>
-      <div id=<%= @graphs["rate_up_period_#{period}"].render %> style="height:247px; width:400px; float:left;"></div>
+    <% content_tag(:div, "", :id => "tabs_#{period}" ) do %>
+      <div id=<%= @graphs["rate_down_period_#{period}"].render %> style="height:247px; width:830px; float:left;"></div>
+      <div class="separador" style='margin-bottom: 5px;'></div>
+      <div id=<%= @graphs["rate_up_period_#{period}"].render %> style="height:247px; width:830px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
     <% end %>
   <% end %>

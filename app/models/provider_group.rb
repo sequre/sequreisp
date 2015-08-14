@@ -120,18 +120,8 @@ class ProviderGroup < ActiveRecord::Base
   def mark_hex
     (self.klass.number << 16).to_s(16)
   end
-  def instant_rate
-    rate = { :rate_down => 0, :rate_up => 0 }
-    if SequreispConfig::CONFIG["demo"] or Rails.env.development?
-      rate[:rate_down] = rand(rate_down)*1024
-      rate[:rate_up] = rand(rate_up)*1024/2
-    else
-      providers.enabled.each do |provider|
-        rate[:rate_up] = $redis.hmget("interface:#{provider.interface.name}:rate_tx", "instant").first.to_i
-        rate[:rate_down] = $redis.hmget("interface:#{provider.interface.name}:rate_rx", "instant").first.to_i
-      end
-    end
-    rate
+  def instant
+    providers.enabled.map{ |p| p.interface.instant }.sum
   end
   def auditable_name
     "#{self.class.human_name}: #{name}"

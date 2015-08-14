@@ -125,7 +125,7 @@ class InterfacesController < ApplicationController
   def instant
     @interface = object
     respond_to do |format|
-      format.json { render :json => @interface.instant_rate }
+      format.json { render :json => @interface.instant }
     end
   end
   def scan
