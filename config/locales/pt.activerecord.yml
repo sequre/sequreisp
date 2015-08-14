@@ -250,6 +250,9 @@ pt:
         low_latency_for_rdp: "RDP"
         tcp_length: "TCP comprimento"
         udp_length: "UDP comprimento"
+        firewall_enabled: "Ativar o controle de firewall de wispro (desabilita arquivo iptables_pre)"
+        firewall_open_tcp_ports: "Portas TCP abertas"
+        firewall_open_udp_ports: "Portas UDP abertas"
       user:
         name: "Nome"
         email: "E-mail do usuário"
@@ -350,6 +353,8 @@ pt:
         low_latency_for_icmp: "Internet Control Message Protocol (ICMP)"
         low_latency_for_sip: "Session Initiation Protocol (SIP)"
         low_latency_for_rdp: "Remote Desktop Protocol (RDP)"
+        firewall_open_tcp_ports: "Números de porta, separados por vírgulas"
+        firewall_open_udp_ports: "Números de porta, separados por vírgulas"
       provider:
         avoid_nat_addresses: "Um endereço por linha, notação CIDR, como 200.10.20.0/24"
   menu:

@@ -693,7 +693,7 @@ class Contract < ActiveRecord::Base
 
   def rules_for_enabled
     macrule = (Configuration.filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
-    target = enabled? ? "ACCEPT" : "DROP"
+    target = disabled? ? "DROP" : "ACCEPT"
     [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j #{target}" ]
   end
 
