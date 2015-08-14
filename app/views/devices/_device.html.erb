@@ -1,0 +1,24 @@
+<script type="text/javascript">
+  $(function(){
+    $('#device_host').autocomplete({
+      delay: 100,
+      source: '<%= ips_contracts_path %>',
+      search: function(event, ui) {
+        //trigger only if 3 octets and a dot are typed
+        return (this.value.split(".").length == 3)
+      }
+    })
+  })
+</script>
+<% semantic_form_for @device do |form| %>
+  <%= error_messages @device %>
+  <% form.inputs do %>
+    <%= form.input :host %>
+    <%= form.input :name %>
+    <%= form.input :description %>
+    <%= form.input :brand, :collection => devices_brands_for_select, :allow_blank => false %>
+    <%= form.input :kind, :collection => devices_kinds_for_select, :allow_blank => false%>
+    <%= form_extensions form %>
+  <% end %>
+  <%= form.buttons %>
+<% end %>

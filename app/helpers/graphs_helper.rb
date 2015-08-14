@@ -333,11 +333,4 @@ module GraphsHelper
     { render_to => default_options_graphs(graph) }
   end
 
-  def device_memory_graph(obj)
-  end
-
-
-  def device_memory_graph_for_periods(obj)
-  end
-
 end

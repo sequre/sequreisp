@@ -1,0 +1,10 @@
+<% form_tag(devices_path, :method => :get) do %>
+  <% fields_for :search do %>
+    <%= label_tag t('activerecord.attributes.device.host'), nil, :style => "display:inline;" %>
+    <%= text_field_tag "devices_search[host_like]", params[:devices_search] ? params[:devices_search][:host_like] : "" %>
+    <%= label_tag t('activerecord.attributes.device.kind'), nil, :style => "display:inline;" %>
+    <%= select_tag "devices_search[kind]", options_for_select([[]] + devices_kinds_for_select, params[:devices_search] ? params[:devices_search][:kind] : "") %>
+    <%= check_box_tag 'search[not_paged]' %>
+  <% end %>
+  <%= submit_tag t('buttons.search') %>
+<% end %>

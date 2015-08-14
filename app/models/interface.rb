@@ -88,6 +88,22 @@ class Interface < ActiveRecord::Base
   def interface_exist
     errors.add(:name, I18n.t('validations.interface.name_does_not_exist')) if not exist?
   end
+
+  # En caso de la red estar routeada devolvera nil (dado que debera usarse si o si
+  # ping) caso contrario se usara arping por lo que es necesario la interfaz
+  def self.arping ip
+    IO.popen("ip ro get #{ip}", "r") do |io|
+      io.each do |line|
+        if line.include?("via")
+          _interface = nil
+        elsif line.include?("dev")
+          _interface = line.split("dev")[1].split(" ")[0] rescue nil
+        end
+      end
+    end
+    Interface.find_by_name(_interface)
+  end
+
   def queue_update_commands
     cq = QueuedCommand.new
     # el vlan_id y el vlan_interface_id si cambian se reflejan en el nombre

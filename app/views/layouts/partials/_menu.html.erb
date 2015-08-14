@@ -91,6 +91,9 @@ ul li a:hover.no_pointer {
             <% if current_user.may_index_iproutes? %>
             <li><%= link_to t('menu.iproutes'), iproutes_path %></li>
             <% end %>
+            <% if current_user.may_index_devices? %>
+            <li><%= link_to t('menu.devices'), devices_path %></li>
+            <% end %>
           </ul>
         </li>
       <% end %>

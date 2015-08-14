@@ -428,8 +428,8 @@ class Contract < ActiveRecord::Base
             end
           end
         end
-        if iface = arping_interface
-          IO.popen("sudo arping -c 1 -I #{iface} #{_ip}", "r") do |io|
+        if iface = Interface.arping(_ip)
+          IO.popen("sudo arping -c 1 -I #{iface.name} #{_ip}", "r") do |io|
             io.each do |line|
               if line.include?("ms")
                 time[:arping] = [ date_time_now, line.split(" ").last.chomp.delete("ms").to_f ]
@@ -454,22 +454,6 @@ class Contract < ActiveRecord::Base
     else
       return nil
     end
-  end
-
-# En caso de la red estar routeada devolvera nil (dado que debera usarse si o si
-# ping) caso contrario se usara arping por lo que es necesario la interfaz
-  def arping_interface
-    _interface = nil
-    IO.popen("ip ro get #{ip}", "r") do |io|
-      io.each do |line|
-        if line.include?("via")
-          _interface = nil
-        elsif line.include?("dev")
-          _interface = line.split("dev")[1].split(" ")[0] rescue nil
-        end
-      end
-    end
-    _interface
   end
 
   def self.free_ips(term)
