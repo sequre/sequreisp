@@ -43,9 +43,9 @@ def gen_tc
       tc_ifb_down.puts "qdisc add dev #{IFB_DOWN} root handle 1 hfsc default fffe"
       total_rate_up = ProviderGroup.total_rate_up
       total_rate_down = ProviderGroup.total_rate_down
-      tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_up * 0.5).round}kbit ul m2 #{total_rate_up}kbit"
+      tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_up * 0.90).round}kbit ul m2 #{total_rate_up}kbit"
       tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
-      tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_down * 0.5).round}kbit ul m2 #{total_rate_down}kbit"
+      tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_down * 0.90).round}kbit ul m2 #{total_rate_down}kbit"
       tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
 
       # ProviderGroup.all.each do |pg|
@@ -477,7 +477,7 @@ def gen_iptables
         end
 
         ######################if
-        contracts = Contract.not_disabled.descend_by_netmask
+        contracts = Contract.descend_by_netmask
         contracts.each do |c|
           f.puts c.rules_for_enabled
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
@@ -562,9 +562,10 @@ def update_provider_group_route pg, force=false, boot=true
   commands = []
   currentroute=`ip -oneline ro li table #{pg.table} | grep default`.gsub("\\\t","  ").strip
   if (currentroute != pg.default_route) or force
-    # force could be true, and current_route empty, so all ip ro batch will fail
-    if pg.default_route == "" and currentroute != ""
-      commands << "ip ro del table #{pg.table} default"
+    # force could be true, and current_route empty
+    if pg.default_route == ""
+      # empty default_route so remove current if not empty, else do nothing
+      commands << "ip ro del table #{pg.table} default" if currentroute != ""
     else
       commands << "ip ro re table #{pg.table} #{pg.default_route}"
     end
