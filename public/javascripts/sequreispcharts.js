@@ -1,7 +1,3 @@
-function createChart(options_hash){
-  return new Highcharts.Chart(options_hash);
-}
-
 function new_chart_rate(utc_offset){
   return new Highcharts.Chart({
     chart: {
@@ -149,7 +145,7 @@ function new_chart_latency(utc_offset){
     series: [{
       name: 'ping',
       type: "area",
-    color: "#00aa00",
+      color: "#00aa00",
       data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     },{
       name: 'arping',

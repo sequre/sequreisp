@@ -1,5 +1,5 @@
 <% content_for :title, t('menu.devices') %>
-<% heading Device.human_name %>
+<% heading "#{@device.name}@#{@device.host}" %>
 
 <div class="main">
   <table cellspacing="" cellpadding="">

@@ -69,8 +69,4 @@ class DevicesController < ApplicationController
   def object
     Device.find(params[:id])
   end
-
-  def set_contract
-    
-  end
 end
