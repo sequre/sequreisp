@@ -1,8 +1,11 @@
 require 'syslog'
 
+INFO = 'info'
+DEBUG = 'debug'
+
 def log(string)
   Syslog.open if not Syslog.opened?
-  Syslog.log(Syslog::LOG_INFO, "[Wispro]#{string}")
+  Syslog.log(Syslog::LOG_INFO, "[Wispro]#{string}") if can_log?(string)
   # puts string if $stdout.tty?
 end
 
@@ -11,7 +14,6 @@ def log_rescue(origin, exception)
   Syslog.log(Syslog::LOG_ERR, "[Wispro]#{origin}: #{exception.message}")
   exception.backtrace.each{ |bt| Syslog.log(Syslog::LOG_ERR, "[Wispro]#{origin} #{exception.class} #{bt}") }
 end
-
 
 def log_rescue_file(path, exception)
   File.open(path, 'a+') do |f|
@@ -25,6 +27,6 @@ def log_rescue_file(path, exception)
   end
 end
 
-class Log
-  LOG_LEVELS = [ "info", "debug", "error" ]
+def can_log?(string)
+  (string.include?("[DEBUG]") and $log_level == DEBUG) or (string.include?("[INFO]") and $log_level == INFO)
 end

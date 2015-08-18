@@ -28,7 +28,7 @@ class DaemonTask
     @log_path = "#{DEPLOY_DIR}/tmp/#{self.class.to_s.underscore.downcase}"
     FileUtils.touch @log_path
     set_next_exec
-    log("[#{@name}] EXEC At #{@next_exec}") if verbose?
+    log("[INFO][#{@name}] EXEC At #{@next_exec}")
   end
 
   def verbose?
@@ -42,7 +42,7 @@ class DaemonTask
       log_rescue("[#{name}][ERROR_STOP]", e)
     ensure
       FileUtils.rm(@log_path) if File.exist?(@log_path)
-      log("#{name}][STOP]")
+      log("[INFO][#{name}][STOP]")
     end
   end
 
@@ -60,7 +60,7 @@ class DaemonTask
   def start
     @thread_daemon = Thread.new do
       @@threads << self
-      log "[#{name}][START]"
+      log "[INFO][#{name}][START]"
       Thread.current["name"] = @name
       loop do
         begin
@@ -69,10 +69,10 @@ class DaemonTask
             set_next_exec
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
-            log("[#{name}] NEXT EXEC TIME #{@next_exec}") if verbose?
+            log("[INFO][#{name}] NEXT EXEC TIME #{@next_exec}")
           end
         rescue Exception => e
-          log_rescue("[#{@name}][ERROR]", e)
+          log_rescue("[ERROR][#{@name}]", e)
           log_rescue_file(@log_path, e)
         end
         to_sleep
@@ -482,7 +482,7 @@ end
 #   end
 
 #   def rrd_update(o, time, down_prio, down_dfl, up_prio, up_dfl)
-#     log("[Daemon][RRD][rrd_update] o=#{o.name}, time=#{time}, down_prio=#{down_prio}, down_dfl=#{down_dfl}, up_prio=#{up_prio}, up_dfl=#{up_dfl}") if verbose?
+#     log("[Daemon][RRD][rrd_update] o=#{o.name}, time=#{time}, down_prio=#{down_prio}, down_dfl=#{down_dfl}, up_prio=#{up_prio}, up_dfl=#{up_dfl}")
 #     rrd_path = RRD_DIR + "/#{o.class.name}.#{o.id.to_s}.rrd"
 #     rrd_create(rrd_path, time) unless File.exists?(rrd_path)
 #     RRD::Wrapper.update rrd_path, "-t", "down_prio:down_dfl:up_prio:up_dfl", "#{time.strftime("%s")}:#{down_prio}:#{down_dfl}:#{up_prio}:#{up_dfl}"
@@ -553,7 +553,7 @@ class DaemonRedis < DaemonTask
          traffic_current.data_count += data_counting[c.id.to_s]
          traffic_current.save
          c.current_traffic = traffic_current
-         log("[#{self.class.name}][#{(__method__).to_s}][UpdateDataCounting][#{c.class.name}:#{c.id}] #{value_before_update} = #{c.current_traffic.data_count}") if verbose?
+         log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][UpdateDataCounting][#{c.class.name}:#{c.id}] #{value_before_update} = #{c.current_traffic.data_count}")
          c.save
        end
      end
@@ -584,7 +584,7 @@ class DaemonRedis < DaemonTask
    InterfaceSample.transaction {
      transactions[:create].each do |transaction|
        sample = InterfaceSample.create(transaction)
-       log("[#{self.class.name}][#{(__method__).to_s}][InterfaceTransactions][CREATE] #{sample.inspect}") if verbose?
+       log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][InterfaceTransactions][CREATE] #{sample.inspect}")
      end
    }
  end
@@ -633,7 +633,7 @@ class DaemonRedis < DaemonTask
    ContractSample.transaction {
      transactions[:create].each do |transaction|
        sample = ContractSample.create(transaction)
-       log("[#{self.class.name}][#{(__method__).to_s}][ContractTransactions][CREATE] #{sample.inspect}") if verbose?
+       log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][ContractTransactions][CREATE] #{sample.inspect}")
      end
    }
  end
@@ -683,7 +683,7 @@ class DaemonRedis < DaemonTask
                     :sample_number => @init_time_new_sample.to_s,
                     "#{@relation.class.name.downcase}_id".to_sym => @relation.id }
 
-     log("[#{self.class.name}][#{(__method__).to_s}][PeriodForNewSample][#{@relation.class.name}:#{@relation.id}] (#{Time.at(@init_time_new_sample)}) - (#{Time.at(@end_time_new_sample)}") if verbose?
+     log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][PeriodForNewSample][#{@relation.class.name}:#{@relation.id}] (#{Time.at(@init_time_new_sample)}) - (#{Time.at(@end_time_new_sample)}")
 
      date_keys.each do |key|
        data = {}
@@ -691,10 +691,10 @@ class DaemonRedis < DaemonTask
        if time <= @end_time_new_sample
          last_time_for_new_sample = time
          @compact_keys.each { |rkey| data[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
-         log("[#{self.class.name}][#{(__method__).to_s}][SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{data.inspect}")
+         log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{data.inspect}")
          keys_to_delete << key
        else
-         log("[#{self.class.name}][#{(__method__).to_s}][SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][NO] (#{Time.at(time)})")
+         log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][NO] (#{Time.at(time)})")
        end
        datas << data
      end
@@ -738,18 +738,18 @@ class DaemonCompactSamples < DaemonTask
         @sample_conf["period_#{i}".to_sym][:samples_to_compact].each do |key, values|
           @relation_id = key
           last_sample_time_for_next_period = @sample_conf["period_#{i.next}".to_sym][:last_sample_time][key]
-          log("[#{self.class.name}][#{(__method__).to_s}][NeedCompact][#{@klass.name}] #{model.camelize}:#{key})") if verbose?
+          log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][NeedCompact][#{@klass.name}] #{model.camelize}:#{key})")
           transactions += compact(i.next, values, last_sample_time_for_next_period)
         end
       end
       @klass.transaction {
         transactions[:destroy].each do |transaction|
-          log("[#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}") if verbose?
+          log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
           transaction.delete
         end
         transactions[:create].each do |transaction|
           sample = @klass.create(transaction)
-          log("[#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{model}:#{sample.object.id}][CREATE] #{sample.inspect}") if verbose?
+          log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{model}:#{sample.object.id}][CREATE] #{sample.inspect}")
         end
       }
     end
@@ -766,13 +766,13 @@ class DaemonCompactSamples < DaemonTask
     end_time_new_sample = init_time_new_sample + (time_period - 1)
     range = (init_time_new_sample..end_time_new_sample)
     sample_time = Time.at(init_time_new_sample)
-    log("[#{self.class.name}][#{(__method__).to_s}][Range] (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}") if verbose?
+    log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][Range] (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
     data.each do |k|
       if range.include?(k.sample_number.to_i)
         samples[:destroy] << k
-        log("[#{self.class.name}][#{(__method__).to_s}][DataSelected][#{@klass.name}][Compact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}") if verbose?
+        log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][DataSelected][#{@klass.name}][Compact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
       else
-        log("[#{self.class.name}][#{(__method__).to_s}][DataSelected][#{@klass.name}][NoCompact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}") if verbose?
+        log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][DataSelected][#{@klass.name}][NoCompact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
       end
     end
     new_sample = @klass.compact(period, samples[:destroy])
@@ -792,7 +792,7 @@ class DaemonSynchronizeTime < DaemonTask
   def exec_daemon_sync_time
     commands = ["ntpdate pool.ntp.org", "hwclock --systohc"].each do |command|
       command_output = `#{command}`
-      log "#{self.class.name}][#{(__method__).to_s}] command: #{command}, output: #{command_output}, exit_status: #{$?.exitstatus}" if verbose?
+      log("[DEBUG][#{self.class.name}][#{(__method__).to_s}] command: #{command}, output: #{command_output}, exit_status: #{$?.exitstatus}")
     end
   end
 end
