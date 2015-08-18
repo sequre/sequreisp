@@ -781,6 +781,22 @@ class DaemonCompactSamples < DaemonTask
   end
 end
 
+class DaemonSynchronizeTime < DaemonTask
+  def initialize
+    @time_for_exec = { :frecuency => 1.day }
+    @wait_for_apply_changes = true
+    @proc = Proc.new { exec_daemon_sync_time }
+    super
+  end
+
+  def exec_daemon_sync_time
+    commands = ["ntpdate pool.ntp.org", "hwclock --systohc"].each do |command|
+      command_output = `#{command}`
+      log "#{self.class.name}][#{(__method__).to_s}] command: #{command}, output: #{command_output}, exit_status: #{$?.exitstatus}" if verbose?
+    end
+  end
+end
+
 #########################################################
 #
 #
