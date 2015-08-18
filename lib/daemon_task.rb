@@ -129,6 +129,7 @@ class DaemonApplyChange < DaemonTask
   end
 
   def exec_daemon_apply_change
+    system("rm #{DEPLOY_DIR}/tmp/apply_changes.lock")
     $mutex.synchronize {
       if Configuration.daemon_reload
         Configuration.first.update_attribute :daemon_reload, false
