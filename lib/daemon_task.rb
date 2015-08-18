@@ -792,7 +792,7 @@ class DaemonSynchronizeTime < DaemonTask
   def exec_daemon_sync_time
     commands = ["ntpdate pool.ntp.org", "hwclock --systohc"].each do |command|
       command_output = `#{command}`
-      log("[DEBUG][#{self.class.name}][#{(__method__).to_s}] command: #{command}, output: #{command_output}, exit_status: #{$?.exitstatus}")
+      log("[DEBUG][#{self.class.name}][#{(__method__).to_s}] command: #{command}, output: #{command_output}")
     end
   end
 end
