@@ -122,8 +122,8 @@ class ContractGraph < Graph
 
     data = faker_values({ :size => 12,
                           :time => (5 * 1000),
-                          :keys => { :ping => 3,
-                                     :arping => 3 } }) unless Rails.env.production?
+                          :keys => { :ping => Rails.env.production? ? 0 : 3,
+                                     :arping => Rails.env.production? ? 0 : 3 } })
 
     series = [ { :name  => 'ping',
                  :color => GREEN,

@@ -397,15 +397,15 @@ class Contract < ActiveRecord::Base
     date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
     date_keys = $redis.keys("#{redis_key}_*").sort
 
-    ContractSample.compact_keys.each do |key|
+    ContractSample.compact_keys.each do |rkey|
       value = if Rails.env.production?
                 date_keys.empty? ? 0 : $redis.hmget(date_keys.last, "#{rkey[:name]}_instant").first.to_i
               else
                 rand(1024)
               end
-      total_up += value if key[:name].include?("up")
-      total_down += value if key[:name].include?("down")
-      data[key[:name].to_sym] = [ date_time_now, value ]
+      total_up += value if rkey[:name].include?("up")
+      total_down += value if rkey[:name].include?("down")
+      data[rkey[:name].to_sym] = [ date_time_now, value ]
     end
 
     data[:total_up] = [ date_time_now, total_up ]

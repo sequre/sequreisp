@@ -92,16 +92,12 @@ class Interface < ActiveRecord::Base
   # En caso de la red estar routeada devolvera nil (dado que debera usarse si o si
   # ping) caso contrario se usara arping por lo que es necesario la interfaz
   def self.arping ip
-    IO.popen("ip ro get #{ip}", "r") do |io|
-      io.each do |line|
-        if line.include?("via")
-          _interface = nil
-        elsif line.include?("dev")
-          _interface = line.split("dev")[1].split(" ")[0] rescue nil
-        end
-      end
+    command = `ip ro get #{ip}`.split("\n").first.strip
+    return nil if command.include?("via")
+    if command.include?("dev")
+      name_iface = command.split("dev")[1].split(" ")[0]
+      Interface.find_by_name(name_iface)
     end
-    Interface.find_by_name(_interface)
   end
 
   def queue_update_commands
