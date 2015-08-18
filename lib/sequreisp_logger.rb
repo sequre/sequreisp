@@ -24,3 +24,7 @@ def log_rescue_file(path, exception)
     end
   end
 end
+
+class Log
+  LOG_LEVELS = [ "info", "debug", "error" ]
+end
