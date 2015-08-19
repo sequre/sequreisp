@@ -37,7 +37,7 @@ class CommandContext
 end
 class BootCommandContext < CommandContext
   def self.clear_boot_file
-    File.open(BOOT_FILE, 'w') do |f|
+    File.open(File.join(BASE_SCRIPTS_TMP, BOOT_FILE), 'w') do |f|
       f.truncate 0
       f.puts "#!/bin/bash"
       f.chmod 0755
@@ -47,7 +47,7 @@ class BootCommandContext < CommandContext
 
   def exec_commands
     begin
-      f = File.open BOOT_FILE, "a+"
+      f = File.open File.join(BASE_SCRIPTS_TMP, BOOT_FILE), "a+"
       human = File.open(File.join(Rails.root, "log/command_human.log"), "a+")
       super f, human
     rescue => e

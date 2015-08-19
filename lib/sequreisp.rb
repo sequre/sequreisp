@@ -37,8 +37,8 @@ def gen_tc
     file.puts "qdisc re dev #{iface} #{command}"
   end
   begin
-    tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
-    tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
+    tc_ifb_up = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + IFB_UP), "w")
+    tc_ifb_down = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + IFB_DOWN), "w")
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
     unless Configuration.in_safe_mode?
       qdisc_add_safe tc_ifb_up, IFB_UP, "root handle 1 hfsc default fffe"
@@ -72,7 +72,7 @@ def gen_tc
   Provider.enabled.with_klass_and_interface.each do |p|
     iface = p.link_interface
     begin
-      tc = File.open(TC_FILE_PREFIX + iface, "w")
+      tc = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + iface), "w")
         unless Configuration.in_safe_mode?
           qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
@@ -92,7 +92,7 @@ def gen_tc
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
     begin
-      tc = File.open(TC_FILE_PREFIX + iface, "w")
+      tc = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + iface), "w")
         unless Configuration.in_safe_mode?
           qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
@@ -113,7 +113,7 @@ end
 
 def gen_iptables
   begin
-    f = File.open("#{IPTABLES_FILE}", "w")
+    f = File.open(File.join(BASE_SCRIPTS_TMP, IPTABLES_FILE), "w")
       #--------#
       # MANGLE #
       #--------#
@@ -528,7 +528,7 @@ end
 
 def gen_ip_ru
   begin
-    f = File.open(IP_RU_FILE, "w")
+    f = File.open(File.join(BASE_SCRIPTS_TMP, IP_RU_FILE), "w")
       f.puts "rule flush"
       f.puts "rule add prio 10 lookup main"
       unless Configuration.in_safe_mode?
@@ -736,7 +736,7 @@ def do_provider_up(p)
   if p.kind == "adsl"
     commands << "tc qdisc del dev #{p.link_interface} root"
     commands << "tc qdisc del dev #{p.link_interface} ingress"
-    commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
+    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
   end
   exec_context_commands "do_provider_up #{p.id}", commands, I18n.t("command.human.do_provider_up"), false
 end
@@ -885,47 +885,47 @@ end
 def setup_tc
   gen_tc
   commands = []
-  commands << "tc -b #{TC_FILE_PREFIX + IFB_UP}"
-  commands << "tc -b #{TC_FILE_PREFIX + IFB_DOWN}"
+  commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + IFB_UP)}"
+  commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + IFB_DOWN)}"
 
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
-    commands << "tc -b #{TC_FILE_PREFIX + interface.name}"
+    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + interface.name)}"
   end
   Provider.enabled.with_klass_and_interface.each do |p|
     #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada
-    commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
+    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
   end
   exec_context_commands "setup_tc", commands, I18n.t("command.human.setup_tc")
 end
 
 def setup_ip_ru
   gen_ip_ru
-  exec_context_commands "ip_ru", "ip -batch #{IP_RU_FILE}", I18n.t("command.human.setup_ip_ru")
+  exec_context_commands "ip_ru", "ip -batch #{File.join(BASE_SCRIPTS, IP_RU_FILE)}", I18n.t("command.human.setup_ip_ru")
 end
 
 def setup_iptables
-  exec_context_commands "setup_iptables",["cp #{IPTABLES_FILE} #{IPTABLES_FILE}.tmp"], I18n.t("command.human.prepare_iptables")
+  exec_context_commands "setup_iptables",["cp #{File.join(BASE_SCRIPTS, IPTABLES_FILE)} #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}.tmp"], I18n.t("command.human.prepare_iptables")
 
   gen_iptables
   commands = []
   status = false
   if Configuration.firewall_enabled
-    status = exec_context_commands "setup_iptables", "iptables-restore < #{IPTABLES_FILE}", I18n.t("command.human.setup_iptables_try")
+    status = exec_context_commands "setup_iptables", "iptables-restore < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}", I18n.t("command.human.setup_iptables_try")
   else
     exec_context_commands "setup_iptables_pre", "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}", I18n.t("command.human.setup_iptables_try")
-    status = exec_context_commands "setup_iptables", "iptables-restore -n < #{IPTABLES_FILE}", I18n.t("command.human.setup_iptables_try")
+    status = exec_context_commands "setup_iptables", "iptables-restore -n < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}", I18n.t("command.human.setup_iptables_try")
   end
   exec_context_commands "setup_iptables_post", "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}", I18n.t("command.human.setup_iptables_try")
 
   if not status
     commands = []
-    commands << "mv #{IPTABLES_FILE} #{IPTABLES_FILE}.error"
-    commands << "mv #{IPTABLES_FILE}.tmp #{IPTABLES_FILE}"
+    commands << "mv #{File.join(BASE_SCRIPTS, IPTABLES_FILE)} #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}.error"
+    commands << "mv #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}.tmp #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
     if Configuration.firewall_enabled
-      commands << "iptables-restore < #{IPTABLES_FILE}"
+      commands << "iptables-restore < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
     else
       commands << "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}"
-      commands << "iptables-restore -n < #{IPTABLES_FILE}"
+      commands << "iptables-restore -n < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
     end
     commands << "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
     exec_context_commands "restore_old_iptables", commands, I18n.t("command.human.setup_iptables_restore_old"), boot=false
@@ -990,7 +990,7 @@ def boot(run=true)
 
       exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}", I18n.t("command.human.sequreisp_post")
       exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.delete_tmp_file")
-      FileUtils.cp BOOT_FILE, BASE_SCRIPTS if File.exists?(BOOT_FILE)
+      FileUtils.cp File.join(BASE_SCRIPTS_TMP, BOOT_FILE), BASE_SCRIPTS if File.exists?(File.join(BASE_SCRIPTS_TMP, BOOT_FILE))
     rescue => e
       log_rescue("[Boot][general_hook_and_service_restart]", e)
     end

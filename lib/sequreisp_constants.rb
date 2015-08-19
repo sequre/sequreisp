@@ -28,15 +28,14 @@ DEPLOY_DIR=SequreispConfig::CONFIG["deploy_dir"]
 # paths
 BASE_SCRIPTS="#{BASE}/scripts"
 BASE_SCRIPTS_TMP="#{BASE_SCRIPTS}/tmp"
-TC_FILE_PREFIX="#{BASE_SCRIPTS_TMP}/tc_"
-IP_FILE_PREFIX="#{BASE_SCRIPTS_TMP}/ip_"
-IP_RU_FILE="#{BASE_SCRIPTS_TMP}/ip_ru"
-IPTABLES_FILE="#{BASE_SCRIPTS_TMP}/iptables"
+BOOT_FILE="boot.sh"
+TC_FILE_PREFIX="tc_"
+IP_RU_FILE="ip_ru"
+IPTABLES_FILE="iptables"
 IPTABLES_PRE_FILE="#{BASE}/etc/iptables_pre.sh"
 IPTABLES_POST_FILE="#{BASE}/etc/iptables_post.sh"
 SEQUREISP_PRE_FILE="#{BASE}/etc/sequreisp_pre.sh"
 SEQUREISP_POST_FILE="#{BASE}/etc/sequreisp_post.sh"
-BOOT_FILE="#{BASE_SCRIPTS_TMP}/boot.sh"
 
 # logs
 COMMAND_LOG ="#{DEPLOY_DIR}/log/command.log"
