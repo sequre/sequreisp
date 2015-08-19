@@ -237,6 +237,11 @@ class Provider < ActiveRecord::Base
   end
   def self.fallback_default_route(alt_format=false)
     providers = Provider.enabled.ready.online.all(:include => :interface)
+    if providers.count == 0
+      # Use all enabled providers as fallback, even if they are offline
+      # Don't leave the server with an empty default table
+      providers = Provider.enabled.ready.all(:include => :interface)
+    end
     case providers.count
     when 0
       ""
