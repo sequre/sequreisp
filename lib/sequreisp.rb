@@ -53,9 +53,9 @@ def gen_tc
       # ProviderGroup.all.each do |pg|
       #   pg.plans.each do |plan|
       Plan.all(:include => [:provider_group, :contracts]).each do |plan|
-        plan.contracts.not_disabled.descend_by_netmask.each do |c|
+        plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ :time_modifiers, {:provider_group => :providers } ] }, :client]).each do |c|
           tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", plan)
-          tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
+          #tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
         end
       end
       # end
@@ -168,7 +168,7 @@ def gen_iptables
         end
 
         # sino marko por cliente segun el ProviderGroup al que pertenezca
-        contracts = Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ])
+        contracts = Contract.not_disabled.descend_by_netmask.all(:include => [{ :plan => { :provider_group => :klass }}, :unique_provider, :public_address ])
         contracts.each do |c|
           if !c.public_address.nil?
             #evito triangulo de NAT si tiene full DNAT
@@ -230,7 +230,7 @@ def gen_iptables
           f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
         end
 
-        contracts = Contract.not_disabled.descend_by_netmask
+        contracts = Contract.not_disabled.descend_by_netmask.all(:include => [:plan, :klass])
 
         ips = contracts.collect(&:ip_addr)
 
@@ -330,6 +330,7 @@ def gen_iptables
         f.puts "-A PREROUTING -j sequreisp-accepted-sites"
 
         # Allowing access from LAN to local ips to avoid notifications redirections
+        # app_listen_port_available is a Class method from Configuration
         listen_ports = Configuration.app_listen_port_available
         Interface.only_lan.each do |interface|
           interface.addresses.each do |addr|
@@ -484,9 +485,9 @@ def gen_iptables
         end
 
         ######################if
-        contracts = Contract.descend_by_netmask
+        contracts = Contract.descend_by_netmask.all(:include => {:plan => :time_modifiers})
         contracts.each do |c|
-          f.puts c.rules_for_enabled
+          f.puts c.rules_for_enabled(Configuration.filter_by_mac_address)
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
         end
         ######################end
@@ -555,10 +556,11 @@ def update_fallback_route force=false, boot=true
   commands = []
   #tabla default (fallback de todos los enlaces)
   currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
-  if (currentroute != Provider.fallback_default_route and currentroute != Provider.fallback_default_route(true)) or force
-    if Provider.fallback_default_route != ""
+  fallback_default_route = Provider.fallback_default_route
+  if (currentroute != fallback_default_route and currentroute != Provider.fallback_default_route(true)) or force
+    if fallback_default_route != ""
       #TODO por ahora solo cambio si hay ruta, sino no toco x las dudas
-      commands << "ip ro re table default #{Provider.fallback_default_route}"
+      commands << "ip ro re table default #{fallback_default_route}"
     end
     #TODO loguear? el cambio de estado en una bitactora
   end
@@ -606,7 +608,7 @@ def setup_ip_ro
     end
 
     unless Configuration.in_safe_mode?
-      ProviderGroup.enabled.each do |pg|
+      ProviderGroup.enabled.all(:include => { :providers => :interface }).each do |pg|
         update_provider_group_route pg, true, true
       end
       update_fallback_route true, true
@@ -846,7 +848,7 @@ def setup_lan_interface i, boot=true
 end
 
 def setup_interfaces
-  Interface.all.each do |i|
+  Interface.all(:include => [{:provider => [:klass, :addresses]}, :addresses ]).each do |i|
     commands = []
     commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
     #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
@@ -940,27 +942,41 @@ def setup_mail_relay
 end
 
 def boot(run=true)
+  Configuration.do_reload
   create_dirs_if_not_present
   BootCommandContext.run = run
   BootCommandContext.clear_boot_file
-  Configuration.do_reload
     I18n.locale = Configuration.language
     exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.create_tmp_file")
     exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}", I18n.t("command.human.sequreisp_pre")
 
+    Rails.logger.debug "[Boot] setup_nf_modules"
     setup_nf_modules
+    Rails.logger.debug "[Boot] setup_queued_commands"
     setup_queued_commands
+    Rails.logger.debug "[Boot] setup_clock"
     setup_clock
+    Rails.logger.debug "[Boot] setup_proc"
     setup_proc
+    Rails.logger.debug "[Boot] setup_interfaces"
     setup_interfaces
+    Rails.logger.debug "[Boot] setup_dynamic_providers_hooks"
     setup_dynamic_providers_hooks
+    Rails.logger.debug "[Boot] setup_proxy_arp"
     setup_proxy_arp
+    Rails.logger.debug "[Boot] setup_static_routes"
     setup_static_routes
+    Rails.logger.debug "[Boot] setup_ifbs"
     setup_ifbs
+    Rails.logger.debug "[Boot] setup_ip_ru"
     setup_ip_ru
+    Rails.logger.debug "[Boot] setup_ip_ro"
     setup_ip_ro
+    Rails.logger.debug "[Boot] setup_tc"
     setup_tc
+    Rails.logger.debug "[Boot] setup_iptables"
     setup_iptables
+    Rails.logger.debug "[Boot] setup_mail_relay"
     setup_mail_relay
 
     begin

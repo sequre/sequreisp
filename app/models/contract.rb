@@ -682,8 +682,9 @@ end
   def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, _plan)
     tc_rules =[]
     mask = "0000ffff"
-    ceil = _plan["ceil_" + direction] * bandwidth_rate
-    rate = _plan.send("rate_" + direction) * bandwidth_rate
+    _bandwidth_rate = bandwidth_rate
+    ceil = _plan["ceil_" + direction] * _bandwidth_rate
+    rate = _plan.send("rate_" + direction) * _bandwidth_rate
     ceil = 1 if ceil < 1
     rate = 1 if rate < 1
 
@@ -725,8 +726,8 @@ end
       "-A count-down.#{ip_addr.to_cidr} -d #{ip} -m comment --comment \"data-count-#{ip}-down-data_count\"" ]
   end
 
-  def rules_for_enabled
-    macrule = (Configuration.filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
+  def rules_for_enabled filter_by_mac_address
+    macrule = (filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
     target = disabled? ? "DROP" : "ACCEPT"
     [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j #{target}" ]
   end
