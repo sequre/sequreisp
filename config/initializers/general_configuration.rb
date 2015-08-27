@@ -1,7 +1,7 @@
 $redis = Redis.new(:host => 'localhost', :port => 6379)
 $log_level = "info"
 
-$daemon_configuration = YAML.load(File.read("config/daemon_tasks.yml"))
+$daemon_configuration = YAML.load(File.read("#{Rails.root.to_s}/config/daemon_tasks.yml"))
 Dir.glob(File.join(Rails.root, 'vendor', 'plugins', '**', 'config', 'daemon_tasks.yml')) do |dt|
   $daemon_configuration.merge!(YAML.load(File.read(dt)))
 end
