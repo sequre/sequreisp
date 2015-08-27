@@ -380,10 +380,11 @@ class Provider < ActiveRecord::Base
     min_online_rate_down = 256
     min_online_rate_up = 56
 
-    instant_rate_up = $redis.hmget("interface:#{interface.name}:rate_tx", "instant").first.to_i/1024
-    instant_rate_down = $redis.hmget("interface:#{interface.name}:rate_rx", "instant").first.to_i/1024
-
-    (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
+    data = interface.instant
+    (data[:rx][1] / 1024 > min_online_rate_down) and (data[:tx][1] / 1024 > min_online_rate_up)
+    # instant_rate_up = $redis.hmget("interface:#{interface.name}:rate_tx", "instant").first.to_i/1024
+    # instant_rate_down = $redis.hmget("interface:#{interface.name}:rate_rx", "instant").first.to_i/1024
+    # (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
   end
 
   def self.all_ips

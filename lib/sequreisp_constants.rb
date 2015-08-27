@@ -46,3 +46,4 @@ PATH_SASL_PASSWD = Rails.env.production? ? "/etc/postfix/sasl_passwd" : "/tmp/sa
 COMMAND_LOG ="#{DEPLOY_DIR}/log/command.log"
 HUMANIZED_COMMAND_LOG ="#{DEPLOY_DIR}/log/command_human.log"
 APPLICATION_LOG = "#{DEPLOY_DIR}/log/application.log"
+SOFT_NAME = "Wispro"

@@ -40,19 +40,30 @@ require "sequreisp_logger"
 require 'command_context'
 #Thread::abort_on_exception = true
 
+#################################################
+#################################################
+
 threads = []
+
+@daemon ||= Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 1.megabytes)
+
+@daemon.formatter = proc do |severity, datetime, progname, msg|
+  datetime_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
+  "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [#{severity}][sequreispd.rb] #{msg} \n"
+end
+
 begin
-#################################################
-#################################################
   if $running
-    DaemonTask.descendants.each do |daemon_task|
+    daemons_enabled = DaemonTask.descendants & $daemon_configuration.select{ |key, value| value['enabled'] }.collect{|d| d.first.camelize.constantize}
+    daemons_enabled.each do |daemon_task|
       daemon = daemon_task.new
       threads << daemon
       daemon.start
     end
   end
-rescue Exception => e
-  log_rescue("[Daemon][Sequreispd] ERROR GENERAL DAEMON", e)
+rescue Exception => exception
+  @daemon.error("[MESSAGE] #{exception.message}")
+  exception.backtrace.each{ |bt| @daemon.error("[BRACKTRACE] #{bt}") }
 ensure
   while($running) do
     threads.each do |thread|
@@ -62,6 +73,6 @@ ensure
   end
   threads.map{ |thread| thread.stop }
   threads.map{ |thread| thread.join }
-#################################################
-#################################################
 end
+#################################################
+#################################################

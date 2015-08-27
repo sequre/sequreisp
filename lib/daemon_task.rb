@@ -16,33 +16,63 @@ end
 
 $mutex = Mutex.new
 $resource = ConditionVariable.new
-$redis_mutex = Mutex.new
 
 class DaemonTask
-
   @@threads ||= []
 
   def initialize
     @thread_daemon = nil
     @name = self.class.to_s
-    @log_path = "#{DEPLOY_DIR}/tmp/#{self.class.to_s.underscore.downcase}"
+    @conf_daemon = $daemon_configuration[@name.underscore]
+    @time_for_exec[:frecuency] = eval(@conf_daemon["frecuency"])
+    @log_path = "#{DEPLOY_DIR}/log/#{self.class.to_s.underscore.downcase}"
     FileUtils.touch @log_path
+    @daemon_logger = Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 1.megabytes)
+    @daemon_logger.formatter = proc do |severity, datetime, progname, msg|
+      datetime_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
+      "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [#{severity}][#{@name}][#{caller[7].scan(/:in `(.*)'/).flatten.first}] #{msg} \n"
+    end
+    @daemon_logger.level = @conf_daemon["log_level"].to_i
     set_next_exec
-    log("[INFO][#{@name}] EXEC At #{@next_exec}")
+    @daemon_logger.info("[INITIALIZE][EXEC_AT] #{@next_exec}")
   end
 
-  def verbose?
-    File.exists?("#{DEPLOY_DIR}/tmp/verbose")
+  def exec_command(command)
+    result_command = {}
+    result_command[:status] = Open4::popen4("bash -c '#{command}'") do |pid, stdin, stdout, stderr|
+      result_command[:pid] = pid
+      result_command[:stdout] = stdout.read.strip
+      result_command[:stderr] = stderr.read.strip
+    end.exitstatus
+    @daemon_logger.debug("[EXEC_COMMAND] command: #{command}, pid: #{result[:pid]}, stdout: #{result[:stdout]}, stdout: #{result[:stderr]}")
+    result_command
+  end
+
+  def daemon_log_rescue_file(exception)
+    File.open(@log_path, 'a+') do |f|
+      date_now = DateTime.now
+      if exception.instance_of? String
+        f.puts "#{date_now} - #{exception}"
+      else
+        f.puts "#{date_now} - #{exception.message}"
+        exception.backtrace.each{ |bt| f.puts "#{date_now} #{exception.class} #{bt}" }
+      end
+    end
+  end
+
+  def daemon_log_rescue(exception)
+    @daemon_logger.error("[MESSAGE] #{exception.message}")
+    exception.backtrace.each{ |bt| @daemon_logger.error("[BRACKTRACE] #{bt}") }
   end
 
   def stop
     begin
       @thread_daemon.exit
     rescue Exception => e
-      log_rescue("[#{name}][ERROR_STOP]", e)
+      daemon_log_rescue("[ERROR][#{name}][STOP]", e)
     ensure
       FileUtils.rm(@log_path) if File.exist?(@log_path)
-      log("[INFO][#{name}][STOP]")
+      @daemon_logger.info("[STOP]")
     end
   end
 
@@ -60,7 +90,7 @@ class DaemonTask
   def start
     @thread_daemon = Thread.new do
       @@threads << self
-      log "[INFO][#{name}][START]"
+      # log "[INFO][#{name}][START]"
       Thread.current["name"] = @name
       loop do
         begin
@@ -69,11 +99,11 @@ class DaemonTask
             set_next_exec
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
-            log("[INFO][#{name}] NEXT EXEC TIME #{@next_exec}")
+            @daemon_logger.info("[NEXT_EXEC_TIME] #{@next_exec}")
           end
         rescue Exception => e
-          log_rescue("[ERROR][#{@name}]", e)
-          log_rescue_file(@log_path, e)
+          daemon_log_rescue(e)
+          daemon_log_rescue_file(e)
         end
         to_sleep
       end
@@ -115,6 +145,7 @@ class DaemonTask
 
   # give all subclasses
   def self.descendants
+    # $daemon_configuration.select{ |key, value| value['enabled'] }.collect{ |d| first.camelize }
     ObjectSpace.each_object(Class).select { |klass| klass < self }
   end
 
@@ -123,18 +154,29 @@ end
 class DaemonApplyChange < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 1.seconds }
+    @time_for_exec = { }
     @wait_for_apply_changes = false
+    @need_to_reboot = false
     @proc = Proc.new { exec_daemon_apply_change }
     super
   end
 
   def exec_daemon_apply_change
-    system("rm #{DEPLOY_DIR}/tmp/apply_changes.lock")
+    file_path = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
+    if File.exists?(file_path)
+      File.delete(file_path)
+      @daemon_logger.debug("[REMOVE_FILE] #{file_path}")
+    end
+
     $mutex.synchronize {
       if Configuration.daemon_reload
+        # @need_to_reboot = true if Configuration.backup_restore == "boot"
         Configuration.first.update_attribute :daemon_reload, false
-        boot
+        @daemon_logger.debug("[START_APPLY_CHANGE]")
+        status = boot
+        @daemon_logger.debug("[STATUS_APPLY_CHANGE] #{status}")
+        # Configuration.first.update_attribute(:backup_restore, "reboot") if @need_to_reboot
+        Configuration.first.update_attribute(:backup_restore, "reboot") if Configuration.backup_restore == "boot"
         $resource.signal
       end
     }
@@ -145,17 +187,19 @@ end
 class DaemonApplyChangeAutomatically < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 1.hour }
-    @wait_for_apply_changes = false
+    @time_for_exec = { }
+    @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_apply_change_automatically }
     super
   end
 
   def exec_daemon_apply_change_automatically
-    $mutex.synchronize {
-      Configuration.apply_changes_automatically!
-      $resource.signal
-    }
+    output = Configuration.apply_changes_automatically!
+    if output.to_a.empty?
+      @daemon_logger.debug("[SEND_MESSAGE_FOR_APPLY_CHANGE]")
+    else
+      daemon_log_rescue_file(@log_path, output.join(" "))
+    end
   end
 
 end
@@ -163,9 +207,10 @@ end
 class DaemonCheckLink < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10.seconds }
+    @time_for_exec = { }
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_check_link }
+    @time_for_kill_dhcp = {}
     super
   end
 
@@ -176,25 +221,21 @@ class DaemonCheckLink < DaemonTask
 
   def exec_check_physical_links
     changes = false
-    readme = []
-    writeme = []
-    pid = []
     Interface.all(:conditions => "vlan = 0").each do |i|
-      physical_link = i.current_physical_link
-      if i.physical_link != physical_link
+      current_physical_link = i.current_physical_link
+      @daemon_logger.debug("[#{i.name}][CURRENT_LINK] #{physical_link}")
+
+      if i.physical_link != current_physical_link
         changes = true
-        i.physical_link = physical_link
+        @daemon_logger.debug("[#{i.name}][CHANGE_LINK] Before => #{i.physical_link}, After => #{current_physical_link}")
+        i.physical_link = current_physical_link
         i.save(false)
-        #TODO loguear el cambio de estado en una bitactora
       end
     end
-    # begin
-      if Configuration.deliver_notifications and changes
-        AppMailer.deliver_check_physical_links_email
-      end
-    # rescue => e
-    #   log_rescue("[Daemon] ERROR Thread #{name}", e)
-    # end
+    if Configuration.deliver_notifications and changes
+      AppMailer.deliver_check_physical_links_email
+      @daemon_logger.debug("[SEND_EMAIL]")
+    end
   end
 
   def exec_check_links
@@ -208,55 +249,69 @@ class DaemonCheckLink < DaemonTask
         # 1st by rate, if offline, then by ping
         # (r)etry=3 (t)iemout=500 (B)ackoff=1.5 (defualts)_
         Thread.current['online'] = p.is_online_by_rate? || `fping -a -S#{p.ip} #{PINGABLE_SERVERS} 2>/dev/null | wc -l`.chomp.to_i > 0
-
       end
     end
 
     # waith for threads
-    threads.each do |k,t| t.join end
+    # threads.each do |k,t| t.join end
 
+    threads.each_value do |thread| thread.join end
     providers.each do |p|
       #puts "#{p.id} #{readme[p.id].first}"
-      online = threads[p.id]['online']
-      p.online = online
-      #TODO loguear el cambio de estado en una bitactora
-
-      if !online and !p.notification_flag and p.offline_time > Configuration.notification_timeframe
-        p.notification_flag = true
-        send_notification_mail = true
-
-      elsif online and p.notification_flag
-        p.notification_flag = false
-        send_notification_mail = true
-      end
-
-      p.save(false) if p.changed?
-
+      # online = threads[p.id]['online']
+      # p.online = online
+      # if not online and not p.notification_flag and p.offline_time > Configuration.notification_timeframe
+      #   p.notification_flag = true
+      #   send_notification_mail = true
+      # elsif online and p.notification_flag
+      #   p.notification_flag = false
+      #   send_notification_mail = true
+      # end
       #TODO refactorizar esto de alguna manera
       # la idea es killear el dhcp si esta caido más de 30 segundos
       # pero solo hacer kill en la primer pasada cada minuto, para darle tiempo de levantar
       # luego lo de abajo lo va a levantar
-      offline_time = p.offline_time
-      if p.kind == "dhcp" and offline_time > 30 and (offline_time-30)%120 < 16
-        system "/usr/bin/pkill -f 'dhclient.#{p.interface.name}'"
+      # offline_time = p.offline_time
+      # if p.kind == "dhcp" and offline_time > 30 and (offline_time-30)%120 < 16
+      #   system "/usr/bin/pkill -f 'dhclient.#{p.interface.name}'"
+      # end
+
+      @time_for_kill_dhcp[p.id] = 0 unless @time_for_kill_dhcp.has_key?(p.id)
+
+      p.online = threads[p.id]['online']
+
+      @daemon_logger.debug("[PROVIDER_OFFLINE] #{p.class.name}:#{p.name}") unless p.online
+
+      if p.online_changed? and p.online
+        p.notification_flag = false
+        send_notification_mail = true
+        @daemon_logger.debug("[PROVIDER_ONLINE] #{p.class.name}:#{p.name}")
+      elsif p.offline_time > Configuration.notification_timeframe and not p.notification_flag
+        p.notification_flag = true
+        send_notification_mail = true
+      end
+
+      p.save(false) if p.changed
+
+      if p.kind == "dhcp"
+        p.offline_time > 30 and Time.now.to_i > @time_for_kill_dhcp[p.id]
+        @time_for_kill_dhcp[p.id] = (Time.now + 2.minutes).to_i
+        @daemon_logger.debug("[KILL_DHCP] #{p.class.name}:#{p.name} try to kill #{Time.at(@time_for_kill_dhcp[p.id])}")
       end
     end
 
     Provider.with_klass_and_interface.each do |p|
-      setup_provider_interface p, false if not p.online?
+      setup_provider_interface p, false unless p.online?
       update_provider_route p, false, false
     end
     ProviderGroup.enabled.each do |pg|
       update_provider_group_route pg, false, false
     end
     update_fallback_route false, false
-    # begin
-      if send_notification_mail and Configuration.deliver_notifications
-        AppMailer.deliver_check_links_email
-      end
-    # rescue => e
-    #   log_rescue("[Daemon] ERROR Thread #{name}", e)
-    # end
+    if send_notification_mail and Configuration.deliver_notifications
+      AppMailer.deliver_check_links_email
+      @daemon_logger.debug("[PROVIDER] #{p.class.name}:#{p.name} send_notification")
+    end
   end
 
 end
@@ -264,7 +319,7 @@ end
 class DaemonBackupRestore < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10.seconds }
+    @time_for_exec = { }
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_backup_restore }
     super
@@ -277,17 +332,29 @@ class DaemonBackupRestore < DaemonTask
   def exec_backup_restore
     case Configuration.backup_restore
     when "respawn_and_boot"
+      @daemon_logger.debug("[RESTART_DAEMON]")
       $running = false
       Configuration.first.update_attribute :backup_restore, "boot"
     when "boot"
-      boot
-      Configuration.first.update_attribute :last_changes_applied_at, Time.now
+      apply_changes
+      @daemon_logger.debug("[SEND_MESSAGE_FOR_APPLY_CHANGE]")
+    when "reboot"
       Configuration.first.update_attribute :backup_restore, nil
       if Configuration.backup_reboot
         Configuration.first.update_attribute :backup_reboot, false
+        @daemon_logger.debug("[REBOOT_SYSTEM]")
         system "/sbin/reboot"
       end
     end
+    # when "boot"
+    #   boot
+    #   Configuration.first.update_attribute :last_changes_applied_at, Time.now
+    #   Configuration.first.update_attribute :backup_restore, nil
+    #   if Configuration.backup_reboot
+    #     Configuration.first.update_attribute :backup_reboot, false
+    #     system "/sbin/reboot"
+    #   end
+    # end
   end
 
 end
@@ -343,7 +410,7 @@ end
 #           end
 #         end
 #       rescue => e
-#         log_rescue("[Daemon] ERROR Thread #{name}", e)
+#         daemon_log_rescue("[Daemon] ERROR Thread #{name}", e)
 #         # Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
 #       ensure
 #         time_last = Time.now
@@ -369,7 +436,7 @@ end
 #           end
 #         end
 #       rescue => e
-#         log_rescue("[Daemon] ERROR Thread #{name}", e)
+#         daemon_log_rescue("[Daemon] ERROR Thread #{name}", e)
 #       end
 #     end
 #   end
@@ -518,21 +585,20 @@ end
 class DaemonCheckBind < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 10.seconds }
+    @time_for_exec = { }
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_bind }
     super
   end
 
   def exec_daemon_bind
-    system("pgrep -x named || service bind9 start")
+    exec_command("pgrep -x named || service bind9 start")
   end
-
 end
 
 class DaemonRedis < DaemonTask
  def initialize
-   @time_for_exec = { :frecuency => 5.seconds }
+   @time_for_exec = { }
    @wait_for_apply_changes = true
    @proc = Proc.new { exec_daemon_redis }
    @sample_count = 50
@@ -540,6 +606,7 @@ class DaemonRedis < DaemonTask
  end
 
  def exec_daemon_redis
+   interfaces_to_redis
    contracts_to_redis
  end
 
@@ -553,7 +620,7 @@ class DaemonRedis < DaemonTask
          traffic_current.data_count += data_counting[c.id.to_s]
          traffic_current.save
          c.current_traffic = traffic_current
-         log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][UpdateDataCounting][#{c.class.name}:#{c.id}] #{value_before_update} = #{c.current_traffic.data_count}")
+         @daemon_logger.debug("[UpdateDataCounting][#{c.class.name}:#{c.id}] #{value_before_update} = #{c.current_traffic.data_count}")
          c.save
        end
      end
@@ -571,7 +638,7 @@ class DaemonRedis < DaemonTask
      round_robin()
      catchs = {}
      @compact_keys.each { |rkey| catchs[rkey[:name]] = i.send("#{rkey[:name]}_bytes") }
-     counter = $redis.hget(counter_key, c.id.to_s).to_i
+     counter = $redis.hget(counter_key, i.id.to_s).to_i
      generate_sample(catchs)
      $redis.hincrby(counter_key, i.id.to_s, 1)
      if counter == 13
@@ -584,7 +651,7 @@ class DaemonRedis < DaemonTask
    InterfaceSample.transaction {
      transactions[:create].each do |transaction|
        sample = InterfaceSample.create(transaction)
-       log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][InterfaceTransactions][CREATE] #{sample.inspect}")
+       @daemon_logger.debug("[InterfaceTransactions][CREATE] #{sample.inspect}")
      end
    }
  end
@@ -633,14 +700,17 @@ class DaemonRedis < DaemonTask
    ContractSample.transaction {
      transactions[:create].each do |transaction|
        sample = ContractSample.create(transaction)
-       log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][ContractTransactions][CREATE] #{sample.inspect}")
+       @daemon_logger.debug("[ContractTransactions][CREATE] #{sample.inspect}")
      end
    }
  end
 
  def round_robin
    date_keys =$redis.keys("#{@redis_key}_*").sort
-   $redis.del(date_keys.first) if date_keys.count == @sample_count
+   if date_keys.count == @sample_count
+     $redis.del(date_keys.first)
+     @daemon_logger.debug("[DROP_FIRST_SAMPLE][#{@relation.class.name}:#{@relation.id}]")
+   end
  end
 
  def generate_sample(catchs)
@@ -651,16 +721,12 @@ class DaemonRedis < DaemonTask
      new_sample[sub_key] = {}
      total_bytes, last_time = $redis.hmget("#{last_key}", "#{sub_key}_total_bytes", "time") unless last_key.nil?
      accumulated = (catchs[sub_key].to_i < total_bytes.to_i ? total_bytes.to_i : (catchs[sub_key].to_i - total_bytes.to_i) ) unless last_key.nil?
-     # new_sample[sub_key][:instant] = last_key.nil? ? "0" : (((accumulated * @factor_precision) / (new_sample[:time] - last_time.to_i)) * 8)
-     # new_sample[:delta_time] = (new_sample[:time] - last_time.to_i) if new_sample[:delta_time].nil?
-     # new_sample[sub_key][:instant] = last_key.nil? ? "0" : ((accumulated / (new_sample[:time] - last_time.to_i)) * 8)
      new_sample[sub_key][:instant] = last_key.nil? ? "0" : accumulated
      new_sample[sub_key][:total_bytes] = catchs[sub_key].to_i
    end
    catchs.each_key { |k| new_sample[k].each_key { |sub_key| $redis.hmset("#{new_key}", "#{k}_#{sub_key}", new_sample[k][sub_key]) } }
    $redis.hmset("#{new_key}", "time", new_sample[:time])
-   # log("[#{self.class.name}][#{(__method__).to_s}][NewSampleRedis] (#{Time.at(new_sample[:time])}) #{new_sample.inspect}")
-   # $redis.hmset("#{new_key}", "delta_time", new_sample[:delta_time])
+   @daemon_logger.debug("[#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hget(last_key).inspect}, new_sample_redis: #{$redis.hget(new_key).inspect}")
  end
 
  def compact_to_db
@@ -683,7 +749,7 @@ class DaemonRedis < DaemonTask
                     :sample_number => @init_time_new_sample.to_s,
                     "#{@relation.class.name.downcase}_id".to_sym => @relation.id }
 
-     log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][PeriodForNewSample][#{@relation.class.name}:#{@relation.id}] (#{Time.at(@init_time_new_sample)}) - (#{Time.at(@end_time_new_sample)}")
+     @daemon_logger.debug("[PeriodForNewSample][#{@relation.class.name}:#{@relation.id}] (#{Time.at(@init_time_new_sample)}) - (#{Time.at(@end_time_new_sample)}")
 
      date_keys.each do |key|
        data = {}
@@ -691,10 +757,10 @@ class DaemonRedis < DaemonTask
        if time <= @end_time_new_sample
          last_time_for_new_sample = time
          @compact_keys.each { |rkey| data[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
-         log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{data.inspect}")
+         @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{data.inspect}")
          keys_to_delete << key
        else
-         log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][NO] (#{Time.at(time)})")
+         @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][NO] (#{Time.at(time)})")
        end
        datas << data
      end
@@ -715,20 +781,16 @@ end
 class DaemonCompactSamples < DaemonTask
 
   def initialize
-    @time_for_exec = { :frecuency => 20.seconds}
+    @time_for_exec = { }
     @wait_for_apply_changes = true
-    # @factor_precision =100
     @proc = Proc.new { exec_daemon_compact_samples }
     super
   end
 
   def models_to_compact; ["contract", "interface"]; end
 
-  def cuack; ["contract"]; end
-
   def exec_daemon_compact_samples
     models_to_compact.each do |model|
-    # cuack.each do |model|
       transactions = { :create => [],:destroy => [] }
       @klass = "#{model}_sample".camelize.constantize
       @model = model
@@ -738,18 +800,18 @@ class DaemonCompactSamples < DaemonTask
         @sample_conf["period_#{i}".to_sym][:samples_to_compact].each do |key, values|
           @relation_id = key
           last_sample_time_for_next_period = @sample_conf["period_#{i.next}".to_sym][:last_sample_time][key]
-          log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][NeedCompact][#{@klass.name}] #{model.camelize}:#{key})")
+          @daemon_logger.debug("[NeedCompact][#{@klass.name}] #{model.camelize}:#{key})")
           transactions += compact(i.next, values, last_sample_time_for_next_period)
         end
       end
       @klass.transaction {
         transactions[:destroy].each do |transaction|
-          log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
+          @daemon_logger.debug("[#{@klass.name}Transactions][#{model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
           transaction.delete
         end
         transactions[:create].each do |transaction|
           sample = @klass.create(transaction)
-          log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][#{@klass.name}Transactions][#{model}:#{sample.object.id}][CREATE] #{sample.inspect}")
+          @daemon_logger.debug("[#{@klass.name}Transactions][#{model}:#{sample.object.id}][CREATE] #{sample.inspect}")
         end
       }
     end
@@ -766,13 +828,13 @@ class DaemonCompactSamples < DaemonTask
     end_time_new_sample = init_time_new_sample + (time_period - 1)
     range = (init_time_new_sample..end_time_new_sample)
     sample_time = Time.at(init_time_new_sample)
-    log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][Range] (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
+    @daemon_logger.debug("[Range] (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
     data.each do |k|
       if range.include?(k.sample_number.to_i)
         samples[:destroy] << k
-        log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][DataSelected][#{@klass.name}][Compact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
+        @daemon_logger.debug("[DataSelected][#{@klass.name}][Compact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
       else
-        log("[DEBUG][#{self.class.name}][#{(__method__).to_s}][DataSelected][#{@klass.name}][NoCompact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
+        @daemon_logger.debug("[DataSelected][#{@klass.name}][NoCompact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
       end
     end
     new_sample = @klass.compact(period, samples[:destroy])
@@ -783,17 +845,15 @@ end
 
 class DaemonSynchronizeTime < DaemonTask
   def initialize
-    @time_for_exec = { :frecuency => 1.day }
+    @time_for_exec = { }
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_sync_time }
     super
   end
 
   def exec_daemon_sync_time
-    commands = ["ntpdate pool.ntp.org", "hwclock --systohc"].each do |command|
-      command_output = `#{command}`
-      log("[DEBUG][#{self.class.name}][#{(__method__).to_s}] command: #{command}, output: #{command_output}")
-    end
+    exec_command("ntpdate pool.ntp.org")
+    exec_command("hwclock --systohc")
   end
 end
 

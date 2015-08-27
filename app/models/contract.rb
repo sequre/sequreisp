@@ -698,6 +698,16 @@ class Contract < ActiveRecord::Base
     end
   end
 
+
+  def current_redis_values
+    hash = {}
+    $redis.keys("#{redis_key}_*").sort.each do |key|
+      hash[key] = $redis.hgetall(key)
+      hash[key][:time_human] = Time.at($redis.hget(key, "time").to_i)
+    end
+    hash
+  end
+
   private
 
   #Please i need refactor
