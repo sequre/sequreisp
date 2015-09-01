@@ -47,9 +47,8 @@ class Backup
     end
   end
 
-  def backup_include_files(include_graphs)
+  def backup_include_files
     paths = ["#{DATABASE_DUMP_PATH}", "#{BASE_DIR}/scripts", "#{BASE_DIR}/etc", "#{BASE_DIR}/deploy/shared/public/system"]
-    paths << "#{BASE_DIR}/deploy/shared/db/rrd" if include_graphs
     paths << Configuration.first.files_include_in_backup.split("\n") rescue []
     paths.flatten.uniq.delete_if do |path| not File.exists?(path) end
   end
@@ -58,9 +57,9 @@ class Backup
     Configuration.first.files_exclude_in_backup.split("\n").map{|path| "--exclude=#{path}"} rescue []
   end
 
-  def full(include_graphs=false)
+  def full
     if mysqldump "#{DATABASE_DUMP_PATH}"
-      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{backup_exclude_files.join(' ')} -zSpcf #{full_path}.tar.gz #{backup_include_files(include_graphs).join(' ')}"
+      success = system "#{SequreispConfig::CONFIG["tar_command"]} #{backup_exclude_files.join(' ')} -zSpcf #{full_path}.tar.gz #{backup_include_files.join(' ')}"
     end
     "#{full_path}.tar.gz" if success
   end

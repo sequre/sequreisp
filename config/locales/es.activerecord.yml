@@ -450,7 +450,6 @@ es:
     create_backup_button: "Crear y descargar copia de resguardo"
     restore_backup_db_button: "Restaurar copia de resguardo (base de datos)"
     restore_backup_full_button: "Restaurar copia de resguardo completa (aplicación y base de datos)"
-    include_graphs: "Incluir historial de gráficos (+%{size}MB aprox.)"
     confirm_restore_backup: "Todos los datos actuales se perderán y serán reemplazados por los de la copia de resguardo seleccionada"
     confirm_restore_title: "¿Está seguro de seguir adelante?"
     backup_file_label: "Seleccione el archivo a restaurar"

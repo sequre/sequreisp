@@ -450,7 +450,6 @@ en:
     create_backup_button: "Create and download backup"
     restore_backup_db_button: "Restore (just database)"
     restore_backup_full_button: "Full restore (application and database)"
-    include_graphs: "Include graphics history (+%{size}MB approx.)"
     confirm_restore_backup: "All current data will be lost and replaced with the selected backup"
     confirm_restore_title: "Are you sure you want to continue?"
     backup_file_label: "Select the backup file to restore"

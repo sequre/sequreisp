@@ -444,7 +444,6 @@ pt:
     create_backup_button: "Criar y descarregar cópia de resguardo"
     restore_backup_db_button: "Restaurar cópia de resguardo (base de dados)"
     restore_backup_full_button: "Restaurar cópia de resguardo completa (aplicativo e base de dados)"
-    include_graphs: "Incluir historial de gráficos (+%{size} MB aprox.)"
     confirm_restore_backup: "Todos os dados atuais se perderão e serão subistituídos pelos da cópia de resguardo selecionada"
     confirm_restore_title: "Está seguro de proseguir?"
     backup_file_label: "Selecione o arquivo a restaurar"
