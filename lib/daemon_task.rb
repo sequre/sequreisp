@@ -25,7 +25,7 @@ class DaemonTask
     @name = self.class.to_s
     @conf_daemon = $daemon_configuration[@name.underscore]
     @time_for_exec[:frecuency] = eval(@conf_daemon["frecuency"])
-    @priority = @conf_daemon.has_key?("priority") ? @conf_daemon["priority"].to_i : 5
+    @priority = @conf_daemon.has_key?("priority") ? @conf_daemon["priority"].to_i : -5
     @log_path = "#{DEPLOY_DIR}/log/#{self.class.to_s.underscore.downcase}"
     FileUtils.touch @log_path
     @daemon_logger = Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 1.megabytes)
