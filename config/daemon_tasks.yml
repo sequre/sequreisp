@@ -10,45 +10,53 @@ daemon_apply_change:
   frecuency: 1.seconds
   level_log: 1
   enabled: true
+  priority: 0
 
 daemon_apply_change_automatically:
   # default frecuency value 1.hour
   frecuency: 1.hour
   level_log: 1
   enabled: true
+  priority: 0
 
 daemon_check_link:
   # default frecuency value 10.seconds
   frecuency: 10.seconds
   level_log: 1
   enabled: true
+  priority: -2
 
 daemon_backup_restore:
   # default frecuency value 10.seconds
   frecuency: 10.seconds
   level_log: 1
   enabled: true
-
-daemon_check_bind:
-  # default frecuency value 10.seconds
-  frecuency: 10.seconds
-  level_log: 1
-  enabled: true
+  priority: -2
 
 daemon_redis:
   # default frecuency value 5.seconds
   frecuency: 5.seconds
   level_log: 1
   enabled: true
+  priority: -3
 
 daemon_compact_samples:
   # default frecuency value 20.seconds
   frecuency: 20.seconds
   level_log: 1
   enabled: true
+  priority: -3
+
+daemon_check_bind:
+  # default frecuency value 10.seconds
+  frecuency: 10.seconds
+  level_log: 1
+  enabled: true
+  priority: -5
 
 daemon_synchronize_time:
   # default frecuency value 1.day
   frecuency: 1.day
   level_log: 1
   enabled: true
+  priority: -5

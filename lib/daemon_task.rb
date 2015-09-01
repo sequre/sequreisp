@@ -25,16 +25,17 @@ class DaemonTask
     @name = self.class.to_s
     @conf_daemon = $daemon_configuration[@name.underscore]
     @time_for_exec[:frecuency] = eval(@conf_daemon["frecuency"])
+    @priority = @conf_daemon.has_key?("priority") ? @conf_daemon["priority"].to_i : 5
     @log_path = "#{DEPLOY_DIR}/log/#{self.class.to_s.underscore.downcase}"
     FileUtils.touch @log_path
     @daemon_logger = Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 1.megabytes)
     @daemon_logger.formatter = proc do |severity, datetime, progname, msg|
       datetime_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
-      "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [#{severity}][#{@name}][#{caller[7].scan(/:in `(.*)'/).flatten.first}] #{msg} \n"
+      "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [Priority:#{@priority}][#{severity}][#{@name}][#{caller[7].scan(/:in `(.*)'/).flatten.first}] #{msg} \n"
     end
-    @daemon_logger.level = @conf_daemon["log_level"].to_i
+    @daemon_logger.level = @conf_daemon["level_log"].to_i
     set_next_exec
-    @daemon_logger.info("[INITIALIZE][EXEC_AT] #{@next_exec}")
+    @daemon_logger.info("[START][PRIORITY:#{@priority}][EXEC_AT] #{@next_exec}")
   end
 
   def exec_command(command)
@@ -44,7 +45,7 @@ class DaemonTask
       result_command[:stdout] = stdout.read.strip
       result_command[:stderr] = stderr.read.strip
     end.exitstatus
-    @daemon_logger.debug("[EXEC_COMMAND] command: #{command}, pid: #{result[:pid]}, stdout: #{result[:stdout]}, stdout: #{result[:stderr]}")
+    @daemon_logger.debug("[EXEC_COMMAND] command: #{command}, pid: #{result_command[:pid]}, stdout: #{result_command[:stdout]}, stdout: #{result_command[:stderr]}")
     result_command
   end
 
@@ -61,7 +62,7 @@ class DaemonTask
   end
 
   def daemon_log_rescue(exception)
-    @daemon_logger.error("[MESSAGE] #{exception.message}")
+    @daemon_logger.error("[FROM] #{caller[1].scan(/:in `(.*)'/).flatten.first} [MESSAGE] #{exception.message}")
     exception.backtrace.each{ |bt| @daemon_logger.error("[BRACKTRACE] #{bt}") }
   end
 
@@ -90,16 +91,17 @@ class DaemonTask
   def start
     @thread_daemon = Thread.new do
       @@threads << self
-      # log "[INFO][#{name}][START]"
       Thread.current["name"] = @name
+      Thread.current.priority = @priority
       loop do
         begin
           if Time.now >= @next_exec
             Configuration.do_reload
             set_next_exec
+            @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
-            @daemon_logger.info("[NEXT_EXEC_TIME] #{@next_exec}")
+            @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
           end
         rescue Exception => e
           daemon_log_rescue(e)
@@ -223,7 +225,7 @@ class DaemonCheckLink < DaemonTask
     changes = false
     Interface.all(:conditions => "vlan = 0").each do |i|
       current_physical_link = i.current_physical_link
-      @daemon_logger.debug("[#{i.name}][CURRENT_LINK] #{physical_link}")
+      @daemon_logger.debug("[#{i.name}][CURRENT_LINK] #{i.physical_link}")
 
       if i.physical_link != current_physical_link
         changes = true
@@ -336,7 +338,7 @@ class DaemonBackupRestore < DaemonTask
       $running = false
       Configuration.first.update_attribute :backup_restore, "boot"
     when "boot"
-      apply_changes
+      Configuration.first.apply_changes
       @daemon_logger.debug("[SEND_MESSAGE_FOR_APPLY_CHANGE]")
     when "reboot"
       Configuration.first.update_attribute :backup_restore, nil
@@ -358,229 +360,6 @@ class DaemonBackupRestore < DaemonTask
   end
 
 end
-
-# class DaemonDataCounting < DaemonTask
-
-#   def initialize
-#     @time_for_exec = { :frecuency => 60.seconds }
-#     @max_current_traffic_count = 1000 / 8 * 1024 * 1024 * 60
-#     @wait_for_apply_changes = true
-#     @proc = Proc.new { exec_daemon_data_counting }
-#     super
-#   end
-
-#   def exec_daemon_data_counting
-#     exec_data_counting
-#   end
-
-#   def exec_data_counting
-#     hash_count = { "up" => {}, "down" => {} }
-#     contracts = Contract.not_disabled(:include => :current_traffic)
-#     contract_count = contracts.count
-#     parse_data_count(contracts, hash_count)
-
-#     ActiveRecord::Base.transaction do
-#       begin
-#         File.open(File.join(DEPLOY_DIR, "log/data_counting.log"), "a") do |f|
-#           contracts.each do |c|
-#             traffic_current = c.current_traffic || c.create_traffic_for_this_period
-#             c.is_connected = false
-
-#             Configuration::COUNT_CATEGORIES.each do |category|
-#               data_total = 0
-#               data_total += hash_count["up"][c.ip][category].to_i if hash_count["up"].has_key?(c.ip)
-#               data_total += hash_count["down"][c.ip][category].to_i if hash_count["down"].has_key?(c.ip)
-
-#               if data_total != 0
-#                 c.is_connected = true
-#                 current_traffic_count = traffic_current.data_count
-#                 eval("traffic_current.#{category} += data_total") if data_total <= @max_current_traffic_count
-
-#                 #Log data counting
-#                 # if contract_count <= 300 and Rails.env.production?
-#                 #   if (data_total >= 7864320) or (eval("c.current_traffic.#{category} - current_traffic_count >= 7864320")) or (eval("(c.current_traffic.#{category} - data_total) != current_traffic_count"))
-#                 #     f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Category: #{category}, Data Count: #{tmp},  Data readed: #{hash_count[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
-#                 #   end
-#                 # end
-#                 traffic_current.save if traffic_current.changed?
-#               end
-#             end
-
-#             c.save if c.changed?
-#           end
-#         end
-#       rescue => e
-#         daemon_log_rescue("[Daemon] ERROR Thread #{name}", e)
-#         # Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
-#       ensure
-#         time_last = Time.now
-#         system "iptables -t filter -Z" if Rails.env.production?
-#       end
-#     end
-#   end
-
-#   def parse_data_count(contracts, hash_count)
-#     if SequreispConfig::CONFIG["demo"]
-#       contracts.all.each do |contract|
-#         hash_count["up"][contract.ip]["data_count"] = rand(1844674)
-#         hash_count["down"][contract.ip]["data_count"] = rand(1844674)
-#       end
-#     else
-#       begin
-#         # [["bytes", "ip", "up|down", "data_count"], ["bytes", "ip", "up|down", "data_count"]]
-#         File.read("|iptables-save -t filter -c").scan(/\[.*:(\d+)\].*comment \"data-count-(.*)-(.*)-(.*)\"/).each do |line|
-#           # line[0] => byte's, line[1] => i1p, line[2] => up | down, line[3] => category, where the category name is the same with  any traffic attribute
-#           if line[0] != "0"
-#             hash_count[line[2]][line[1]] = {}
-#             hash_count[line[2]][line[1]][line[3]] = line[0]
-#           end
-#         end
-#       rescue => e
-#         daemon_log_rescue("[Daemon] ERROR Thread #{name}", e)
-#       end
-#     end
-#   end
-
-# end
-
-
-# class DaemonRrdFeed < DaemonTask
-
-#   require 'rrd'
-#   #require 'ruby-debug'
-#   # IFB_UP="ifb0"
-#   # IFB_DOWN="ifb1"
-#   RRD_DIR=RAILS_ROOT + "/db/rrd"
-#   INTERVAL=300
-
-#   def initialize
-#     @time_for_exec = { :frecuency => 5.minutes }
-#     @wait_for_apply_changes = true
-#     @proc = Proc.new { exec_daemon_rrd_feed unless Configuration.in_safe_mode? }
-#     super
-#   end
-
-#   def exec_daemon_rrd_feed
-#     exec_rrd_feed
-#   end
-
-#   def exec_rrd_feed
-#     client_up = tc_class(IFB_UP)
-#     client_down = tc_class(IFB_DOWN)
-#     time_c = Time.now
-
-#     # if Configuration.use_global_prios
-#     #   p_up, p_down = {}, {}
-#     #   Interface.all(:conditions => { :kind => "lan" }).each do |i|
-#     #     p_down = tc_class i.name, p_down
-#     #   end
-#     #   Provider.enabled.all.each do |p|
-#     #     p_up = tc_class p.link_interface, p_up
-#     #   end
-#     # else
-#     p_up, p_down = [], []
-#     Provider.enabled.all.each do |p|
-#       p_up[p.id] = File.open("/sys/class/net/#{p.interface.name}/statistics/tx_bytes").read.chomp.to_i rescue 0
-#       p_down[p.id] = File.open("/sys/class/net/#{p.interface.name}/statistics/rx_bytes").read.chomp.to_i rescue 0
-#     end
-#     # end
-#     time_p = Time.now
-
-#     i_up, i_down = [], []
-#     Interface.all.each do |i|
-#       i_up[i.id] = File.open("/sys/class/net/#{i.name}/statistics/tx_bytes").read.chomp rescue 0
-#       i_down[i.id] = File.open("/sys/class/net/#{i.name}/statistics/rx_bytes").read.chomp rescue 0
-#     end
-#     time_i = Time.now
-
-#     # SECOND we made the updates
-#     Contract.all.each do |c|
-#       # if Configuration.use_global_prios
-#       #   rrd_update c, time_c, client_down["1"][c.class_hex], 0, client_up["1"][c.class_hex], 0
-#       # else
-#       rrd_update c, time_c, client_down["1"][c.class_prio2_hex], client_down["1"][c.class_prio3_hex], client_up["1"][c.class_prio2_hex], client_up["1"][c.class_prio3_hex]
-#       # end
-#     end
-
-#     ProviderGroup.enabled.each do |pg|
-#       pg_down_prio2 = pg_down_prio3 = pg_up_prio2 = pg_up_prio3 = 0
-#       pg.providers.enabled.each do |p|
-#         p_down_prio2 = p_down_prio3 = p_up_prio2 = p_up_prio3 = 0
-#         # if Configuration.use_global_prios
-#         #   p_down_prio2 = p_down[p.class_hex]["a"] + p_down[p.class_hex]["b"] rescue 0
-#         #   p_down_prio3 = p_down[p.class_hex]["c"] rescue 0
-#         #   # dynamic ifaces like ppp could not exists, so we need to rescue an integer
-#         #   # if we scope providers by ready and online, we may skip traffic to be logged
-#         #   # and the ppp iface could go down betwen check and the read
-#         #   p_up_prio2 = (p_up[p.class_hex]["a"] + p_up[p.class_hex]["b"]) rescue 0
-#         #   p_up_prio3 = p_up[p.class_hex]["c"] rescue 0
-#         # else
-#         p_up_prio2 = p_up[p.id]
-#         p_down_prio2 = p_down[p.id]
-#         # end
-#         rrd_update p, time_p, p_down_prio2, p_down_prio3, p_up_prio2, p_up_prio3
-#         pg_down_prio2 += p_down_prio2
-#         pg_down_prio3 += p_down_prio3
-#         pg_up_prio2 += p_up_prio2
-#         pg_up_prio3 += p_up_prio3
-#       end
-#       rrd_update pg, time_p, pg_down_prio2, pg_down_prio3, pg_up_prio2, pg_up_prio3
-#     end
-
-#     Interface.all.each do |i|
-#       rrd_update i, time_i, i_down[i.id], 0, i_up[i.id], 0
-#     end
-#   end
-
-#   def rrd_create(path, time)
-#     RRD::Wrapper.create '--start', (time - 60.seconds).strftime("%s"), path,
-#     "-s", "#{INTERVAL.to_s}",
-#     # max = 1*1024*1024*1024*600 = 1Gbit/s * 600s
-#     "DS:down_prio:DERIVE:600:0:644245094400",
-#     "DS:down_dfl:DERIVE:600:0:644245094400",
-#     "DS:up_prio:DERIVE:600:0:644245094400",
-#     "DS:up_dfl:DERIVE:600:0:644245094400",
-#     #(24x60x60/300)*30dias
-#     "RRA:AVERAGE:0.5:1:8640",
-#     #(24x60x60x30/300)*12meses
-#     "RRA:AVERAGE:0.5:30:3456",
-#     #(24x60x60x30x12/300)*10años
-#     "RRA:AVERAGE:0.5:360:2880"
-#   end
-
-#   def rrd_update(o, time, down_prio, down_dfl, up_prio, up_dfl)
-#     log("[Daemon][RRD][rrd_update] o=#{o.name}, time=#{time}, down_prio=#{down_prio}, down_dfl=#{down_dfl}, up_prio=#{up_prio}, up_dfl=#{up_dfl}")
-#     rrd_path = RRD_DIR + "/#{o.class.name}.#{o.id.to_s}.rrd"
-#     rrd_create(rrd_path, time) unless File.exists?(rrd_path)
-#     RRD::Wrapper.update rrd_path, "-t", "down_prio:down_dfl:up_prio:up_dfl", "#{time.strftime("%s")}:#{down_prio}:#{down_dfl}:#{up_prio}:#{up_dfl}"
-#     #puts "#{o.klass.number.to_s(16) rescue nil} #{rrd_path} #{time.strftime("%s")}:#{down_prio}:#{down_dfl}:#{up_prio}:#{up_dfl}"
-#   end
-
-#   def tc_class(iface, karray = {})
-#     pklass=nil
-#     cklass=nil
-#     sent=false
-#     IO.popen("/sbin/tc -s class show dev #{iface}", "r").each do |line|
-#       #puts line
-#       if (line =~ /class hfsc (\w+):(\w+)/) != nil
-#         #puts "pklass = #{$~[1]} cklass =  #{$~[2]}"
-#         #next if $~[2].hex < 4
-#         pklass = $~[1]
-#         cklass = $~[2]
-#         sent = true
-#       elsif sent and (line =~ /Sent (\d+) /) != nil
-#         #puts "sent = #{$~[1]}"
-#         karray[pklass] = {} if karray[pklass].nil?
-#         karray[pklass][cklass] = 0 if karray[pklass][cklass].nil?
-#         karray[pklass][cklass] += $~[1].to_i # if cklass
-#         sent = false
-#       end
-#     end
-#     #puts "karray = #{karray.inspect}"
-#     karray
-#   end
-
-# end
 
 class DaemonCheckBind < DaemonTask
 
@@ -726,7 +505,7 @@ class DaemonRedis < DaemonTask
    end
    catchs.each_key { |k| new_sample[k].each_key { |sub_key| $redis.hmset("#{new_key}", "#{k}_#{sub_key}", new_sample[k][sub_key]) } }
    $redis.hmset("#{new_key}", "time", new_sample[:time])
-   @daemon_logger.debug("[#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hget(last_key).inspect}, new_sample_redis: #{$redis.hget(new_key).inspect}")
+   @daemon_logger.debug("[#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
  end
 
  def compact_to_db
