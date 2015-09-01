@@ -726,5 +726,6 @@ en:
       daemon_backup_restore: "backup restore"
       daemon_check_bind: "bind"
       daemon_check_link: "Check link providers"
-      daemon_data_counting: "Data count"
-      daemon_rrd_feed: "Generate stats"
+      daemon_synchronize_time: "Synchronize time"
+      daemon_compact_samples: "Graph generation"
+      daemon_redis: "Statistics generation"

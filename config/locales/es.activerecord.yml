@@ -745,5 +745,6 @@ es:
       daemon_backup_restore: "Restaurar backup"
       daemon_check_bind: "Bind"
       daemon_check_link: "Chequeo de proveedores"
-      daemon_data_counting: "Conteo de datos"
-      daemon_rrd_feed: "Generación de estadisticas"
+      daemon_synchronize_time: "Sincronización horario"
+      daemon_compact_samples: "Generación de gráficos"
+      daemon_redis: "Generación de estadisticas"
