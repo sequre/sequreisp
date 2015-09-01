@@ -271,7 +271,7 @@ class Configuration < ActiveRecord::Base
 
   # This method is rewrite
   def self.daemons
-    (Dir.entries("#{DEPLOY_DIR}/tmp") -[".", ".."]).select{|file| file.include?("daemon_")}.sort
+    (Dir.entries("#{DEPLOY_DIR}/log") -[".", ".."]).select{|file| file.include?("daemon_")}.sort
   end
 ##############################################################
 #
