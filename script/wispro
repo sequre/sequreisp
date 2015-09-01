@@ -150,17 +150,19 @@ opts = OptionParser.new do |opts|
     change_daemon_log_level daemon, 1
   end
 
-  def change_daemon_log_level daemon, level
+  def change_daemon_log_level daemons_input, level
     require 'yaml'
-    root_path = PATH_APP
-    plugin = daemon.sub('daemon_', 'sequreisp_')
-    if PLUGINS.include?(plugin)
-      root_path += "/vendor/plugins/#{plugin}"
+    daemons_input = `#{PATH_APP}/script/runner -e production \"puts Configuration.daemons.join(',')\"` if daemons_input == "all"
+    daemons = daemons_input.delete("\n").split(",")
+    daemons.each do |daemon|
+      root_path = PATH_APP
+      plugin = daemon.sub('daemon_', '')
+      root_path += "/vendor/plugins/#{plugin_dir}" if plugin_dir = PLUGINS.select{|p| p.include?(plugin)}.first
+      daemon_path = "#{root_path}/config/daemon_tasks.yml"
+      daemon_config = YAML.load(File.read(daemon_path))
+      daemon_config[daemon]['level_log'] = level
+      File.open(daemon_path, 'w'){|l| l.puts daemon_config.to_yaml }
     end
-    daemon_path = "#{root_path}/config/daemon_tasks.yml"
-    daemon_config = YAML.load(File.read(daemon_path))
-    daemon_config[daemon]['level_log'] = level
-    File.open(daemon_path, 'w'){|l| l.puts daemon_config.to_yaml }
   end
 
   ##########################################################
