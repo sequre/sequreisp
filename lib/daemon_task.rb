@@ -165,10 +165,7 @@ class DaemonApplyChange < DaemonTask
 
   def exec_daemon_apply_change
     file_path = "#{DEPLOY_DIR}/tmp/apply_changes.lock"
-    if File.exists?(file_path)
-      File.delete(file_path)
-      @daemon_logger.debug("[REMOVE_FILE] #{file_path}")
-    end
+    exec_command("rm #{file_path}") if File.exists?(file_path)
 
     $mutex.synchronize {
       if Configuration.daemon_reload
