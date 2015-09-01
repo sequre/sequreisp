@@ -71,7 +71,7 @@ module Dashboard
         _daemon = {}
         _daemon[:id] = id
         _daemon[:name] = daemon
-        _daemon[:status] = File.zero?("#{DEPLOY_DIR}/tmp/#{daemon}") ? true : false
+        _daemon[:status] = File.zero?("#{DEPLOY_DIR}/log/#{daemon}") ? true : false
         daemons << Daemon.new(_daemon)
         id += 1
       end
