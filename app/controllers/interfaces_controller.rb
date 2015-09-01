@@ -18,7 +18,7 @@
 class InterfacesController < ApplicationController
   before_filter :require_user
   permissions :interfaces
- 
+
   # GET /interfaces
   # GET /interfaces.xml
   def index
@@ -26,6 +26,7 @@ class InterfacesController < ApplicationController
     params[:search][:order] ||= 'ascend_by_name'
     @search = Interface.search(params[:search])
     @interfaces = @search.paginate(:page => params[:page],:per_page => 30)
+    @graphs = @interfaces.map{ |i| InterfaceGraph.new(i, "interface_instant") }
 
     respond_to do |format|
       format.html # index.html.erb
@@ -37,7 +38,17 @@ class InterfacesController < ApplicationController
   # GET /interfaces/1.xml
   def show
     @interface = object
-    render :action => "edit"
+    @periods = InterfaceSample::CONF_PERIODS.size
+    @graphs = {}
+
+    InterfaceGraph.supported_graph(@interface).each do |graph_name|
+      @graphs[graph_name] = InterfaceGraph.new(@interface, graph_name)
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => @interface }
+    end
   end
 
   # GET /interfaces/new
@@ -77,7 +88,7 @@ class InterfacesController < ApplicationController
   # PUT /interfaces/1.xml
   def update
     @interface = object
-    
+
     respond_to do |format|
       if @interface.update_attributes(params[:interface])
         flash[:notice] = t 'controllers.successfully_updated'
@@ -114,8 +125,8 @@ class InterfacesController < ApplicationController
   def instant
     @interface = object
     respond_to do |format|
-      format.json { render :json => @interface.instant_rate }
-    end 
+      format.json { render :json => @interface.instant }
+    end
   end
   def scan
     count=0
@@ -133,6 +144,7 @@ class InterfacesController < ApplicationController
     redirect_to :back
   end
   def graph
+    @interface = object
     @graph = Graph.new(:class => object.class.name, :id => object.id)
     respond_to do |format|
       format.html # show.html.erb

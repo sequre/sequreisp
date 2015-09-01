@@ -77,6 +77,9 @@ en:
       always_allowed_site:
         one: 'Allowed site'
         other: 'Allowed sites'
+      device:
+        one: 'Device'
+        other: 'Devices'
     attributes:
       name: "Name"
       ip: "IP Address"
@@ -148,10 +151,10 @@ en:
         id: 'Id'
         name: "Name"
         provider_group: "Providers Group"
-        rate_down: "Min. Download [kbps]"
-        ceil_down: "Máx. Download [kbps]"
-        rate_up: "Mín. Upload [kbps]"
-        ceil_up: "Máx. Upload [kbps]"
+        rate_down: "Min. Download"
+        ceil_down: "Máx. Download"
+        rate_up: "Min. Upload"
+        ceil_up: "Max. Upload"
         burst_down: "Download Burst [kbits]"
         burst_up: "Upload Burst [kbits]"
         long_download_max: "Large downloads limit [kbytes]"
@@ -165,8 +168,8 @@ en:
         cir_reuse: "Reuse value"
       provider_group:
         name: "name"
-        rate_down: "Download [kbps]"
-        rate_up: "Upload [kbps]"
+        rate_down: "Download"
+        rate_up: "Upload"
         state: "State"
         concurrency_index: "Concurrency [%]"
         total_cir_down: "Total down rate"
@@ -178,8 +181,8 @@ en:
         netmask: "Netmask"
         gateway: "Gateway"
         interface: "Interface"
-        rate_down: "Download [kbps]"
-        rate_up: "Upload [kbps]"
+        rate_down: "Download"
+        rate_up: "Upload"
         pppoe_user: "User"
         pppoe_pass: "Password"
         dhcp_force_32_netmask: "Force netmask to 255.255.255.255"
@@ -253,6 +256,9 @@ en:
         low_latency_for_rdp: "RDP"
         tcp_length: "TCP lenght"
         udp_length: "UDP lenght"
+        firewall_enabled: "Enable firewall control from Wispro (disables iptables_pre file)"
+        firewall_open_tcp_ports: "Open tcp ports"
+        firewall_open_udp_ports: "Open udp ports"
       user:
         name: "Name"
         email: "User email address"
@@ -302,6 +308,19 @@ en:
         id: 'Id'
         name: 'Ip or site name'
         detail: 'Detail'
+      device:
+        host: 'Host'
+        description: 'Description'
+        kind: 'Kind'
+        name: 'Name'
+        kinds:
+          cpe: 'CPE'
+          ap: 'AP'
+          switch: 'Switch'
+          server: 'Server'
+          router: 'Router'
+      device_brand:
+        name: "Name"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
@@ -353,6 +372,8 @@ en:
         low_latency_for_icmp: "Internet Control Message Protocol (ICMP)"
         low_latency_for_sip: "Session Initiation Protocol (SIP)"
         low_latency_for_rdp: "Remote Desktop Protocol (RDP)"
+        firewall_open_tcp_ports: "Port numbers, comma separated"
+        firewall_open_udp_ports: "Port numbers, comma separated"
       provider:
         avoid_nat_addresses: "One address per line, CIDR notation, ie: 200.10.20.0/24"
   menu:
@@ -380,6 +401,8 @@ en:
     guides: "Wispro guides"
     support: "Support"
     command_log: "Command log"
+    devices: "Devices"
+    device_brands: "Device Brands"
   table_headers:
     plans:
       plugins_enabled: 'Plugins enabled'
@@ -484,6 +507,7 @@ en:
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"
+      redis_server: "Redis Server"
   actions:
     edit: "Editing %{model}"
     new: "Creating %{model}"
@@ -583,6 +607,7 @@ en:
       proxy_arp_provider_can_not_be_guessed: "The IP address assigned to this contract does not belongs to any of the providers, you must select a provider"
       unique_provider_does_not_belongs_to_plan: "The assigned provider does not belong to the selected plan"
       mac_address_taken_in_interface: "existing in <a target='_blank' href='/interface/%{interface_id}/'>Interface No. %{interface_id}</a>"
+      do_not_set_mask_if_is_not_a_network: "Do not set the mask if it's not a network"
     configuration:
       notification_email_invalid: "Invalid email address"
       web_interface_listen_at_least_on_one_port: "At least one port must be enabled for web interface requests"
@@ -665,7 +690,7 @@ en:
     human:
       prepare_iptables: "Prepare iptables rules"
       create_tmp_file: "Initialize apply changes process"
-      sequreisp_pre: "Clear cache virtual memory"
+      sequreisp_pre: "scripts pre apply changes"
       setup_queued_commands: "Start pending jobs"
       setup_clock: "Setup time zone"
       setup_proc: "Setup sysctl general params"
@@ -685,7 +710,7 @@ en:
       setup_iptables_restore_old: "Fail loading iptables, restore the old iptables"
       setup_mail_relay: "Setup mail relay"
       bind_reload: "Setup DNS service"
-      sequreisp_post: "Finalize iptables"
+      sequreisp_post: "scripts post apply changes"
       delete_tmp_file: "Finalize apply changes process"
       do_port_forwarding: "Do port forwarding"
       do_port_forwardings_avoid_nat_triangle: "Do port forwardings avoid nat triangle"
@@ -701,5 +726,6 @@ en:
       daemon_backup_restore: "backup restore"
       daemon_check_bind: "bind"
       daemon_check_link: "Check link providers"
-      daemon_data_counting: "Data count"
-      daemon_rrd_feed: "Generate stats"
+      daemon_synchronize_time: "Synchronize time"
+      daemon_compact_samples: "Graph generation"
+      daemon_redis: "Statistics generation"

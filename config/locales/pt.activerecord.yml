@@ -74,6 +74,9 @@ pt:
       always_allowed_site:
         one: 'Site permitido'
         other: 'Sites permitidos'
+      device:
+        one: 'Dispositivo'
+        other: 'Dispositivos'
     attributes:
       name: "Nombre"
       ip: "Endereço IP"
@@ -145,10 +148,10 @@ pt:
         id: 'Id'
         name: "Nombre"
         provider_group: "Grupo de fornecedores"
-        rate_down: "Mín. baixada [kbps]"
-        ceil_down: "Máx. baixada [kbps]"
-        rate_up: "Mín. subida [kbps]"
-        ceil_up: "Máx. subida [kbps]"
+        rate_down: "Mín. baixada"
+        ceil_down: "Máx. baixada"
+        rate_up: "Mín. subida"
+        ceil_up: "Máx. subida"
         burst_down: "Rajada de baixada [kbits]"
         burst_up: "Rajada de subida [kbits]"
         long_download_max: "Limite para descargas grandes [kbytes]"
@@ -250,6 +253,9 @@ pt:
         low_latency_for_rdp: "RDP"
         tcp_length: "TCP comprimento"
         udp_length: "UDP comprimento"
+        firewall_enabled: "Ativar o controle de firewall de wispro (desabilita arquivo iptables_pre)"
+        firewall_open_tcp_ports: "Portas TCP abertas"
+        firewall_open_udp_ports: "Portas UDP abertas"
       user:
         name: "Nome"
         email: "E-mail do usuário"
@@ -299,6 +305,17 @@ pt:
         id: 'Id'
         name: 'IP ou o nome do site'
         detail: 'Detalhe'
+      device:
+        host: 'Host'
+        description: 'Descrição'
+        kind: 'Tipo'
+        name: 'Nome'
+        kinds:
+          cpe: 'CPE'
+          ap: 'AP'
+          switch: 'Switch'
+          server: 'Servidor'
+          router: 'Router'
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"
@@ -350,6 +367,8 @@ pt:
         low_latency_for_icmp: "Internet Control Message Protocol (ICMP)"
         low_latency_for_sip: "Session Initiation Protocol (SIP)"
         low_latency_for_rdp: "Remote Desktop Protocol (RDP)"
+        firewall_open_tcp_ports: "Números de porta, separados por vírgulas"
+        firewall_open_udp_ports: "Números de porta, separados por vírgulas"
       provider:
         avoid_nat_addresses: "Um endereço por linha, notação CIDR, como 200.10.20.0/24"
   menu:
@@ -377,6 +396,7 @@ pt:
     guides: "Guias Wispro"
     support: "Apoio"
     command_log: "Log de ​​comando"
+    devices: "Dispositivos"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'
@@ -481,6 +501,7 @@ pt:
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"
+      redis_server: "Redis Server"
   actions:
     edit: "Editando %{model}"
     new: "Criando %{model}"
@@ -580,6 +601,7 @@ pt:
       proxy_arp_provider_can_not_be_guessed: "O endereço IP atribuído a este contrato não pertence a nenhum dos fornecedores, você deve selecionar um fornecedor"
       unique_provider_does_not_belongs_to_plan: "O fornecedor atribuído não pertence ao plano escolhido"
       mac_address_taken_in_interface: "existente no <a target='_blank' href='/interface/%{interface_id}/'>Interface No. %{interface_id}</a>"
+      do_not_set_mask_if_is_not_a_network: "Não defina a máscara se não é uma rede"
     configuration:
       notification_email_invalid: "Endereço de e-mail inválido"
       web_interface_listen_at_least_on_one_port: "Pelo menos uma porta deve estar habilitado para pedidos de interface web"
@@ -700,5 +722,6 @@ pt:
       daemon_backup_restore: "Daemon backup restore"
       daemon_check_bind: "Daemon bind"
       daemon_check_link: "Daemon check link providers"
-      daemon_data_counting: "Daemon data count"
-      daemon_rrd_feed: "Daemon generate stats"
+      daemon_synchronize_time: "Synchronize time"
+      daemon_compact_samples: "Graph generation"
+      daemon_redis: "Statistics generation"

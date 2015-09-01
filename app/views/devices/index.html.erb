@@ -1,0 +1,40 @@
+<% content_for :title, t('menu.devices') %>
+<% heading t('menu.devices') %>
+
+<% render_new_button_for :device %>
+<div class="separador"></div>
+<%= render :partial => "search" %>
+<div class="main">
+  <%= page_entries_info @devices %>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th>#</th>
+        <th><%= Device.human_attribute_name 'host' %></th>
+        <th><%= Device.human_attribute_name 'name' %></th>
+        <th><%= Device.human_attribute_name 'description' %></th>
+        <th><%= Device.human_attribute_name 'kind' %></th>
+        <th><%= Client.human_name %></th>
+        <%= render :partial => "shared/plugins_table_headers" %>
+        <th></th>
+        <th></th>
+      </tr>
+      <% @devices.each_with_index do |device,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%= device.id %></td>
+          <td><%= device.contract.present? ? link_to(device.host, contract_path(device.contract)) : device.host %></td>
+          <td><%= device.name %></td>
+          <td><%= truncate device.description %></td>
+          <td><%= t("activerecord.attributes.device.kinds.#{device.kind}") %></td>
+          <td><%= device.contract.present? ? device.contract.client.name : "-" %></td>
+          <%= render :partial => "shared/plugins_table_cells", :locals => {:object => device} %>
+          <td><%= link_to t("buttons.show"), device_path(device) %></td>
+          <td><%= link_to t("buttons.edit"), edit_device_path(device) %></td>
+          <td><%= link_to t("buttons.delete"), device, :confirm => t('messages.confirm'), :method => :delete %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @devices %>
+</div>

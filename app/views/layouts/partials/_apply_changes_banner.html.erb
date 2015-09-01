@@ -1,26 +1,28 @@
 <script type="text/javascript">
- var running = <%= Configuration.is_apply_changes? %>;
- var delta_time = 1000;
+  var running = <%= Configuration.is_apply_changes? %>;
+  var delta_time = 1000;
 
- function Init(){
-   UpdateButtons();
-   setTimeout(function(){ running = true; IsRunning(); },5000);
-   IsRunning();
- }
+  function Init(){
+    UpdateButtons();
+    <% if current_user and current_user.may_is_apply_changes_configuration? %>
+      setTimeout(function(){ running = true; IsRunning(); },5000);
+      IsRunning();
+    <% end %>
+  }
 
- function IsRunning(){
-   if(running){
-     $.ajax({
+  function IsRunning(){
+    if(running){
+      $.ajax({
         type : 'GET',
         url : '/configurations/is_apply_changes',
         complete : function(resp){
           running = resp.responseText === "true";
           UpdateButtons();
           setTimeout(function(){ IsRunning(); },delta_time);
-        }
-      });
-    }
-  }
+         }
+       });
+     }
+   }
 
  function UpdateButtons(){
    if(running){
@@ -40,16 +42,18 @@
 </script>
 
 <div id="apply_changes_wrapper">
-  <div class="wait_apply_changes" id="apply_changes_banner">
-    <div id="wait_apply_changes_button" style="width: 43%;">
-      <ul class="nav"><li><b>
-        <img src="/images/loading.GIF" WIDTH=15 HEIGHT=15>
-        <em style="font-size:17px; color: #fff;"><%=  t('menu.wait_apply_changes') %></em>
-      </b></li></ul>
+  <% if current_user and current_user.may_is_apply_changes_configuration? %>
+    <div class="wait_apply_changes" id="apply_changes_banner">
+      <div id="wait_apply_changes_button" style="width: 43%;">
+        <ul class="nav"><li><b>
+          <img src="/images/loading.GIF" WIDTH=15 HEIGHT=15>
+          <em style="font-size:17px; color: #fff;"><%=  t('menu.wait_apply_changes') %></em>
+        </b></li></ul>
+      </div>
     </div>
-  </div>
+  <% end %>
 
-  <% if current_user.may_doreload_configuration? and Configuration.first.changes_to_apply? and not Configuration.is_apply_changes? %>
+  <% if current_user and current_user.may_doreload_configuration? and Configuration.first.changes_to_apply? and not Configuration.is_apply_changes? %>
     <div id="apply_changes_banner">
       <span id="apply_changes_notice">
         <%= t('notifications.changes_to_be_applied_notice') %>

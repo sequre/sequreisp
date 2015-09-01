@@ -24,6 +24,8 @@ class ProviderGroupsController < ApplicationController
   def index
     @provider_groups = ProviderGroup.all(:order => "name ASC")
 
+    @graphs = @provider_groups.map{ |pg| InterfaceGraph.new(pg, "provider_group_instant") }
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @provider_groups }
@@ -34,7 +36,17 @@ class ProviderGroupsController < ApplicationController
   # GET /provider_groups/1.xml
   def show
     @provider_group = object
-    render :action => "edit"
+    @periods = InterfaceSample::CONF_PERIODS.size
+    @graphs = {}
+
+    InterfaceGraph.supported_graph(@provider_group).each do |graph_name|
+      @graphs[graph_name] = InterfaceGraph.new(@provider_group, graph_name)
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => @provider_group }
+    end
   end
 
   # GET /provider_groups/new
@@ -103,10 +115,11 @@ class ProviderGroupsController < ApplicationController
   def instant
     @provider_group = object
     respond_to do |format|
-      format.json { render :json => @provider_group.instant_rate }
-    end 
+      format.json { render :json => @provider_group.instant }
+    end
   end
   def graph
+    @provider_group = object
     @graph = Graph.new(:class => object.class.name, :id => object.id)
     respond_to do |format|
       format.html # show.html.erb

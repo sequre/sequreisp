@@ -1,57 +1,59 @@
 class InterfaceSample < ActiveRecord::Base
   belongs_to :interface
 
-  named_scope :last_sample, lambda{ |period| { :select => 'COUNT(*) as total_samples, interface_samples.*',
-                                                    :include => 'interface',
-                                                    :group  => 'interface_id',
-                                                    :conditions => "interface_samples.sample_number IN (SELECT MAX(interface_samples.sample_number)
-                                                                                                       FROM interface_samples
-                                                                                                       WHERE interface_samples.period = #{period}
-                                                                                                       GROUP BY interface_samples.interface_id)" } }
+  # PERIOD    AMPLITUD              TIME_SAMPLE           SAMPLES_SIZE   SAMPLES_SIZE_SATURA
+  #   0       180.min (3.hours)        1.min                  180        180 + 5 = 185
+  #   1      1440.min (1.day)          5.min                  288        288 + 6 = 294
+  #   2     10080.min (1.week)        30.min                  336        336 + 6 = 342
+  #   3     44640.min (1.month)      180.min (3.hours)        348        348 + 8 = 356
+  #   4    525600.min (1.year)      1440.min (24.hours)       365        365
 
-  named_scope :total_samples_for_period, lambda { |period| { :select => 'COUNT(*) as total_samples, interface_samples.*',
-                                                             :group => 'interface_id',
-                                                             :conditions => "interface_samples.period = #{period}" } }
+  CONF_PERIODS = { :period_0 => { :period_number => 0, :time_sample => 1,    :sample_size => 180, :sample_size_cut => 10, :excess_count => 5,   :scope => 180.minutes    },
+                   # :period_0 => { :period_number => 0, :time_sample => 1,    :sample_size => 180, :sample_size_cut => 185, :excess_count => 5,   :scope => 180.minutes    },
+                   :period_1 => { :period_number => 1, :time_sample => 5,    :sample_size => 288, :sample_size_cut => 294, :excess_count => 6,   :scope => 1440.minutes   },
+                   :period_2 => { :period_number => 2, :time_sample => 30,   :sample_size => 336, :sample_size_cut => 342, :excess_count => 6,   :scope => 10080.minutes  },
+                   :period_3 => { :period_number => 3, :time_sample => 180,  :sample_size => 348, :sample_size_cut => 356, :excess_count => 8,   :scope => 44640.minutes  },
+                   :period_4 => { :period_number => 4, :time_sample => 1440, :sample_size => 348, :sample_size_cut => nil, :excess_count => nil, :scope => 525600.minutes } }
 
-  named_scope :samples_to_compact, lambda { |id, period, limit| { :conditions => "interface_samples.interface_id = #{id} and interface_samples.period = #{period}",
-                                                                  :group => "interface_samples.interface_id",
-                                                                  :limit => limit } }
+
+  named_scope :for_period, lambda { |period| {:conditions => "interface_samples.period = #{period}"} }
+
+
+  named_scope :total_samples_for_period, :select => 'COUNT(*) as total_samples, interface_samples.*',
+                                         :group  => 'interface_id'
+
+  named_scope :last_samples, lambda{|period| { :conditions => "sample_number IN (SELECT MAX(sample_number)
+                                                                                 FROM interface_samples
+                                                                                 WHERE period = #{period}
+                                                                                 GROUP BY interface_id )
+                                                                             AND period = #{period}"}}
+
+  named_scope :samples_to_compact, lambda { |id,limit| { :conditions => "interface_samples.interface_id = #{id}",
+                                                         :limit => limit } }
 
   def self.sample_conf
-    # PERIOD    AMPLITUD              TIME_SAMPLE           SAMPLES_SIZE   SAMPLES_SIZE_SATURA
-    #   0       180.min (3.hours)        1.min                  180        180 + 5 = 185
-    #   1      1440.min (1.day)          5.min                  288        288 + 6 = 294
-    #   2     10080.min (1.week)        30.min                  336        336 + 6 = 342
-    #   3     44640.min (1.month)      180.min (3.hours)        348        348 + 8 = 356
-    #   4    525600.min (1.year)      1440.min (24.hours)       365        365
-
-    conf = { :period_0 => { :period_number => 0, :time_sample => 1,    :sample_size => 180, :sample_size_cut => 185, :excess_count => 5,   :scope => 180.minutes    },
-             :period_1 => { :period_number => 1, :time_sample => 5,    :sample_size => 288, :sample_size_cut => 294, :excess_count => 6,   :scope => 1440.minutes   },
-             :period_2 => { :period_number => 2, :time_sample => 30,   :sample_size => 336, :sample_size_cut => 342, :excess_count => 6,   :scope => 10080.minutes  },
-             :period_3 => { :period_number => 3, :time_sample => 180,  :sample_size => 348, :sample_size_cut => 356, :excess_count => 8,   :scope => 44640.minutes  },
-             :period_4 => { :period_number => 4, :time_sample => 1440, :sample_size => 348, :sample_size_cut => nil, :excess_count => nil, :scope => 525600.minutes } }
-
+    conf = CONF_PERIODS
     InterfaceSample.transaction {
       conf.each_key do |key|
-        conf[key][:samples] = {}
-        conf[key][:excess_samples] = {}
-        total = InterfaceSample.total_samples_for_period(conf[key][:period_number])
+        last = InterfaceSample.last_samples(conf[key][:period_number]).all
+        conf[key][:samples_to_compact] = {}
+        conf[key][:last_sample_time] = {}
 
-        InterfaceSample.last_sample(conf[key][:period_number]).each do |interface_sample|
-          conf[key][:samples][interface_sample.interface_id.to_s] = interface_sample
-          conf[key][:samples][interface_sample.interface_id.to_s].total_samples = total.select{|k| k.interface_id == interface_sample.interface_id }.first.total_samples
-          conf[key][:excess_samples][interface_sample.interface_id.to_s] = InterfaceSample.samples_to_compact(interface_sample.interface_id, conf[key][:period_number], conf[key][:excess_count] )
+        InterfaceSample.for_period(conf[key][:period_number]).total_samples_for_period.all.each do |is|
+          conf[key][:last_sample_time][is.interface_id]   = last.find{ |ls| ls.interface_id == is.interface_id }.sample_number.to_i
+          conf[key][:samples_to_compact][is.interface_id] = InterfaceSample.for_period(conf[key][:period_number]).samples_to_compact(is.interface_id, conf[key][:excess_count]).all if is.total_samples.to_i >= conf[key][:sample_size_cut]
         end
       end
     }
     conf
   end
 
-  def self.compact(samples)
+  def self.compact(period, samples)
+    time = CONF_PERIODS["period_#{period}".to_sym][:scope]
     new_sample = {}
     compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] = 0 }
     samples.each do |destroy_sample|
-      compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] += destroy_sample[rkey[:name]] }
+      compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] += (destroy_sample[rkey[:name]] / time )}
     end
     new_sample
   end

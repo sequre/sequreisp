@@ -88,6 +88,18 @@ class Interface < ActiveRecord::Base
   def interface_exist
     errors.add(:name, I18n.t('validations.interface.name_does_not_exist')) if not exist?
   end
+
+  # En caso de la red estar routeada devolvera nil (dado que debera usarse si o si
+  # ping) caso contrario se usara arping por lo que es necesario la interfaz
+  def self.arping ip
+    command = `ip ro get #{ip}`.split("\n").first.strip
+    return nil if command.include?("via")
+    if command.include?("dev")
+      name_iface = command.split("dev")[1].split(" ")[0]
+      Interface.find_by_name(name_iface)
+    end
+  end
+
   def queue_update_commands
     cq = QueuedCommand.new
     # el vlan_id y el vlan_interface_id si cambian se reflejan en el nombre
@@ -138,22 +150,30 @@ class Interface < ActiveRecord::Base
   def tx_bytes
     File.open("/sys/class/net/#{name}/statistics/tx_bytes").read.chomp.to_i rescue 0
   end
-  def instant_rate
-    rate = {}
-    if SequreispConfig::CONFIG["demo"] or Rails.env.development?
-      if kind == "lan"
-        # en lan el down de los providers es el up
-        rate[:rate_down] = rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2
-        rate[:rate_up] = rand(ProviderGroup.all.collect(&:rate_down).sum)*1024
-      else
-        rate[:rate_down] = rand(provider.rate_down)*1024 rescue 0
-        rate[:rate_up] = rand(provider.rate_up)*1024/2 rescue 0
+  def redis_key
+    "interface_#{id}_sample"
+  end
+  def instant
+    data = {}
+    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+    if Rails.env.production?
+      date_keys = $redis.keys("#{redis_key}_*").sort
+      time = date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i
+      InterfaceSample.compact_keys.each do |rkey|
+        value = date_keys.empty? ? 0 : $redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_i
+        data[rkey[:name].to_sym] = [ time, value ]
       end
     else
-      rate[:rate_up] = $redis.hmget("interface:#{name}:rate_tx", "instant").first.to_i
-      rate[:rate_down] = $redis.hmget("interface:#{name}:rate_rx", "instant").first.to_i
+      if kind == "lan"
+        # en lan el down de los providers es el up
+        data[:tx] = [ date_time_now, rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2 ]
+        data[:rx] = [ date_time_now, rand(ProviderGroup.all.collect(&:rate_down).sum)*1024 ]
+      else
+        data[:tx] = [ date_time_now, (rand(provider.rate_up)*1024/2 rescue 0) ]
+        data[:rx] = [ date_time_now, (rand(provider.rate_down)*1024 rescue 0) ]
+      end
     end
-    rate
+    data
   end
   def physical_link
     self.vlan? ? vlan_interface.physical_link : read_attribute(:physical_link)
@@ -216,6 +236,15 @@ class Interface < ActiveRecord::Base
 
   def wan?
     kind == "wan"
+  end
+
+  def current_redis_values
+    hash = {}
+    $redis.keys("#{redis_key}_*").sort.each do |key|
+      hash[key] = $redis.hgetall(key)
+      hash[key][:time_human] = Time.at($redis.hget(key, "time").to_i)
+    end
+    hash
   end
 
 end

@@ -44,7 +44,8 @@ class Configuration < ActiveRecord::Base
                :filter_by_mac_address, :clamp_mss_to_pmtu,
                :web_interface_listen_on_80, :web_interface_listen_on_443, :web_interface_listen_on_8080,
                :mail_relay_manipulated_for_sequreisp, :mail_relay_used, :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password,
-               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server
+               :dns_use_forwarders, :dns_first_server, :dns_second_server, :dns_third_server,
+               :firewall_open_tcp_ports, :firewall_open_udp_ports, :firewall_enabled
 
   validates_presence_of :default_tcp_prio_ports, :default_prio_protos, :default_prio_helpers, :nf_conntrack_max, :gc_thresh1, :gc_thresh2, :gc_thresh3
   validates_presence_of :notification_email, :if => Proc.new { |c| c.deliver_notifications? }
@@ -52,7 +53,7 @@ class Configuration < ActiveRecord::Base
   validates_presence_of :language
   validates_presence_of :mail_relay_option_server, :mail_relay_smtp_server, :mail_relay_smtp_port, :mail_relay_mail, :mail_relay_password, :if => "mail_relay_used == true"
 
-  validates_format_of :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers, :with => /^([0-9a-z-]+,)*[0-9a-z-]+$/, :allow_blank => true
+  validates_format_of :default_tcp_prio_ports, :default_udp_prio_ports, :default_prio_protos, :default_prio_helpers, :firewall_open_tcp_ports, :firewall_open_udp_ports, :with => /^([0-9a-z-]+,)*[0-9a-z-]+$/, :allow_blank => true
 
   validates_numericality_of :notification_timeframe, :only_integer => true, :greater_than_or_equal_to => 0
   validates_numericality_of :logged_in_timeout, :only_integer => true, :greater_than_or_equal_to => 0
@@ -81,6 +82,8 @@ class Configuration < ActiveRecord::Base
   def validate
     validate_in_range_or_in_file(:default_tcp_prio_ports, 0,65536, :service)
     validate_in_range_or_in_file(:default_udp_prio_ports, 0,65536, :service)
+    validate_in_range_or_in_file(:firewall_open_tcp_ports, 0,65536, :service)
+    validate_in_range_or_in_file(:firewall_open_udp_ports, 0,65536, :service)
     validate_in_range_or_in_file(:default_prio_protos, -1,256, :protocol)
     validate_in_range_or_in_file(:default_prio_helpers, 0, 0, :helper)
 
@@ -155,7 +158,7 @@ class Configuration < ActiveRecord::Base
     self.last_changes_applied_at = Time.now
     self.changes_to_apply = false
     self.daemon_reload = true
-    save ? [] : errors.full_message
+    save ? [] : errors.full_messages
   end
 
   def auditable_name
@@ -163,7 +166,7 @@ class Configuration < ActiveRecord::Base
   end
 
   include CommaSeparatedArray
-  comma_separated_array_field :default_prio_protos, :default_prio_helpers, :default_tcp_prio_ports, :default_udp_prio_ports
+  comma_separated_array_field :default_prio_protos, :default_prio_helpers, :default_tcp_prio_ports, :default_udp_prio_ports, :firewall_open_tcp_ports, :firewall_open_udp_ports
 
   def self.apply_changes_automatically!
     return if Time.now.hour != apply_changes_automatically_hour

@@ -102,4 +102,38 @@ module ApplicationHelper
     end
   end
 
+  def options_hash container, titleText='', yAxisTitleText='', xAxisType='datetime', series=[], options = {}
+    { :chart => {
+        :renderTo => container,
+        :type => 'area',
+        :marginRight => 0,
+      },
+      :title => {
+        :text => titleText
+      },
+      :xAxis => {
+        :type => xAxisType,
+        #:tickPixelInterval => 150
+      },
+      :yAxis => {
+        :title => {
+          :text => yAxisTitleText
+        }
+      },
+      :legend => {
+        :enabled => true,
+        :verticalAlign => 'top'
+      },
+      :exporting => {
+        :enabled => false
+      },
+      :plotOptions => {
+        :series => {
+          :pointStart => Time.now.utc.to_i * 1000 - 5*40000,
+          :pointInterval => 5000
+        }
+      },
+      :series => series
+    }.merge(options)
+  end
 end

@@ -12,14 +12,14 @@ class AlwaysAllowedSite < ActiveRecord::Base
   def ip_addresses
     require 'resolv'
     begin
-      Timeout::timeout(3) do
+      Timeout::timeout(10) do
         Resolv.getaddresses(name).select do |a| IP.new(a).is_a?(IP::V4) end
       end
     rescue Timeout::Error
-      Rails.logger.error "AlwaysAllowedSite::ip_addresses failed to resolv #{name}"
+      log_rescue("[Model][AlwaysAllowedSite] timeout for ip_addresses #{name}", e)
       []
     rescue => e
-      Rails.logger.error "AlwaysAllowedSite::ip_addresses #{e.inspect}"
+      log_rescue("[Model][AlwaysAllowedSite] ip_addresses method failed", e)
       []
     end
   end

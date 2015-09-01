@@ -1,0 +1,51 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "highstock" %>
+  <%= javascript_include_tag "exporting" %>
+<% end %>
+
+<script type="text/javascript">
+  $(function() {
+    $("#tabs").tabs();
+  });
+
+  function get_data(){
+    $.get('<%= instant_interface_path %>', null, function(data) {
+      instant.series[0].addPoint(data.rx, true, true);
+      instant.series[1].addPoint(data.tx, true, true);
+    },'json');
+  };
+
+  $(document).ready(function() {
+    instant = new Highcharts.Chart(<%= @graphs["interface_instant"].graph! %>);
+    <% @periods.times do |i| %>
+      new Highcharts.StockChart(<%= @graphs["interface_period_#{i}"].graph! %>);
+    <% end %>
+
+    get_data();
+
+    setInterval(function() {
+      get_data();
+    }, 5000);
+  });
+</script>
+
+<%= heading "#{@interface.name} [#{@interface.mac_address}] #{@interface.kind} #{@interface.speed}" %>
+<% content_for :title, @interface.name %>
+
+<div id=<%= @graphs["interface_instant"].render %> style="height:247px; width:860px; float:left;"></div>
+<div class="separador" style='margin-bottom: 5px;'></div>
+
+<% content_tag(:div, "", :id => "tabs") do %>
+  <ul>
+    <% @periods.times do |period| %>
+      <li><a href=<%="#tabs-#{period}"%>><%= "Period #{period}" %></a></li>
+    <% end %>
+  </ul>
+
+  <% @periods.times do |period| %>
+    <% content_tag(:div, "", :id => "tabs-#{period}" ) do %>
+      <div id=<%= @graphs["interface_period_#{period}"].render %> style="height:450px; width:840px; float:left;"></div>
+      <div class="separador" style='margin-bottom: 5px;'></div>
+    <% end %>
+  <% end %>
+<% end %>

@@ -77,6 +77,9 @@ es:
       always_allowed_site:
         one: 'Sitio permitido'
         other: 'Sitios permitidos'
+      device:
+        one: 'Dispositivo'
+        other: 'Dispositivos'
     attributes:
       name: "Nombre"
       ip: "Dirección IP"
@@ -148,10 +151,10 @@ es:
         id: 'Id'
         name: "Nombre"
         provider_group: "Grupo de proveedores"
-        rate_down: "Mín. bajada [kbps]"
-        ceil_down: "Máx. bajada [kbps]"
-        rate_up: "Mín. subida [kbps]"
-        ceil_up: "Máx. subida [kbps]"
+        rate_down: "Mín. bajada"
+        ceil_down: "Máx. bajada"
+        rate_up: "Mín. subida"
+        ceil_up: "Máx. subida"
         burst_down: "Ráfaga de bajada [kbits]"
         burst_up: "Ráfaga de subida [kbits]"
         long_download_max: "Límite para descargas grandes [kbytes]"
@@ -165,8 +168,8 @@ es:
         cir_reuse: "Valor de reuso"
       provider_group:
         name: "Nombre"
-        rate_down: "Bajada [kbps]"
-        rate_up: "Subida [kbps]"
+        rate_down: "Bajada"
+        rate_up: "Subida"
         state: "Estado"
         concurrency_index: "Simultaneidad [%]"
         total_cir_down: "Total de bajada para el plan"
@@ -178,8 +181,8 @@ es:
         netmask: "Máscara de red"
         gateway: "Puerta de enlace"
         interface: "Interfaz"
-        rate_down: "Bajada [kbps]"
-        rate_up: "Subida [kbps]"
+        rate_down: "Bajada"
+        rate_up: "Subida"
         pppoe_user: "Usuario"
         pppoe_pass: "Contraseña"
         dhcp_force_32_netmask: "Forzar máscara de red 255.255.255.255"
@@ -253,6 +256,9 @@ es:
         low_latency_for_rdp: "RDP"
         tcp_length: "Tamaño paquetes en bytes (TCP)"
         udp_length: "Tamaño paquetes en bytes (UDP)"
+        firewall_enabled: "Habilitar control de firewall desde Wispro (deshabilita iptables_pre)"
+        firewall_open_tcp_ports: "Puertos TCP abiertos"
+        firewall_open_udp_ports: "Puertos UDP abiertos"
       user:
         name: "Nombre"
         email: "E-mail del usuario"
@@ -302,6 +308,19 @@ es:
         id: 'Id'
         name: 'Ip o nombre de sitio'
         detail: 'Detail'
+      device:
+        host: 'Host'
+        description: 'Descripción'
+        kind: 'Tipo'
+        name: 'Nombre'
+        kinds:
+          cpe: 'CPE'
+          ap: 'AP'
+          switch: 'Switch'
+          server: 'Servidor'
+          router: 'Router'
+      device_brand:
+        name: "Nombre"
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -353,6 +372,8 @@ es:
         low_latency_for_icmp: "Protocolo de Mensajes de Control de Internet (ICMP)"
         low_latency_for_sip: "Protocolo de Inicio de Sesiones (SIP)"
         low_latency_for_rdp: "Protocolo de escritorio remoto (RDP)"
+        firewall_open_tcp_ports: "Números de puertos, separado por comas"
+        firewall_open_udp_ports: "Números de puertos, separado por comas"
       provider:
         avoid_nat_addresses: "Una dirección por linea, notación CIDR, ejemplo 200.10.20.0/24"
   menu:
@@ -380,6 +401,8 @@ es:
     guides: "Guías de wispro"
     support: "Soporte"
     command_log: "Log de comandos"
+    devices: "Dispositivos"
+    device_brands: "Marcas de dispositivo"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'
@@ -455,6 +478,23 @@ es:
     data_traffic: 'Trafico de datos'
     data: 'Datos'
     traffic: 'Trafico'
+  graphs:
+    titles:
+      latency: 'Latencia'
+      total_rate: 'Instantaneo total (UP/DOWN)'
+      instant_rate_up: 'Instantaneo (UP)'
+      instant_rate_down: 'Instantaneo (DOWN)'
+      rate_up_period_0: 'Ultimas 3 horas (UP)'
+      rate_down_period_0: 'Ultimas 3 horas (DOWN)'
+      rate_up_period_1: 'Ultimos dias (UP)'
+      rate_down_period_1: 'Ultimos dias (DOWN)'
+      rate_up_period_2: 'Ultimas semanas (UP)'
+      rate_down_period_2: 'Ultimas semanas (DOWN)'
+      rate_up_period_3: 'Ultimos meses (UP)'
+      rate_down_period_3: 'Ultimos meses (DOWN)'
+      rate_up_period_4: 'Ulitmos años (UP)'
+      rate_down_period_4: 'Ulitmos años (DOWN)'
+      data_count: 'Conteo de datos'
   about:
     version: "Versión wispro"
     url: "Actualizaciones, módulos y soporte disponible en"
@@ -484,6 +524,7 @@ es:
       bind_dns_server: "Servicio Bind DNS"
       apache_web_server: "Servicio Apache Web"
       mysql_server: "Servicio MySQL"
+      redis_server: "Servicio Redis"
   actions:
     edit: "Editando %{model}"
     new: "Creando %{model}"
@@ -583,6 +624,7 @@ es:
       proxy_arp_provider_can_not_be_guessed: "La IP asignada al contrato no pertenece a ningun proveedor, debe especificar el proveedor"
       unique_provider_does_not_belongs_to_plan: "El proveedor asignado no pertenece al plan seleccionado"
       mac_address_taken_in_interface: "existente en <a target='_blank' href='/interface/%{interface_id}/'>Interface Nro. %{interface_id}</a>"
+      do_not_set_mask_if_is_not_a_network: "No establezca máscara si no es una red"
     configuration:
       notification_email_invalid: "Dirección de e-mail inválida"
       web_interface_listen_at_least_on_one_port: "Al menos se debe seleccionar un puerto para la interfaz web"
@@ -667,7 +709,7 @@ es:
     human:
       prepare_iptables: "Preparando reglas de iptables"
       create_tmp_file: "Inicializando proceso de aplicar cambios"
-      sequreisp_pre: "Eliminado cache de memoria virtual"
+      sequreisp_pre: "Scripts previo a la aplicación de cambios"
       setup_queued_commands: "Realizando tareas pendientes"
       setup_clock: "Configurando zona horario en el servidor"
       setup_proc: "Configurando parametros generales del sistema operativo (sysctl)"
@@ -680,14 +722,14 @@ es:
       setup_ifbs: "Configurando interfaces virtuales"
       setup_ip_ru: "Configurando reglas de ruteo"
       setup_ip_ro: "Configurando rutas"
-      gen_tc: "Eliminados las reglas de control de ancho de banda"
+      gen_tc: "Eliminando reglas de control de ancho de banda"
       setup_tc: "Configurando reglas de control de ancho de banda"
       setup_iptables_try: "Generando reglas de iptables"
       setup_iptables_success: "Estableciendo reglas de iptables"
       setup_iptables_restore_old: "Fallo en las reglas de iptables, restaurando archivo backup de iptables"
       setup_mail_relay: "Configurando Mail Relay"
       bind_reload: "Configurando servidor DNS"
-      sequreisp_post: "Estableciendo reglas de iptables manuales"
+      sequreisp_post: "Scripts luego de la finalización de aplicar cambios"
       delete_tmp_file: "Finalizado proceso de aplicar cambios"
       do_port_forwarding: "Do port forwarding"
       do_port_forwardings_avoid_nat_triangle: "Do port forwardings avoid nat triangle"
@@ -703,5 +745,6 @@ es:
       daemon_backup_restore: "Restaurar backup"
       daemon_check_bind: "Bind"
       daemon_check_link: "Chequeo de proveedores"
-      daemon_data_counting: "Conteo de datos"
-      daemon_rrd_feed: "Generación de estadisticas"
+      daemon_synchronize_time: "Sincronización horario"
+      daemon_compact_samples: "Generación de gráficos"
+      daemon_redis: "Generación de estadisticas"

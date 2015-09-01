@@ -1,0 +1,8 @@
+.ui-state-active,
+.ui-widget-content .ui-state-active,
+.ui-widget-header .ui-state-active {
+	border: 1px solid #20414E;
+	background: #20414E;
+	font-weight: normal;
+	color: #ffffff;
+}

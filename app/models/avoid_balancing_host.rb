@@ -10,15 +10,16 @@ class AvoidBalancingHost < ActiveRecord::Base
 
   def ip_addresses
     require 'resolv'
+
     begin
-      Timeout::timeout(3) do
+      Timeout::timeout(10) do
         Resolv.getaddresses(name).select do |a| IP.new(a).is_a?(IP::V4) end
       end
-    rescue Timeout::Error
-      Rails.logger.error "AvoidBalancingHost::ip_addresses failed to resolv #{name}"
+    rescue Timeout::Error => e
+      log_rescue("[Model][AvoidBalancingHost] timeout for ip_addresses #{name}", e)
       []
     rescue => e
-      Rails.logger.error "AvoidBalancingHost::ip_addresses #{e.inspect}"
+      log_rescue("[Model][AvoidBalancingHost] ip_addresses method failed", e)
       []
     end
   end

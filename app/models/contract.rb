@@ -78,6 +78,7 @@ class Contract < ActiveRecord::Base
 
   validate :state_should_be_included_in_the_list
   validate :uniqueness_mac_address_in_interfaces_lan
+  validate :ip_without_netmask, :if => "ip_changed?"
 
   def uniqueness_mac_address_in_interfaces_lan
     if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).count > 0
@@ -88,6 +89,14 @@ class Contract < ActiveRecord::Base
   def state_should_be_included_in_the_list
     unless AASM::StateMachine[Contract].states.map(&:name).include?(state.to_sym)
       errors.add(:state, I18n.t('activerecord.errors.messages.inclusion'))
+    end
+  end
+
+  def ip_without_netmask
+    _ip = IP.new(ip)
+    # check that the mask is set only for networks
+    if _ip.mask > 0 and _ip != _ip.network
+      errors.add(:ip, I18n.t('validations.contract.do_not_set_mask_if_is_not_a_network'))
     end
   end
 
@@ -176,7 +185,7 @@ class Contract < ActiveRecord::Base
   include OverflowCheck
   before_save :check_integer_overflow
   before_create :bind_klass
-  before_update :clean_proxy_arp_provider_proxy_arp_interface, :if => "proxy_arp_changed? and proxy_arp == false"
+  before_save :clean_proxy_arp_provider_proxy_arp_interface, :if => "proxy_arp_changed? and proxy_arp == false"
   after_save :create_traffic_for_this_period
 
   def create_traffic_for_this_period
@@ -373,48 +382,66 @@ class Contract < ActiveRecord::Base
   end
 
   def instant
-    { :rates => instant_rate,
+    { :rates   => instant_rate,
       :latency => instant_latency }
   end
 
-  # this has an alias_method_chain
-  def instant_rate
-    in_production = (SequreispConfig::CONFIG["demo"] or Rails.env.development?)
-    rate_down = rand(plan.ceil_down)*1024
-    rate_up = rand(plan.ceil_up)*1024 * 0.3
-    rate = {}
-    rate["0"] = { :name => "down_prio1", :value => in_production ? $redis.hmget("contract:#{id}:prio1:down", "instant").first.to_i : rate_down * 0.15 }
-    rate["1"] = { :name => "down_prio2", :value => in_production ? $redis.hmget("contract:#{id}:prio2:down", "instant").first.to_i : rate_down * 0.6 }
-    rate["2"] = { :name => "down_prio3", :value => in_production ? $redis.hmget("contract:#{id}:prio3:down", "instant").first.to_i : rate_down * 0.15 }
-    up_value = in_production ? ($redis.hmget("contract:#{id}:prio1:up", "instant").first.to_i + $redis.hmget("contract:#{id}:prio2:up", "instant").first.to_i + $redis.hmget("contract:#{id}:prio3:up", "instant").first.to_i) : rate_up
-    rate["3"] = { :name => "up", :value => up_value }
-    rate
+  def redis_key
+    "contract_#{id}_sample"
   end
 
-  # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
+  def instant_rate
+    data = {}
+    total_up = 0
+    total_down = 0
+    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+    date_keys = $redis.keys("#{redis_key}_*").sort
+
+    ContractSample.compact_keys.each do |rkey|
+      value = if Rails.env.production?
+                date_keys.empty? ? 0 : $redis.hmget(date_keys.last, "#{rkey[:name]}_instant").first.to_i
+              else
+                rand(1024)
+              end
+      total_up += value if rkey[:name].include?("up")
+      total_down += value if rkey[:name].include?("down")
+      data[rkey[:name].to_sym] = [ date_time_now, value ]
+    end
+
+    data[:total_up] = [ date_time_now, total_up ]
+    data[:total_down] = [ date_time_now, total_down ]
+    data
+  end
+
+ # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
   def instant_latency
-    return { :ping => rand(890)+10, :arping => rand(100)+50 } if SequreispConfig::CONFIG["demo"]
-    time = {:ping => nil, :arping => nil}
-    if _ip = get_address? # si es ip/32
-      thread_ping = Thread.new do
-        IO.popen("/bin/ping -c 1 -n -W 4 #{_ip}", "r") do |io|
-          io.each do |line|
-            if line.include?("time=")
-              time[:ping] = line.split("time=")[1].split(" ")[0].to_f
+    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+    time = {}
+    if Rails.env.production?
+      if _ip = get_address? # si es ip/32
+        thread_ping = Thread.new do
+          IO.popen("/bin/ping -c 1 -n -W 4 #{_ip}", "r") do |io|
+            io.each do |line|
+              if line.include?("time=")
+                        time[:ping] = [ date_time_now, line.split("time=")[1].split(" ")[0].to_f ]
+              end
             end
           end
         end
-      end
-      if iface = arping_interface
-        IO.popen("sudo arping -c 1 -I #{iface} #{_ip}", "r") do |io|
-          io.each do |line|
-            if line.include?("ms")
-              time[:arping] = line.split(" ").last.chomp.delete("ms").to_f
+        if iface = Interface.arping(_ip)
+          IO.popen("sudo arping -c 1 -I #{iface.name} #{_ip}", "r") do |io|
+            io.each do |line|
+              if line.include?("ms")
+                time[:arping] = [ date_time_now, line.split(" ").last.chomp.delete("ms").to_f ]
+              end
             end
           end
         end
+        thread_ping.join
       end
-      thread_ping.join
+    else
+      time[:ping] = [ date_time_now, rand(890)+10 ]
+      time[:arping] = [ date_time_now, rand(100)+50 ]
     end
     time
   end
@@ -427,22 +454,6 @@ class Contract < ActiveRecord::Base
     else
       return nil
     end
-  end
-
-# En caso de la red estar routeada devolvera nil (dado que debera usarse si o si
-# ping) caso contrario se usara arping por lo que es necesario la interfaz
-  def arping_interface
-    _interface = nil
-    IO.popen("ip ro get #{ip}", "r") do |io|
-      io.each do |line|
-        if line.include?("via")
-          _interface = nil
-        elsif line.include?("dev")
-          _interface = line.split("dev")[1].split(" ")[0] rescue nil
-        end
-      end
-    end
-    _interface
   end
 
   def self.free_ips(term)
@@ -577,15 +588,24 @@ class Contract < ActiveRecord::Base
   end
 
   def data_count_for_last_year
-    dates = []
     datas = []
     _traffics = Traffic.for_contract(self.id).for_date(Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 12.month)
     _traffics.each do |traffic|
-      dates << traffic.from_date.strftime("%m-%Y")
-      datas << traffic.data_count
+      datas << [ traffic.from_date.strftime("%m-%Y"), traffic.data_count ]
     end
-    [dates, datas]
+    datas
   end
+
+  # def data_count_for_last_year
+  #   dates = []
+  #   datas = []
+  #   _traffics = Traffic.for_contract(self.id).for_date(Date.new(Date.today.year, Date.today.month, Configuration.first.day_of_the_beginning_of_the_period) - 12.month)
+  #   _traffics.each do |traffic|
+  #     dates << traffic.from_date.strftime("%m-%Y")
+  #     datas << traffic.data_count
+  #   end
+  #   [dates, datas]
+  # end
 
   def ip_addr
     require "ipaddr"
@@ -614,7 +634,12 @@ class Contract < ActiveRecord::Base
     mask = Contract::MASK_CONTRACT_PRIO
     ceil = _plan["ceil_" + direction] * bandwidth_rate
     rate = _plan.send("rate_" + direction) * bandwidth_rate
-    rate = 1 if rate <= 0
+    ceil = 1 if ceil < 1
+    rate = 1 if rate < 1
+
+    ls_m1_prio3 = [ (rate / 20).round, 1 ].max
+    ls_m2_prio3 = [ (rate / 10).round, 1 ].max
+    ul_m2_prio3 = [ (ceil * ceil_dfl_percent / 100).round, 1 ].max
 
     #padre
     tc_rules << "##{client.name} - IP: #{ip} ID: #{id} KLASS_NUMBER: #{class_hex}"
@@ -634,7 +659,7 @@ class Contract < ActiveRecord::Base
 
     #prio3
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio3_hex} " +
-            "est 1sec 5sec hfsc ls m1 #{(rate / 20).round}kbit d 3s m2 #{(rate / 10).round}kbit ul m2 #{(ceil * ceil_dfl_percent / 100).round}kbit"
+            "est 1sec 5sec hfsc ls m1 #{ls_m1_prio3}kbit d 3s m2 #{ls_m2_prio3}kbit ul m2 #{ul_m2_prio3}kbit"
     tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio3_hex}"
     tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10"
   end
@@ -652,7 +677,8 @@ class Contract < ActiveRecord::Base
 
   def rules_for_enabled
     macrule = (Configuration.filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
-    [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j ACCEPT" ]
+    target = disabled? ? "DROP" : "ACCEPT"
+    [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j #{target}" ]
   end
 
   def rules_for_mark_provider
@@ -670,6 +696,16 @@ class Contract < ActiveRecord::Base
     else
       plan.provider_group.mark_hex
     end
+  end
+
+
+  def current_redis_values
+    hash = {}
+    $redis.keys("#{redis_key}_*").sort.each do |key|
+      hash[key] = $redis.hgetall(key)
+      hash[key][:time_human] = Time.at($redis.hget(key, "time").to_i)
+    end
+    hash
   end
 
   private

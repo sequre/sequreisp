@@ -1,3 +1,8 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "highcharts" %>
+  <%= javascript_include_tag "sequreispcharts" %>
+<% end %>
+
 <style type="text/css">
   #search_client_name_like, #search_ip_like {
   }
@@ -27,9 +32,10 @@
     color: green;
   }
 </style>
+
 <script type="text/javascript">
   $(function(){
-      initMoreToggle('#massive_setting', '#form_massive_setting', 'toggle_form_massive_setting');
+    initMoreToggle('#massive_setting', '#form_massive_setting', 'toggle_form_massive_setting');
     initMoreToggle('#search_more', '#search_advanced', 'toggle_contracts_search_advanced');
     $('#search_client_name_like').autocomplete({
       delay: 200,
@@ -65,6 +71,11 @@
       minLength: 2
     })
   })
+  $(document).ready(function() {
+    <% @graphs.each do |g| %>
+      new Highcharts.Chart(<%= g.minimal_graph %>);
+    <% end %>
+  });
 </script>
 <% content_for :title, t('menu.contracts') %>
 <% heading (t 'menu.contracts') %>
@@ -147,8 +158,6 @@
 
 <div class="separador"></div>
 
-
-
 <div class="main">
   <div style="float: right;">
     <h3><%= t('messages.contracts_online', :count => Contract.how_many_connected.count) %></h3>
@@ -166,9 +175,7 @@
         <th><%= order @search, :by => :state, :as => t('activerecord.attributes.contract.state') %></th>
         <th><%= order @search, :by => :current_traffic_data_count, :as => t('activerecord.attributes.traffic.data_count') %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
-        <% if current_user.may_update_contracts? or current_user.may_index_contracts? or current_user.may_destroy_contract?(Contract.new)%>
         <th></th>
-        <% end %>
       </tr>
       <% @contracts.each_with_index do |contract,i| %>
         <% css_class = i%2 == 0 ? "even" : "odd" %>
@@ -177,7 +184,7 @@
           <td><%= contract.id %></td>
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
-            <%= link_to Graph.new(:element => contract).img("day", "small"), graph_contract_path(contract) %>
+	    <div id="<%= @graphs.find{ |g| g.model.id == contract.id }.render %>" style="width: 231px; height: 126px"></div>
           </td>
           <td><%=link_to h(contract.plan.name), plan_path(contract.plan) %></td>
           <td>
@@ -203,20 +210,23 @@
           </td>
           <td><%= show_traffic(contract) rescue 0 %> <%= current_consumption_percentage_of contract %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => contract} %>
-          <% if current_user.may_update_contract?(contract) or current_user.may_destroy_contract?(contract) %>
-            <td>
-              <% if current_user.may_update_contract?(contract) %>
-                <%= link_to t('buttons.edit'), edit_contract_path(contract) %>
-              <% end %>
-              <% if current_user.may_destroy_contract?(contract) %>
-                <br/>
-                <br/>
-                <%= link_to t('buttons.delete'), contract, :confirm => t('messages.confirm'), :method => :delete %>
-              <% end %>
-            </td>
-          <% elsif current_user.may_show_contract?(contract) %>
-            <td><%= link_to t('buttons.show'), contract_path(contract) %></td>
-          <% end %>
+          <td>
+	    <% if current_user.may_show_contract?(contract) %>
+              <br/>
+              <br/>
+              <%= link_to t('buttons.show'), contract_path(contract) %>
+	    <% end %>
+            <% if current_user.may_update_contract?(contract) %>
+              <br/>
+              <br/>
+              <%= link_to t('buttons.edit'), edit_contract_path(contract) %>
+            <% end %>
+            <% if current_user.may_destroy_contract?(contract) %>
+              <br/>
+              <br/>
+              <%= link_to t('buttons.delete'), contract, :confirm => t('messages.confirm'), :method => :delete %>
+            <% end %>
+          </td>
         </tr>
       <% end %>
     </tbody>

@@ -1,6 +1,7 @@
-<% content_for :title, t('menu.interfaces') %>
-<% heading t('menu.interfaces') %>
-<% render_new_button_for :interface %>
+<% content_for :javascript do %>
+  <%= javascript_include_tag "highcharts" %>
+  <%= javascript_include_tag "exporting" %>
+<% end %>
 
 <style type="text/css">
   .mac_address {
@@ -9,10 +10,21 @@
   }
 </style>
 
+<script type="text/javascript">
+  $(document).ready(function() {
+    <% @graphs.each do |g| %>
+      new Highcharts.Chart(<%= g.minimal_graph %>);
+    <% end %>
+  });
+</script>
+
+<% content_for :title, t('menu.interfaces') %>
+<% heading t('menu.interfaces') %>
+<% render_new_button_for :interface %>
 
 <ul id="nav" style="float:right">
   <li><%= link_to t('buttons.scan_interfaces'), scan_interfaces_path %> </li>
-  <%= render :partial => "shared/submenu_items"%>  
+  <%= render :partial => "shared/submenu_items"%>
 </ul>
 <div style="clear: both"></div>
 
@@ -51,20 +63,15 @@
         <th><%=t 'activerecord.attributes.ip' %></th>
         <th><%=t 'activerecord.attributes.interface.physical_link' %></th>
         <%= render :partial => "shared/plugins_table_headers" %>
-        <% if current_user.may_update_interfaces? or current_user.may_index_interfaces? %>
-        <th></th> 
-        <% end %>
-        <% if current_user.may_destroy_interface?(Interface.new) %>
-        <th></th> 
-        <% end %>
+        <th></th>
       </tr>
 
       <% @interfaces.each_with_index do |interface,i| %>
-        <% css_class = i%2 == 0 ? "even" : "odd" %>
+       <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td>
             <%=h interface.name + (interface.description.blank? ? "" : " (#{interface.description})") %><br/>
-            <%= link_to Graph.new(:element => interface).img("day", "small"), graph_interface_path(interface) %>
+	    <div id=<%= @graphs.find{ |g| g.model.id == interface.id }.render %> style="width: 231px; height: 126px"></div>
           </td>
           <td><%= interface.kind %></td>
           <td><%=h interface.vlan_id %></td>
@@ -79,18 +86,26 @@
             <%=h interface.speed %>
           </td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => interface} %>
-          <% if current_user.may_update_interface?(interface) %>
-            <td><%= link_to t('buttons.edit'), edit_interface_path(interface) %></td>
-          <% elsif current_user.may_show_interface?(interface) %>
-            <td><%= link_to t('buttons.show'), interface_path(interface) %></td>
-          <% end %> 
-          <% if current_user.may_destroy_interface?(interface) %>
-          <td><%= link_to t('buttons.delete'), interface, :confirm => t('messages.confirm'), :method => :delete %></td>
-          <% end %>
+          <td>
+	    <% if current_user.may_show_interface?(interface) %>
+	      <br />
+	      <br />
+              <%= link_to t('buttons.show'), interface_path(interface) %>
+	    <% end %>
+            <% if current_user.may_update_interface?(interface) %>
+	      <br />
+	      <br />
+              <%= link_to t('buttons.edit'), edit_interface_path(interface) %>
+	    <% end %>
+	    <% if current_user.may_destroy_interface?(interface) %>
+	      <br />
+	      <br />
+              <%= link_to t('buttons.delete'), interface, :confirm => t('messages.confirm'), :method => :delete %>
+            <% end %>
+	  </td>
         </tr>
       <% end %>
     </tbody>
   </table>
   <%= will_paginate @interfaces %>
 </div>
-

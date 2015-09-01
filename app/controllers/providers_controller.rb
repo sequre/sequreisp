@@ -26,6 +26,8 @@ class ProvidersController < ApplicationController
     @search = Provider.search(params[:search])
     @providers = @search.paginate(:page => params[:page],:per_page => 30)
 
+    @graphs = @providers.map{ |p| InterfaceGraph.new(p.interface, "interface_instant") }
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @providers }
@@ -36,7 +38,17 @@ class ProvidersController < ApplicationController
   # GET /providers/1.xml
   def show
     @provider = object
-    render :action => "edit"
+    @periods = InterfaceSample::CONF_PERIODS.size
+    @graphs = {}
+
+    InterfaceGraph.supported_graph(@provider.interface).each do |graph_name|
+      @graphs[graph_name] = InterfaceGraph.new(@provider.interface, graph_name)
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => @provider }
+    end
   end
 
   # GET /providers/new
@@ -102,6 +114,7 @@ class ProvidersController < ApplicationController
     end
   end
   def graph
+    @provider = object
     @graph = Graph.new(:class => object.class.name, :id => object.id)
     respond_to do |format|
       format.html # show.html.erb

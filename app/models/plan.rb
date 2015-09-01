@@ -100,23 +100,23 @@ class Plan < ActiveRecord::Base
   end
 
   def contracts_count
-    contracts.select { |contract| contract.state != 'disabled' }.count
+    @cached_contracts_count ||= contracts.select { |contract| contract.state != 'disabled' }.count
   end
 
   def cir_up_real
-    provider_group.cir_total_up * cir_up / provider_group.rate_up
+    @cached_cir_up_real ||= [ ((provider_group.rate_up.to_f / provider_group.cir_total_up) * cir_up ), cir_up ].min
   end
 
   def cir_down_real
-    provider_group.cir_total_down * cir_down / provider_group.rate_down
+    @cached_cir_down_real ||= [ ((provider_group.rate_down.to_f / provider_group.cir_total_down) * cir_down ), cir_down ].min
   end
 
   def rate_up
-    ceil_up * cir_up_real
+    @cached_rate_up ||= ceil_up * cir_up_real
   end
 
   def rate_down
-    ceil_down * cir_down_real
+    @cached_rate_down ||= ceil_down * cir_down_real
   end
 
   def default_value_for_cir_reused
