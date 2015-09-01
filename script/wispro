@@ -13,7 +13,7 @@ options.log_file = "log/production.log"
 
 ARGV << "-h" if ARGV.empty?
 
-PATH_APP="/home/enrique/src/sequreisp"
+PATH_APP="/opt/sequreisp/deploy/current/"
 
 PLUGINS = (Dir.entries("#{PATH_APP}/vendor/plugins/") - [".", ".."]).select{|dir| dir.include?("sequreisp")}.sort
 
@@ -82,6 +82,7 @@ opts = OptionParser.new do |opts|
   end
 
   opts.on("-l", "--log-level LEVEL", "grep log by level. Example: wispro -t daemon_<daemon_name> -l [info|debug]") do |level|
+    puts level
     options.cmd = "tail"
     options.log_level = "| grep #{level.upcase}"
   end
@@ -150,6 +151,7 @@ opts = OptionParser.new do |opts|
   end
 
   def change_daemon_log_level daemon, level
+    require 'yaml'
     root_path = PATH_APP
     plugin = daemon.sub('daemon_', 'sequreisp_')
     if PLUGINS.include?(plugin)
