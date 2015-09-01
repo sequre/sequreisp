@@ -48,7 +48,7 @@ class Backup
   end
 
   def backup_include_files(include_graphs)
-    paths = ["#{DATABASE_DUMP_PATH}", "#{BASE_DIR}/scripts", "#{BASE_DIR}/etc"]
+    paths = ["#{DATABASE_DUMP_PATH}", "#{BASE_DIR}/scripts", "#{BASE_DIR}/etc", "#{BASE_DIR}/deploy/shared/public/system"]
     paths << "#{BASE_DIR}/deploy/shared/db/rrd" if include_graphs
     paths << Configuration.first.files_include_in_backup.split("\n") rescue []
     paths.flatten.uniq.delete_if do |path| not File.exists?(path) end

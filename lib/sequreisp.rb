@@ -19,17 +19,17 @@ require 'sequreisp_constants'
 require 'command_context'
 require 'ip_tree'
 require 'sequreisp_logger'
+require 'fileutils'
 
 def create_dirs_if_not_present
-  [BASE_SCRIPTS, DHCPD_DIR, PPP_DIR, DEPLOY_DIR, "#{PPP_DIR}/ip-up.d", "#{PPP_DIR}/ip-down.d", "#{DHCPD_DIR}/dhclient-enter-hooks.d",  "#{DHCPD_DIR}/dhclient-exit-hooks.d", "#{PPP_DIR}/peers"].each do |dir|
-    dir.split("/").inject do |path, dir|
-      new_dir = "#{path}/#{dir}"
-      Dir.mkdir(new_dir) if not File.exist? new_dir
-      new_dir
-    end
+  [BASE_SCRIPTS, BASE_SCRIPTS_TMP, DHCPD_DIR, PPP_DIR, DEPLOY_DIR, "#{PPP_DIR}/ip-up.d", "#{PPP_DIR}/ip-down.d", "#{DHCPD_DIR}/dhclient-enter-hooks.d",  "#{DHCPD_DIR}/dhclient-exit-hooks.d", "#{PPP_DIR}/peers"].each do |dir|
+    FileUtils.mkdir_p(dir) unless File.exist?(dir)
   end
 end
-
+def close_file_and_move_to_scripts f
+  f.close
+  FileUtils.cp f.path, BASE_SCRIPTS
+end
 def gen_tc
   def qdisc_add_safe file, iface, command
     file.puts "qdisc re dev #{iface} #{command}"
@@ -37,8 +37,8 @@ def gen_tc
     file.puts "qdisc re dev #{iface} #{command}"
   end
   begin
-    tc_ifb_up = File.open(TC_FILE_PREFIX + IFB_UP, "w")
-    tc_ifb_down = File.open(TC_FILE_PREFIX + IFB_DOWN, "w")
+    tc_ifb_up = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + IFB_UP), "w")
+    tc_ifb_down = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + IFB_DOWN), "w")
     # Contracts tree on IFB_UP (upload control) and IFB_DOWN (download control)
     unless Configuration.in_safe_mode?
       qdisc_add_safe tc_ifb_up, IFB_UP, "root handle 1 hfsc default fffe"
@@ -53,16 +53,16 @@ def gen_tc
       # ProviderGroup.all.each do |pg|
       #   pg.plans.each do |plan|
       Plan.all(:include => [:provider_group, :contracts]).each do |plan|
-        plan.contracts.not_disabled.descend_by_netmask.each do |c|
+        plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ :time_modifiers, {:provider_group => :providers } ] }, :client]).each do |c|
           tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", plan)
-          tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
+          #tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
         end
       end
       # end
       BootHook.run :hook => :tc_hook, :tc_script => tc_ifb_down, :iface => IFB_DOWN
     end
-    tc_ifb_up.close
-    tc_ifb_down.close
+    close_file_and_move_to_scripts tc_ifb_up
+    close_file_and_move_to_scripts tc_ifb_down
   rescue => e
     log_rescue("[Boot][gen_tc]", e)
   end
@@ -71,7 +71,7 @@ def gen_tc
   Provider.enabled.with_klass_and_interface.each do |p|
     iface = p.link_interface
     begin
-      File.open(TC_FILE_PREFIX + iface, "w") do |tc|
+      tc = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + iface), "w")
         unless Configuration.in_safe_mode?
           qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_UP}"
@@ -80,7 +80,7 @@ def gen_tc
           tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_up}kbit ul m2 #{p.rate_up}kbit"
           tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
         end
-      end
+      close_file_and_move_to_scripts tc
     rescue => e
       log_rescue("[Boot][gen_tc][provider_interface]", e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider upload limit in #{iface}) e=>#{e.inspect}"
@@ -91,7 +91,7 @@ def gen_tc
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
     iface = interface.name
     begin
-      File.open(TC_FILE_PREFIX + iface, "w") do |tc|
+      tc = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + iface), "w")
         unless Configuration.in_safe_mode?
           qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
           tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
@@ -102,7 +102,7 @@ def gen_tc
             tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
           end
         end
-      end
+      close_file_and_move_to_scripts tc
     rescue => e
       log_rescue("[Boot][gen_tc][lan_interface]", e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider download limit in #{iface}) e=>#{e.inspect}"
@@ -112,7 +112,7 @@ end
 
 def gen_iptables
   begin
-    File.open("#{IPTABLES_FILE}", "w") do |f|
+    f = File.open(File.join(BASE_SCRIPTS_TMP, IPTABLES_FILE), "w")
       #--------#
       # MANGLE #
       #--------#
@@ -167,7 +167,7 @@ def gen_iptables
         end
 
         # sino marko por cliente segun el ProviderGroup al que pertenezca
-        contracts = Contract.not_disabled.descend_by_netmask(:include => [{ :plan => :provider_group}, :unique_provider, :public_address ])
+        contracts = Contract.not_disabled.descend_by_netmask.all(:include => [{ :plan => { :provider_group => :klass }}, :unique_provider, :public_address ])
         contracts.each do |c|
           if !c.public_address.nil?
             #evito triangulo de NAT si tiene full DNAT
@@ -229,7 +229,7 @@ def gen_iptables
           f.puts "-A POSTROUTING #{mark_if} -o #{p.link_interface} -j sequreisp.up"
         end
 
-        contracts = Contract.not_disabled.descend_by_netmask
+        contracts = Contract.not_disabled.descend_by_netmask.all(:include => [:plan, :klass])
 
         ips = contracts.collect(&:ip_addr)
 
@@ -330,6 +330,7 @@ def gen_iptables
         f.puts "-A PREROUTING -j sequreisp-accepted-sites"
 
         # Allowing access from LAN to local ips to avoid notifications redirections
+        # app_listen_port_available is a Class method from Configuration
         listen_ports = Configuration.app_listen_port_available
         Interface.only_lan.each do |interface|
           interface.addresses.each do |addr|
@@ -484,9 +485,9 @@ def gen_iptables
         end
 
         ######################if
-        contracts = Contract.descend_by_netmask
+        contracts = Contract.descend_by_netmask.all(:include => {:plan => :time_modifiers})
         contracts.each do |c|
-          f.puts c.rules_for_enabled
+          f.puts c.rules_for_enabled(Configuration.filter_by_mac_address)
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
         end
         ######################end
@@ -501,7 +502,7 @@ def gen_iptables
       # /FILTER #
       #---------#
       # close iptables file
-    end
+    close_file_and_move_to_scripts f
   rescue => e
     log_rescue("[Boot][setup_iptables]", e)
   end
@@ -527,7 +528,7 @@ end
 
 def gen_ip_ru
   begin
-    File.open(IP_RU_FILE, "w") do |f|
+    f = File.open(File.join(BASE_SCRIPTS_TMP, IP_RU_FILE), "w")
       f.puts "rule flush"
       f.puts "rule add prio 10 lookup main"
       unless Configuration.in_safe_mode?
@@ -544,7 +545,7 @@ def gen_ip_ru
       end
       f.puts "rule add prio 32767 from all lookup default"
       BootHook.run(:hook => :gen_ip_ru, :ip_ru_script => f) unless Configuration.in_safe_mode?
-    end
+    close_file_and_move_to_scripts f
   rescue => e
     log_rescue("[Boot][gen_ip_ru]", e)
     # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
@@ -555,10 +556,11 @@ def update_fallback_route force=false, boot=true
   commands = []
   #tabla default (fallback de todos los enlaces)
   currentroute=`ip -oneline ro li table default | grep default`.gsub("\\\t","  ").strip
-  if (currentroute != Provider.fallback_default_route and currentroute != Provider.fallback_default_route(true)) or force
-    if Provider.fallback_default_route != ""
+  fallback_default_route = Provider.fallback_default_route
+  if (currentroute != fallback_default_route and currentroute != Provider.fallback_default_route(true)) or force
+    if fallback_default_route != ""
       #TODO por ahora solo cambio si hay ruta, sino no toco x las dudas
-      commands << "ip ro re table default #{Provider.fallback_default_route}"
+      commands << "ip ro re table default #{fallback_default_route}"
     end
     #TODO loguear? el cambio de estado en una bitactora
   end
@@ -606,7 +608,7 @@ def setup_ip_ro
     end
 
     unless Configuration.in_safe_mode?
-      ProviderGroup.enabled.each do |pg|
+      ProviderGroup.enabled.all(:include => { :providers => :interface }).each do |pg|
         update_provider_group_route pg, true, true
       end
       update_fallback_route true, true
@@ -734,7 +736,7 @@ def do_provider_up(p)
   if p.kind == "adsl"
     commands << "tc qdisc del dev #{p.link_interface} root"
     commands << "tc qdisc del dev #{p.link_interface} ingress"
-    commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
+    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
   end
   exec_context_commands "do_provider_up #{p.id}", commands, I18n.t("command.human.do_provider_up"), false
 end
@@ -846,7 +848,7 @@ def setup_lan_interface i, boot=true
 end
 
 def setup_interfaces
-  Interface.all.each do |i|
+  Interface.all(:include => [{:provider => [:klass, :addresses]}, :addresses ]).each do |i|
     commands = []
     commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
     #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
@@ -883,47 +885,47 @@ end
 def setup_tc
   gen_tc
   commands = []
-  commands << "tc -b #{TC_FILE_PREFIX + IFB_UP}"
-  commands << "tc -b #{TC_FILE_PREFIX + IFB_DOWN}"
+  commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + IFB_UP)}"
+  commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + IFB_DOWN)}"
 
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
-    commands << "tc -b #{TC_FILE_PREFIX + interface.name}"
+    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + interface.name)}"
   end
   Provider.enabled.with_klass_and_interface.each do |p|
     #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada
-    commands << "tc -b #{TC_FILE_PREFIX + p.link_interface}"
+    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
   end
   exec_context_commands "setup_tc", commands, I18n.t("command.human.setup_tc")
 end
 
 def setup_ip_ru
   gen_ip_ru
-  exec_context_commands "ip_ru", "ip -batch #{IP_RU_FILE}", I18n.t("command.human.setup_ip_ru")
+  exec_context_commands "ip_ru", "ip -batch #{File.join(BASE_SCRIPTS, IP_RU_FILE)}", I18n.t("command.human.setup_ip_ru")
 end
 
 def setup_iptables
-  exec_context_commands "setup_iptables",["cp #{IPTABLES_FILE} #{IPTABLES_FILE}.tmp"], I18n.t("command.human.prepare_iptables")
+  exec_context_commands "setup_iptables",["cp #{File.join(BASE_SCRIPTS, IPTABLES_FILE)} #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}.tmp"], I18n.t("command.human.prepare_iptables")
 
   gen_iptables
   commands = []
   status = false
   if Configuration.firewall_enabled
-    status = exec_context_commands "setup_iptables", "iptables-restore < #{IPTABLES_FILE}", I18n.t("command.human.setup_iptables_try")
+    status = exec_context_commands "setup_iptables", "iptables-restore < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}", I18n.t("command.human.setup_iptables_try")
   else
     exec_context_commands "setup_iptables_pre", "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}", I18n.t("command.human.setup_iptables_try")
-    status = exec_context_commands "setup_iptables", "iptables-restore -n < #{IPTABLES_FILE}", I18n.t("command.human.setup_iptables_try")
+    status = exec_context_commands "setup_iptables", "iptables-restore -n < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}", I18n.t("command.human.setup_iptables_try")
   end
   exec_context_commands "setup_iptables_post", "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}", I18n.t("command.human.setup_iptables_try")
 
   if not status
     commands = []
-    commands << "mv #{IPTABLES_FILE} #{IPTABLES_FILE}.error"
-    commands << "mv #{IPTABLES_FILE}.tmp #{IPTABLES_FILE}"
+    commands << "mv #{File.join(BASE_SCRIPTS, IPTABLES_FILE)} #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}.error"
+    commands << "mv #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}.tmp #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
     if Configuration.firewall_enabled
-      commands << "iptables-restore < #{IPTABLES_FILE}"
+      commands << "iptables-restore < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
     else
       commands << "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}"
-      commands << "iptables-restore -n < #{IPTABLES_FILE}"
+      commands << "iptables-restore -n < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
     end
     commands << "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
     exec_context_commands "restore_old_iptables", commands, I18n.t("command.human.setup_iptables_restore_old"), boot=false
@@ -940,27 +942,41 @@ def setup_mail_relay
 end
 
 def boot(run=true)
+  Configuration.do_reload
+  create_dirs_if_not_present
   BootCommandContext.run = run
   BootCommandContext.clear_boot_file
-  create_dirs_if_not_present if Rails.env.development?
-  Configuration.do_reload
     I18n.locale = Configuration.language
     exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.create_tmp_file")
     exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}", I18n.t("command.human.sequreisp_pre")
 
+    Rails.logger.debug "[Boot] setup_nf_modules"
     setup_nf_modules
+    Rails.logger.debug "[Boot] setup_queued_commands"
     setup_queued_commands
+    Rails.logger.debug "[Boot] setup_clock"
     setup_clock
+    Rails.logger.debug "[Boot] setup_proc"
     setup_proc
+    Rails.logger.debug "[Boot] setup_interfaces"
     setup_interfaces
+    Rails.logger.debug "[Boot] setup_dynamic_providers_hooks"
     setup_dynamic_providers_hooks
+    Rails.logger.debug "[Boot] setup_proxy_arp"
     setup_proxy_arp
+    Rails.logger.debug "[Boot] setup_static_routes"
     setup_static_routes
+    Rails.logger.debug "[Boot] setup_ifbs"
     setup_ifbs
+    Rails.logger.debug "[Boot] setup_ip_ru"
     setup_ip_ru
+    Rails.logger.debug "[Boot] setup_ip_ro"
     setup_ip_ro
+    Rails.logger.debug "[Boot] setup_tc"
     setup_tc
+    Rails.logger.debug "[Boot] setup_iptables"
     setup_iptables
+    Rails.logger.debug "[Boot] setup_mail_relay"
     setup_mail_relay
 
     begin
@@ -974,6 +990,7 @@ def boot(run=true)
 
       exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}", I18n.t("command.human.sequreisp_post")
       exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.delete_tmp_file")
+      FileUtils.cp File.join(BASE_SCRIPTS_TMP, BOOT_FILE), BASE_SCRIPTS if File.exists?(File.join(BASE_SCRIPTS_TMP, BOOT_FILE))
     rescue => e
       log_rescue("[Boot][general_hook_and_service_restart]", e)
     end
