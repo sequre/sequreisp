@@ -798,7 +798,7 @@ end
 
 def setup_dhcp_interface(p)
   commands = []
-  commands << "/bin/ps x | grep \"[d]hclient.#{p.interface.name}.pid\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
+  commands << "/bin/ps -eo command | egrep \"^dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
   if p.online?
     p.addresses.each do |a|
       commands << "ip address | grep \"#{a.ip_in_cidr} .* #{p.link_interface}\" || ip address add #{a.ip_in_cidr} dev #{p.link_interface}"
