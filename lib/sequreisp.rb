@@ -55,7 +55,7 @@ def gen_tc
       Plan.all(:include => [:provider_group, :contracts]).each do |plan|
         plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ :time_modifiers, {:provider_group => :providers } ] }, :client]).each do |c|
           tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", plan)
-          #tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
+          tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
         end
       end
       # end
