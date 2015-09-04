@@ -90,6 +90,26 @@
 <div class="separador" style='margin-bottom: 5px;'></div>
 <div style="clear: both"></div>
 
+<h2>Uptime</h2>
+<table cellspacing="'" cellpadding="0">
+  <thead>
+    <tr class="odd">
+      <th>Uptime</th>
+      <th>Since</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><%= @uptime[0] %></td>
+      <td><%= @uptime[1] %></td>
+    </tr>
+  </tbody>
+</table>
+<div style="clear: both"></div>
+
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div style="clear: both"></div>
+
 <% @graphs_instant.each_value do |graph| %>
   <div id=<%= graph.render %> style="height:247px; width: 860px"></div>
 <% end %>

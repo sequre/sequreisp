@@ -84,6 +84,10 @@ module Dashboard
     def initialize
       @now, @min5, @min15 = `uptime`.split('load average:')[1].chomp.split(",").map(&:strip).map(&:to_f)
     end
+
+    def self.uptime 
+      @uptime = `uptime -p; uptime -s`.split("\n") 
+    end
   end
   class Cpu
     attr_reader :total, :kernel, :iowait
