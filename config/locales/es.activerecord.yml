@@ -747,3 +747,9 @@ es:
       daemon_synchronize_time: "Sincronización horario"
       daemon_compact_samples: "Generación de gráficos"
       daemon_redis: "Generación de estadisticas"
+  graphs:
+    titles:
+      disk: "Disco: %{name}"
+      ram: "Memoria RAM"
+      load_average: "Carga promedio del sistema"
+      cpu_usage: "Uso de CPU"
