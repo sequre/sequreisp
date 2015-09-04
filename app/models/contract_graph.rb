@@ -33,6 +33,7 @@ class ContractGraph < Graph
 
       graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
+                :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) }",
                 :series => series }
 
       default_options_graphs(graph)
@@ -63,6 +64,7 @@ class ContractGraph < Graph
 
         graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
                   :ytitle => 'bps(bits/second)',
+                  :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) }",
                   :series => series }
 
         default_options_graphs(graph)
@@ -112,6 +114,7 @@ class ContractGraph < Graph
 
     graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
+              :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) }",
               :series => series }
 
     default_options_graphs(graph)
@@ -136,6 +139,7 @@ class ContractGraph < Graph
 
     graph = { :title  => I18n.t("graphs.titles.latency"),
               :ytitle => "Milliseconds",
+              :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2)} + ms",
               :series => series }
 
     default_options_graphs(graph)
@@ -149,6 +153,7 @@ class ContractGraph < Graph
     graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
               :ytitle => I18n.t('graph.data'),
               :xtype  => 'category',
+              :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) }",
               :series => series }
 
     default_options_graphs(graph)
