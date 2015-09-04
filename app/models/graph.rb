@@ -18,6 +18,7 @@
 class Graph
   GREEN = '#00aa00'
   RED = '#aa0000'
+  BLUE = '#0000aa'
 
   attr_accessor :model, :method, :render
 
@@ -28,7 +29,11 @@ class Graph
     @minimal = false
   end
 
-  def graph!; send(@method).to_json; end
+  def graph!
+    gra = send(@method).to_json
+    gra.scan(/\"function.*\}\"/).flatten.each{|str| gra.sub!(str, str[1..-2]) }
+    gra
+  end
 
   def minimal_graph
     @minimal = true
@@ -49,8 +54,16 @@ class Graph
   end
 
   def path
-    # eval("app.graph_#{@model.class.name.downcase}_path(#{@model.id})") # ESTE SIRVE PARA CUANDO LO EJECUTO DESDE CONSOLA
     "graph_#{@model.class.name.downcase}_path(#{@model.id})"
+    #eval("app.graph_#{@model.class.name.downcase}_path(#{@model.id})") # ESTE SIRVE PARA CUANDO LO EJECUTO DESDE CONSOLA
+  end
+
+  def self.credit_text
+    "wispro.co"
+  end
+
+  def self.credit_href
+    "http://www.highcharts.com"
   end
 
   private
@@ -58,11 +71,16 @@ class Graph
   def default_options_graphs options={}
     options[:type] ||= 'line'
     options[:xtype] ||= 'datetime'
+    options[:tooltip_formatter] ||= 'undefined'
 
-    { :credits       => { :enabled => false },
+    { :credits       => { :enabled => @minimal? false : true,
+                          :text => Graph.credit_text,
+                          :href => Graph.credit_href },
       :chart         => { :renderTo => @render,
-                          :zoomType => 'x' },
+                          :zoomType => 'x',
+                          :type => options[:type] },
       :rangeSelector => { :selected => 1 },
+       :tooltip      => { :formatter => options[:tooltip_formatter] },
       :exporting     => { :enabled => @minimal? false : true },
       :legend        => { :enabled => @minimal? false : true,
                           :verticalAlign => 'bottom' },

@@ -269,6 +269,25 @@ class Configuration < ActiveRecord::Base
     SequreISP::Version.to_s
   end
 
+  def system_information
+    result = {}
+#    cpu = Dashboard::Cpu.new
+    load_average = Dashboard::LoadAverage.new
+
+    result[:cpu] = {}
+    result[:load_average] = {}
+
+    result[:cpu][:total] = cpu.total rescue 1
+    result[:cpu][:kernel] = cpu.kernel rescue 2
+    result[:cpu][:iowait] = cpu.iowait rescue 3
+
+    result[:load_average][:now] = load_average.now.to_i
+    result[:load_average][:min5] = load_average.min5.to_i
+    result[:load_average][:min15] = load_average.min15.to_i
+
+    result
+  end
+
   # This method is rewrite
   def self.daemons
     (Dir.entries("#{DEPLOY_DIR}/log") -[".", ".."]).select{|file| file.include?("daemon_")}.delete_if{|file| file.include?("comercial")}.sort

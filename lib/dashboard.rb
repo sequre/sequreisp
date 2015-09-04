@@ -88,7 +88,7 @@ module Dashboard
   class Cpu
     attr_reader :total, :kernel, :iowait
     def initialize
-      all = `mpstat 1 1`.grep(/Average/)[0].chomp.split
+      all = `mpstat 1 1`.grep(/[Average|Media]/)[0].chomp.split
       stats = all[2..10].map(&:to_i)
       @total = stats[0..7].sum
       @iowait = stats[3]
