@@ -7,7 +7,6 @@ class DashboardsController < ApplicationController
     # @swap = Dashboard::Memory.new(/Swap:/)
     @services = Dashboard::Service.load_all
     @daemons = Dashboard::Daemon.load_all
-    @uptime = Dashboard::LoadAverage.uptime
     @graphs_instant = {}
     @graphs = {}
     conf = Configuration.first

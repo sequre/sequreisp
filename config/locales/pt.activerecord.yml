@@ -397,6 +397,7 @@ pt:
     support: "Apoio"
     command_log: "Log de ​​comando"
     devices: "Dispositivos"
+    uptime: "Uptime"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'

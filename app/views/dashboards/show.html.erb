@@ -62,8 +62,10 @@
 
   });
 </script>
-  <% content_for :title, t('menu.dashboard') %>
-<% heading t('menu.dashboard') %>
+<td>
+
+<% content_for :title, t('menu.dashboard') %>
+<% heading "#{t('menu.uptime')}: #{l(Configuration.uptime, :format => :long)}"  %>
 
 <ul class="nav" style="float:right">
   <% if current_user.may_reboot_dashboard? %>
@@ -90,39 +92,31 @@
 <div class="separador" style='margin-bottom: 5px;'></div>
 <div style="clear: both"></div>
 
-<h2>Uptime</h2>
-<table cellspacing="'" cellpadding="0">
-  <thead>
-    <tr class="odd">
-      <th>Uptime</th>
-      <th>Since</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><%= @uptime[0] %></td>
-      <td><%= @uptime[1] %></td>
-    </tr>
-  </tbody>
-</table>
-<div style="clear: both"></div>
-
-<div class="separador" style='margin-bottom: 5px;'></div>
-<div style="clear: both"></div>
-
-<% @graphs_instant.each_value do |graph| %>
-  <div id=<%= graph.render %> style="height:247px; width: 860px"></div>
-<% end %>
-
-<div class="separador" style='margin-bottom: 5px;'></div>
-<div style="clear: both"></div>
-
 <table>
   <tr>
-    <td>
+    <td valign="top">
+      <h2><%=t 'dashboard.daemons' %></h2>
+      <div id="daemons">
+        <table>
+	  <tbody>
+	    <tr class="odd">
+              <th><%=t 'dashboard.daemons_table.daemon' %></th>
+              <th><%=t 'dashboard.daemons_table.status' %></th>
+	    </tr>
+	    <% @daemons.each do |daemon| %>
+	      <tr class="even" >
+		<td> <%= daemon.name %> <%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
+		<td id="daemon_<%= daemon.id %>"> <%= daemon.status_html %> </td>
+	      </tr>
+	    <% end %>
+	  </tbody>
+	</table>
+      </div>
+    </td>
+    <td valign="top">
       <h2><%=t 'dashboard.services' %></h2>
       <div id="services">
-	<table cellspacing="0" cellpadding="0">
+	<table>
 	  <tbody>
 	    <tr class="odd">
               <th><%=t 'dashboard.services_table.service' %></th>
@@ -142,27 +136,15 @@
 	</table>
       </div>
     </td>
-    <td>
-      <h2><%=t 'dashboard.daemons' %></h2>
-      <div id="services">
-	<table cellspacing="0" cellpadding="0">
-	  <tbody>
-	    <tr class="odd">
-              <th><%=t 'dashboard.daemons_table.daemon' %></th>
-              <th><%=t 'dashboard.daemons_table.status' %></th>
-	    </tr>
-	    <% @daemons.each do |daemon| %>
-	      <tr class="even" >
-		<td> <%= daemon.name %> <%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
-		<td id="daemon_<%= daemon.id %>"> <%= daemon.status_html %> </td>
-	      </tr>
-	    <% end %>
-	  </tbody>
-	</table>
-      </div>
-    </td>
   </tr>
 </table>
+
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div style="clear: both"></div>
+
+<% @graphs_instant.each_value do |graph| %>
+  <div id=<%= graph.render %> style="height:247px; width: 860px"></div>
+<% end %>
 
 <div class="separador" style='margin-bottom: 5px;'></div>
 <div style="clear: both"></div>

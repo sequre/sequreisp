@@ -403,6 +403,7 @@ en:
     command_log: "Command log"
     devices: "Devices"
     device_brands: "Device Brands"
+    uptime: "Uptime"
   table_headers:
     plans:
       plugins_enabled: 'Plugins enabled'

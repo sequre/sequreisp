@@ -288,6 +288,11 @@ class Configuration < ActiveRecord::Base
     result
   end
 
+  def self.uptime
+    time = `cat /proc/uptime`.split(" ").first
+    Time.at((DateTime.now.to_i -  DateTime.strptime("#{time}",'%s').to_i))
+  end
+
   # This method is rewrite
   def self.daemons
     (Dir.entries("#{DEPLOY_DIR}/log") -[".", ".."]).select{|file| file.include?("daemon_")}.delete_if{|file| file.include?("comercial")}.sort

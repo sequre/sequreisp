@@ -403,6 +403,7 @@ es:
     command_log: "Log de comandos"
     devices: "Dispositivos"
     device_brands: "Marcas de dispositivo"
+    uptime: "Tiempo activo"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'
