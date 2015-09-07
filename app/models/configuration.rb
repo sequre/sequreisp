@@ -271,19 +271,20 @@ class Configuration < ActiveRecord::Base
 
   def system_information
     result = {}
-#    cpu = Dashboard::Cpu.new
+    cpu = Dashboard::Cpu.new
     load_average = Dashboard::LoadAverage.new
+    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
 
     result[:cpu] = {}
     result[:load_average] = {}
 
-    result[:cpu][:total] = cpu.total rescue 1
-    result[:cpu][:kernel] = cpu.kernel rescue 2
-    result[:cpu][:iowait] = cpu.iowait rescue 3
+    result[:cpu][:total] = [ date_time_now, cpu.total ]
+    result[:cpu][:kernel] = [ date_time_now, cpu.kernel ]
+    result[:cpu][:iowait] = [ date_time_now, cpu.iowait ]
 
-    result[:load_average][:now] = load_average.now.to_i
-    result[:load_average][:min5] = load_average.min5.to_i
-    result[:load_average][:min15] = load_average.min15.to_i
+    result[:load_average][:now] =  [ date_time_now, load_average.now.to_i ]
+    result[:load_average][:min5] = [ date_time_now, load_average.min5.to_i ]
+    result[:load_average][:min15] = [ date_time_now, load_average.min15.to_i ]
 
     result
   end

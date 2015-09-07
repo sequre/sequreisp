@@ -24,12 +24,13 @@ class DashboardsController < ApplicationController
     end
   end
 
-  def cpu
-    @cpu = Dashboard::Cpu.new
-    respond_to do |format|
-      format.json { render :json => @cpu.stats }
-    end
-  end
+  # def cpu
+  #   @cpu = Dashboard::Cpu.new
+  #   respond_to do |format|
+  #     format.json { render :json => @cpu.stats }
+  #   end
+  # end
+
   def services
     @services = Dashboard::Service.load_all
     respond_to do |format|
@@ -44,12 +45,13 @@ class DashboardsController < ApplicationController
     end
   end
 
-  def load_average
-    @load_average = Dashboard::LoadAverage.new
-    respond_to do |format|
-      format.json { render :json => @load_average }
-    end
-  end
+  # def load_average
+  #   @load_average = Dashboard::LoadAverage.new
+  #   respond_to do |format|
+  #     format.json { render :json => @load_average }
+  #   end
+  # end
+
   def reboot
     if system("sleep 5 && sudo /usr/sbin/reboot &")
       flash[:notice] = I18n.t('messages.dashboard.reboot')
