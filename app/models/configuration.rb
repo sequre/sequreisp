@@ -158,7 +158,7 @@ class Configuration < ActiveRecord::Base
     self.last_changes_applied_at = Time.now
     self.changes_to_apply = false
     self.daemon_reload = true
-    save ? [] : errors.full_message
+    save ? [] : errors.full_messages
   end
 
   def auditable_name
