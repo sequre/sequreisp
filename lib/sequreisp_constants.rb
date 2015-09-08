@@ -42,6 +42,7 @@ COMMAND_LOG ="#{DEPLOY_DIR}/log/command.log"
 HUMANIZED_COMMAND_LOG ="#{DEPLOY_DIR}/log/command_human.log"
 APPLICATION_LOG = "#{DEPLOY_DIR}/log/application.log"
 SOFT_NAME = "Wispro"
+SOFT_URL = "http://www.wispro.co"
 
 # postfix
 PATH_POSTFIX = Rails.env.production? ? "/etc/postfix/main.cf" : "/tmp/main.cf"

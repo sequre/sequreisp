@@ -59,11 +59,11 @@ class Graph
   end
 
   def self.credit_text
-    "wispro.co"
+    SOFT_NAME
   end
 
   def self.credit_href
-    "http://www.highcharts.com"
+    SOFT_URL
   end
 
   private
