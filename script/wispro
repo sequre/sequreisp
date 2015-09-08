@@ -127,10 +127,10 @@ opts = OptionParser.new do |opts|
                                                     |daemon_notification
                                                     |daemon_network_monitoring
                                                     |daemon_net_audit]") do |daemon|
-    change_daemon_log_level daemon, 0
+    change_daemon_attribute daemon, 'level_log', 0
   end
 
-  opts.on("-i", "--debug-mode DAEMON", "Enable debug-mode for daemon log. Example:
+  opts.on("-i", "--info-mode DAEMON", "Enable info-mode for daemon log. Example:
                                           wispro -i [daemon_invoicing
                                                     |daemon_dyndns
                                                     |daemon_synchronize_time
@@ -147,20 +147,60 @@ opts = OptionParser.new do |opts|
                                                     |daemon_notification
                                                     |daemon_network_monitoring
                                                     |daemon_net_audit]") do |daemon|
-    change_daemon_log_level daemon, 1
+    change_daemon_attribute daemon, 'level_log', 1
   end
 
-  def change_daemon_log_level daemons_input, level
+  opts.on("-w", "--enable-daemon DAEMON", "Enable daemon. Example:
+                                          wispro -w [daemon_invoicing
+                                                    |daemon_dyndns
+                                                    |daemon_synchronize_time
+                                                    |daemon_compact_samples
+                                                    |daemon_redis
+                                                    |daemon_check_bind
+                                                    |daemon_backup_restore
+                                                    |daemon_check_link
+                                                    |daemon_apply_change_automatically
+                                                    |daemon_apply_change
+                                                    |daemon_traffic_accounting
+                                                    |daemon_time_modifier
+                                                    |daemon_remote_backup
+                                                    |daemon_notification
+                                                    |daemon_network_monitoring
+                                                    |daemon_net_audit]") do |daemon|
+    change_daemon_attribute daemon, 'enabled', true
+  end
+
+  opts.on("-x", "--disable-daemon DAEMON", "Disable daemon. Example:
+                                          wispro -x [daemon_invoicing
+                                                    |daemon_dyndns
+                                                    |daemon_synchronize_time
+                                                    |daemon_compact_samples
+                                                    |daemon_redis
+                                                    |daemon_check_bind
+                                                    |daemon_backup_restore
+                                                    |daemon_check_link
+                                                    |daemon_apply_change_automatically
+                                                    |daemon_apply_change
+                                                    |daemon_traffic_accounting
+                                                    |daemon_time_modifier
+                                                    |daemon_remote_backup
+                                                    |daemon_notification
+                                                    |daemon_network_monitoring
+                                                    |daemon_net_audit]") do |daemon|
+    change_daemon_attribute daemon, 'enabled', false
+  end
+
+  def change_daemon_attribute daemons_input, attribute, value
     require 'yaml'
     daemons_input = `#{PATH_APP}/script/runner -e production \"puts Configuration.daemons.join(',')\"` if daemons_input == "all"
     daemons = daemons_input.delete("\n").split(",")
     daemons.each do |daemon|
       root_path = PATH_APP
       plugin = daemon.sub('daemon_', '')
-      root_path += "/vendor/plugins/#{plugin_dir}" if plugin_dir = PLUGINS.select{|p| p.include?(plugin)}.first
+      root_path += "vendor/plugins/#{plugin_dir}" if plugin_dir = PLUGINS.select{|p| p.include?(plugin)}.first
       daemon_path = "#{root_path}/config/daemon_tasks.yml"
       daemon_config = YAML.load(File.read(daemon_path))
-      daemon_config[daemon]['level_log'] = level
+      daemon_config[daemon][attribute] = value
       File.open(daemon_path, 'w'){|l| l.puts daemon_config.to_yaml }
     end
   end
