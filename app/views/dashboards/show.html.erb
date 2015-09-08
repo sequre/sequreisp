@@ -29,31 +29,21 @@
       get_data();
     }, 5000);
 
-    setInterval(function() {
-      $('.services_loader').show();
-      $.get('<%= services_dashboard_path %>', function(services){
-       $.each(services, function (index, s) {
-	   $('#up_'+ s.id).html(s.up_html);
-          $('#cpu_p_'+ s.id).html(s.cpu_p_html);
-          $('#mem_p_'+ s.id).html(s.mem_p_html);
-	 });
-       $('.services_loader').hide();
-      },'json');
-    }, 15000);
-
-    setInterval(function() {
-      $('.daemons_loader').show();
-     $.get('<%= daemons_dashboard_path%>', function(daemons){
-       $.each(daemons, function (index, daemon) {
-          $('#daemon_'+ daemon.id).html(daemon.status_html);
-        });
-        $('.daemons_loader').hide();
-      },'json');
-    }, 15000);
-
   });
   function get_data(){
     $.get('<%= instant_dashboard_path %>', null, function(data) {
+      $('.daemons_loader').show().delay(2000).fadeOut();
+      $.each(data.daemons, function (index, daemon) {
+        $('#daemon_'+ daemon.id).html(daemon.status_html);
+      });
+
+      $('.services_loader').show().delay(2000).fadeOut();
+      $.each(data.services, function (index, s) {
+        $('#up_'+ s.id).html(s.up_html);
+        $('#cpu_p_'+ s.id).html(s.cpu_p_html);
+        $('#mem_p_'+ s.id).html(s.mem_p_html);
+      });
+
       <% keys.each do |key| %>
         <%= key %>.series[0].addPoint(data.<%= key %>.arg1, true, true);
         <%= key %>.series[1].addPoint(data.<%= key %>.arg2, true, true);

@@ -2,8 +2,6 @@ class DashboardsController < ApplicationController
   before_filter :require_user
   permissions :dashboard
   def show
-    # @disks = Dashboard::Disk.load_all
-    # @ram = Dashboard::Memory.new(/Mem:/)
     # @swap = Dashboard::Memory.new(/Swap:/)
     @services = Dashboard::Service.load_all
     @daemons = Dashboard::Daemon.load_all
@@ -24,33 +22,11 @@ class DashboardsController < ApplicationController
     end
   end
 
-  # def cpu
-  #   @cpu = Dashboard::Cpu.new
-  #   respond_to do |format|
-  #     format.json { render :json => @cpu.stats }
-  #   end
-  # end
-
-  def services
-    @services = Dashboard::Service.load_all
+  def instant
     respond_to do |format|
-      format.json { render :json => @services }
+      format.json { render :json => Configuration.system_information }
     end
   end
-
-  def daemons
-    @daemons = Dashboard::Daemon.load_all
-    respond_to do |format|
-      format.json { render :json => @daemons }
-    end
-  end
-
-  # def load_average
-  #   @load_average = Dashboard::LoadAverage.new
-  #   respond_to do |format|
-  #     format.json { render :json => @load_average }
-  #   end
-  # end
 
   def reboot
     if system("sleep 5 && sudo /usr/sbin/reboot &")
@@ -67,11 +43,5 @@ class DashboardsController < ApplicationController
       flash[:error] = I18n.t('messages.dashboard.halt_error')
     end
     redirect_to :back
-  end
-
-  def instant
-    respond_to do |format|
-      format.json { render :json => Configuration.system_information }
-    end
   end
 end

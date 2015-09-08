@@ -273,6 +273,8 @@ class Configuration < ActiveRecord::Base
     result = {}
     cpus = Dashboard::Cpu.new.stats
     load_average = Dashboard::LoadAverage.new
+    result[:daemons] = Dashboard::Daemon.load_all
+    result[:services] = Dashboard::Service.load_all
     date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
 
     cpus.each do |key, sample|

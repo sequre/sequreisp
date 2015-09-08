@@ -31,7 +31,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resource :about
 
-  map.resource :dashboard, :collection => { :cpu => :get , :services => :get, :load_average => :get, :reboot => :get, :halt => :get, :daemons => :get, :instant => :get }
+  map.resource :dashboard, :collection => { :reboot => :get, :halt => :get, :instant => :get }
 
   map.resources :always_allowed_sites
 

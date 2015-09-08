@@ -94,7 +94,7 @@ module Dashboard
       result.shift
       result.each do |cp|
         cp_strip = cp.chomp.split
-        @cpu["cpu_#{cp_strip[1]}"] = {:total => cp_strip[2..10].map(&:to_f).sum, :iowait => cp_strip[5].to_f, :kernel => cp_strip[4].to_f }
+        @cpu["cpu_#{cp_strip[1]}"] = {:total => cp_strip[2..9].map(&:to_f).sum, :iowait => cp_strip[5].to_f, :kernel => cp_strip[4].to_f }
       end
     end
     def stats
