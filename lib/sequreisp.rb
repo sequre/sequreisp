@@ -798,7 +798,7 @@ end
 
 def setup_dhcp_interface(p)
   commands = []
-  commands << "/bin/ps x | grep \"[d]hclient.#{p.interface.name}.pid\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
+  commands << "/bin/ps -eo command | egrep \"^dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid\" &>/dev/null || dhclient3 -nw -pf /var/run/dhclient.#{p.link_interface}.pid -lf /var/lib/dhcp3/dhclient.#{p.link_interface}.leases #{p.link_interface}"
   if p.online?
     p.addresses.each do |a|
       commands << "ip address | grep \"#{a.ip_in_cidr} .* #{p.link_interface}\" || ip address add #{a.ip_in_cidr} dev #{p.link_interface}"
@@ -850,7 +850,16 @@ end
 def setup_interfaces
   Interface.all(:include => [{:provider => [:klass, :addresses]}, :addresses ]).each do |i|
     commands = []
-    commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
+    if i.vlan?
+      commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}"
+      #BTW, in your case the drops most likely occur because HFSC's default pfifo
+      #child qdiscs use the tx_queue_len of the device as their limit, which in
+      #case of vlan devices is zero (in that case 1 is used).
+      #So you can either increase the tx_queue_len of the vlan device or manually
+      #add child qdiscs with bigger limits.
+      commands << "ip link set #{i.name} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_VLAN}"
+    end
+
     #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
     commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || (ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address})"
     #commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
