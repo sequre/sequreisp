@@ -850,7 +850,16 @@ end
 def setup_interfaces
   Interface.all(:include => [{:provider => [:klass, :addresses]}, :addresses ]).each do |i|
     commands = []
-    commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}" if i.vlan?
+    if i.vlan?
+      commands << "ip link list #{i.name} &>/dev/null || vconfig add #{i.vlan_interface.name} #{i.vlan_id}"
+      #BTW, in your case the drops most likely occur because HFSC's default pfifo
+      #child qdiscs use the tx_queue_len of the device as their limit, which in
+      #case of vlan devices is zero (in that case 1 is used).
+      #So you can either increase the tx_queue_len of the vlan device or manually
+      #add child qdiscs with bigger limits.
+      commands << "ip link set #{p.interface.name} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_VLAN}"
+    end
+
     #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
     commands << "ip -o link list #{i.name} | grep -o -i #{i.mac_address} >/dev/null || (ip link set dev #{i.name} down && ip link set #{i.name} address #{i.mac_address})"
     #commands << "ip link set #{i.name} address #{i.mac_address}" if mac_address.present?
