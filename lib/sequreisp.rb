@@ -857,7 +857,7 @@ def setup_interfaces
       #case of vlan devices is zero (in that case 1 is used).
       #So you can either increase the tx_queue_len of the vlan device or manually
       #add child qdiscs with bigger limits.
-      commands << "ip link set #{p.interface.name} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_VLAN}"
+      commands << "ip link set #{i.name} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_VLAN}"
     end
 
     #commands << "ip link set dev #{i.name} down" SOLO SI ES NECESARIO CAMBIAR LA MAC
