@@ -285,9 +285,9 @@ class Configuration < ActiveRecord::Base
     end
 
     result[:load_average_instant] = {}
-    result[:load_average_instant][:arg1] = [ date_time_now, load_average.now.to_i   ]
-    result[:load_average_instant][:arg2] = [ date_time_now, load_average.min5.to_i  ]
-    result[:load_average_instant][:arg3] = [ date_time_now, load_average.min15.to_i ]
+    result[:load_average_instant][:arg1] = [ date_time_now, load_average.now.to_f   ]
+    result[:load_average_instant][:arg2] = [ date_time_now, load_average.min5.to_f  ]
+    result[:load_average_instant][:arg3] = [ date_time_now, load_average.min15.to_f ]
 
     result
   end

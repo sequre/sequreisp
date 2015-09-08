@@ -5,9 +5,11 @@
 <style>
 .services_loader {
   display: none;
+  overflow:hidden;
 }
 .daemons_loader {
   display: none;
+  overflow:hidden;
 }
 
 </style>
@@ -90,12 +92,14 @@
         <table>
 	  <tbody>
 	    <tr class="odd">
+	       <th  style="width: 14px"></th>
               <th><%=t 'dashboard.daemons_table.daemon' %></th>
               <th><%=t 'dashboard.daemons_table.status' %></th>
 	    </tr>
 	    <% @daemons.each do |daemon| %>
 	      <tr class="even" >
-		<td> <%= daemon.name %> <%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
+		<td  style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
+		<td> <%= daemon.name %></td>
 		<td id="daemon_<%= daemon.id %>"> <%= daemon.status_html %> </td>
 	      </tr>
 	    <% end %>
@@ -109,6 +113,7 @@
 	<table>
 	  <tbody>
 	    <tr class="odd">
+	       <th style="width: 14px"></th>
               <th><%=t 'dashboard.services_table.service' %></th>
               <th><%=t 'dashboard.services_table.status' %></th>
               <th>CPU %</th>
@@ -116,7 +121,8 @@
 	    </tr>
 	    <% @services.each do |s| %>
 	      <tr class="even" >
-		<td> <%= s.name %> <%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
+		<td style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
+		<td> <%= s.name %></td>
 		<td id="up_<%= s.id %>"> <%= s.up_html %> </td>
 		<td id="cpu_p_<%= s.id %>"> <%= s.cpu_p_html %> </td>
 		<td id="mem_p_<%= s.id %>"> <%= s.mem_p_html %> </td>
