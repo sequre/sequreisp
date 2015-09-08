@@ -33,13 +33,17 @@ class ContractSample < ActiveRecord::Base
     conf = CONF_PERIODS
     ContractSample.transaction {
       conf.each_key do |key|
-        last = ContractSample.last_samples(conf[key][:period_number]).all
+        last = Contract.all.collect{|c| c.contract_samples.for_period(conf[key][:period_number]).all( :order => "sample_number DESC", :limit => 1) }.flatten
         conf[key][:samples_to_compact] = {}
         conf[key][:last_sample_time] = {}
 
-        ContractSample.for_period(conf[key][:period_number]).total_samples_for_period.all.each do |cs|
-          conf[key][:last_sample_time][cs.contract_id]   = last.find{ |ls| ls.contract_id == cs.contract_id }.sample_number.to_i
-          conf[key][:samples_to_compact][cs.contract_id] = ContractSample.for_period(conf[key][:period_number]).samples_to_compact(cs.contract_id, conf[key][:excess_count]).all if cs.total_samples.to_i >= conf[key][:sample_size_cut]
+        if conf[key][:sample_size_cut]
+          ContractSample.for_period(conf[key][:period_number]).total_samples_for_period.all.each do |cs|
+            conf[key][:last_sample_time][cs.contract_id]   = last.find{ |ls| ls.contract_id == cs.contract_id }.sample_number.to_i
+            conf[key][:samples_to_compact][cs.contract_id] = ContractSample.for_period(conf[key][:period_number]).samples_to_compact(cs.contract_id, conf[key][:excess_count]).all if cs.total_samples.to_i >= conf[key][:sample_size_cut]
+          end
+        else
+           conf[key][:last_sample_time] = Hash[last.collect{ |cs| [cs.contract_id, cs.sample_number.to_i] }]
         end
       end
     }

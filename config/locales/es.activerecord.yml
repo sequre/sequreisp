@@ -753,4 +753,5 @@ es:
       disk: "Disco: %{name}"
       ram: "Memoria RAM"
       load_average: "Carga promedio del sistema"
-      cpu_usage: "Uso de CPU"
+      cpu_average: "Promedio total de CPU"
+      cpu: "CPU: %{number}"

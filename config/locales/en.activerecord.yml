@@ -734,4 +734,5 @@ en:
       disk: "Disk: %{name}"
       ram: "RAM Memory"
       load_average: "Load Average"
-      cpu_usage: "CPU Usage"
+      cpu_average: "Total CPU average"
+      cpu: "CPU: %{number}"

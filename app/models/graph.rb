@@ -20,7 +20,7 @@ class Graph
   RED = '#aa0000'
   BLUE = '#0000aa'
 
-  attr_accessor :model, :method, :render
+  attr_accessor :model, :method, :render, :height, :width, :float
 
   def initialize(model, method, options={})
     @model = model

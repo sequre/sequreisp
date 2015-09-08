@@ -1,5 +1,5 @@
 class SystemGraph < Graph
-  GRAPHS = ["load_average_instant", "cpu_instant", "ram"]
+  GRAPHS = ["load_average_instant", "ram"]
 
   Dashboard::Disk.load_all.each do |disk|
     disk_name = disk.device.split('/').last.split('-').last
@@ -50,9 +50,9 @@ class SystemGraph < Graph
 
     data = faker_values({ :size => 12,
                           :time => (5 * 1000),
-                          :keys => { :now  => Rails.env.production? ? 0 : 1,
-                                     :min5 => Rails.env.production? ? 0 : 2,
-                                     :min15 => Rails.env.production? ? 0 : 3 } })
+                          :keys => { :now   => 0,
+                                     :min5  => 0,
+                                     :min15 => 0 } })
 
     series = [ { :name => 'now',
                  :color => GREEN,
@@ -76,36 +76,43 @@ class SystemGraph < Graph
     default_options_graphs(graph)
   end
 
-  def cpu_instant
-    data = { :total => [], :kernel => [], :iowait => [] }
+  Dashboard::Cpu.new.stats.each do |key, sample|
+    GRAPHS << "#{key}_instant"
+    define_method("#{key}_instant") do
+      data = { :total => [], :kernel => [], :iowait => [] }
 
-    data = faker_values({ :size => 12,
-                          :time => (5 * 1000),
-                          :keys => { :total  => Rails.env.production? ? 0 : 1,
-                                     :kernel => Rails.env.production? ? 0 : 2,
-                                     :iowait => Rails.env.production? ? 0 : 3 } })
+      data = faker_values({ :size => 12,
+                            :time => (5 * 1000),
+                            :keys => { :total  => 0,
+                                       :kernel => 0,
+                                       :iowait => 0 } })
 
-    series = [ { :name => 'Total',
-                 :color => GREEN,
-                 :type  => "spline",
-                 :data => data[:total] },
-               { :name => 'Kernel',
-                 :color => RED,
-                 :type  => "spline",
-                 :data => data[:kernel] },
-               { :name => 'IO/Wait',
-                 :color => BLUE,
-                 :type  => "spline",
-                 :data => data[:iowait] } ]
+      series = [ { :name  => 'Total',
+                   :color => GREEN,
+                   :type  => "spline",
+                   :data  => data[:total] },
+                 { :name  => 'Kernel',
+                   :color => RED,
+                   :type  => "spline",
+                   :data  => data[:kernel] },
+                 { :name  => 'IO/Wait',
+                   :color => BLUE,
+                   :type  => "spline",
+                   :data  => data[:iowait] } ]
 
+      core_number = key.split("_").last
 
-    graph = { :title  => I18n.t("graphs.titles.cpu_usage"),
-              :ytitle => "percentage",
-              :tooltip_formatter => "function() {return '<b>'+ this.series.name +'</b><br/>'+Highcharts.numberFormat(this.y, 2)}",
-              :series => series }
+      title = (core_number == "all")? I18n.t("graphs.titles.cpu_average") : I18n.t("graphs.titles.cpu", :number => core_number )
+
+      graph = { :title  => title,
+                :ytitle => "percentage",
+                :tooltip_formatter => "function() {return '<b>'+ this.series.name +'</b><br/>'+Highcharts.numberFormat(this.y, 2)}",
+                :series => series }
 
     default_options_graphs(graph)
+    end
   end
+
 
   def self.supported_graphs
     GRAPHS

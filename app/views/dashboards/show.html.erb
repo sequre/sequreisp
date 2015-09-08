@@ -12,19 +12,10 @@
 
 </style>
 <script type="text/javascript">
-  function get_data(){
-    $.get('<%= instant_dashboard_path %>', null, function(data) {
-     cpu_instant.series[0].addPoint(data.cpu.total, true, true);
-     cpu_instant.series[1].addPoint(data.cpu.kernel, true, true);
-     cpu_instant.series[2].addPoint(data.cpu.iowait, true, true);
-
-     load_average_instant.series[0].addPoint(data.load_average.now  , true, true);
-     load_average_instant.series[1].addPoint(data.load_average.min5 , true, true);
-     load_average_instant.series[2].addPoint(data.load_average.min15, true, true);
-    },'json');
-  };
   $(document).ready(function() {
+   <% keys = [] %>
     <% @graphs_instant.each do |key, graph| %>
+      <% keys << key %>
       <%= key %> = new Highcharts.Chart(<%= graph.graph! %>);
     <% end %>
 
@@ -61,6 +52,15 @@
     }, 15000);
 
   });
+  function get_data(){
+    $.get('<%= instant_dashboard_path %>', null, function(data) {
+      <% keys.each do |key| %>
+        <%= key %>.series[0].addPoint(data.<%= key %>.arg1, true, true);
+        <%= key %>.series[1].addPoint(data.<%= key %>.arg2, true, true);
+        <%= key %>.series[2].addPoint(data.<%= key %>.arg3, true, true);
+      <% end %>
+    },'json');
+  };
 </script>
 <td>
 
@@ -142,8 +142,14 @@
 <div class="separador" style='margin-bottom: 5px;'></div>
 <div style="clear: both"></div>
 
+<div id=<%= @graphs_instant["load_average_instant"].render %> style="height:247px; width: 860px"></div>
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div style="clear: both"></div>
+<div id=<%= @graphs_instant["cpu_all_instant"].render %> style="height:247px; width: 860px"></div>
+<% @graphs_instant.delete("load_average_instant") %>
+<% @graphs_instant.delete("cpu_all_instant") %>
 <% @graphs_instant.each_value do |graph| %>
-  <div id=<%= graph.render %> style="height:247px; width: 860px"></div>
+  <div id=<%= graph.render %> style="height:247px; width: 430px; float:left;"></div>
 <% end %>
 
 <div class="separador" style='margin-bottom: 5px;'></div>

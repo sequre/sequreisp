@@ -21,6 +21,7 @@ class Interface < ActiveRecord::Base
   DEFAULT_TX_QUEUE_LEN_FOR_IFB = 1000
   acts_as_audited
   belongs_to :vlan_interface, :class_name => "Interface", :foreign_key => "vlan_interface_id"
+  has_many :interface_samples
   has_many :vlan_interfaces, :class_name => "Interface", :foreign_key => "vlan_interface_id", :dependent => :destroy
   has_one :provider, :dependent => :nullify
   has_many :addresses, :as => :addressable, :class_name => "Address", :dependent => :destroy

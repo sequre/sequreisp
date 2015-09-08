@@ -33,6 +33,7 @@ class Contract < ActiveRecord::Base
   belongs_to :client
   belongs_to :plan
 
+  has_many :contract_samples
   has_many :forwarded_ports, :dependent => :destroy
   accepts_nested_attributes_for :forwarded_ports, :reject_if => :all_blank, :allow_destroy => true
   has_one :klass, :dependent => :nullify

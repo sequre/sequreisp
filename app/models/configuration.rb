@@ -271,20 +271,21 @@ class Configuration < ActiveRecord::Base
 
   def system_information
     result = {}
-    cpu = Dashboard::Cpu.new
+    cpus = Dashboard::Cpu.new.stats
     load_average = Dashboard::LoadAverage.new
     date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
 
-    result[:cpu] = {}
-    result[:load_average] = {}
+    cpus.each do |key, sample|
+      result["#{key}_instant"] = {}
+      result["#{key}_instant"][:arg1] = [ date_time_now, sample[:total]  ]
+      result["#{key}_instant"][:arg2] = [ date_time_now, sample[:kernel] ]
+      result["#{key}_instant"][:arg3] = [ date_time_now, sample[:iowait] ]
+    end
 
-    result[:cpu][:total] = [ date_time_now, cpu.total ]
-    result[:cpu][:kernel] = [ date_time_now, cpu.kernel ]
-    result[:cpu][:iowait] = [ date_time_now, cpu.iowait ]
-
-    result[:load_average][:now] =  [ date_time_now, load_average.now.to_i ]
-    result[:load_average][:min5] = [ date_time_now, load_average.min5.to_i ]
-    result[:load_average][:min15] = [ date_time_now, load_average.min15.to_i ]
+    result[:load_average_instant] = {}
+    result[:load_average_instant][:arg1] = [ date_time_now, load_average.now.to_i   ]
+    result[:load_average_instant][:arg2] = [ date_time_now, load_average.min5.to_i  ]
+    result[:load_average_instant][:arg3] = [ date_time_now, load_average.min15.to_i ]
 
     result
   end
