@@ -16,6 +16,9 @@ class DashboardsController < ApplicationController
       end
     end
 
+    @graphs.sort_by_key
+    @graphs_instant.sort_by_key
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => conf }

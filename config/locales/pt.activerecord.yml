@@ -507,6 +507,7 @@ pt:
     new: "Criando %{model}"
     login: "Aceso"
   messages:
+    uptime: "%{day} dias, %{hour} horas, %{minute} atas e %{second} segundos"
     audits:
       changes_in: "Alterações"
       selected_attributes: "atributo/s seleccionado/s"
@@ -731,4 +732,4 @@ pt:
       ram: "RAM Memory"
       load_average: "Load Average"
       cpu_average: "Total CPU average"
-      cpu: "CPU: %{number}"
+      cpu: "Core: %{number}"

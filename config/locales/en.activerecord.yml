@@ -513,6 +513,7 @@ en:
     new: "Creating %{model}"
     login: "Sign In"
   messages:
+    uptime: "%{day} days, %{hour} hours, %{minute} minutes and %{second} seconds"
     audits:
       changes_in: "Changes in"
       selected_attributes: "selected attributes"
@@ -735,4 +736,4 @@ en:
       ram: "RAM Memory"
       load_average: "Load Average"
       cpu_average: "Total CPU average"
-      cpu: "CPU: %{number}"
+      cpu: "Core: %{number}"

@@ -293,8 +293,13 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.uptime
-    time = `cat /proc/uptime`.split(" ").first
-    Time.at((DateTime.now.to_i -  DateTime.strptime("#{time}",'%s').to_i))
+    time = `cat /proc/uptime`.split(" ").first.to_f
+    # Time.at((DateTime.now.to_i -  DateTime.strptime("#{time}",'%s').to_i))
+    mm, ss = time.divmod(60)
+    hh, mm = mm.divmod(60)
+    dd, hh = hh.divmod(24)
+    # puts "%d days, %d hours, %d minutes and %d seconds" % [dd, hh, mm, ss]
+    I18n.t("messages.uptime", {:day => dd.to_i, :hour => hh.to_i, :minute => mm.to_i, :second => ss.to_i})
   end
 
   # This method is rewrite

@@ -530,6 +530,7 @@ es:
     new: "Creando %{model}"
     login: "Acceso"
   messages:
+    uptime: "%{day} dias, %{hour} horas, %{minute} minutos y %{second} segundos"
     audits:
       changes_in: "Cambios en"
       selected_attributes: "atributo/s seleccionado/s"
@@ -754,4 +755,4 @@ es:
       ram: "Memoria RAM"
       load_average: "Carga promedio del sistema"
       cpu_average: "Promedio total de CPU"
-      cpu: "CPU: %{number}"
+      cpu: "Core: %{number}"

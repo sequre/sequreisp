@@ -57,7 +57,7 @@
 <td>
 
 <% content_for :title, t('menu.dashboard') %>
-<% heading "#{t('menu.uptime')}: #{l(Configuration.uptime, :format => :long)}"  %>
+<% heading "#{t('menu.uptime')}: #{Configuration.uptime}"  %>
 
 <ul class="nav" style="float:right">
   <% if current_user.may_reboot_dashboard? %>
@@ -144,13 +144,14 @@
 <div id=<%= @graphs_instant["cpu_all_instant"].render %> style="height:247px; width: 860px"></div>
 <% @graphs_instant.delete("load_average_instant") %>
 <% @graphs_instant.delete("cpu_all_instant") %>
-<% @graphs_instant.each_value do |graph| %>
+
+<% @graphs_instant.sort_by_key.each_value do |graph| %>
   <div id=<%= graph.render %> style="height:247px; width: 430px; float:left;"></div>
 <% end %>
 
 <div class="separador" style='margin-bottom: 5px;'></div>
 <div style="clear: both"></div>
 
-<% @graphs.each_value do |graph| %>
-   <div id=<%= graph.render %> style="height:247px; width: 430px; float:left;"></div>
+<% @graphs.sort_by_key.each_value do |graph| %>
+  <div id=<%= graph.render %> style="height:247px; width: 430px; float:left;"></div>
 <% end %>
