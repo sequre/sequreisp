@@ -26,14 +26,7 @@ class DaemonTask
     @conf_daemon = $daemon_configuration[@name.underscore]
     @time_for_exec[:frecuency] = eval(@conf_daemon["frecuency"])
     @priority = @conf_daemon.has_key?("priority") ? @conf_daemon["priority"].to_i : -5
-    @log_path = "#{DEPLOY_DIR}/log/#{self.class.to_s.underscore.downcase}"
-    FileUtils.touch @log_path
-    @daemon_logger = Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 1.megabytes)
-    @daemon_logger.formatter = proc do |severity, datetime, progname, msg|
-      datetime_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
-      "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [Priority:#{@priority}][#{severity}][#{@name}][#{caller[7].scan(/:in `(.*)'/).flatten.first}] #{msg} \n"
-    end
-    @daemon_logger.level = @conf_daemon["level_log"].to_i
+    @daemon_logger = DaemonLogger.new(@name.underscore.downcase, @conf_daemon["level_log"].to_i)
     set_next_exec
     @daemon_logger.info("[START][PRIORITY:#{@priority}][EXEC_AT] #{@next_exec}")
   end
@@ -49,28 +42,11 @@ class DaemonTask
     result_command
   end
 
-  def daemon_log_rescue_file(exception)
-    File.open(@log_path, 'a+') do |f|
-      date_now = DateTime.now
-      if exception.instance_of? String
-        f.puts "#{date_now} - #{exception}"
-      else
-        f.puts "#{date_now} - #{exception.message}"
-        exception.backtrace.each{ |bt| f.puts "#{date_now} #{exception.class} #{bt}" }
-      end
-    end
-  end
-
-  def daemon_log_rescue(exception)
-    @daemon_logger.error("[FROM] #{caller[1].scan(/:in `(.*)'/).flatten.first} [MESSAGE] #{exception.message}")
-    exception.backtrace.each{ |bt| @daemon_logger.error("[BRACKTRACE] #{bt}") }
-  end
-
   def stop
     begin
       @thread_daemon.exit
     rescue Exception => e
-      daemon_log_rescue("[ERROR][#{name}][STOP]", e)
+      @daemon_logger.error(e, "[ERROR][#{name}][STOP]")
     ensure
       FileUtils.rm(@log_path) if File.exist?(@log_path)
       @daemon_logger.info("[STOP]")
@@ -100,12 +76,11 @@ class DaemonTask
             set_next_exec
             @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
-            @proc.call if Rails.env.production?
+            @proc.call #if Rails.env.production?
             @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
           end
         rescue Exception => e
-          daemon_log_rescue(e)
-          daemon_log_rescue_file(e)
+          @daemon_logger.error(e)
         end
         to_sleep
       end
@@ -175,7 +150,7 @@ class DaemonApplyChange < DaemonTask
         status = boot
         @daemon_logger.debug("[STATUS_APPLY_CHANGE] #{status}")
         # Configuration.first.update_attribute(:backup_restore, "reboot") if @need_to_reboot
-        Configuration.first.update_attribute(:backup_restore, "reboot") if Configuration.backup_restore == "boot"
+        Configuration.first.update_attribute(:backup_restore, "reboot") if status and Configuration.backup_restore == "boot"
         $resource.signal
       end
     }
@@ -197,7 +172,7 @@ class DaemonApplyChangeAutomatically < DaemonTask
     if output.to_a.empty?
       @daemon_logger.debug("[SEND_MESSAGE_FOR_APPLY_CHANGE]")
     else
-      daemon_log_rescue_file(@log_path, output.join(" "))
+      @daemon_logger.error_to_file(output.join(" "))
     end
   end
 

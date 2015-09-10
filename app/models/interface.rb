@@ -193,8 +193,8 @@ class Interface < ActiveRecord::Base
     begin
       File.open("/etc/udev/rules.d/70-persistent-net.rules").readlines.join.scan(/NAME="([^"]+)"/).flatten
     rescue => e
-      log_rescue("[Model][Interface][scan]", e)
-      Rails.logger.error e.inspect
+      $application_logger.error(e)
+      # Rails.logger.error e.inspect
     end
   end
   def vlan_interface_collection

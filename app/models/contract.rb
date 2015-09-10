@@ -204,7 +204,7 @@ class Contract < ActiveRecord::Base
         traffics.create(attr)
       end
       rescue Exception => e
-      log_rescue("[Contract] ERROR create_traffic_for_this_period", e)
+      $application_logger.error(e)
     end
   end
 
@@ -275,8 +275,8 @@ class Contract < ActiveRecord::Base
           #end
         end
       rescue => e
-        log_rescue("[Model][Contract][Queue_update_commands]", e)
-        Rails.logger.error "ERROR: Contract::queue_update_commands #{e.inspect}"
+        $application_logger.error(e)
+        # Rails.logger.error "ERROR: Contract::queue_update_commands #{e.inspect}"
       end
     end
     cq.save if not cq.command.empty?
@@ -710,6 +710,14 @@ class Contract < ActiveRecord::Base
     hash
   end
 
+  def foo
+    begin
+      4 * nil
+    rescue => e
+      $application_logger.info(e)
+    end
+  end
+
   private
 
   #Please i need refactor
@@ -719,5 +727,4 @@ class Contract < ActiveRecord::Base
     self.prio_protos = self.prio_protos.strip unless self.prio_protos.nil?
     self.prio_helpers = self.prio_helpers.strip unless self.prio_helpers.nil?
   end
-
 end

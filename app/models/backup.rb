@@ -42,8 +42,8 @@ class Backup
       end
       $?.exitstatus == 0
     rescue => e
-      log_rescue("[Model][Backup][mysqldump]", e)
-      Rails.logger.error e.inspect
+      $application_logger.error("[Model][#{self.class.name}][Method][#{__method__}][TimeOut]", e)
+      # Rails.logger.error e.inspect
     end
   end
 
@@ -68,7 +68,8 @@ class Backup
     _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
     command = "/usr/bin/mysqldump --no-data --add-drop-table -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]} | grep '^DROP' |  /usr/bin/mysql -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]}"
     success = system(command)
-    Rails.logger.error("Backup::flush_db command failed: #{command}") unless success
+    $application_logger.error("[Model][#{self.class.name}][Method][#{__method__}]", e) unless success
+    # Rails.logger.error("Backup::flush_db command failed: #{command}") unless success
     success
   end
 
@@ -76,9 +77,11 @@ class Backup
     cat_command = compressed ? "zcat" : "cat"
     _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
     command = "#{cat_command} #{sql_file} | /usr/bin/mysql -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]}"
-    Rails.logger.debug "Backup:pop_db poping db with command: #{command}"
+    $application_logger.debug("[Model][#{self.class.name}][Method][#{__method__}]", "poping db with command: #{command}")
+    # Rails.logger.debug "Backup:pop_db poping db with command: #{command}"
     success = system(command)
-    Rails.logger.error("Backup::pop_db failed") unless success
+    $application_logger.error("[Model][#{self.class.name}][Method][#{__method__}]", e) unless success
+    # Rails.logger.error("Backup::pop_db failed") unless success
     success
   end
 
@@ -91,7 +94,8 @@ class Backup
         success = pop_db("#{DATABASE_DUMP_PATH}")
       end
     else
-      Rails.logger.error("Backup::restore_full tar_command failure")
+      $application_logger.error("[Model][#{self.class.name}][Method][#{__method__}]", e)
+      # Rails.logger.error("Backup::restore_full tar_command failure")
     end
     unless failsafe
       if success
@@ -123,7 +127,8 @@ class Backup
       # if it is downgrading to an older version maybe backup_restore
       # and backup_reboot are not present
       #raise e.inspect
-      Rails.logger.warn "Downgrading to a version without backup_restore or backup_reboot, need to respawn or reboot by hand"
+      $application_logger.info("[Model][#{self.class.name}][Method][#{__method__}][TimeOut]", "Downgrading to a version without backup_restore or backup_reboot, need to respawn or reboot by hand")
+      # Rails.logger.warn "Downgrading to a version without backup_restore or backup_reboot, need to respawn or reboot by hand"
     end
   end
 

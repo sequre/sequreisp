@@ -64,7 +64,7 @@ def gen_tc
     close_file_and_move_to_scripts tc_ifb_up
     close_file_and_move_to_scripts tc_ifb_down
   rescue => e
-    log_rescue("[Boot][gen_tc]", e)
+    @daemon_logger.error(e)
   end
 
   # Per provider upload limit, on it's own interface
@@ -82,7 +82,7 @@ def gen_tc
         end
       close_file_and_move_to_scripts tc
     rescue => e
-      log_rescue("[Boot][gen_tc][provider_interface]", e)
+      @daemon_logger.error(e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider upload limit in #{iface}) e=>#{e.inspect}"
     end
   end
@@ -104,7 +104,7 @@ def gen_tc
         end
       close_file_and_move_to_scripts tc
     rescue => e
-      log_rescue("[Boot][gen_tc][lan_interface]", e)
+      @daemon_logger.error(e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_tc(#per provider download limit in #{iface}) e=>#{e.inspect}"
     end
   end
@@ -504,7 +504,7 @@ def gen_iptables
       # close iptables file
     close_file_and_move_to_scripts f
   rescue => e
-    log_rescue("[Boot][setup_iptables]", e)
+    @daemon_logger.error(e)
   end
 end
 
@@ -547,7 +547,7 @@ def gen_ip_ru
       BootHook.run(:hook => :gen_ip_ru, :ip_ru_script => f) unless Configuration.in_safe_mode?
     close_file_and_move_to_scripts f
   rescue => e
-    log_rescue("[Boot][gen_ip_ru]", e)
+    @daemon_logger.error(e)
     # Rails.logger.error "ERROR in lib/sequreisp.rb::gen_ip_ru e=>#{e.inspect}"
   end
 end
@@ -616,7 +616,7 @@ def setup_ip_ro
       BootHook.run :hook => :gen_ip_ro
     end
   rescue => e
-    log_rescue("[Boot][setup_ip_ro]", e)
+    @daemon_logger.error(e)
   end
 end
 
@@ -628,7 +628,7 @@ def setup_dynamic_providers_hooks
       f.chmod(0755)
     end
   rescue => e
-    log_rescue("[Boot][setup_dynamic_providers_hooks][ip-up.d]", e)
+    @daemon_logger.error(e)
     # Rails.logger.error "ERROR in lib/sequreisp.rb::setup_dynamic_providers_hooks(PPP_DIR/ip-up) e=>#{e.inspect}"
   end
 
@@ -639,7 +639,7 @@ def setup_dynamic_providers_hooks
       f.chmod(0755)
     end
   rescue => e
-    log_rescue("[Boot][setup_dynamic_providers_hooks][ip-down.d]", e)
+    @daemon_logger.error(e)
   end
 
   begin
@@ -656,7 +656,7 @@ def setup_dynamic_providers_hooks
       end
     end
   rescue => e
-    log_rescue("[Boot][setup_dynamic_providers_hooks][dhclient-enter-hooks.d]", e)
+    @daemon_logger.error(e)
     # Rails.logger.error "ERROR in lib/sequreisp.rb::setup_dynamic_providers_hooks(DHCPD_DIR/enter-hooks) e=>#{e.inspect}"
   end
 
@@ -668,7 +668,7 @@ def setup_dynamic_providers_hooks
       f.puts "#{DEPLOY_DIR}/script/runner -e production #{DEPLOY_DIR}/bin/sequreisp_up_down_provider.rb up $interface $new_ip_address $new_subnet_mask $gateway"
     end
   rescue => e
-    log_rescue("[Boot][setup_dynamic_providers_hooks][dhclient-exit-hooks.d]", e)
+    @daemon_logger.error(e)
     # Rails.logger.error "ERROR in lib/sequreisp.rb::setup_dynamic_providers_hooks(DHCPD_DIR/exit-hooks) e=>#{e.inspect}"
   end
 end
@@ -783,7 +783,7 @@ def setup_adsl_interface(p)
   begin
     File.open("#{PPP_DIR}/peers/#{p.interface.name}", 'w') {|peer| peer.write(p.to_ppp_peer) }
   rescue => e
-    log_rescue("[Boot][setup_adsl_interface]", e)
+    @daemon_logger.error(e)
   end
   commands << "(/bin/ps x | grep \"[p]ppd call #{p.interface.name}$\" &>/dev/null || ip link list #{p.link_interface} &>/dev/null ) || /usr/bin/pon #{p.interface.name}"
 
@@ -951,6 +951,7 @@ def setup_mail_relay
 end
 
 def boot(run=true)
+  @daemon_logger ||= DaemonLogger.new("daemon_apply_change", 0)
   Configuration.do_reload
   create_dirs_if_not_present
   BootCommandContext.run = run
@@ -1001,6 +1002,6 @@ def boot(run=true)
       exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.delete_tmp_file")
       FileUtils.cp File.join(BASE_SCRIPTS_TMP, BOOT_FILE), BASE_SCRIPTS if File.exists?(File.join(BASE_SCRIPTS_TMP, BOOT_FILE))
     rescue => e
-      log_rescue("[Boot][general_hook_and_service_restart]", e)
+      @daemon_logger.error(e)
     end
 end

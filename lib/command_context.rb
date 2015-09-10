@@ -51,7 +51,7 @@ class BootCommandContext < CommandContext
       human = File.open(File.join(Rails.root, "log/command_human.log"), "a+")
       super f, human
     rescue => e
-      log_rescue("[CommandContext] Error exec_commands", e)
+      $application_logger.error(e)
       # Rails.logger.error "ERROR in lib/sequreisp.rb::exec_commands e=>#{e.inspect}"
     ensure
       f.close if f
