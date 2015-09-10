@@ -45,12 +45,7 @@ require 'command_context'
 
 threads = []
 
-@daemon ||= Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 1.megabytes)
-
-@daemon.formatter = proc do |severity, datetime, progname, msg|
-  datetime_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
-  "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [#{severity}][sequreispd.rb] #{msg} \n"
-end
+@daemon ||= DaemonLogger.new("general_daemon", 0)
 
 begin
   if $running
@@ -62,8 +57,7 @@ begin
     end
   end
 rescue Exception => exception
-  @daemon.error("[MESSAGE] #{exception.message}")
-  exception.backtrace.each{ |bt| @daemon.error("[BRACKTRACE] #{bt}") }
+  @daemon.error(exception)
 ensure
   while($running) do
     threads.each do |thread|

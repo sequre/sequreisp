@@ -960,33 +960,33 @@ def boot(run=true)
     exec_context_commands "create_tmp_file", ["touch #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.create_tmp_file")
     exec_context_commands  "sequreisp_pre", "[ -x #{SEQUREISP_PRE_FILE} ] && #{SEQUREISP_PRE_FILE}", I18n.t("command.human.sequreisp_pre")
 
-    Rails.logger.debug "[Boot] setup_nf_modules"
+    @daemon_logger.info "setup_nf_modules"
     setup_nf_modules
-    Rails.logger.debug "[Boot] setup_queued_commands"
+    @daemon_logger.info "setup_queued_commands"
     setup_queued_commands
-    Rails.logger.debug "[Boot] setup_clock"
+    @daemon_logger.info "setup_clock"
     setup_clock
-    Rails.logger.debug "[Boot] setup_proc"
+    @daemon_logger.info "setup_proc"
     setup_proc
-    Rails.logger.debug "[Boot] setup_interfaces"
+    @daemon_logger.info "setup_interfaces"
     setup_interfaces
-    Rails.logger.debug "[Boot] setup_dynamic_providers_hooks"
+    @daemon_logger.info "setup_dynamic_providers_hooks"
     setup_dynamic_providers_hooks
-    Rails.logger.debug "[Boot] setup_proxy_arp"
+    @daemon_logger.info "setup_proxy_arp"
     setup_proxy_arp
-    Rails.logger.debug "[Boot] setup_static_routes"
+    @daemon_logger.info "setup_static_routes"
     setup_static_routes
-    Rails.logger.debug "[Boot] setup_ifbs"
+    @daemon_logger.info "setup_ifbs"
     setup_ifbs
-    Rails.logger.debug "[Boot] setup_ip_ru"
+    @daemon_logger.info "setup_ip_ru"
     setup_ip_ru
-    Rails.logger.debug "[Boot] setup_ip_ro"
+    @daemon_logger.info "setup_ip_ro"
     setup_ip_ro
-    Rails.logger.debug "[Boot] setup_tc"
+    @daemon_logger.info "setup_tc"
     setup_tc
-    Rails.logger.debug "[Boot] setup_iptables"
+    @daemon_logger.info "setup_iptables"
     setup_iptables
-    Rails.logger.debug "[Boot] setup_mail_relay"
+    @daemon_logger.info "setup_mail_relay"
     setup_mail_relay
 
     begin

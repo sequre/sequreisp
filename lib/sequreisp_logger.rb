@@ -36,6 +36,10 @@ class DaemonLogger
       end
     end
   end
+
+  def remove_log_file
+    FileUtils.rm(@log_file_path) if File.exist?(@log_file_path)
+  end
 end
 
 class ApplicationLogger

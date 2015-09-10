@@ -45,11 +45,10 @@ class DaemonTask
   def stop
     begin
       @thread_daemon.exit
-    rescue Exception => e
-      @daemon_logger.error(e, "[ERROR][#{name}][STOP]")
-    ensure
-      FileUtils.rm(@log_path) if File.exist?(@log_path)
+      @daemon_logger.remove_log_file
       @daemon_logger.info("[STOP]")
+    rescue Exception => e
+      @daemon_logger.error(e)
     end
   end
 
