@@ -26,7 +26,7 @@ class DaemonTask
     @conf_daemon = $daemon_configuration[@name.underscore]
     @time_for_exec[:frecuency] = eval(@conf_daemon["frecuency"])
     @priority = @conf_daemon.has_key?("priority") ? @conf_daemon["priority"].to_i : -5
-    @daemon_logger = DaemonLogger.new(@name.underscore.downcase, @conf_daemon["level_log"].to_i)
+    @daemon_logger = DaemonLogger.new(@name.underscore.downcase, @conf_daemon["level_log"].to_i, @priority)
     set_next_exec
     @daemon_logger.info("[START][PRIORITY:#{@priority}][EXEC_AT] #{@next_exec}")
   end
