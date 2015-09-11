@@ -356,8 +356,11 @@ class DaemonRedis < DaemonTask
  end
 
  def exec_daemon_redis
-   interfaces_to_redis
-   contracts_to_redis
+   result = exec_command("/bin/ps -eo command | egrep \"^/usr/local/bin/redis-server *:6379\" &>/dev/null || /etc/init.d/redis start")
+   if result[:status]
+     interfaces_to_redis
+     contracts_to_redis
+   end
  end
 
  def data_count(contracts, data_counting)
