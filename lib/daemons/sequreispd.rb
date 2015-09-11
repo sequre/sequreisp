@@ -45,7 +45,7 @@ require 'command_context'
 
 threads = []
 
-@daemon ||= DaemonLogger.new("general_daemon", 0)
+@daemon ||= DaemonLogger.new("general_daemon", 0, 0)
 
 begin
   if $running
