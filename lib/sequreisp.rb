@@ -951,7 +951,7 @@ def setup_mail_relay
 end
 
 def boot(run=true)
-  @daemon_logger ||= DaemonLogger.new("daemon_apply_change", 0)
+  @daemon_logger ||= DaemonLogger.new("daemon_apply_change", 0, 0)
   Configuration.do_reload
   create_dirs_if_not_present
   BootCommandContext.run = run
