@@ -49,7 +49,7 @@ threads = []
 
 begin
   if $running
-    daemons_enabled = DaemonTask.descendants & $daemon_configuration.select{ |key, value| value['enabled'] }.collect{|d| d.first.camelize.constantize}
+    daemons_enabled = DaemonTask.descendants
     daemons_enabled.each do |daemon_task|
       daemon = daemon_task.new
       threads << daemon

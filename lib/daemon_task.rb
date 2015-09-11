@@ -122,7 +122,7 @@ class DaemonTask
   # give all subclasses
   def self.descendants
     # $daemon_configuration.select{ |key, value| value['enabled'] }.collect{ |d| first.camelize }
-    ObjectSpace.each_object(Class).select { |klass| klass < self }
+    (ObjectSpace.each_object(Class).select{ |klass| klass < self }.map(&:to_s) & $daemon_configuration.reject{|key, value| not value['enabled'] }.keys.map(&:camelize)).map(&:constantize)
   end
 
 end
