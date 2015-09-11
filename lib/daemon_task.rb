@@ -355,6 +355,11 @@ class DaemonRedis < DaemonTask
    super
  end
 
+ def stop
+   exec_command("/etc/init.d/redis stop")
+   super
+ end
+
  def exec_daemon_redis
    result = exec_command("/bin/ps -eo command | egrep \"^/usr/local/bin/redis-server *:6379\" &>/dev/null || /etc/init.d/redis start")
    if result[:status]
