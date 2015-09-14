@@ -146,10 +146,9 @@ class DaemonApplyChange < DaemonTask
         # @need_to_reboot = true if Configuration.backup_restore == "boot"
         Configuration.first.update_attribute :daemon_reload, false
         @daemon_logger.debug("[START_APPLY_CHANGE]")
-        status = boot
-        @daemon_logger.debug("[STATUS_APPLY_CHANGE] #{status}")
-        # Configuration.first.update_attribute(:backup_restore, "reboot") if @need_to_reboot
-        Configuration.first.update_attribute(:backup_restore, "reboot") if status and Configuration.backup_restore == "boot"
+        boot
+        @daemon_logger.debug("[FINISH_APPLY_CHANGE]")
+        Configuration.first.update_attribute(:backup_restore, "reboot") if Configuration.backup_restore == "boot"
         $resource.signal
       end
     }
@@ -316,7 +315,7 @@ class DaemonBackupRestore < DaemonTask
       if Configuration.backup_reboot
         Configuration.first.update_attribute :backup_reboot, false
         @daemon_logger.debug("[REBOOT_SYSTEM]")
-        system "/sbin/reboot"
+        exec_command("/sbin/reboot")
       end
     end
     # when "boot"
