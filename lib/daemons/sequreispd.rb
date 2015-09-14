@@ -45,12 +45,13 @@ require 'command_context'
 
 daemons = []
 
-@daemon ||= DaemonLogger.new("general_daemon", 0, 0)
+@general_daemon_logger ||= DaemonLogger.new("general_daemon", 0, 0)
 
 begin
   if $running
     daemons_enabled = DaemonTask.descendants
     daemons_enabled.each do |daemon_task|
+      @general_daemon_logger.debug("[CALL_DAEMON] #{daemon.name}")
       daemon = daemon_task.new
       daemons << daemon
       daemon.start
@@ -59,20 +60,20 @@ begin
   while($running) do
     daemons.each do |daemon|
       if daemon.state.nil?
-        @daemon.debug("[DAEMON_DEATH_AND_RESTART] #{daemon.name}")
+        @general_daemon_logger.debug("[DAEMON_DEATH_AND_RESTART] #{daemon.name}")
         daemon.start
       end
     end
     sleep 1
   end
   daemons.each do |daemon|
-    @daemon.debug("[SIGNAL_DAEMON_STOP] #{daemon.name}")
+    @general_daemon_logger.debug("[SIGNAL_DAEMON_STOP] #{daemon.name}")
     daemon.stop
-    @daemon.debug("[WAITH_FOR_DAEMON] #{thread.name}")
+    @general_daemon_logger.debug("[WAITH_FOR_DAEMON] #{daemon.name}")
     daemon.join
   end
 rescue Exception => exception
-  @daemon.error(exception)
+  @general_daemon_logger.error(exception)
 end
 #################################################
 #################################################
