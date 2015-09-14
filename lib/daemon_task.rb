@@ -42,6 +42,10 @@ class DaemonTask
     result_command
   end
 
+  def join
+    @thread_daemon.join
+  end
+
   def stop
     begin
       @daemon_logger.debug("[REMOVE_DAEMON_LOG_FILE]")
