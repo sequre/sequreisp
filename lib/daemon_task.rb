@@ -44,8 +44,9 @@ class DaemonTask
 
   def stop
     begin
-      @thread_daemon.exit
+      @daemon_logger.debug("[REMOVE_DAEMON_LOG_FILE]")
       @daemon_logger.remove_log_file
+      @thread_daemon.exit
       @daemon_logger.info("[STOP]")
     rescue Exception => e
       @daemon_logger.error(e)
