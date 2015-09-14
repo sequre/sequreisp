@@ -51,7 +51,6 @@ begin
   if $running
     daemons_enabled = DaemonTask.descendants
     daemons_enabled.each do |daemon_task|
-      @general_daemon_logger.debug("[CALL_DAEMON] #{daemon.name}")
       daemon = daemon_task.new
       daemons << daemon
       daemon.start
