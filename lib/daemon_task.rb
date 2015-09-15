@@ -67,6 +67,7 @@ class DaemonTask
       last_execution_time = configuration.respond_to?("#{@name.underscore}_last_execution_time") ? configuration.send("#{@name.underscore}_last_execution_time") : nil
       if last_execution_time
         @next_exec = last_execution_time + @time_for_exec[:frecuency]
+        @daemon_logger.info("[GET_VALUE_FROM_DATABASE] #{@next_exec}")
       else
         @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.now
         @next_exec += @time_for_exec[:frecuency] if Time.now > @next_exec
