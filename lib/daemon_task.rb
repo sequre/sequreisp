@@ -77,7 +77,7 @@ class DaemonTask
             Configuration.do_reload
             set_next_exec
             configuration = Configuration.first
-            configuration.write_attribute("#{@name.underscore}_last_execution_time", @next_exec) if configuration.respond_to?("#{@name.underscore}_last_execution_time")
+            configuration.update_attribute("#{@name.underscore}_last_execution_time", @next_exec) if configuration.respond_to?("#{@name.underscore}_last_execution_time")
             @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
