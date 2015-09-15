@@ -46,6 +46,10 @@ class DaemonTask
     @thread_daemon.join
   end
 
+  def join
+    @thread_daemon.join
+  end
+
   def stop
     begin
       @daemon_logger.debug("[REMOVE_DAEMON_LOG_FILE]")
@@ -59,8 +63,14 @@ class DaemonTask
 
   def set_next_exec
     if not defined?(@next_exec)
-      @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.now
-      @next_exec += @time_for_exec[:frecuency] if Time.now > @next_exec
+      configuration = Configuration.first
+      last_execution_time = configuration.respond_to?("#{@name.underscore}_last_execution_time") ? configuration.send("#{@name.underscore}_last_execution_time") : nil
+      if last_execution_time
+        @next_exec = last_execution_time + @time_for_exec[:frecuency]
+      else
+        @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.now
+        @next_exec += @time_for_exec[:frecuency] if Time.now > @next_exec
+      end
     else
       while @next_exec <= Time.now
         @next_exec += @time_for_exec[:frecuency]
@@ -78,6 +88,8 @@ class DaemonTask
           if Time.now >= @next_exec
             Configuration.do_reload
             set_next_exec
+            configuration = Configuration.first
+            configuration.write_attribute("#{@name.underscore}_last_execution_time", @next_exec) if configuration.respond_to?("#{@name.underscore}_last_execution_time")
             @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call #if Rails.env.production?
