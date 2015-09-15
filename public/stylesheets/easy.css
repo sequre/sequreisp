@@ -109,7 +109,7 @@ background: none repeat scroll 0% 0% #CCC;
 	}
 	body{
 		font-size:13px;
-		background:#000000;
+		/* background:#000000; */
 		margin:0;
 		padding:0;
 		text-align:center;
