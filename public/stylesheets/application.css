@@ -7,8 +7,9 @@ body {
 	min-width: 100%;
 	font-family: "Helvetica Neue", Helvetica, clean, sans-serif;
 	font-size: 13px;
-        background-image: url(/images/back_admin.jpg) !important;
-	background-repeat: no-repeat !important;
+	background-image: url(/images/back.png) !important;
+        /* background-image: url(/images/back_admin.png) !important; */
+	background-repeat: repeat !important;
 }
 
 #container {
