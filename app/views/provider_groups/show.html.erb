@@ -44,7 +44,7 @@
 
   <% @periods.times do |period| %>
     <% content_tag(:div, "", :id => "tabs-#{period}" ) do %>
-      <div id=<%= @graphs["provider_group_period_#{period}"].render %> style="height:450px; width:800px; float:left;"></div>
+      <div id=<%= @graphs["provider_group_period_#{period}"].render %> style="height:350px; width:830px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
     <% end %>
   <% end %>

@@ -139,9 +139,9 @@
 
   <% @periods.times do |period| %>
     <% content_tag(:div, "", :id => "tabs_#{period}" ) do %>
-      <div id=<%= @graphs["rate_down_period_#{period}"].render %> style="height:247px; width:830px; float:left;"></div>
+      <div id=<%= @graphs["rate_down_period_#{period}"].render %> style="height:350px; width:830px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
-      <div id=<%= @graphs["rate_up_period_#{period}"].render %> style="height:247px; width:830px; float:left;"></div>
+      <div id=<%= @graphs["rate_up_period_#{period}"].render %> style="height:350px; width:830px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
     <% end %>
   <% end %>
