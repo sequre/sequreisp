@@ -734,6 +734,7 @@ def do_provider_up(p)
     #ips << "#{a.ruby_ip.to_s}"
   end
   if p.kind == "adsl"
+    commands << "ip link set #{p.link_interface} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_VLAN}"
     commands << "tc qdisc del dev #{p.link_interface} root"
     commands << "tc qdisc del dev #{p.link_interface} ingress"
     commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
