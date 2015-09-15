@@ -109,7 +109,7 @@ background: none repeat scroll 0% 0% #CCC;
 	}
 	body{
 		font-size:13px;
-		background:#424242;
+		background:#000000;
 		margin:0;
 		padding:0;
 		text-align:center;
@@ -213,12 +213,12 @@ padding:2px;
 	.inner{
 		position:relative;
 		}
-/*	#header{ */
-/*		position:relative; */
-/*		background: url(../images/header.png) no-repeat; */
-/*		width: 902px; */
-/*		height: 122px; */
-/*		} */
+	#header{
+		position:relative;
+		background: url(../images/header.png) no-repeat;
+		width: 902px;
+		height: 122px;
+		}
 	#footer{
 		position:relative;
 		clear:both;
