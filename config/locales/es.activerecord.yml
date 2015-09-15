@@ -123,6 +123,7 @@ es:
         unique_provider: "Usar proveedor específico para este contrato (anula el balanceo)"
         start_date: "Fecha de alta"
         is_connected: "Conectado"
+        port_prios: "Puertos prioritarios"
       client:
         id: "ID"
         name: "Nombre y apellido"

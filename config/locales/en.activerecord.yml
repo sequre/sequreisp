@@ -123,6 +123,7 @@ en:
         unique_provider: "Use a specific provider for this contract (avoids balancing)"
         start_date: "Start date"
         is_connected: "Connected"
+        port_prios: "Priority ports"
       client:
         id: "ID"
         name: "First name and surname"

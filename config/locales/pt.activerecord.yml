@@ -120,6 +120,7 @@ pt:
         unique_provider: "Use um provedor específico para este contrato (evita balanceamento)"
         start_date: "Data de início"
         is_connected: "Conectado"
+        port_prios: "Portos prioritários"
       client:
         id: "ID"
         name: "Nome e sobrenome"
