@@ -16,10 +16,10 @@ class AvoidBalancingHost < ActiveRecord::Base
         Resolv.getaddresses(name).select do |a| IP.new(a).is_a?(IP::V4) end
       end
     rescue Timeout::Error => e
-      log_rescue("[Model][AvoidBalancingHost] timeout for ip_addresses #{name}", e)
+      $application_logger.error(e)
       []
     rescue => e
-      log_rescue("[Model][AvoidBalancingHost] ip_addresses method failed", e)
+      $application_logger.error(e)
       []
     end
   end

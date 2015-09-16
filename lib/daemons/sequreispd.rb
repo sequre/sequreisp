@@ -40,19 +40,24 @@ require "sequreisp_logger"
 require 'command_context'
 #Thread::abort_on_exception = true
 
+#################################################
+#################################################
+
 threads = []
+
+@daemon ||= DaemonLogger.new("general_daemon", 0, 0)
+
 begin
-#################################################
-#################################################
   if $running
-    DaemonTask.descendants.each do |daemon_task|
+    daemons_enabled = DaemonTask.descendants & $daemon_configuration.select{ |key, value| value['enabled'] }.collect{|d| d.first.camelize.constantize}
+    daemons_enabled.each do |daemon_task|
       daemon = daemon_task.new
       threads << daemon
       daemon.start
     end
   end
-rescue Exception => e
-  log_rescue("[Daemon][Sequreispd] ERROR GENERAL DAEMON", e)
+rescue Exception => exception
+  @daemon.error(exception)
 ensure
   while($running) do
     threads.each do |thread|
@@ -62,6 +67,6 @@ ensure
   end
   threads.map{ |thread| thread.stop }
   threads.map{ |thread| thread.join }
-#################################################
-#################################################
 end
+#################################################
+#################################################

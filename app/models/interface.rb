@@ -21,6 +21,7 @@ class Interface < ActiveRecord::Base
   DEFAULT_TX_QUEUE_LEN_FOR_IFB = 1000
   acts_as_audited
   belongs_to :vlan_interface, :class_name => "Interface", :foreign_key => "vlan_interface_id"
+  has_many :interface_samples
   has_many :vlan_interfaces, :class_name => "Interface", :foreign_key => "vlan_interface_id", :dependent => :destroy
   has_one :provider, :dependent => :nullify
   has_many :addresses, :as => :addressable, :class_name => "Address", :dependent => :destroy
@@ -158,9 +159,10 @@ class Interface < ActiveRecord::Base
     date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
     if Rails.env.production?
       date_keys = $redis.keys("#{redis_key}_*").sort
+      time = date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i
       InterfaceSample.compact_keys.each do |rkey|
-        value = date_keys.empty? ? 0 : $redis.hmget(date_keys.last, "#{rkey[:name]}_instant").first.to_i
-        data[rkey[:name].to_sym] = [ date_time_now, value ]
+        value = date_keys.empty? ? 0 : $redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_i
+        data[rkey[:name].to_sym] = [ time, value ]
       end
     else
       if kind == "lan"
@@ -191,8 +193,8 @@ class Interface < ActiveRecord::Base
     begin
       File.open("/etc/udev/rules.d/70-persistent-net.rules").readlines.join.scan(/NAME="([^"]+)"/).flatten
     rescue => e
-      log_rescue("[Model][Interface][scan]", e)
-      Rails.logger.error e.inspect
+      $application_logger.error(e)
+      # Rails.logger.error e.inspect
     end
   end
   def vlan_interface_collection
@@ -235,6 +237,15 @@ class Interface < ActiveRecord::Base
 
   def wan?
     kind == "wan"
+  end
+
+  def current_redis_values
+    hash = {}
+    $redis.keys("#{redis_key}_*").sort.each do |key|
+      hash[key] = $redis.hgetall(key)
+      hash[key][:time_human] = Time.at($redis.hget(key, "time").to_i)
+    end
+    hash
   end
 
 end

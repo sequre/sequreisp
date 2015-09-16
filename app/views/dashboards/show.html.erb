@@ -1,233 +1,63 @@
 <% content_for :javascript do %>
-  <%= javascript_include_tag "highcharts" %>
+  <%= javascript_include_tag "highstock" %>
+  <%= javascript_include_tag "exporting" %>
 <% end %>
 <style>
 .services_loader {
   display: none;
+  overflow:hidden;
 }
 .daemons_loader {
   display: none;
+  overflow:hidden;
 }
+
 </style>
 <script type="text/javascript">
-  var chart;
-  function pie_chart(chart_id, title, data) {
-    new Highcharts.Chart({
-      chart: {
-         renderTo: chart_id,
-         plotBackgroundColor: null,
-         plotBorderWidth: null,
-         plotShadow: false
-      },
-      title: {
-         text: title
-      },
-      tooltip: {
-         formatter: function() {
-            return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';
-         }
-      },
-      plotOptions: {
-         pie: {
-            allowPointSelect: true,
-            cursor: 'pointer',
-            dataLabels: {
-               enabled: false
-            },
-            showInLegend: true
-         }
-      },
-       series: [{
-         type: 'pie',
-         name: 'Disk Use',
-         data:  data
-      }]
-    });
-  }
   $(document).ready(function() {
-    <% @disks.each do |d| %>
-      pie_chart('<%= d.id %>', '<%= d.name %>', <%= d.data.to_json %> )
+   <% keys = [] %>
+    <% @graphs_instant.each do |key, graph| %>
+      <% keys << key %>
+      <%= key %> = new Highcharts.Chart(<%= graph.graph! %>);
     <% end %>
-    pie_chart('ram', '<%= @ram.name %>', <%= @ram.data.to_json %> )
-    pie_chart('swap', '<%= @swap.name %>', <%= @swap.data.to_json %> )
-    cpu_chart = new Highcharts.Chart({
-      chart: {
-        renderTo: 'cpu',
-        defaultSeriesType: 'area',
-        marginRight: 0,
-        events: {
-          load: function() {
-            // set up the updating of the chart each second
-            var total = this.series[0];
-            var kernel = this.series[1];
-            var iowait = this.series[2];
-            $.get('<%= cpu_dashboard_path %>',null,function(data){
-              total.addPoint(data.total, true, true);
-              iowait.addPoint(data.iowait, true, true);
-              kernel.addPoint(data.kernel, true, true);
-            },'json');
-            setInterval(function() {
-              $.get('<%= cpu_dashboard_path %>', function(data){
-                total.addPoint(data.total, true, true);
-                iowait.addPoint(data.iowait, true, true);
-                kernel.addPoint(data.kernel, true, true);
-              },'json');
-            }, 5000);
-          }
-        }
-      },
-      title: {
-        text: ''
-      },
-      xAxis: {
-        type: 'datetime',
-        //tickPixelInterval: 150
-      },
-      yAxis: {
-        title: {
-          text: '%Utilization'
-        },
-        min: 0,
-        max: 100
-      },
-      tooltip: {
-        formatter: function() {
-            return '<b>'+ this.series.name +'</b><br/>'+
-            Highcharts.numberFormat(this.y, 2);
-        }
-      },
-      legend: {
-        enabled: true,
-        verticalAlign: 'top',
-      },
-      exporting: {
-        enabled: false
-      },
-      plotOptions: {
-        series: {
-        pointStart: (new Date()).getTime() + <%= Time.zone.utc_offset %> * 1000 - 5*40000,
-          pointInterval: 5000 // 5 seconds
-        },
-      },
-      series: [{
-        name: 'Total',
-        type: "area",
-        color: "#00aa00",
-        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-      },{
-        name: 'Kernel',
-        type: "line",
-        color: "#ff0000",
-        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-      },{
-        name: 'IO/Wait',
-        type: "line",
-        color: "#FFCC00",
-        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-      }
-      ]
-    });
-    setInterval(function() {
-      $('.services_loader').show();
-      $.get('<%= services_dashboard_path %>', function(services){
-        $.each(services, function (index, s) {
-          $('#up_'+ s.id).html(s.up_html);
-          $('#cpu_p_'+ s.id).html(s.cpu_p_html);
-          $('#mem_p_'+ s.id).html(s.mem_p_html);
-        });
-        $('.services_loader').hide();
-      },'json');
-    }, 15000);
+
+    <% @graphs.each_value do |graph| %>
+      new Highcharts.Chart(<%= graph.graph! %>);
+    <% end %>
+
+    get_data();
 
     setInterval(function() {
-      $('.daemons_loader').show();
-      $.get('<%= daemons_dashboard_path %>', function(daemons){
-        $.each(daemons, function (index, daemon) {
-          $('#daemon_'+ daemon.id).html(daemon.status_html);
-        });
-        $('.daemons_loader').hide();
-      },'json');
-    }, 15000);
+      get_data();
+    }, 5000);
 
-    load_average_chart = new Highcharts.Chart({
-      chart: {
-        renderTo: 'load_average',
-        defaultSeriesType: 'area',
-        marginRight: 0,
-        events: {
-          load: function() {
-            // set up the updating of the chart each second
-            var now = this.series[0];
-            var min5 = this.series[1];
-            var min15 = this.series[2];
-            $.get('<%= load_average_dashboard_path %>',null,function(data){
-              now.addPoint(data.now, true, true);
-              min5.addPoint(data.min5, true, true);
-              min15.addPoint(data.min15, true, true);
-            },'json');
-            setInterval(function() {
-              $.get('<%= load_average_dashboard_path %>', function(data){
-                now.addPoint(data.now, true, true);
-                min5.addPoint(data.min5, true, true);
-                min15.addPoint(data.min15, true, true);
-              },'json');
-            }, 5000);
-          }
-        }
-      },
-      title: {
-        text: ''
-      },
-      xAxis: {
-        type: 'datetime',
-        //tickPixelInterval: 150
-      },
-      yAxis: {
-        title: {
-          text: '%Utilization'
-        },
-      },
-      tooltip: {
-        formatter: function() {
-            return '<b>'+ this.series.name +'</b><br/>'+
-            Highcharts.numberFormat(this.y, 2);
-        }
-      },
-      legend: {
-        enabled: true,
-        verticalAlign: 'top',
-      },
-      exporting: {
-        enabled: false
-      },
-      plotOptions: {
-        series: {
-        pointStart: (new Date()).getTime() + <%= Time.zone.utc_offset %> * 1000 - 5*40000,
-          pointInterval: 5000 // 5 seconds
-        },
-      },
-      series: [{
-        name: '<%=t 'dashboard.load_average_chart.now' %>',
-        type: "area",
-        color: "#00aa00",
-        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-      },{
-        name: '<%=t 'dashboard.load_average_chart.min5' %>',
-        type: "line",
-        color: "#ffcc00",
-        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-      },{
-        name: '<%=t 'dashboard.load_average_chart.min15' %>',
-        type: "line",
-        color: "#FF0000",
-        data: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-      }
-      ]
-    });
   });
+  function get_data(){
+    $.get('<%= instant_dashboard_path %>', null, function(data) {
+      $('.daemons_loader').show().delay(2000).fadeOut();
+      $.each(data.daemons, function (index, daemon) {
+        $('#daemon_'+ daemon.id).html(daemon.status_html);
+      });
+
+      $('.services_loader').show().delay(2000).fadeOut();
+      $.each(data.services, function (index, s) {
+        $('#up_'+ s.id).html(s.up_html);
+        $('#cpu_p_'+ s.id).html(s.cpu_p_html);
+        $('#mem_p_'+ s.id).html(s.mem_p_html);
+      });
+
+      <% keys.each do |key| %>
+        <%= key %>.series[0].addPoint(data.<%= key %>.arg1, true, true);
+        <%= key %>.series[1].addPoint(data.<%= key %>.arg2, true, true);
+        <%= key %>.series[2].addPoint(data.<%= key %>.arg3, true, true);
+      <% end %>
+    },'json');
+  };
 </script>
-  <% content_for :title, t('menu.dashboard') %>
-<% heading t('menu.dashboard') %>
+<td>
+
+<% content_for :title, t('menu.dashboard') %>
+<% heading "#{t('menu.uptime')}: #{Configuration.uptime}"  %>
 
 <ul class="nav" style="float:right">
   <% if current_user.may_reboot_dashboard? %>
@@ -250,74 +80,78 @@
   <% end %>
   <%= render :partial => "shared/submenu_items"%>
 </ul>
+
+<div class="separador" style='margin-bottom: 5px;'></div>
 <div style="clear: both"></div>
 
-<ul>
-  <li>
-  <h2><%=t 'dashboard.cpu' %></h2>
-  <div id="cpu" style="height:240px; width: 740px; margin: 20px"></div>
-  <div style="clear: both"></div>
-  </li>
-  <li>
-  <h2><%=t 'dashboard.services' %></h2>
-  <div id="services" style="width: 740px; margin: 20px">
-  <table cellspacing="0" cellpadding="0">
-    <tbody>
-      <tr class="odd">
-        <th><%=t 'dashboard.services_table.service' %></th>
-        <th><%=t 'dashboard.services_table.status' %></th>
-        <th>CPU %</th>
-        <th>MEM % (MB)</th>
-      </tr>
-  <% @services.each do |s| %>
-      <tr class="even" >
-          <td style="width: 350px"> <%= s.name %> <%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
-          <td id="up_<%= s.id %>"> <%= s.up_html %> </td>
-          <td id="cpu_p_<%= s.id %>"> <%= s.cpu_p_html %> </td>
-          <td id="mem_p_<%= s.id %>"> <%= s.mem_p_html %> </td>
-      </tr>
-  <% end %>
-    </tbody>
-  </table>
-  </div>
-  </li>
-
-  <li>
-    <h2><%=t 'dashboard.daemons' %></h2>
-    <div id="services" style="width: 740px; margin: 20px">
-      <table cellspacing="0" cellpadding="0">
-	<tbody>
-	  <tr class="odd">
-            <th><%=t 'dashboard.daemons_table.daemon' %></th>
-            <th><%=t 'dashboard.daemons_table.status' %></th>
-	  </tr>
-	  <% @daemons.each do |daemon| %>
-	    <tr class="even" >
-              <td style="width: 350px"> <%= daemon.name %> <%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
-              <td id="daemon_<%= daemon.id %>"> <%= daemon.status_html %> </td>
+<table>
+  <tr>
+    <td valign="top">
+      <h2><%=t 'dashboard.daemons' %></h2>
+      <div id="daemons">
+        <table>
+	  <tbody>
+	    <tr class="odd">
+	       <th  style="width: 14px"></th>
+              <th><%=t 'dashboard.daemons_table.daemon' %></th>
+              <th><%=t 'dashboard.daemons_table.status' %></th>
 	    </tr>
-	  <% end %>
-	</tbody>
-      </table>
-    </div>
-  </li>
+	    <% @daemons.each do |daemon| %>
+	      <tr class="even" >
+		<td  style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
+		<td> <%= daemon.name %></td>
+		<td id="daemon_<%= daemon.id %>"> <%= daemon.status_html %> </td>
+	      </tr>
+	    <% end %>
+	  </tbody>
+	</table>
+      </div>
+    </td>
+    <td valign="top">
+      <h2><%=t 'dashboard.services' %></h2>
+      <div id="services">
+	<table>
+	  <tbody>
+	    <tr class="odd">
+	       <th style="width: 14px"></th>
+              <th><%=t 'dashboard.services_table.service' %></th>
+              <th><%=t 'dashboard.services_table.status' %></th>
+              <th>CPU %</th>
+              <th>MEM % (MB)</th>
+	    </tr>
+	    <% @services.each do |s| %>
+	      <tr class="even" >
+		<td style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
+		<td> <%= s.name %></td>
+		<td id="up_<%= s.id %>"> <%= s.up_html %> </td>
+		<td id="cpu_p_<%= s.id %>"> <%= s.cpu_p_html %> </td>
+		<td id="mem_p_<%= s.id %>"> <%= s.mem_p_html %> </td>
+	      </tr>
+	    <% end %>
+	  </tbody>
+	</table>
+      </div>
+    </td>
+  </tr>
+</table>
 
-  <li>
-  <h2><%=t 'dashboard.memory' %></h2>
-  <div id="ram" style="height:200px;width: 350px; float:left; margin: 20px"></div>
-  <div id="swap" style="height:200px;width: 350px; float:left; margin: 20px"></div>
-  <div style="clear: both"></div>
-  </li>
-  <li>
-  <h2><%=t 'dashboard.load_average' %></h2>
-  <div id="load_average" style="height:240px; width: 740px; margin: 20px"></div>
-  <div style="clear: both"></div>
-  </li>
-  <li>
-  <h2><%=t 'dashboard.disks' %></h2>
-  <% @disks.each do |d| %>
-    <div id="<%= d.id %>" style="height:200px;width: 350px; float:left; margin: 20px"></div>
-  <% end %>
-  <div style="clear: both"></div>
-  </li>
-</ul>
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div style="clear: both"></div>
+
+<div id=<%= @graphs_instant["load_average_instant"].render %> style="height:247px; width: 860px"></div>
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div style="clear: both"></div>
+<div id=<%= @graphs_instant["cpu_all_instant"].render %> style="height:247px; width: 860px"></div>
+<% @graphs_instant.delete("load_average_instant") %>
+<% @graphs_instant.delete("cpu_all_instant") %>
+
+<% @graphs_instant.sort_by_key.each_value do |graph| %>
+  <div id=<%= graph.render %> style="height:247px; width: 430px; float:left;"></div>
+<% end %>
+
+<div class="separador" style='margin-bottom: 5px;'></div>
+<div style="clear: both"></div>
+
+<% @graphs.sort_by_key.each_value do |graph| %>
+  <div id=<%= graph.render %> style="height:247px; width: 430px; float:left;"></div>
+<% end %>

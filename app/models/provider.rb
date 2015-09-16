@@ -236,7 +236,12 @@ class Provider < ActiveRecord::Base
     "default via #{self.gateway} dev #{self.link_interface}  proto static onlink"
   end
   def self.fallback_default_route(alt_format=false)
-    providers = Provider.enabled.ready.online
+    providers = Provider.enabled.ready.online.all(:include => :interface)
+    if providers.count == 0
+      # Use all enabled providers as fallback, even if they are offline
+      # Don't leave the server with an empty default table
+      providers = Provider.enabled.ready.all(:include => :interface)
+    end
     case providers.count
     when 0
       ""
@@ -258,9 +263,12 @@ class Provider < ActiveRecord::Base
   def weight
     # max 256 (from iproute.c)
     # dinamic quantum from the bigest rate_down provider
-    _quantum = Provider.enabled.first(:order => 'rate_down DESC').rate_down/255.0
+    _quantum = biggest_rate_down/255.0
     _weight = (self.rate_down/_quantum).round
     _weight > 0 ? _weight : 1
+  end
+  def biggest_rate_down
+    @biggest_rate_down ||= Provider.enabled.first(:order => 'rate_down DESC').rate_down
   end
   def check_link_table
     self.klass.number << 8
@@ -380,10 +388,11 @@ class Provider < ActiveRecord::Base
     min_online_rate_down = 256
     min_online_rate_up = 56
 
-    instant_rate_up = $redis.hmget("interface:#{interface.name}:rate_tx", "instant").first.to_i/1024
-    instant_rate_down = $redis.hmget("interface:#{interface.name}:rate_rx", "instant").first.to_i/1024
-
-    (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
+    data = interface.instant
+    (data[:rx][1] / 1024 > min_online_rate_down) and (data[:tx][1] / 1024 > min_online_rate_up)
+    # instant_rate_up = $redis.hmget("interface:#{interface.name}:rate_tx", "instant").first.to_i/1024
+    # instant_rate_down = $redis.hmget("interface:#{interface.name}:rate_rx", "instant").first.to_i/1024
+    # (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
   end
 
   def self.all_ips

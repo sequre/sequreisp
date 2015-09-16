@@ -35,13 +35,17 @@ class InterfaceSample < ActiveRecord::Base
     conf = CONF_PERIODS
     InterfaceSample.transaction {
       conf.each_key do |key|
-        last = InterfaceSample.last_samples(conf[key][:period_number]).all
+        last = Interface.all.collect{|i| i.interface_samples.for_period(conf[key][:period_number]).all( :order => "sample_number DESC", :limit => 1) }.flatten
         conf[key][:samples_to_compact] = {}
         conf[key][:last_sample_time] = {}
 
-        InterfaceSample.for_period(conf[key][:period_number]).total_samples_for_period.all.each do |is|
-          conf[key][:last_sample_time][is.interface_id]   = last.find{ |ls| ls.interface_id == is.interface_id }.sample_number.to_i
-          conf[key][:samples_to_compact][is.interface_id] = InterfaceSample.for_period(conf[key][:period_number]).samples_to_compact(is.interface_id, conf[key][:excess_count]).all if is.total_samples.to_i >= conf[key][:sample_size_cut]
+        if conf[key][:sample_size_cut]
+          InterfaceSample.for_period(conf[key][:period_number]).total_samples_for_period.all.each do |is|
+            conf[key][:last_sample_time][is.interface_id]   = last.find{ |ls| ls.interface_id == is.interface_id }.sample_number.to_i
+            conf[key][:samples_to_compact][is.interface_id] = InterfaceSample.for_period(conf[key][:period_number]).samples_to_compact(is.interface_id, conf[key][:excess_count]).all if is.total_samples.to_i >= conf[key][:sample_size_cut]
+          end
+        else
+          conf[key][:last_sample_time] = Hash[last.collect{ |is| [is.interface_id, is.sample_number.to_i] }]
         end
       end
     }

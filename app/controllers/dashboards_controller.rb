@@ -2,38 +2,35 @@ class DashboardsController < ApplicationController
   before_filter :require_user
   permissions :dashboard
   def show
-    @disks = Dashboard::Disk.load_all
-    @ram = Dashboard::Memory.new(/Mem:/)
-    @swap = Dashboard::Memory.new(/Swap:/)
+    # @swap = Dashboard::Memory.new(/Swap:/)
     @services = Dashboard::Service.load_all
     @daemons = Dashboard::Daemon.load_all
-  end
-  def cpu
-    @cpu = Dashboard::Cpu.new
-    respond_to do |format|
-      format.json { render :json => @cpu.stats }
+    @graphs_instant = {}
+    @graphs = {}
+    conf = Configuration.first
+    SystemGraph.supported_graphs.each do |graph_name|
+      if graph_name.include?("instant")
+        @graphs_instant[graph_name] = SystemGraph.new(conf, graph_name)
+      else
+        @graphs[graph_name] = SystemGraph.new(conf, graph_name)
+      end
     end
-  end
-  def services
-    @services = Dashboard::Service.load_all
+
+    @graphs.sort_by_key
+    @graphs_instant.sort_by_key
+
     respond_to do |format|
-      format.json { render :json => @services }
+      format.html # index.html.erb
+      format.xml  { render :xml => conf }
     end
   end
 
-  def daemons
-    @daemons = Dashboard::Daemon.load_all
+  def instant
     respond_to do |format|
-      format.json { render :json => @daemons }
+      format.json { render :json => Configuration.system_information }
     end
   end
 
-  def load_average
-    @load_average = Dashboard::LoadAverage.new
-    respond_to do |format|
-      format.json { render :json => @load_average }
-    end
-  end
   def reboot
     if system("sleep 5 && sudo /usr/sbin/reboot &")
       flash[:notice] = I18n.t('messages.dashboard.reboot')

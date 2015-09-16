@@ -71,7 +71,7 @@ module Dashboard
         _daemon = {}
         _daemon[:id] = id
         _daemon[:name] = daemon
-        _daemon[:status] = File.zero?("#{DEPLOY_DIR}/tmp/#{daemon}") ? true : false
+        _daemon[:status] = File.zero?("#{DEPLOY_DIR}/log/#{daemon}") ? true : false
         daemons << Daemon.new(_daemon)
         id += 1
       end
@@ -86,17 +86,30 @@ module Dashboard
     end
   end
   class Cpu
-    attr_reader :total, :kernel, :iowait
+    attr_reader :cpu
+
     def initialize
-      all = `mpstat 1 1`.grep(/Average/)[0].chomp.split
-      stats = all[2..10].map(&:to_i)
-      @total = stats[0..7].sum
-      @iowait = stats[3]
-      @kernel = stats[2] + stats[4] + stats[5]
+      @cpu = {}
+      result = `mpstat -P ALL 1 1`.grep(/Media|Average/)
+      result.shift
+      result.each do |cp|
+        cp_strip = cp.chomp.split
+        @cpu["cpu_#{cp_strip[1]}"] = {:total => cp_strip[2..9].map(&:to_f).sum, :iowait => cp_strip[5].to_f, :kernel => cp_strip[4].to_f }
+      end
     end
     def stats
-      { :total => total, :iowait => iowait, :kernel => kernel }
+      @cpu
     end
+    # def initialize
+    #   all = `mpstat 1 1`.grep(/Average/)[0].chomp.split
+    #   stats = all[2..10].map(&:to_i)
+    #   @total = stats[0..7].sum
+    #   @iowait = stats[3]
+    #   @kernel = stats[2] + stats[4] + stats[5]
+    # end
+    # def stats
+    #   { :total => total, :iowait => iowait, :kernel => kernel }
+    # end
   end
   class Memory
     attr_reader :total, :name, :data, :free, :used, :free_p, :used_p, :kind

@@ -22,4 +22,10 @@
     def *(number)
       self.each { |key, value| self[key] = value * number }
     end
+    def sort_by_key
+      ActiveSupport::OrderedHash[*self.sort_by{|k,v| k}.flatten]
+    end
+    def sort_by_value
+      ActiveSupport::OrderedHash[*self.sort_by{|k,v| v}.flatten]
+    end
   end

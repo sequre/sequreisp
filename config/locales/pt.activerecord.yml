@@ -397,6 +397,7 @@ pt:
     support: "Apoio"
     command_log: "Log de ​​comando"
     devices: "Dispositivos"
+    uptime: "Uptime"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'
@@ -444,7 +445,6 @@ pt:
     create_backup_button: "Criar y descarregar cópia de resguardo"
     restore_backup_db_button: "Restaurar cópia de resguardo (base de dados)"
     restore_backup_full_button: "Restaurar cópia de resguardo completa (aplicativo e base de dados)"
-    include_graphs: "Incluir historial de gráficos (+%{size} MB aprox.)"
     confirm_restore_backup: "Todos os dados atuais se perderão e serão subistituídos pelos da cópia de resguardo selecionada"
     confirm_restore_title: "Está seguro de proseguir?"
     backup_file_label: "Selecione o arquivo a restaurar"
@@ -507,6 +507,7 @@ pt:
     new: "Criando %{model}"
     login: "Aceso"
   messages:
+    uptime: "%{day} dias, %{hour} horas, %{minute} atas e %{second} segundos"
     audits:
       changes_in: "Alterações"
       selected_attributes: "atributo/s seleccionado/s"
@@ -722,5 +723,13 @@ pt:
       daemon_backup_restore: "Daemon backup restore"
       daemon_check_bind: "Daemon bind"
       daemon_check_link: "Daemon check link providers"
-      daemon_data_counting: "Daemon data count"
-      daemon_rrd_feed: "Daemon generate stats"
+      daemon_synchronize_time: "Synchronize time"
+      daemon_compact_samples: "Graph generation"
+      daemon_redis: "Statistics generation"
+  graphs:
+    titles:
+      disk: "Disk: %{name}"
+      ram: "RAM Memory"
+      load_average: "Load Average"
+      cpu_average: "Total CPU average"
+      cpu: "Core: %{number}"

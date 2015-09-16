@@ -89,7 +89,7 @@ class ProviderGroup < ActiveRecord::Base
   #   remaining
   # end
   def self.total_rate_down
-    @cached_total_rate_down ||= all.collect(&:rate_down).sum
+    all.collect(&:rate_down).sum
   end
 
   def rate_up
@@ -108,7 +108,7 @@ class ProviderGroup < ActiveRecord::Base
   #   remaining
   # end
   def self.total_rate_up
-    @cached_total_rate_up ||= all.collect(&:rate_up).sum
+    all.collect(&:rate_up).sum
   end
 
   def table

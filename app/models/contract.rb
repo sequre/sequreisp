@@ -33,6 +33,7 @@ class Contract < ActiveRecord::Base
   belongs_to :client
   belongs_to :plan
 
+  has_many :contract_samples
   has_many :forwarded_ports, :dependent => :destroy
   accepts_nested_attributes_for :forwarded_ports, :reject_if => :all_blank, :allow_destroy => true
   has_one :klass, :dependent => :nullify
@@ -203,7 +204,7 @@ class Contract < ActiveRecord::Base
         traffics.create(attr)
       end
       rescue Exception => e
-      log_rescue("[Contract] ERROR create_traffic_for_this_period", e)
+      $application_logger.error(e)
     end
   end
 
@@ -274,8 +275,8 @@ class Contract < ActiveRecord::Base
           #end
         end
       rescue => e
-        log_rescue("[Model][Contract][Queue_update_commands]", e)
-        Rails.logger.error "ERROR: Contract::queue_update_commands #{e.inspect}"
+        $application_logger.error(e)
+        # Rails.logger.error "ERROR: Contract::queue_update_commands #{e.inspect}"
       end
     end
     cq.save if not cq.command.empty?
@@ -632,8 +633,9 @@ class Contract < ActiveRecord::Base
   def do_per_contract_prios_tc(parent_mayor, parent_minor, iface, direction, action, _plan)
     tc_rules =[]
     mask = Contract::MASK_CONTRACT_PRIO
-    ceil = _plan["ceil_" + direction] * bandwidth_rate
-    rate = _plan.send("rate_" + direction) * bandwidth_rate
+    _bandwidth_rate = bandwidth_rate
+    ceil = _plan["ceil_" + direction] * _bandwidth_rate
+    rate = _plan.send("rate_" + direction) * _bandwidth_rate
     ceil = 1 if ceil < 1
     rate = 1 if rate < 1
 
@@ -675,8 +677,8 @@ class Contract < ActiveRecord::Base
       "-A count-down.#{ip_addr.to_cidr} -d #{ip} -m comment --comment \"data-count-#{ip}-down-data_count\"" ]
   end
 
-  def rules_for_enabled
-    macrule = (Configuration.filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
+  def rules_for_enabled filter_by_mac_address
+    macrule = (filter_by_mac_address and !mac_address.blank?) ? "-m mac --mac-source #{mac_address}" : ""
     target = disabled? ? "DROP" : "ACCEPT"
     [ ":enabled.#{ip_addr.to_cidr} -", "-A enabled.#{ip_addr.to_cidr} #{macrule} -s #{ip} -j #{target}" ]
   end
@@ -698,6 +700,24 @@ class Contract < ActiveRecord::Base
     end
   end
 
+
+  def current_redis_values
+    hash = {}
+    $redis.keys("#{redis_key}_*").sort.each do |key|
+      hash[key] = $redis.hgetall(key)
+      hash[key][:time_human] = Time.at($redis.hget(key, "time").to_i)
+    end
+    hash
+  end
+
+  def foo
+    begin
+      4 * nil
+    rescue => e
+      $application_logger.info(e)
+    end
+  end
+
   private
 
   #Please i need refactor
@@ -707,5 +727,4 @@ class Contract < ActiveRecord::Base
     self.prio_protos = self.prio_protos.strip unless self.prio_protos.nil?
     self.prio_helpers = self.prio_helpers.strip unless self.prio_helpers.nil?
   end
-
 end

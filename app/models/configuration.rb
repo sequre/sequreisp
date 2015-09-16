@@ -158,7 +158,7 @@ class Configuration < ActiveRecord::Base
     self.last_changes_applied_at = Time.now
     self.changes_to_apply = false
     self.daemon_reload = true
-    save ? [] : errors.full_message
+    save ? [] : errors.full_messages
   end
 
   def auditable_name
@@ -269,9 +269,42 @@ class Configuration < ActiveRecord::Base
     SequreISP::Version.to_s
   end
 
+  def system_information
+    result = {}
+    cpus = Dashboard::Cpu.new.stats
+    load_average = Dashboard::LoadAverage.new
+    result[:daemons] = Dashboard::Daemon.load_all
+    result[:services] = Dashboard::Service.load_all
+    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+
+    cpus.each do |key, sample|
+      result["#{key}_instant"] = {}
+      result["#{key}_instant"][:arg1] = [ date_time_now, sample[:total]  ]
+      result["#{key}_instant"][:arg2] = [ date_time_now, sample[:kernel] ]
+      result["#{key}_instant"][:arg3] = [ date_time_now, sample[:iowait] ]
+    end
+
+    result[:load_average_instant] = {}
+    result[:load_average_instant][:arg1] = [ date_time_now, load_average.now.to_f   ]
+    result[:load_average_instant][:arg2] = [ date_time_now, load_average.min5.to_f  ]
+    result[:load_average_instant][:arg3] = [ date_time_now, load_average.min15.to_f ]
+
+    result
+  end
+
+  def self.uptime
+    time = `cat /proc/uptime`.split(" ").first.to_f
+    # Time.at((DateTime.now.to_i -  DateTime.strptime("#{time}",'%s').to_i))
+    mm, ss = time.divmod(60)
+    hh, mm = mm.divmod(60)
+    dd, hh = hh.divmod(24)
+    # puts "%d days, %d hours, %d minutes and %d seconds" % [dd, hh, mm, ss]
+    I18n.t("messages.uptime", {:day => dd.to_i, :hour => hh.to_i, :minute => mm.to_i, :second => ss.to_i})
+  end
+
   # This method is rewrite
   def self.daemons
-    (Dir.entries("#{DEPLOY_DIR}/tmp") -[".", ".."]).select{|file| file.include?("daemon_")}.sort
+    (Dir.entries("#{DEPLOY_DIR}/log") -[".", ".."]).select{|file| file.include?("daemon_")}.delete_if{|file| file.include?("comercial")}.sort
   end
 ##############################################################
 #

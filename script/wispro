@@ -1,0 +1,224 @@
+#!/usr/bin/ruby
+
+require 'optparse'
+require 'optparse/time'
+require 'ostruct'
+require 'pp'
+
+options = OpenStruct.new
+options.env = "production"
+options.path = "/opt/sequreisp/deploy/current/"
+options.cmd = ""
+options.log_file = "log/production.log"
+
+ARGV << "-h" if ARGV.empty?
+
+PATH_APP="/opt/sequreisp/deploy/current/"
+
+PLUGINS = (Dir.entries("#{PATH_APP}/vendor/plugins/") - [".", ".."]).select{|dir| dir.include?("sequreisp")}.sort
+
+opts = OptionParser.new do |opts|
+
+  opts.banner = "Usage: wispro [options]"
+
+  opts.separator ""
+  opts.separator "Specific options:"
+
+  opts.on("-a", "--apply-changes", "Apply changes. Example: wispro -a") do
+    options.cmd = "runner"
+    options.extension = "Configuration.apply_changes"
+  end
+
+  # opts.on("-m", "--manual-apply-changes", "Manual apply changes. Example: wispro -m") do
+  #   options.cmd = "runner"
+  #   options.extension = "require 'sequreisp'; boot"
+  # end
+
+  opts.on("-z", "--safe-mode", "Active safe-mode. Example: wispro -z.") do
+    options.cmd = "runner"
+    options.extension = "conf = Configuration; conf.in_safe_mode = true; conf.save"
+  end
+
+  opts.on("-n", "--no-safe-mode", "Desactive safe-mode. Example: wispro -n.") do
+    options.cmd = "runner"
+    options.extension = "conf = Configuration; conf.in_safe_mode = false; conf.save"
+  end
+
+  opts.on("-p","--providers", "Show provider status. Example: wispro -p") do
+    options.cmd= "runner"
+    options.extension ="Provider.all.map{|a| puts 'Name: ' + a.name + ', kind: ' + a.kind + ', IP: ' + a.ip + ',rate_down: ' + a.rate_down.to_s + ',rate_up: ' + a.rate_up.to_s + ', State: ' + a.state + '\n' }"
+  end
+
+  opts.on("-t", "--tail FILE", "Show tail for production, command, command_human, daemon log. Example:
+                                          wispro -t [production
+                                                    |command
+                                                    |command_human
+                                                    |command_server
+                                                    |daemon_invoicing
+                                                    |daemon_dyndns
+                                                    |daemon_synchronize_time
+                                                    |daemon_compact_samples
+                                                    |daemon_redis
+                                                    |daemon_check_bind
+                                                    |daemon_backup_restore
+                                                    |daemon_check_link
+                                                    |daemon_apply_change_automatically
+                                                    |daemon_apply_change
+                                                    |daemon_traffic_accounting
+                                                    |daemon_time_modifier
+                                                    |daemon_remote_backup
+                                                    |daemon_notification
+                                                    |daemon_network_monitoring
+                                                    |daemon_net_audit]") do |log_file|
+    options.cmd = "tail"
+    options.extension = "-n80 -F"
+    daemon = log_file.scan(/(daemon_.*)/).flatten.first.to_s
+    if not daemon.empty?
+      options.path = "/opt/sequreisp/deploy/current/"
+      options.log_file = "log/wispro.log | ccze -A | grep #{daemon}"
+    else
+      options.log_file = "log/#{log_file}.log | ccze -A"
+    end
+  end
+
+  opts.on("-l", "--log-level LEVEL", "grep log by level. Example: wispro -t daemon_<daemon_name> -l [info|debug]") do |level|
+    puts level
+    options.cmd = "tail"
+    options.log_level = "| grep #{level.upcase}"
+  end
+
+  opts.on("-v", "--version", "Show version app. Example: wispro -v") do
+    options.cmd = "runner"
+    options.extension = "puts 'Version: ' + Configuration.app_version"
+  end
+
+  opts.on("-c", "--console", "Open rails console. Example: wispro -c") do
+    options.cmd = "console"
+  end
+
+  opts.on("-x", "--console-sandbox", "Open rails console in sandbox mode. WARNING you must used with option -c. Example: wispro -c -x.") do
+    options.extension = "-s"
+  end
+
+  opts.on("-e", "--environment ENVIRONMENT", "Define environment by default use production. Example wispro -e [production|development|test]") do |env|
+    options.env = env
+    options.path = "." if env == "development"
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+  opts.on("-d", "--debug-mode DAEMON", "Enable debug-mode for daemon log. Example:
+                                          wispro -d [daemon_invoicing
+                                                    |daemon_dyndns
+                                                    |daemon_synchronize_time
+                                                    |daemon_compact_samples
+                                                    |daemon_redis
+                                                    |daemon_check_bind
+                                                    |daemon_backup_restore
+                                                    |daemon_check_link
+                                                    |daemon_apply_change_automatically
+                                                    |daemon_apply_change
+                                                    |daemon_traffic_accounting
+                                                    |daemon_time_modifier
+                                                    |daemon_remote_backup
+                                                    |daemon_notification
+                                                    |daemon_network_monitoring
+                                                    |daemon_net_audit]") do |daemon|
+    change_daemon_attribute daemon, 'level_log', 0
+  end
+
+  opts.on("-i", "--info-mode DAEMON", "Enable info-mode for daemon log. Example:
+                                          wispro -i [daemon_invoicing
+                                                    |daemon_dyndns
+                                                    |daemon_synchronize_time
+                                                    |daemon_compact_samples
+                                                    |daemon_redis
+                                                    |daemon_check_bind
+                                                    |daemon_backup_restore
+                                                    |daemon_check_link
+                                                    |daemon_apply_change_automatically
+                                                    |daemon_apply_change
+                                                    |daemon_traffic_accounting
+                                                    |daemon_time_modifier
+                                                    |daemon_remote_backup
+                                                    |daemon_notification
+                                                    |daemon_network_monitoring
+                                                    |daemon_net_audit]") do |daemon|
+    change_daemon_attribute daemon, 'level_log', 1
+  end
+
+  opts.on("-w", "--enable-daemon DAEMON", "Enable daemon. Example:
+                                          wispro -w [daemon_invoicing
+                                                    |daemon_dyndns
+                                                    |daemon_synchronize_time
+                                                    |daemon_compact_samples
+                                                    |daemon_redis
+                                                    |daemon_check_bind
+                                                    |daemon_backup_restore
+                                                    |daemon_check_link
+                                                    |daemon_apply_change_automatically
+                                                    |daemon_apply_change
+                                                    |daemon_traffic_accounting
+                                                    |daemon_time_modifier
+                                                    |daemon_remote_backup
+                                                    |daemon_notification
+                                                    |daemon_network_monitoring
+                                                    |daemon_net_audit]") do |daemon|
+    change_daemon_attribute daemon, 'enabled', true
+  end
+
+  opts.on("-x", "--disable-daemon DAEMON", "Disable daemon. Example:
+                                          wispro -x [daemon_invoicing
+                                                    |daemon_dyndns
+                                                    |daemon_synchronize_time
+                                                    |daemon_compact_samples
+                                                    |daemon_redis
+                                                    |daemon_check_bind
+                                                    |daemon_backup_restore
+                                                    |daemon_check_link
+                                                    |daemon_apply_change_automatically
+                                                    |daemon_apply_change
+                                                    |daemon_traffic_accounting
+                                                    |daemon_time_modifier
+                                                    |daemon_remote_backup
+                                                    |daemon_notification
+                                                    |daemon_network_monitoring
+                                                    |daemon_net_audit]") do |daemon|
+    change_daemon_attribute daemon, 'enabled', false
+  end
+
+  def change_daemon_attribute daemons_input, attribute, value
+    require 'yaml'
+    daemons_input = `#{PATH_APP}/script/runner -e production \"puts Configuration.daemons.join(',')\"` if daemons_input == "all"
+    daemons = daemons_input.delete("\n").split(",")
+    daemons.each do |daemon|
+      root_path = PATH_APP
+      plugin = daemon.sub('daemon_', '')
+      root_path += "vendor/plugins/#{plugin_dir}" if plugin_dir = PLUGINS.select{|p| p.include?(plugin)}.first
+      daemon_path = "#{root_path}/config/daemon_tasks.yml"
+      daemon_config = YAML.load(File.read(daemon_path))
+      daemon_config[daemon][attribute] = value
+      File.open(daemon_path, 'w'){|l| l.puts daemon_config.to_yaml }
+    end
+  end
+
+  ##########################################################
+  #
+  ##########################################################
+end
+
+opts.parse!
+
+if options.cmd
+  case options.cmd
+  when "tail"
+    exec("#{options.cmd} #{options.extension} #{options.path}#{options.log_file} #{options.log_level}")
+  when "console"
+    exec("#{options.path}script/#{options.cmd} #{options.env} #{options.extension}")
+  when "runner"
+    exec("#{options.path}script/#{options.cmd} -e #{options.env} \"#{options.extension}\"")
+  end
+end

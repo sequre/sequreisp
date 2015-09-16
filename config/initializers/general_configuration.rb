@@ -1,4 +1,18 @@
-if $0 == 'irb'
+$redis = Redis.new(:host => 'localhost', :port => 6379)
+$log_level = "info"
+
+$daemon_configuration = YAML.load(File.read("#{Rails.root.to_s}/config/daemon_tasks.yml"))
+Dir.glob(File.join(Rails.root, 'vendor', 'plugins', '**', 'config', 'daemon_tasks.yml')) do |dt|
+  $daemon_configuration.merge!(YAML.load(File.read(dt)))
+end
+
+FileUtils.mkdir_p("#{DEPLOY_DIR}/log")
+FileUtils.touch(APPLICATION_LOG) unless File.exist?(APPLICATION_LOG)
+
+# $daemon_logger ||= Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 1.megabytes)
+$application_logger ||= ApplicationLogger.new
+
+if Rails.env.development? and $0 == 'irb'
   ActiveRecord::Base.logger = Logger.new(STDOUT)
   ActiveRecord::Base.connection_pool.clear_reloadable_connections!
 end

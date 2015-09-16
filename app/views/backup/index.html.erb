@@ -29,11 +29,6 @@ $(function() {
         <legend><span><%=t 'backup.create_backup_legend' %></span></legend>
         <% semantic_form_for 'backup', :url => create_full_backup_path  do |f| %>
 
-	  <%= f.input :include_graph,
-	              :as => :boolean,
-	              :label => t('backup.include_graphs', :size => Contract.count/2.0),
-	              :required => false %>
-
           <%= f.input :include_files,
                       :as => :text,
                       :label =>t('backup.include_files'),

@@ -403,6 +403,7 @@ es:
     command_log: "Log de comandos"
     devices: "Dispositivos"
     device_brands: "Marcas de dispositivo"
+    uptime: "Tiempo activo"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'
@@ -450,7 +451,6 @@ es:
     create_backup_button: "Crear y descargar copia de resguardo"
     restore_backup_db_button: "Restaurar copia de resguardo (base de datos)"
     restore_backup_full_button: "Restaurar copia de resguardo completa (aplicación y base de datos)"
-    include_graphs: "Incluir historial de gráficos (+%{size}MB aprox.)"
     confirm_restore_backup: "Todos los datos actuales se perderán y serán reemplazados por los de la copia de resguardo seleccionada"
     confirm_restore_title: "¿Está seguro de seguir adelante?"
     backup_file_label: "Seleccione el archivo a restaurar"
@@ -530,6 +530,7 @@ es:
     new: "Creando %{model}"
     login: "Acceso"
   messages:
+    uptime: "%{day} dias, %{hour} horas, %{minute} minutos y %{second} segundos"
     audits:
       changes_in: "Cambios en"
       selected_attributes: "atributo/s seleccionado/s"
@@ -745,5 +746,13 @@ es:
       daemon_backup_restore: "Restaurar backup"
       daemon_check_bind: "Bind"
       daemon_check_link: "Chequeo de proveedores"
-      daemon_data_counting: "Conteo de datos"
-      daemon_rrd_feed: "Generación de estadisticas"
+      daemon_synchronize_time: "Sincronización horario"
+      daemon_compact_samples: "Generación de gráficos"
+      daemon_redis: "Generación de estadisticas"
+  graphs:
+    titles:
+      disk: "Disco: %{name}"
+      ram: "Memoria RAM"
+      load_average: "Carga promedio del sistema"
+      cpu_average: "Promedio total de CPU"
+      cpu: "Core: %{number}"

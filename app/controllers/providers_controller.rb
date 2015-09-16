@@ -26,7 +26,7 @@ class ProvidersController < ApplicationController
     @search = Provider.search(params[:search])
     @providers = @search.paginate(:page => params[:page],:per_page => 30)
 
-    @graphs = @providers.map{ |p| InterfaceGraph.new(p.interface, "instant") }
+    @graphs = @providers.map{ |p| InterfaceGraph.new(p.interface, "interface_instant") }
 
     respond_to do |format|
       format.html # index.html.erb

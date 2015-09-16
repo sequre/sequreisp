@@ -15,11 +15,11 @@ class AlwaysAllowedSite < ActiveRecord::Base
       Timeout::timeout(10) do
         Resolv.getaddresses(name).select do |a| IP.new(a).is_a?(IP::V4) end
       end
-    rescue Timeout::Error
-      log_rescue("[Model][AlwaysAllowedSite] timeout for ip_addresses #{name}", e)
+    rescue Timeout::Error => e
+      $application_logger.error(e)
       []
     rescue => e
-      log_rescue("[Model][AlwaysAllowedSite] ip_addresses method failed", e)
+      $application_logger.error(e)
       []
     end
   end

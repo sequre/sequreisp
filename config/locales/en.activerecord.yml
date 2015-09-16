@@ -403,6 +403,7 @@ en:
     command_log: "Command log"
     devices: "Devices"
     device_brands: "Device Brands"
+    uptime: "Uptime"
   table_headers:
     plans:
       plugins_enabled: 'Plugins enabled'
@@ -450,7 +451,6 @@ en:
     create_backup_button: "Create and download backup"
     restore_backup_db_button: "Restore (just database)"
     restore_backup_full_button: "Full restore (application and database)"
-    include_graphs: "Include graphics history (+%{size}MB approx.)"
     confirm_restore_backup: "All current data will be lost and replaced with the selected backup"
     confirm_restore_title: "Are you sure you want to continue?"
     backup_file_label: "Select the backup file to restore"
@@ -513,6 +513,7 @@ en:
     new: "Creating %{model}"
     login: "Sign In"
   messages:
+    uptime: "%{day} days, %{hour} hours, %{minute} minutes and %{second} seconds"
     audits:
       changes_in: "Changes in"
       selected_attributes: "selected attributes"
@@ -726,5 +727,13 @@ en:
       daemon_backup_restore: "backup restore"
       daemon_check_bind: "bind"
       daemon_check_link: "Check link providers"
-      daemon_data_counting: "Data count"
-      daemon_rrd_feed: "Generate stats"
+      daemon_synchronize_time: "Synchronize time"
+      daemon_compact_samples: "Graph generation"
+      daemon_redis: "Statistics generation"
+  graphs:
+    titles:
+      disk: "Disk: %{name}"
+      ram: "RAM Memory"
+      load_average: "Load Average"
+      cpu_average: "Total CPU average"
+      cpu: "Core: %{number}"
