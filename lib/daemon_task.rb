@@ -80,8 +80,10 @@ class DaemonTask
             set_next_exec
             @@update_execution.synchronize {
               configuration = Configuration.first
-              configuration.update_attribute("#{@name.underscore}_last_execution_time", @next_exec) if configuration.respond_to?("#{@name.underscore}_last_execution_time")
-              log("[Daemon][#{name}] Last Execution Time is set on: #{configuration.send("#{@name.underscore}_last_execution_time")}") if verbose?
+              if configuration.respond_to?("#{@name.underscore}_last_execution_time")
+                configuration.update_attribute("#{@name.underscore}_last_execution_time", @next_exec)
+                log("[Daemon][#{name}] Last Execution Time is set on: #{configuration.send("#{@name.underscore}_last_execution_time")}") if verbose?
+              end
             }
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
