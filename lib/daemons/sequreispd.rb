@@ -56,23 +56,19 @@ begin
       daemon.start
     end
   end
-  while($running) do
-    daemons.each do |daemon|
-      if daemon.state.nil?
-        @general_daemon_logger.debug("[DAEMON_DEATH_AND_RESTART] #{daemon.name}")
-        daemon.start
-      end
-    end
-    sleep 1
-  end
-  daemons.each do |daemon|
-    @general_daemon_logger.debug("[SIGNAL_DAEMON_STOP] #{daemon.name}")
-    daemon.stop
-    @general_daemon_logger.debug("[WAITH_FOR_DAEMON] #{daemon.name}")
-    daemon.join
-  end
 rescue Exception => exception
-  @general_daemon_logger.error(exception)
+    @general_daemon_logger.error(exception)
+ensure
+  begin
+    daemons.each do |daemon|
+      @general_daemon_logger.debug("[SIGNAL_DAEMON_STOP] #{daemon.name}")
+      daemon.stop
+      @general_daemon_logger.debug("[WAITH_FOR_DAEMON] #{daemon.name}")
+      daemon.join
+    end
+  rescue Exception => exception
+    @general_daemon_logger.error(exception)
+  end
 end
 #################################################
 #################################################
