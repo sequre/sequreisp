@@ -55,6 +55,7 @@ class DaemonTask
       configuration = Configuration.first
       last_execution_time = configuration.respond_to?("#{@name.underscore}_last_execution_time") ? configuration.send("#{@name.underscore}_last_execution_time") : nil
       if last_execution_time
+        log("[Daemon][#{name}] get Last Execution Time as: #{last_execution_time}") if verbose?
         @next_exec = last_execution_time + @time_for_exec[:frecuency]
       else
         @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.now
@@ -81,6 +82,7 @@ class DaemonTask
               configuration = Configuration.first
               configuration.update_attribute("#{@name.underscore}_last_execution_time", @next_exec) if configuration.respond_to?("#{@name.underscore}_last_execution_time")
               log("[Daemon][#{name}] Last Execution Time is set on: #{configuration.send("#{@name.underscore}_last_execution_time")}") if verbose?
+            }
             }
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
