@@ -28,7 +28,7 @@ class AuditsController < ApplicationController
 
   def export_to_csv
     csv_string = FasterCSV.generate(:col_sep => ";") do |csv|
-      csv << [t('activerecord.attributes.audit.id'),
+      csv << [ "",
               t('activerecord.attributes.audit.created_at'),
               t('activerecord.attributes.audit.auditable_type'),
               t('activerecord.attributes.audit.user'),
