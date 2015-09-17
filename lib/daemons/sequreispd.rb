@@ -45,6 +45,7 @@ begin
 #################################################
 #################################################
   if $running
+    log("[GeneralDaemon] STARTING DAEMONS")
     DaemonTask.descendants.each do |daemon_task|
       daemon = daemon_task.new
       threads << daemon
@@ -62,6 +63,7 @@ ensure
   end
   threads.map{ |thread| thread.stop }
   threads.map{ |thread| thread.join }
+  log("[GeneralDaemon] DAEMONS STOPPED")
 #################################################
 #################################################
 end
