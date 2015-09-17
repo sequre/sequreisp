@@ -734,6 +734,19 @@ pt:
       load_average: "Load Average"
       cpu_average: "Total CPU average"
       cpu: "Core: %{number}"
+      tabs:
+        contracts:
+          period_0: "3 hours"
+          period_1: "Per Day"
+          period_2: "Per week"
+          period_3: "Per month"
+          period_4: "Per Year"
+        Interfaces:
+          period_0: "3 hours"
+          period_1: "Per Day"
+          period_2: "Per week"
+          period_3: "Per month"
+          period_4: "Per Year"
       contracts:
         data_count: "Data counting monthly"
         latency_instant: "Latency instant (5 sec)"

@@ -103,7 +103,7 @@
 	</td>
 	<td>
 	  <% if @contract.proxy_arp %>
-	    <br/><span class="proxy_arp"><%= "#{@contract.proxy_arp_interface.name} #{@contract.proxy_arp_provider.name} #{@contract.proxy_arp_gateway} #{@contract.proxy_arp_lan_gateway}" %></span>
+	    <br/><span class="proxy_arp"><%= "#{@contract.proxy_arp_interface.try(:name)} #{@contract.proxy_arp_provider.try(:name)} #{@contract.proxy_arp_gateway} #{@contract.proxy_arp_lan_gateway}" %></span>
 	  <% end %>
 	</td>
 	<td>
@@ -133,7 +133,7 @@
 <% content_tag(:div, "tab_periods", :id => "tabs") do %>
   <ul>
     <% @periods.times do |period| %>
-      <li><a href=<%="#tabs_#{period}"%>><%= "Period #{period}" %></a></li>
+      <li><a href=<%="#tabs_#{period}"%>><%= t("graphs.titles.tabs.contracts.period_#{period}") %></a></li>
     <% end %>
   </ul>
 

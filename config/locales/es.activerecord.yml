@@ -757,6 +757,19 @@ es:
       load_average: "Carga promedio del sistema"
       cpu_average: "Promedio total de CPU"
       cpu: "Core: %{number}"
+      tabs:
+        contracts:
+          period_0: "Cada 3 hs"
+          period_1: "Por dia"
+          period_2: "Por semana"
+          period_3: "Por mes"
+          period_4: "Por año"
+        Interfaces:
+          period_0: "cada 3 hs"
+          period_1: "Por dia"
+          period_2: "Por semana"
+          period_3: "Por mes"
+          period_4: "por año"
       contracts:
         data_count: "Conteo de datos mensual"
         latency_instant: "Instantaneo de latencia (5 sec)"
