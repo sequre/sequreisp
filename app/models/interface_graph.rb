@@ -24,10 +24,10 @@ class InterfaceGraph < Graph
         series << { :name  => rkey[:name],
                     :type  => "spline",
                     :stack => rkey[:name],
-                    :data  => data }
+                    :data  => data.sort }
       end
 
-      graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
+      graph = { :title  => I18n.t("graphs.titles.interfaces.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
                 :series => series }
 
@@ -43,16 +43,16 @@ class InterfaceGraph < Graph
         data = interfaces.empty? ? faker_values({ :size => key[:sample_size], :time => (key[:scope] * 1000), :keys => { rkey[:name] => Rails.env.production? ? 0 : (100 * 0.99) } })[rkey[:name]] : {}
         InterfaceSample.all( :conditions => { :interface_id => interfaces.map(&:id), :period => period } ).each do |s|
           data[s[:sample_number]] = 0 unless data.has_key?(s[:sample_number])
-          data[s[:sample_number]] += data[rkey[:name]]
+          data[s[:sample_number]] += s[rkey[:name]]
         end
 
         series << { :name  => rkey[:name],
                     :type  => "spline",
                     :stack => rkey[:name],
-                    :data  => data.to_a }
+                    :data  => data.to_a.sort }
       end
 
-      graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
+      graph = { :title  => I18n.t("graphs.titles.provider_groups.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
                 :series => series }
 
@@ -82,10 +82,10 @@ class InterfaceGraph < Graph
                   :type   => "spline",
                   :marker => { :enabled => false },
                   :stack  => rkey[:name],
-                  :data   => data }
+                  :data   => data.sort }
     end
 
-    graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
+    graph = { :title  => I18n.t("graphs.titles.interfaces.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
               :series => series }
 
@@ -103,10 +103,12 @@ class InterfaceGraph < Graph
       interfaces.each do |i|
         date_keys = $redis.keys("interface_#{i.id}_sample_*").sort
         date_keys.each do |key|
-          data[time] = 0 unless data.has_key?(key)
-          time = $redis.hget("#{key}", "time").to_i * 1000
-          value = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
-          data[time] += value
+          unless data.has_key?(key)
+            time = $redis.hget("#{key}", "time").to_i * 1000
+            data[time] = 0 unless data.has_key?(time)
+            value = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
+            data[time] += value
+          end
         end
       end
 
@@ -114,10 +116,12 @@ class InterfaceGraph < Graph
                   :type   => "spline",
                   :marker => { :enabled => false },
                   :stack  => rkey[:name],
-                  :data   => data.to_a }
+                  :data   => data.to_a.sort }
     end
 
-    graph = { :title  => I18n.t("graphs.titles.#{(__method__).to_s}"),
+
+
+    graph = { :title  => I18n.t("graphs.titles.provider_groups.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
               :series => series }
 
