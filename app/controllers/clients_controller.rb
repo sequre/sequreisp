@@ -25,7 +25,7 @@ class ClientsController < ApplicationController
     params[:search][:order] ||= 'ascend_by_name'
     @search = Client.search(params[:search])
     @clients = @search.paginate(:page => params[:page],:per_page => 10)
-    
+
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @clients }
@@ -104,6 +104,14 @@ class ClientsController < ApplicationController
       format.json { render :json => Client.all(:conditions => ["name like ?", "%#{params[:term]}%"], :limit => 10, :select => :name).collect(&:name) }
     end
   end
+
+  def export_to_excel
+    @clients = Client.all
+    send_data Client.to_csv(@clients),
+            :type => 'text/csv; charset=UTF-8; header=present',
+            :disposition => "attachment; filename=wispro_contracts_#{Time.now.strftime("%Y-%m-%d")}.csv"
+  end
+
   private
   def object
     @object ||= Client.find(params[:id])

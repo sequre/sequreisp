@@ -64,6 +64,11 @@
 </div>
 <div class="separador"></div>
 
+<ul id="nav" style="float:right">
+  <li><%= link_to t('buttons.export_to_excel'), client_export_path %> </li>
+</ul>
+<div style="clear: both"></div>
+
 <div class="main">
   <%= page_entries_info @clients %>
   <table cellspacing="0" cellpadding="0">
