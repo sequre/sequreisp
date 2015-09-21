@@ -54,14 +54,18 @@ begin
 rescue Exception => e
   log_rescue("[Daemon][Sequreispd] ERROR GENERAL DAEMON", e)
 ensure
-  while($running) do
-    threads.each do |thread|
-      thread.start if thread.state.nil?
+  begin
+    while($running) do
+      threads.each do |thread|
+        thread.start if thread.state.nil?
+      end
+      sleep 1
     end
-    sleep 1
+    threads.map{ |thread| thread.stop }
+    threads.map{ |thread| thread.join }
+  rescue => e
+    log_rescue("[Daemon][Sequreispd] ERROR GENERAL DAEMON", e)
   end
-  threads.map{ |thread| thread.stop }
-  threads.map{ |thread| thread.join }
 #################################################
 #################################################
 end
