@@ -306,7 +306,7 @@ class DaemonCheckLink < DaemonTask
     update_fallback_route false, false
     if send_notification_mail and Configuration.deliver_notifications
       AppMailer.deliver_check_links_email
-      @daemon_logger.debug("[PROVIDER] #{p.class.name}:#{p.name} send_notification")
+      @daemon_logger.debug("[PROVIDER] send_notification")
     end
   end
 
@@ -435,20 +435,20 @@ class DaemonRedis < DaemonTask
  def contracts_to_redis
    transactions = { :create => [] }
    data_counting = {}
-   last_samples = {}
+   # last_samples = {}
    @compact_keys = ContractSample.compact_keys
    counter_key = "contract_counters"
    hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
                   "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
 
-   ContractSample.last_samples(0).each { |cs| last_samples[cs.contract_id.to_s] = cs }
+   # ContractSample.last_samples(0).each { |cs| last_samples[cs.contract_id.to_s] = cs }
 
    contracts = Contract.all(:include => :current_traffic)
 
    contracts.each do |c|
      next if c.disabled?
      @relation = c
-     @last_db_sample = last_samples[c.id.to_s]
+     # @last_db_sample = last_samples[c.id.to_s]
      @redis_key  = c.redis_key
      $redis.hset(counter_key, c.id.to_s, 0) unless $redis.hexists(counter_key, c.id.to_s)
      round_robin()
@@ -458,7 +458,7 @@ class DaemonRedis < DaemonTask
        classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
        parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
        contract_class = hfsc_class[rkey[:up_or_down]].select{|k| k.include?("class hfsc #{classid} parent #{parent}")}.first
-       catchs["#{rkey[:name]}"] = contract_class.split("\n").select{|k| k.include?("Sent ")}.first.split(" ")[1]
+       catchs["#{rkey[:name]}"] = contract_class.split("\n").select{|k| k.include?("Sent ")}.first.split(" ")[1].to_i
      end
      counter = $redis.hget(counter_key, c.id.to_s).to_i
      generate_sample(catchs)
@@ -490,18 +490,21 @@ class DaemonRedis < DaemonTask
  end
 
  def generate_sample(catchs)
-   new_sample = { :time => DateTime.now.to_i }
-   new_key = "#{@redis_key}_#{new_sample[:time]}"
+   new_sample = {}
+   current_time = DateTime.now.to_i
+   new_key = "#{@redis_key}_#{current_time}"
    last_key = $redis.keys("#{@redis_key}_*").sort.last
-   catchs.each_key do |sub_key|
-     new_sample[sub_key] = {}
-     total_bytes, last_time = $redis.hmget("#{last_key}", "#{sub_key}_total_bytes", "time") unless last_key.nil?
-     accumulated = (catchs[sub_key].to_i < total_bytes.to_i ? total_bytes.to_i : (catchs[sub_key].to_i - total_bytes.to_i) ) unless last_key.nil?
-     new_sample[sub_key][:instant] = last_key.nil? ? "0" : accumulated
-     new_sample[sub_key][:total_bytes] = catchs[sub_key].to_i
+
+   catchs.each do |prio_key, current_total|
+     new_sample[prio_key] = { :instant => 0, :total_bytes => current_total }
+     unless last_key.nil?
+       last_total = $redis.hget("#{last_key}", "#{prio_key}_total_bytes").to_i
+       new_sample[prio_key][:instant] = (current_total < last_total ? current_total : (current_total - last_total) )
+     end
+     $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total )
    end
-   catchs.each_key { |k| new_sample[k].each_key { |sub_key| $redis.hmset("#{new_key}", "#{k}_#{sub_key}", new_sample[k][sub_key]) } }
-   $redis.hmset("#{new_key}", "time", new_sample[:time])
+
+   $redis.hmset("#{new_key}", "time", current_time)
    @daemon_logger.debug("[#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
  end
 
@@ -510,16 +513,16 @@ class DaemonRedis < DaemonTask
    time_period = 60
    period = 0
    date_keys = $redis.keys("#{@redis_key}_*").sort
-   time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i
+   time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
    @init_time_new_sample = (ContractSample.all(:conditions => {:period => period, :contract_id => @relation.id} ).last.sample_number + time_period) rescue false ||
                            (Time.at($redis.hget("#{date_keys.first}", "time").to_i).change(:sec => 0)).to_i
    @end_time_new_sample  = @init_time_new_sample + (time_period - 1)
 
    while (not date_keys.empty?) and time_last_sample >= @end_time_new_sample
-     time_first_sample = $redis.hget("#{date_keys.first}", "time").to_i
-     last_time_for_new_sample = nil
      keys_to_delete = []
-     datas = []
+     samples_to_compact = []
+     selected_times = []
+
      new_sample = { :period => period,
                     :sample_time => Time.at(@init_time_new_sample),
                     :sample_number => @init_time_new_sample.to_s,
@@ -528,26 +531,27 @@ class DaemonRedis < DaemonTask
      @daemon_logger.debug("[PeriodForNewSample][#{@relation.class.name}:#{@relation.id}] (#{Time.at(@init_time_new_sample)}) - (#{Time.at(@end_time_new_sample)}")
 
      date_keys.each do |key|
-       data = {}
+       sample = {}
        time = $redis.hget("#{key}", "time").to_i
        if time <= @end_time_new_sample
-         last_time_for_new_sample = time
-         @compact_keys.each { |rkey| data[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
-         @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{data.inspect}")
+         @compact_keys.each { |rkey| sample[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
+         @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{new_sample.inspect}")
+         selected_times << time
          keys_to_delete << key
        else
          @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][NO] (#{Time.at(time)})")
        end
-       datas << data
+       samples_to_compact << sample
      end
 
-     data_acummulated = datas.sum
+     seconds = (selected_times.last.to_i - selected_times.first.to_i) + 1
+
+     data_acummulated = samples_to_compact.sum
      samples[:total] += data_acummulated.values.sum
-     seconds = (last_time_for_new_sample - time_first_sample).zero? ? 1 : (last_time_for_new_sample - time_first_sample)
      samples[:create] << new_sample.merge((data_acummulated / seconds * 8))
      keys_to_delete.each { |key| $redis.del(key) }
      @init_time_new_sample += time_period
-     @end_time_new_sample = @init_time_new_sample + (time_period - 1)
+     @end_time_new_sample  += time_period
    end
    samples
  end

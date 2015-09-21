@@ -159,10 +159,10 @@ class Interface < ActiveRecord::Base
     date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
     if Rails.env.production?
       date_keys = $redis.keys("#{redis_key}_*").sort
-      time = date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i
+      # time = ((date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i)
       InterfaceSample.compact_keys.each do |rkey|
         value = date_keys.empty? ? 0 : $redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_i
-        data[rkey[:name].to_sym] = [ time, value ]
+        data[rkey[:name].to_sym] = [ date_time_now, value ]
       end
     else
       if kind == "lan"

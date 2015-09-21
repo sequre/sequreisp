@@ -14,7 +14,7 @@ class InterfaceGraph < Graph
 
       InterfaceSample.compact_keys.each do |rkey|
         data = if Rails.env.production?
-                 samples.map { |s| [ (s.sample_number.to_i * 1000), s[rkey[:name].to_sym] ] }
+                 samples.map { |s| [ ((s.sample_number.to_i + Time.now.utc_offset) * 1000), s[rkey[:name].to_sym] ] }
                else
                  faker_values({ :size => key[:sample_size],
                                 :time => (key[:scope] * 1000),
@@ -29,6 +29,7 @@ class InterfaceGraph < Graph
 
       graph = { :title  => I18n.t("graphs.titles.interfaces.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
+                :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2) + 'b/s'}",
                 :series => series }
 
       default_options_graphs(graph)
@@ -42,8 +43,9 @@ class InterfaceGraph < Graph
       InterfaceSample.compact_keys.each do |rkey|
         data = interfaces.empty? ? faker_values({ :size => key[:sample_size], :time => (key[:scope] * 1000), :keys => { rkey[:name] => Rails.env.production? ? 0 : (100 * 0.99) } })[rkey[:name]] : {}
         InterfaceSample.all( :conditions => { :interface_id => interfaces.map(&:id), :period => period } ).each do |s|
-          data[s[:sample_number]] = 0 unless data.has_key?(s[:sample_number])
-          data[s[:sample_number]] += s[rkey[:name]]
+          time = (s[:sample_number] + Time.now.utc_offset) * 1000
+          data[time] = 0 unless data.has_key?(time)
+          data[time] += s[rkey[:name]]
         end
 
         series << { :name  => rkey[:name],
@@ -54,6 +56,7 @@ class InterfaceGraph < Graph
 
       graph = { :title  => I18n.t("graphs.titles.provider_groups.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
+                :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2) + 'b/s'}",
                 :series => series }
 
       default_options_graphs(graph)
@@ -70,12 +73,10 @@ class InterfaceGraph < Graph
                                                :time => (5 * 1000),
                                                :keys => {rkey[:name] => Rails.env.production? ? 0: speed * 0.99}})[rkey[:name]] : []
 
-      if Rails.env.production?
-        date_keys.each do |key|
-          time = $redis.hget("#{key}", "time").to_i * 1000
-          value = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
-          data << [ time, value ]
-        end
+      date_keys.each do |key|
+        time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
+        value = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
+        data << [ time, value ]
       end
 
       series << { :name   => rkey[:name],
@@ -87,6 +88,7 @@ class InterfaceGraph < Graph
 
     graph = { :title  => I18n.t("graphs.titles.interfaces.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
+              :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2) + 'b/s'}",
               :series => series }
 
     default_options_graphs(graph)
@@ -123,6 +125,7 @@ class InterfaceGraph < Graph
 
     graph = { :title  => I18n.t("graphs.titles.provider_groups.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
+              :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2) + 'b/s'}",
               :series => series }
 
     default_options_graphs(graph)

@@ -13,7 +13,7 @@ class ContractGraph < Graph
         data = []
         if Rails.env.production?
           date_keys.each do |key|
-            time = $redis.hget("#{key}", "time").to_i * 1000
+            time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
             value = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
             data << [ time, value ]
           end
@@ -33,7 +33,7 @@ class ContractGraph < Graph
 
       graph = { :title  => I18n.t("graphs.titles.contracts.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
-                :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) }",
+                :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) + 'b/s'}",
                 :series => series }
 
       default_options_graphs(graph)
@@ -64,7 +64,7 @@ class ContractGraph < Graph
 
         graph = { :title  => I18n.t("graphs.titles.contracts.#{(__method__).to_s}"),
                   :ytitle => 'bps(bits/second)',
-                  :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) }",
+                  :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) + 'b/s'}",
                   :series => series }
 
         default_options_graphs(graph)
@@ -85,7 +85,7 @@ class ContractGraph < Graph
                                      :down => Rails.env.production? ? 0 : plan.ceil_down } }) if date_keys.empty?
 
     date_keys.sort.each do |key|
-      time = $redis.hget("#{key}", "time").to_i * 1000
+      time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
       value_up = 0
       value_down = 0
       rkey_down.each do |rkey|
@@ -114,7 +114,7 @@ class ContractGraph < Graph
 
     graph = { :title  => I18n.t("graphs.titles.contracts.#{(__method__).to_s}"),
               :ytitle => 'bps(bits/second)',
-              :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) }",
+              :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) + 'b/s' }",
               :series => series }
 
     default_options_graphs(graph)
@@ -139,7 +139,7 @@ class ContractGraph < Graph
 
     graph = { :title  => I18n.t("graphs.titles.contracts.#{(__method__).to_s}"),
               :ytitle => "Milliseconds",
-              :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2)} + ms",
+              :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2) + 'ms'}",
               :series => series }
 
     default_options_graphs(graph)
@@ -153,7 +153,7 @@ class ContractGraph < Graph
     graph = { :title  => I18n.t("graphs.titles.contracts.#{(__method__).to_s}"),
               :ytitle => I18n.t('graph.data'),
               :xtype  => 'category',
-              :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) }",
+              :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) + 'Bytes' }",
               :series => series }
 
     default_options_graphs(graph)
