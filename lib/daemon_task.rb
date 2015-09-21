@@ -375,7 +375,6 @@ class DaemonRedis < DaemonTask
    @wait_for_apply_changes = true
    @proc = Proc.new { exec_daemon_redis }
    @sample_count = 50
-   @factor_precision = 1000
    super
  end
 
@@ -492,7 +491,7 @@ class DaemonRedis < DaemonTask
 
  def generate_sample(catchs)
    new_sample = {}
-   current_time = DateTime.now.to_f
+   current_time = DateTime.now.to_i
    new_key = "#{@redis_key}_#{current_time}"
    last_key = $redis.keys("#{@redis_key}_*").sort.last
 
@@ -514,9 +513,9 @@ class DaemonRedis < DaemonTask
    time_period = 60
    period = 0
    date_keys = $redis.keys("#{@redis_key}_*").sort
-   time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_f #LA FECHA DE LA MAS NUEVA
+   time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
    @init_time_new_sample = (ContractSample.all(:conditions => {:period => period, :contract_id => @relation.id} ).last.sample_number + time_period) rescue false ||
-                           (Time.at($redis.hget("#{date_keys.first}", "time").to_f).change(:sec => 0)).to_i
+                           (Time.at($redis.hget("#{date_keys.first}", "time").to_i).change(:sec => 0)).to_i
    @end_time_new_sample  = @init_time_new_sample + (time_period - 1)
 
    while (not date_keys.empty?) and time_last_sample >= @end_time_new_sample
