@@ -375,6 +375,7 @@ class DaemonRedis < DaemonTask
    @wait_for_apply_changes = true
    @proc = Proc.new { exec_daemon_redis }
    @sample_count = 50
+   @factor_precision = 1000
    super
  end
 
@@ -491,7 +492,7 @@ class DaemonRedis < DaemonTask
 
  def generate_sample(catchs)
    new_sample = {}
-   current_time = DateTime.now.to_i
+   current_time = DateTime.now.to_f
    new_key = "#{@redis_key}_#{current_time}"
    last_key = $redis.keys("#{@redis_key}_*").sort.last
 
@@ -513,15 +514,14 @@ class DaemonRedis < DaemonTask
    time_period = 60
    period = 0
    date_keys = $redis.keys("#{@redis_key}_*").sort
-   time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
+   time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_f #LA FECHA DE LA MAS NUEVA
    @init_time_new_sample = (ContractSample.all(:conditions => {:period => period, :contract_id => @relation.id} ).last.sample_number + time_period) rescue false ||
-                           (Time.at($redis.hget("#{date_keys.first}", "time").to_i).change(:sec => 0)).to_i
+                           (Time.at($redis.hget("#{date_keys.first}", "time").to_f).change(:sec => 0)).to_i
    @end_time_new_sample  = @init_time_new_sample + (time_period - 1)
 
    while (not date_keys.empty?) and time_last_sample >= @end_time_new_sample
      keys_to_delete = []
      samples_to_compact = []
-     selected_times = []
 
      new_sample = { :period => period,
                     :sample_time => Time.at(@init_time_new_sample),
@@ -532,11 +532,10 @@ class DaemonRedis < DaemonTask
 
      date_keys.each do |key|
        sample = {}
-       time = $redis.hget("#{key}", "time").to_i
+       time = $redis.hget("#{key}", "time").to_f
        if time <= @end_time_new_sample
-         @compact_keys.each { |rkey| sample[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
+         @compact_keys.each { |rkey| sample[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_f }
          @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{new_sample.inspect}")
-         selected_times << time
          keys_to_delete << key
        else
          @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][NO] (#{Time.at(time)})")
@@ -544,11 +543,11 @@ class DaemonRedis < DaemonTask
        samples_to_compact << sample
      end
 
-     seconds = (selected_times.last.to_i - selected_times.first.to_i) + 1
+     #seconds = (selected_times.last.to_f - selected_times.first.to_f) + 1
 
      data_acummulated = samples_to_compact.sum
      samples[:total] += data_acummulated.values.sum
-     samples[:create] << new_sample.merge((data_acummulated / seconds * 8))
+     samples[:create] << new_sample.merge((data_acummulated / time_period * 8)).round
      keys_to_delete.each { |key| $redis.del(key) }
      @init_time_new_sample += time_period
      @end_time_new_sample  += time_period
