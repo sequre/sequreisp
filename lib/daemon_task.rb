@@ -541,7 +541,7 @@ class DaemonRedis < DaemonTask
 
      data_acummulated = samples_to_compact.sum
      samples[:total] += data_acummulated.values.sum
-     samples[:create] << new_sample.merge((data_acummulated / time_period * 8)).round
+     samples[:create] << new_sample.merge((data_acummulated / time_period * 8))
      keys_to_delete.each { |key| $redis.del(key) }
      @init_time_new_sample += time_period
      @end_time_new_sample  += time_period

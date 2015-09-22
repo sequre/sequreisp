@@ -29,7 +29,7 @@ class ContractGraph < Graph
         data = add_empty_values( {:data => data, :size => 12} )
 
         series << { :name  => rkey[:name],
-                    :type  => "areaspline",
+                    :type  => "spline",
                     :stack => rkey[:up_or_down],
                     :data  => data.sort }
       end
