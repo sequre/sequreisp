@@ -8,11 +8,11 @@ class ContractSample < ActiveRecord::Base
   #   3     44640.min (1.month)      180.min (3.hours)        348        348 + 8 = 356
   #   4    525600.min (1.year)      1440.min (24.hours)       365        365
 
-  CONF_PERIODS = { :period_0 => { :period_number => 0, :time_sample => 1,    :sample_size => 180, :sample_size_cut => 185, :excess_count => 5,   :scope => 180.minutes    },
-                   :period_1 => { :period_number => 1, :time_sample => 5,    :sample_size => 288, :sample_size_cut => 294, :excess_count => 6,   :scope => 1440.minutes   },
-                   :period_2 => { :period_number => 2, :time_sample => 30,   :sample_size => 336, :sample_size_cut => 342, :excess_count => 6,   :scope => 10080.minutes  },
-                   :period_3 => { :period_number => 3, :time_sample => 180,  :sample_size => 348, :sample_size_cut => 356, :excess_count => 8,   :scope => 44640.minutes  },
-                   :period_4 => { :period_number => 4, :time_sample => 1440, :sample_size => 348, :sample_size_cut => nil, :excess_count => nil, :scope => 525600.minutes } }
+  CONF_PERIODS = { :period_0 => { :period_number => 0, :time_sample => 1.minutes,    :sample_size => 180, :sample_size_cut => 185, :excess_count => 5,   :scope => 180.minutes    },
+                   :period_1 => { :period_number => 1, :time_sample => 5.minutes,    :sample_size => 288, :sample_size_cut => 294, :excess_count => 6,   :scope => 1440.minutes   },
+                   :period_2 => { :period_number => 2, :time_sample => 30.minutes,   :sample_size => 336, :sample_size_cut => 342, :excess_count => 6,   :scope => 10080.minutes  },
+                   :period_3 => { :period_number => 3, :time_sample => 180.minutes,  :sample_size => 348, :sample_size_cut => 356, :excess_count => 8,   :scope => 44640.minutes  },
+                   :period_4 => { :period_number => 4, :time_sample => 1440.minutes, :sample_size => 365, :sample_size_cut => nil, :excess_count => nil, :scope => 525600.minutes } }
 
   named_scope :for_period, lambda { |period| {:conditions => "contract_samples.period = #{period}"} }
 
