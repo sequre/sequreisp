@@ -21,10 +21,10 @@
   })
   $(document).ready(function() {
     function get_data(){
-      $.get('<%= instant_group_interfaces_path(@providers.collect(&:id).join(",")) %>', null, function(data) {
+      $.get('<%= instant_group_interfaces_path(@providers.collect(&:interface_id).join(",")) %>', null, function(data) {
        <% @providers.each do |provider| %>
-         <%= "interface_#{provider.interface.id}_instant" %>.series[0].addPoint(data[<%= provider.interface.id %>].rx, true, true);
-         <%= "interface_#{provider.interface.id}_instant" %>.series[1].addPoint(data[<%= provider.interface.id %>].tx,true, true);
+         <%= "interface_#{provider.interface_id}_instant" %>.series[0].addPoint(data[<%= provider.interface_id %>].rx, true, true);
+         <%= "interface_#{provider.interface_id}_instant" %>.series[1].addPoint(data[<%= provider.interface_id %>].tx, true, true);
        <% end %>
       },'json');
     };
