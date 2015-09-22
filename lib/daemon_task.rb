@@ -435,20 +435,17 @@ class DaemonRedis < DaemonTask
  def contracts_to_redis
    transactions = { :create => [] }
    data_counting = {}
-   # last_samples = {}
    @compact_keys = ContractSample.compact_keys
    counter_key = "contract_counters"
    hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
                   "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
 
-   # ContractSample.last_samples(0).each { |cs| last_samples[cs.contract_id.to_s] = cs }
 
    contracts = Contract.all(:include => :current_traffic)
 
    contracts.each do |c|
      next if c.disabled?
      @relation = c
-     # @last_db_sample = last_samples[c.id.to_s]
      @redis_key  = c.redis_key
      $redis.hset(counter_key, c.id.to_s, 0) unless $redis.hexists(counter_key, c.id.to_s)
      round_robin()
@@ -531,9 +528,9 @@ class DaemonRedis < DaemonTask
 
      date_keys.each do |key|
        sample = {}
-       time = $redis.hget("#{key}", "time").to_f
+       time = $redis.hget("#{key}", "time").to_i
        if time <= @end_time_new_sample
-         @compact_keys.each { |rkey| sample[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_f }
+         @compact_keys.each { |rkey| sample[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
          @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{new_sample.inspect}")
          keys_to_delete << key
        else
@@ -541,8 +538,6 @@ class DaemonRedis < DaemonTask
        end
        samples_to_compact << sample
      end
-
-     #seconds = (selected_times.last.to_f - selected_times.first.to_f) + 1
 
      data_acummulated = samples_to_compact.sum
      samples[:total] += data_acummulated.values.sum

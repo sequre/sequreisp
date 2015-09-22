@@ -20,12 +20,6 @@ class ContractSample < ActiveRecord::Base
   named_scope :total_samples_for_period, :select => 'COUNT(*) as total_samples, contract_samples.*',
                                          :group  => 'contract_id'
 
-  named_scope :last_samples, lambda{|period| { :conditions => "sample_number IN (SELECT MAX(sample_number)
-                                                                                 FROM contract_samples
-                                                                                 WHERE period = #{period}
-                                                                                 GROUP BY contract_id )
-                                                                             AND period = #{period}"}}
-
   named_scope :samples_to_compact, lambda { |id,limit| { :conditions => "contract_samples.contract_id = #{id}",
                                                          :limit => limit } }
 

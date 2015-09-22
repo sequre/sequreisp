@@ -374,21 +374,13 @@ class Contract < ActiveRecord::Base
     (self.klass.prio3 | prefix).to_s(16)
   end
 
-  # this has an alias_method_chain
-  def serie_for_chart_rate_prio
-    { "0" => { :name => 'down_prio1', :type => 'area', :color => '#00ff00', :stack => 0 },
-      "1" => { :name => 'down_prio2', :type => 'area', :color => '#00aa00', :stack => 0 },
-      "2" => { :name => 'down_prio3', :type => 'area', :color => '#006600', :stack => 0 },
-      "3" => { :name => 'up',         :type => 'line', :color => '#ff0000', :stack => 1 } }
+  def redis_key
+    "contract_#{id}_sample"
   end
 
   def instant
     { :rates   => instant_rate,
       :latency => instant_latency }
-  end
-
-  def redis_key
-    "contract_#{id}_sample"
   end
 
   def instant_rate
@@ -414,7 +406,7 @@ class Contract < ActiveRecord::Base
     data
   end
 
- # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
+  # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
   def instant_latency
     date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
     time = {}
@@ -700,7 +692,7 @@ class Contract < ActiveRecord::Base
     end
   end
 
-
+  # Only used for check redis if is it necesary
   def current_redis_values
     hash = {}
     $redis.keys("#{redis_key}_*").sort.each do |key|
@@ -708,14 +700,6 @@ class Contract < ActiveRecord::Base
       hash[key][:time_human] = Time.at($redis.hget(key, "time").to_i)
     end
     hash
-  end
-
-  def foo
-    begin
-      4 * nil
-    rescue => e
-      $application_logger.info(e)
-    end
   end
 
   private

@@ -22,12 +22,6 @@ class InterfaceSample < ActiveRecord::Base
   named_scope :total_samples_for_period, :select => 'COUNT(*) as total_samples, interface_samples.*',
                                          :group  => 'interface_id'
 
-  named_scope :last_samples, lambda{|period| { :conditions => "sample_number IN (SELECT MAX(sample_number)
-                                                                                 FROM interface_samples
-                                                                                 WHERE period = #{period}
-                                                                                 GROUP BY interface_id )
-                                                                             AND period = #{period}"}}
-
   named_scope :samples_to_compact, lambda { |id,limit| { :conditions => "interface_samples.interface_id = #{id}",
                                                          :limit => limit } }
 

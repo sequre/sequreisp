@@ -21,6 +21,8 @@ class InterfaceGraph < Graph
                                 :keys => { rkey[:name] => speed * 0.99 } })[rkey[:name]]
                end
 
+        data = add_empty_values( {:data => data, :size => 12} )
+
         series << { :name  => rkey[:name],
                     :type  => "spline",
                     :stack => rkey[:name],
@@ -48,10 +50,12 @@ class InterfaceGraph < Graph
           data[time] += s[rkey[:name]]
         end
 
+        data = add_empty_values( {:data => data.to_a.sort, :size => 12} )
+
         series << { :name  => rkey[:name],
                     :type  => "spline",
                     :stack => rkey[:name],
-                    :data  => data.to_a.sort }
+                    :data  => data }
       end
 
       graph = { :title  => I18n.t("graphs.titles.provider_groups.#{(__method__).to_s}"),
@@ -79,11 +83,13 @@ class InterfaceGraph < Graph
         data << [ time, value ]
       end
 
+      data = add_empty_values( {:data => data.sort, :size => 12} )
+
       series << { :name   => rkey[:name],
                   :type   => "spline",
                   :marker => { :enabled => false },
                   :stack  => rkey[:name],
-                  :data   => data.sort }
+                  :data   => data }
     end
 
     graph = { :title  => I18n.t("graphs.titles.interfaces.#{(__method__).to_s}"),
@@ -114,11 +120,13 @@ class InterfaceGraph < Graph
         end
       end
 
+      data = add_empty_values( {:data => data.to_a.sort, :size => 12} )
+
       series << { :name   => rkey[:name],
                   :type   => "spline",
                   :marker => { :enabled => false },
                   :stack  => rkey[:name],
-                  :data   => data.to_a.sort }
+                  :data   => data }
     end
 
 

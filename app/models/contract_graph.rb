@@ -25,6 +25,9 @@ class ContractGraph < Graph
             data << [ date, value ]
           end
         end
+
+        data = add_empty_values( {:data => data, :size => 12} )
+
         series << { :name  => rkey[:name],
                     :type  => "areaspline",
                     :stack => rkey[:up_or_down],
@@ -55,6 +58,8 @@ class ContractGraph < Graph
             value = sample[rkey[:name].to_sym]
             data << [ time, value ]
           end
+
+          data = add_empty_values( {:data => data, :size => 12} )
 
           series << { :name  => rkey[:name],
                       :type  => "areaspline",
@@ -97,6 +102,9 @@ class ContractGraph < Graph
       data[:down] << [time, value_down]
       data[:up] << [time, value_up]
     end
+
+    data[:up] = add_empty_values( {:data => data[:up], :size => 12} )
+    data[:down] = add_empty_values( {:data => data[:down], :size => 12} )
 
     series = [ { :name   => "up",
                  :type   => "spline",
