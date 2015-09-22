@@ -193,6 +193,16 @@ class ContractsController < ApplicationController
     end
   end
 
+  def instant_group
+    data = {}
+    Contract.find(params["ids"].split("/")).each do |contract|
+      data[contract.id] = contract.instant
+    end
+    respond_to do |format|
+      format.json { render :json => data }
+    end
+  end
+
   def instant
     @contract = object
     respond_to do |format|

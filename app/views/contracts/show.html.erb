@@ -92,11 +92,9 @@
       <tr class="even" >
         <td><%= @contract.plan.name rescue 'Undefined' %></td>
         <td>
-	  <%= @contract.plan.ceil_down rescue 'Undefined' %> /
-	  <%= @contract.plan.ceil_up rescue 'Undefined' %>
+	  <%= show_human_down_up(@contract.plan.ceil_down, @contract.plan.ceil_up) rescue 'Undefined' %>
 	  <br/>
-          <%= @contract.plan.rate_down rescue 'Undefined' %> /
-          <%= @contract.plan.rate_up rescue 'Undefined' %>
+          <%= show_human_down_up(@contract.plan.rate_down, @contract.plan.rate_up) rescue 'Undefined' %>
 	</td>
 	<td>
 	  <%= @contract.forwarded_ports.collect{|fp| "<span class=\"forwarded_port\">#{fp.to_s}</span><br/>"} %>

@@ -71,10 +71,26 @@
       minLength: 2
     })
   })
+
+  function get_data(){
+    $.get('<%= instant_group_contracts_path(@contracts.collect(&:id)) %>', null, function(data) {
+     <% @contracts.each do |contract| %>
+       <%= "total_instant_#{contract.id}" %>.series[0].addPoint(data[<%= contract.id %>].rates.total_up, true, true);
+       <%= "total_instant_#{contract.id}" %>.series[1].addPoint(data[<%= contract.id %>].rates.total_down,true, true);
+     <% end %>
+    },'json');
+  };
+
   $(document).ready(function() {
     <% @graphs.each do |g| %>
-      new Highcharts.Chart(<%= g.minimal_graph %>);
+      <%= "total_instant_#{g.model.id}" %> = new Highcharts.Chart(<%= g.minimal_graph %>);
     <% end %>
+
+    get_data();
+
+    setInterval(function() {
+      get_data();
+    }, 5000);
   });
 </script>
 <% content_for :title, t('menu.contracts') %>

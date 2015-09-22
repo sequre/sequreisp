@@ -11,10 +11,25 @@
 </style>
 
 <script type="text/javascript">
+  function get_data(){
+    $.get('<%= instant_group_interfaces_path(@interfaces.collect(&:id)) %>', null, function(data) {
+     <% @interfaces.each do |interface| %>
+       <%= "interface_#{interface.id}_instant" %>.series[0].addPoint(data[<%= interface.id %>].rx, true, true);
+       <%= "interface_#{interface.id}_instant" %>.series[1].addPoint(data[<%= interface.id %>].tx,true, true);
+     <% end %>
+    },'json');
+  };
+
   $(document).ready(function() {
     <% @graphs.each do |g| %>
-      new Highcharts.Chart(<%= g.minimal_graph %>);
+      <%= "interface_#{g.model.id}_instant" %> = new Highcharts.Chart(<%= g.minimal_graph %>);
     <% end %>
+
+    get_data();
+
+    setInterval(function() {
+      get_data();
+    }, 5000);
   });
 </script>
 

@@ -122,12 +122,24 @@ class InterfacesController < ApplicationController
       redirect_back_from_edit_or_to interfaces_url
     end
   end
+
+  def instant_group
+    data = {}
+    Interface.find(params["ids"].split("/")).each do |interface|
+      data[interface.id] = interface.instant
+    end
+    respond_to do |format|
+      format.json { render :json => data }
+    end
+  end
+
   def instant
     @interface = object
     respond_to do |format|
       format.json { render :json => @interface.instant }
     end
   end
+
   def scan
     count=0
     Interface.scan.each do |name|

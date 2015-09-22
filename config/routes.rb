@@ -3,6 +3,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :interfaces, :member => { :instant => :get, :graph => :get }, :collection => { :scan => :get, :get_mac_address => :get }
 
+  map.instant_group_interfaces '/interfaces/instant_group/:ids', :controller => 'interfaces', :action => 'instant_group', :conditions => { :method => :get }
+
   map.resources :configurations, :collection => {:doreload => :get, :is_apply_changes => :get }
 
   map.resources :users
@@ -22,6 +24,8 @@ ActionController::Routing::Routes.draw do |map|
   map.resources :contracts, :member => { :instant => :get, :graph => :get},
                 :collection => { :free_ips => :get, :ips => :get, :arping_mac_address =>
                 :get, :excel => :get, :massive => :put }
+
+  map.instant_group_contracts '/contracts/instant_group/:ids', :controller => 'contracts', :action => 'instant_group', :conditions => { :method => :get }
 
   map.resources :clients, :has_many => :contracts, :collection => { :names => :get }
 
