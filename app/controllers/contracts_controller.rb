@@ -195,7 +195,7 @@ class ContractsController < ApplicationController
 
   def instant_group
     data = {}
-    Contract.find(params["ids"].split("/")).each do |contract|
+    Contract.find(params["ids"].split(",")).each do |contract|
       data[contract.id] = contract.instant
     end
     respond_to do |format|

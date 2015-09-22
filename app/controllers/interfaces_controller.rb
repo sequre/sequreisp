@@ -125,7 +125,7 @@ class InterfacesController < ApplicationController
 
   def instant_group
     data = {}
-    Interface.find(params["ids"].split("/")).each do |interface|
+    Interface.find(params["ids"].split(",")).each do |interface|
       data[interface.id] = interface.instant
     end
     respond_to do |format|

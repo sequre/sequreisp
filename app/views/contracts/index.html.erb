@@ -73,7 +73,7 @@
   })
 
   function get_data(){
-    $.get('<%= instant_group_contracts_path(@contracts.collect(&:id)) %>', null, function(data) {
+    $.get('<%= instant_group_contracts_path(@contracts.collect(&:id).join(",")) %>', null, function(data) {
      <% @contracts.each do |contract| %>
        <%= "total_instant_#{contract.id}" %>.series[0].addPoint(data[<%= contract.id %>].rates.total_up, true, true);
        <%= "total_instant_#{contract.id}" %>.series[1].addPoint(data[<%= contract.id %>].rates.total_down,true, true);

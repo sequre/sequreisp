@@ -12,7 +12,7 @@
 
 <script type="text/javascript">
   function get_data(){
-    $.get('<%= instant_group_interfaces_path(@interfaces.collect(&:id)) %>', null, function(data) {
+    $.get('<%= instant_group_interfaces_path(@interfaces.collect(&:id).join(",")) %>', null, function(data) {
      <% @interfaces.each do |interface| %>
        <%= "interface_#{interface.id}_instant" %>.series[0].addPoint(data[<%= interface.id %>].rx, true, true);
        <%= "interface_#{interface.id}_instant" %>.series[1].addPoint(data[<%= interface.id %>].tx,true, true);
