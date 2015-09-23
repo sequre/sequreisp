@@ -45,7 +45,7 @@ class ContractsController < ApplicationController
 
     @contracts = @search.uniq.paginate(:page => params[:page],:per_page => per_page)
 
-    @graphs = @contracts.map{ |c| ContractGraph.new(c, "total_rate")}
+    @graphs = @contracts.map{ |c| ContractGraph.new(c, "total_rate_instant")}
 
     respond_to do |format|
       format.html # index.html.erb

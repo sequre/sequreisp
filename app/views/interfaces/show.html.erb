@@ -35,15 +35,15 @@
 <div id=<%= @graphs["interface_instant"].render %> style="height:247px; width:860px; float:left;"></div>
 <div class="separador" style='margin-bottom: 5px;'></div>
 
-<% content_tag(:div, "", :id => "tabs") do %>
+<% content_tag(:div, "tab_periods", :id => "tabs") do %>
   <ul>
     <% @periods.times do |period| %>
-      <li><a href=<%="#tabs-#{period}"%>><%= t("graphs.titles.tabs.interfaces.period_#{period}") %></a></li>
+      <li><a href=<%="#tabs_#{period}"%>><%= t("graphs.titles.tabs.interfaces.period_#{period}") %></a></li>
     <% end %>
   </ul>
 
   <% @periods.times do |period| %>
-    <% content_tag(:div, "", :id => "tabs-#{period}" ) do %>
+    <% content_tag(:div, "", :id => "tabs_#{period}" ) do %>
       <div id=<%= @graphs["interface_period_#{period}"].render %> style="height:350px; width:830px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
     <% end %>

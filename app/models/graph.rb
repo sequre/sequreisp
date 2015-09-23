@@ -110,7 +110,7 @@ class Graph
   end
 
   def add_empty_values(hash)
-    first_time = hash[:data].empty? ? ((DateTime.now.to_i + Time.now.utc_offset) * 1000) : hash[:data].sort[0].first
+    first_time = hash[:data].empty? ? ((DateTime.now.to_i + Time.now.utc_offset) * 1000) : hash[:data].sort.first[0]
     1.upto(hash[:size] - hash[:data].size) do |i|
       hash[:data] << [(first_time - (i * 5000)), 0]
     end

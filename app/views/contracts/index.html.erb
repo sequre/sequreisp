@@ -1,6 +1,5 @@
 <% content_for :javascript do %>
   <%= javascript_include_tag "highcharts" %>
-  <%= javascript_include_tag "sequreispcharts" %>
 <% end %>
 
 <style type="text/css">
@@ -75,15 +74,15 @@
   function get_data(){
     $.get('<%= instant_group_contracts_path(@contracts.collect(&:id).join(",")) %>', null, function(data) {
      <% @contracts.each do |contract| %>
-       <%= "total_instant_#{contract.id}" %>.series[0].addPoint(data[<%= contract.id %>].total_up, true, true);
-       <%= "total_instant_#{contract.id}" %>.series[1].addPoint(data[<%= contract.id %>].total_down, true, true);
+       <%= "total_rate_instant_#{contract.id}" %>.series[0].addPoint(data[<%= contract.id %>].total_up, true, true);
+       <%= "total_rate_instant_#{contract.id}" %>.series[1].addPoint(data[<%= contract.id %>].total_down, true, true);
      <% end %>
     },'json');
   };
 
   $(document).ready(function() {
     <% @graphs.each do |g| %>
-      <%= "total_instant_#{g.model.id}" %> = new Highcharts.Chart(<%= g.minimal_graph %>);
+      <%= "total_rate_instant_#{g.model.id}" %> = new Highcharts.Chart(<%= g.minimal_graph %>);
     <% end %>
 
     get_data();

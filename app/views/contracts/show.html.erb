@@ -22,38 +22,26 @@
 
   function get_data(){
     $.get('<%= instant_contract_path %>', null, function(data) {
-     $(rate_up.series).each( function(i, serie) {
+     $(rate_up_instant.series).each( function(i, serie) {
        serie.addPoint(data.rates[serie.name], true, true);
      });
 
-     $(rate_down.series).each( function(i, serie) {
+     $(rate_down_instant.series).each( function(i, serie) {
        serie.addPoint(data.rates[serie.name], true, true);
      });
 
-     total_rate.series[0].addPoint(data.rates.total_up, true, true);
-     total_rate.series[1].addPoint(data.rates.total_down, true, true);
+     total_rate_instant.series[0].addPoint(data.rates.total_up, true, true);
+     total_rate_instant.series[1].addPoint(data.rates.total_down, true, true);
 
-     latency.series[0].addPoint(data.latency.ping, true, true);
-     latency.series[1].addPoint(data.latency.arping, true, true);
+     latency_instant.series[0].addPoint(data.latency.ping, true, true);
+     latency_instant.series[1].addPoint(data.latency.arping, true, true);
     },'json');
   };
 
   $(document).ready(function() {
-    latency = new Highcharts.Chart(<%= @graphs["latency_instant"].graph! %>);
-    rate_up = new Highcharts.Chart(<%= @graphs["rate_up_instant"].graph! %>);
-    rate_down = new Highcharts.Chart(<%= @graphs["rate_down_instant"].graph! %>);
-    total_rate = new Highcharts.Chart(<%= @graphs["total_rate"].graph! %>);
-    new Highcharts.Chart(<%= @graphs["data_count"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_down_period_0"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_down_period_1"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_down_period_2"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_down_period_3"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_down_period_4"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_up_period_0"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_up_period_1"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_up_period_2"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_up_period_3"].graph! %>);
-    new Highcharts.StockChart(<%= @graphs["rate_up_period_4"].graph! %>);
+     <% @graphs.each do |key, graph| %>
+       <%= key %> = new Highcharts.Chart(<%= graph.graph! %>);
+     <% end %>
 
     get_data();
 
@@ -120,7 +108,7 @@
 <div class="separador" style='margin-bottom: 5px;'></div>
 <div style="clear: both"></div>
 <div id=<%= @graphs["latency_instant"].render %> style="height:247px; width:430px; float:left;"></div>
-<div id=<%= @graphs["total_rate"].render %> style="height:247px; width:430px; float:left;"></div>
+<div id=<%= @graphs["total_rate_instant"].render %> style="height:247px; width:430px; float:left;"></div>
 <div class="separador" style='margin-bottom: 5px;'></div>
 <div id=<%= @graphs["rate_up_instant"].render %> style="height:247px; width:430px; float:left;"></div>
 <div id=<%= @graphs["rate_down_instant"].render %> style="height:247px; width:430px; float:left;"></div>
@@ -137,6 +125,8 @@
 
   <% @periods.times do |period| %>
     <% content_tag(:div, "", :id => "tabs_#{period}" ) do %>
+      <div id=<%= @graphs["total_rate_period_#{period}"].render %> style="height:350px; width:830px; float:left;"></div>
+      <div class="separador" style='margin-bottom: 5px;'></div>
       <div id=<%= @graphs["rate_down_period_#{period}"].render %> style="height:350px; width:830px; float:left;"></div>
       <div class="separador" style='margin-bottom: 5px;'></div>
       <div id=<%= @graphs["rate_up_period_#{period}"].render %> style="height:350px; width:830px; float:left;"></div>
