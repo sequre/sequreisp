@@ -45,6 +45,7 @@ begin
 #################################################
 #################################################
   if $running
+    log("[GeneralDaemon] STARTING DAEMONS")
     DaemonTask.descendants.each do |daemon_task|
       daemon = daemon_task.new
       threads << daemon
@@ -66,6 +67,7 @@ ensure
   rescue => e
     log_rescue("[Daemon][Sequreispd] ERROR GENERAL DAEMON", e)
   end
+  log("[GeneralDaemon] DAEMONS STOPPED")
 #################################################
 #################################################
 end
