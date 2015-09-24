@@ -28,7 +28,7 @@ class DaemonTask
     @name = self.class.to_s.underscore.humanize
     @log_path = "#{DEPLOY_DIR}/tmp/#{self.class.to_s.underscore.downcase}"
     FileUtils.touch @log_path
-    set_next_exec
+    init_next_execution_time
   end
 
   def verbose?
@@ -50,21 +50,36 @@ class DaemonTask
     end
   end
 
-  def set_next_exec
-    if not defined?(@next_exec)
-      configuration = Configuration.first
-      last_execution_time = configuration.respond_to?("#{@name.underscore}_last_execution_time") ? configuration.send("#{@name.underscore}_last_execution_time") : nil
-      if last_execution_time
-        log("[Daemon][#{name}] get Last Execution Time as: #{last_execution_time}") if verbose?
-        @next_exec = last_execution_time + @time_for_exec[:frecuency]
+  def init_next_execution_time
+    configuration = Configuration.first
+    @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.now
+    @next_exec += @time_for_exec[:frecuency] if Time.now > @next_exec
+
+    if configuration.respond_to?("#{@name.underscore}_next_exec_time")
+      if configuration.send("#{@name.underscore}_next_exec_time").nil?
+        @@update_execution.synchronize {
+          configuration.update_attribute("#{@name.underscore}_next_exec_time", @next_exec)
+          log("[Daemon][#{name}] Generate next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}") if verbose?
+        }
       else
-        @next_exec = @time_for_exec.has_key?(:begin_in) ? Time.parse(@time_for_exec[:begin_in], Time.new) : Time.now
-        @next_exec += @time_for_exec[:frecuency] if Time.now > @next_exec
+        @next_exec = configuration.send("#{@name.underscore}_next_exec_time")
+        log("[Daemon][#{name}] Get next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}") if verbose?
       end
-    else
-      while @next_exec <= Time.now
-        @next_exec += @time_for_exec[:frecuency]
-      end
+    end
+  end
+
+  def set_next_execution_time
+    configuration = Configuration.first
+
+    while @next_exec <= Time.now
+      @next_exec += @time_for_exec[:frecuency]
+    end
+
+    if configuration.respond_to?("#{@name.underscore}_next_exec_time")
+      @@update_execution.synchronize {
+        configuration.update_attribute("#{@name.underscore}_next_exec_time", @next_exec)
+        log("[Daemon][#{name}][UPDATE] Next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}") if verbose?
+      }
     end
   end
 
@@ -77,14 +92,7 @@ class DaemonTask
         begin
           if Time.now >= @next_exec
             Configuration.do_reload
-            set_next_exec
-            @@update_execution.synchronize {
-              configuration = Configuration.first
-              if configuration.respond_to?("#{@name.underscore}_last_execution_time")
-                configuration.update_attribute("#{@name.underscore}_last_execution_time", @next_exec)
-                log("[Daemon][#{name}] Last Execution Time is set on: #{configuration.send("#{@name.underscore}_last_execution_time")}") if verbose?
-              end
-            }
+            set_next_execution_time
             applying_changes? if @wait_for_apply_changes and Rails.env.production?
             @proc.call if Rails.env.production?
             log "[Daemon] EXEC Thread #{name}" if verbose?
