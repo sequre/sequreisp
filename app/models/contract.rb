@@ -443,7 +443,7 @@ class Contract < ActiveRecord::Base
     rate = {}
     count = 0
     klass = ""
-    IO.popen("/sbin/tc -s class show dev #{iface}", "r") do |io|
+    IO.popen("/sbin/tc -s class show dev #{iface} | egrep -A4 'class hfsc 1:#{class_hex} |parent 1:#{class_hex} '", "r") do |io|
       io.each do |line|
         if match and (line =~ /rate (\d+)(\w+) /) != nil
          Rails.logger.debug "Contract::instant_rate #{line}"

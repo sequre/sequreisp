@@ -13,6 +13,16 @@ class Iproute < ActiveRecord::Base
   validates_presence_of :dst_address
   validates_presence_of :gateway, :if => Proc.new { |i| i.interface_id.nil? }
   validates_presence_of :interface, :if => Proc.new { |i| not i.gateway.present? }
+
+  validate :dst_address_without_netmask, :if => "dst_address_changed?"
+  def dst_address_without_netmask
+    _dst_address = IP.new(dst_address)
+    # check that the mask is set only for networks
+    if _dst_address.mask > 0 and _dst_address != _dst_address.network
+      errors.add(:dst_address, I18n.t('validations.contract.do_not_set_mask_if_is_not_a_network'))
+    end
+  end
+
 #  validate :presence_of_gateway_or_interface_id
 
 #  def presence_of_gateway_or_interface_id
