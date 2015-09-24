@@ -502,7 +502,7 @@ class DaemonRedis < DaemonTask
        last_total = $redis.hget("#{last_key}", "#{prio_key}_total_bytes").to_i
        last_time = $redis.hget("#{last_key}", "time").to_i
        new_sample[prio_key][:instant] = (current_total < last_total ? current_total : (current_total - last_total) )
-       new_sample[prio_key][:total_seconds] = current_time - last_time
+       new_sample[prio_key][:total_seconds] = (current_time - last_time).zero? ? 1 : (current_time - last_time)
      end
      $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant],
                                 "#{prio_key}_total_bytes", current_total,
