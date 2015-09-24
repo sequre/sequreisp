@@ -47,10 +47,6 @@ class DaemonTask
     @thread_daemon.join
   end
 
-  def join
-    @thread_daemon.join
-  end
-
   def stop
     begin
       @daemon_logger.debug("[REMOVE_DAEMON_LOG_FILE]")
@@ -493,12 +489,16 @@ class DaemonRedis < DaemonTask
    last_key = $redis.keys("#{@redis_key}_*").sort.last
 
    catchs.each do |prio_key, current_total|
-     new_sample[prio_key] = { :instant => 0, :total_bytes => current_total }
+     new_sample[prio_key] = { :instant => 0, :total_bytes => current_total, :total_seconds => 1 }
      unless last_key.nil?
-       last_total = $redis.hget("#{last_key}", "#{prio_key}_total_bytes").to_i
+       last_total = $redis.hmget("#{last_key}", "#{prio_key}_total_bytes").to_i
+       last_time = $redis.hmget("#{last_key}", "time").to_i
        new_sample[prio_key][:instant] = (current_total < last_total ? current_total : (current_total - last_total) )
+       new_sample[prio_key][:total_seconds] = current_time - last_time
      end
-     $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total )
+     $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant],
+                                "#{prio_key}_total_bytes", current_total,
+                                "total_seconds", new_sample[prio_key][:total_seconds] )
    end
 
    $redis.hmset("#{new_key}", "time", current_time)

@@ -83,7 +83,7 @@ class InterfaceGraph < Graph
 
       date_keys.each do |key|
         time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
-        value = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
+        value = ($redis.hget("#{key}", "#{rkey[:name]}_instant").to_i / $redis.hget("#{key}", "total_seconds").to_i) * 8
         data << [ time, value ]
       end
 
@@ -119,7 +119,8 @@ class InterfaceGraph < Graph
         date_keys = $redis.keys("interface_#{id}_sample_*").sort
         date_keys.each do |key|
           time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
-          sample[time] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
+          sample[time] = ($redis.hget("#{key}", "#{rkey[:name]}_instant").to_i / $redis.hget("#{key}", "total_seconds").to_i) * 8
+          # sample[time] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i
         end
         data << sample
       end
