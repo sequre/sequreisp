@@ -491,8 +491,8 @@ class DaemonRedis < DaemonTask
    catchs.each do |prio_key, current_total|
      new_sample[prio_key] = { :instant => 0, :total_bytes => current_total, :total_seconds => 1 }
      unless last_key.nil?
-       last_total = $redis.hmget("#{last_key}", "#{prio_key}_total_bytes").to_i
-       last_time = $redis.hmget("#{last_key}", "time").to_i
+       last_total = $redis.hget("#{last_key}", "#{prio_key}_total_bytes").to_i
+       last_time = $redis.hget("#{last_key}", "time").to_i
        new_sample[prio_key][:instant] = (current_total < last_total ? current_total : (current_total - last_total) )
        new_sample[prio_key][:total_seconds] = current_time - last_time
      end
