@@ -38,7 +38,7 @@
 <% content_tag(:div, "", :id => "tabs") do %>
   <ul>
     <% @periods.times do |period| %>
-      <li><a href=<%="#tabs-#{period}"%>><%= "Period #{period}" %></a></li>
+      <li><a href=<%="#tabs-#{period}"%>><%= t("graphs.titles.tabs.interfaces.period_#{period}") %></a></li>
     <% end %>
   </ul>
 
