@@ -57,3 +57,23 @@ function initMoreToggle(clickElement, toogleElement, cookieName) {
   })
 }
 
+/* Toggle More and Less in searchs */
+function toggleLessMore() {
+  if ($('#search_advanced').is(':visible')) {
+    $("#search_more").removeClass("hidden");
+    $("#search_less").addClass("hidden");
+  } else {
+    $("#search_more").addClass("hidden");
+    $("#search_less").removeClass("hidden");
+  }
+}
+function defaultToggleLessMore() {
+  if ($('#search_advanced').is(':visible')) {
+    $("#search_more").addClass("hidden");
+    $("#search_less").removeClass("hidden");
+  } else {
+    $("#search_more").removeClass("hidden");
+    $("#search_less").addClass("hidden");
+  }
+}
+

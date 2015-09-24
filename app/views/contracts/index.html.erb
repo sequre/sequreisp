@@ -36,6 +36,7 @@
   $(function(){
     initMoreToggle('#massive_setting', '#form_massive_setting', 'toggle_form_massive_setting');
     initMoreToggle('#search_more', '#search_advanced', 'toggle_contracts_search_advanced');
+    initMoreToggle('#search_less', '#search_advanced', 'toggle_contracts_search_advanced');
     $('#search_client_name_like').autocomplete({
       delay: 200,
       source: '<%= names_clients_path %>',

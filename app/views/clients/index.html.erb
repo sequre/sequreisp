@@ -1,6 +1,7 @@
 <script type="text/javascript">
   $(function(){
     initMoreToggle('#search_more', '#search_advanced', 'toggle_clients_search_advanced');
+    initMoreToggle('#search_less', '#search_advanced', 'toggle_clients_search_advanced');
     $('#search_name_like').autocomplete({
       delay: 200,
       source: '<%= names_clients_path %>',
@@ -10,7 +11,8 @@
         $(this).closest('form').submit();
       },
       minLength: 2
-    })
+    });
+    defaultToggleLessMore();
   })
 </script>
 <% content_for :title, t('menu.clients') %>
@@ -40,7 +42,8 @@
       <%= f.text_field :phone_like_or_phone_mobile_like %>
     </li>
     <div sytle="clear: both">
-      <li><a id="search_more"><%= I18n.t('buttons.more') %></a><li>
+      <li><a id="search_more" onclick="toggleLessMore()"><%= I18n.t('buttons.more') %></a><li>
+      <li><a id="search_less" class="hidden" onclick="toggleLessMore()"><%= I18n.t('buttons.less') %></a><li>
     </div>
 
     <div id="search_advanced">
