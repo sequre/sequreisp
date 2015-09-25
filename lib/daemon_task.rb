@@ -492,9 +492,9 @@ class DaemonRedis < DaemonTask
 
  def generate_sample(catchs)
    new_sample = {}
+   current_time = DateTime.now.to_i
    new_key = "#{@redis_key}_#{current_time}"
    last_key = $redis.keys("#{@redis_key}_*").sort.last
-   current_time = DateTime.now.to_i
    last_time = $redis.hget("#{last_key}", "time").to_i
    total_seconds = (current_time - last_time).zero? ? 1 : (current_time - last_time)
    $redis.hmset("#{new_key}", "time", current_time)
