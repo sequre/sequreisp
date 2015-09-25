@@ -44,4 +44,26 @@ class Client < ActiveRecord::Base
   def auditable_name
     self.class.human_name+': '+name
   end
+
+  def self.to_csv clients
+    client_attributes = Client.new.attribute_names.delete_if do |attr|
+      attr.include?("content_type") ||
+      attr.include?("file_name") ||
+      attr.include?("file_size") ||
+      attr.include?("updated_at") ||
+      attr.include?("tmp_email") ||
+      attr.include?("digest")
+    end
+    client_attributes_translations = client_attributes.map { |attr| I18n.t("activerecord.attributes.client.#{attr}") }
+
+    csv_string = FasterCSV.generate(:col_sep => ";") do |csv|
+      # header
+      csv << client_attributes_translations
+
+      # data rows
+      clients.each do |client|
+        csv << client_attributes.map { |attr| client.send(attr)}
+      end
+    end
+  end
 end

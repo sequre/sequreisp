@@ -28,6 +28,7 @@ ActionController::Routing::Routes.draw do |map|
   map.instant_group_contracts '/contracts/instant_group/:ids', :controller => 'contracts', :action => 'instant_group', :conditions => { :method => :get }
 
   map.resources :clients, :has_many => :contracts, :collection => { :names => :get }
+  map.client_export '/client_export', :controller => 'clients', :action => 'export_to_excel'
 
   map.resources :plans
 
