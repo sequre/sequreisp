@@ -492,24 +492,23 @@ class DaemonRedis < DaemonTask
 
  def generate_sample(catchs)
    new_sample = {}
-   current_time = DateTime.now.to_i
    new_key = "#{@redis_key}_#{current_time}"
    last_key = $redis.keys("#{@redis_key}_*").sort.last
+   current_time = DateTime.now.to_i
+   last_time = $redis.hget("#{last_key}", "time").to_i
+   total_seconds = (current_time - last_time).zero? ? 1 : (current_time - last_time)
+   $redis.hmset("#{new_key}", "time", current_time)
+   $redis.hmset("#{new_key}", "total_seconds", total_seconds)
 
    catchs.each do |prio_key, current_total|
-     new_sample[prio_key] = { :instant => 0, :total_bytes => current_total, :total_seconds => 1 }
+     new_sample[prio_key] = { :instant => 0, :total_bytes => current_total }
      unless last_key.nil?
        last_total = $redis.hget("#{last_key}", "#{prio_key}_total_bytes").to_i
-       last_time = $redis.hget("#{last_key}", "time").to_i
        new_sample[prio_key][:instant] = (current_total < last_total ? current_total : (current_total - last_total) )
-       new_sample[prio_key][:total_seconds] = (current_time - last_time).zero? ? 1 : (current_time - last_time)
      end
-     $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant],
-                                "#{prio_key}_total_bytes", current_total,
-                                "total_seconds", new_sample[prio_key][:total_seconds] )
+     $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total )
    end
 
-   $redis.hmset("#{new_key}", "time", current_time)
    @daemon_logger.debug("[#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
  end
 
