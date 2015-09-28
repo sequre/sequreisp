@@ -514,8 +514,9 @@ class DaemonRedis < DaemonTask
 
  def compact_to_db
    samples = { :create => [], :total => 0 }
-   time_period = 60
-   period = 0
+   # time_period = ContractSample::CONF_PERIODS[:period_0][:time_sample]
+   time_period = 0
+   period = ContractSample::CONF_PERIODS[:period_0][:period_number]
    date_keys = $redis.keys("#{@redis_key}_*").sort
    time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
    @init_time_new_sample = (ContractSample.all(:conditions => {:period => period, :contract_id => @relation.id} ).last.sample_number + time_period) rescue false ||
@@ -536,6 +537,7 @@ class DaemonRedis < DaemonTask
      date_keys.each do |key|
        sample = {}
        time = $redis.hget("#{key}", "time").to_i
+       time_period += $redis.hget("#{key}", "total_seconds").to_i
        if time <= @end_time_new_sample
          @compact_keys.each { |rkey| sample[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
          @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{new_sample.inspect}")

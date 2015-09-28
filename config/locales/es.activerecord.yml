@@ -792,14 +792,14 @@ es:
         total_rate_period_3: "Rate promedio por mes (total)"
         total_rate_period_4: "Rate promedio por año (total)"
       interfaces:
-        interface_instant: "Rate interface transmission instant (5 sec)"
+        interface_instant: "Instantaneo de transmisión (5 sec)"
         interface_period_0: "Rate promedio de transmisión cada 3 horas"
         interface_period_1: "Rate promedio de transmisión por dia"
         interface_period_2: "Rate promedio de transmisión por semana"
         interface_period_3: "Rate promedio de transmisión por mes"
         interface_period_4: "Rate promedio de transmisión por año"
       provider_groups:
-        provider_group_instant: "Rate provider group transmission instant (5 sec)"
+        provider_group_instant: "Instantaneo de transmisión del grupo de proveedores (5 sec)"
         provider_group_period_0: "Rate promedio de transmisión cada 3 horas"
         provider_group_period_1: "Rate promedio de transmisión por dia"
         provider_group_period_2: "Rate promedio de transmisión por semana"

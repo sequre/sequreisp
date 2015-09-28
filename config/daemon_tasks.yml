@@ -38,7 +38,7 @@ daemon_redis:
   frecuency: 5.seconds
   level_log: 1
   enabled: true
-  priority: -3
+  priority: -1
 
 daemon_compact_samples:
   # default frecuency value 20.seconds
