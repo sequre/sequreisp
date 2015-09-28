@@ -15,7 +15,7 @@ class ContractGraph < Graph
         if Rails.env.production?
           date_keys.each do |key|
             time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
-            value = ($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8
+            value = (($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8).round
             data << [ time, value ]
           end
         else
@@ -60,7 +60,7 @@ class ContractGraph < Graph
           end
 
           series << { :name  => rkey[:name],
-                      :type  => "areaspline",
+                      :type  => "spline",
                       :stack => rkey[:up_or_down],
                       :data  => data.sort }
         end
@@ -86,8 +86,8 @@ class ContractGraph < Graph
       ["up", "down"].each do |up_or_down|
         data = []
         rkeys = ContractSample.compact_keys.select{ |a| a[:up_or_down] == up_or_down }
-        total = 0
         samples.each do |sample|
+          total = 0
           time = (sample.sample_number.to_i + Time.now.utc_offset) * 1000
           rkeys.each do |rkey|
             total += sample[rkey[:name]]
@@ -125,7 +125,7 @@ class ContractGraph < Graph
       date_keys.sort.each do |key|
         time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
         total = 0
-        rkeys.each { |rkey| total += ($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8 }
+        rkeys.each { |rkey| total += (($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8).round }
         data << [time, total]
       end
 

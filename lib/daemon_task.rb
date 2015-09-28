@@ -67,11 +67,11 @@ class DaemonTask
       if configuration.send("#{@name.underscore}_next_exec_time").nil?
         @@update_execution.synchronize {
           configuration.update_attribute("#{@name.underscore}_next_exec_time", @next_exec)
-          @daemon_logger.debug("Generate next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}") if verbose?
+          @daemon_logger.debug("Generate next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}")
         }
       else
         @next_exec = configuration.send("#{@name.underscore}_next_exec_time")
-        @daemon_logger.debug("Get next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}") if verbose?
+        @daemon_logger.debug("Get next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}")
       end
     end
   end
@@ -86,7 +86,7 @@ class DaemonTask
     if configuration.respond_to?("#{@name.underscore}_next_exec_time")
       @@update_execution.synchronize {
         configuration.update_attribute("#{@name.underscore}_next_exec_time", @next_exec)
-        log("[Daemon][#{name}][UPDATE] Next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}") if verbose?
+        @daemon_logger.debug("[Daemon][#{name}][UPDATE] Next exec time for: #{configuration.send("#{@name.underscore}_next_exec_time")}")
       }
     end
   end
@@ -514,8 +514,7 @@ class DaemonRedis < DaemonTask
 
  def compact_to_db
    samples = { :create => [], :total => 0 }
-   # time_period = ContractSample::CONF_PERIODS[:period_0][:time_sample]
-   time_period = 0
+   time_period = ContractSample::CONF_PERIODS[:period_0][:time_sample]
    period = ContractSample::CONF_PERIODS[:period_0][:period_number]
    date_keys = $redis.keys("#{@redis_key}_*").sort
    time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
@@ -537,15 +536,14 @@ class DaemonRedis < DaemonTask
      date_keys.each do |key|
        sample = {}
        time = $redis.hget("#{key}", "time").to_i
-       time_period += $redis.hget("#{key}", "total_seconds").to_i
        if time <= @end_time_new_sample
          @compact_keys.each { |rkey| sample[rkey[:name]] = $redis.hget("#{key}", "#{rkey[:name]}_instant").to_i }
          @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{new_sample.inspect}")
          keys_to_delete << key
+         samples_to_compact << sample
        else
          @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][NO] (#{Time.at(time)})")
        end
-       samples_to_compact << sample
      end
 
      data_acummulated = samples_to_compact.sum

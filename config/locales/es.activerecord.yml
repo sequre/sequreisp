@@ -785,7 +785,7 @@ es:
         rate_up_period_2: "Rate promedio de subida por semana (por prio)"
         rate_up_period_3: "Rate promedio de subida por mes (por prio)"
         rate_up_period_4: "Rate promedio de subida por año (por prio)"
-        total_rate_instant: "Rate total (Subida/Bajada)"
+        total_rate_instant: "Instantaneo Rate total Subida/Bajada (5 sec)"
         total_rate_period_0: "Rate promedio cada 3 horas (total)"
         total_rate_period_1: "Rate promedio por dia (total)"
         total_rate_period_2: "Rate promedio por semana (total)"

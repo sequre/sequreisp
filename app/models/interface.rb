@@ -155,27 +155,34 @@ class Interface < ActiveRecord::Base
     "interface_#{id}_sample"
   end
   def instant
-    data = {}
-    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
-    if Rails.env.production?
-      date_keys = $redis.keys("#{redis_key}_*").sort
-      # time = ((date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i)
-      InterfaceSample.compact_keys.each do |rkey|
-        value = date_keys.empty? ? 0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8)
-        data[rkey[:name].to_sym] = [ date_time_now, value ]
-      end
-    else
-      if kind == "lan"
-        # en lan el down de los providers es el up
-        data[:tx] = [ date_time_now, rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2 ]
-        data[:rx] = [ date_time_now, rand(ProviderGroup.all.collect(&:rate_down).sum)*1024 ]
+    begin
+      data = {}
+      date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+      if Rails.env.production?
+        date_keys = $redis.keys("#{redis_key}_*").sort
+        # time = ((date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i)
+        InterfaceSample.compact_keys.each do |rkey|
+          value = date_keys.empty? ? 0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8).round
+          data[rkey[:name].to_sym] = [ date_time_now, value ]
+        end
       else
-        data[:tx] = [ date_time_now, (rand(provider.rate_up)*1024/2 rescue 0) ]
-        data[:rx] = [ date_time_now, (rand(provider.rate_down)*1024 rescue 0) ]
+        if kind == "lan"
+          # en lan el down de los providers es el up
+          data[:tx] = [ date_time_now, rand(ProviderGroup.all.collect(&:rate_up).sum)*1024/2 ]
+          data[:rx] = [ date_time_now, rand(ProviderGroup.all.collect(&:rate_down).sum)*1024 ]
+        else
+          data[:tx] = [ date_time_now, (rand(provider.rate_up)*1024/2 rescue 0) ]
+          data[:rx] = [ date_time_now, (rand(provider.rate_down)*1024 rescue 0) ]
+        end
       end
+      data
+    rescue => e
+      $application_logger.error(e)
+    ensure
+      data
     end
-    data
   end
+
   def physical_link
     self.vlan? ? vlan_interface.physical_link : read_attribute(:physical_link)
   end

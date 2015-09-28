@@ -762,7 +762,7 @@ pt:
         rate_up_period_2: "Average rate up per week (per prio)"
         rate_up_period_3: "Average rate up per month (per prio)"
         rate_up_period_4: "Average rate up per year (per prio)"
-        total_rate_instant: "Total rate UP/DOWN"
+        total_rate_instant: "Total rate instant UP/DOWN (5 sec)"
         total_rate_period_0: "Average rate for 3 hours (total)"
         total_rate_period_1: "Average rate per day (total)"
         total_rate_period_2: "Average rate per week (total)"

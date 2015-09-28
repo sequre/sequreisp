@@ -384,26 +384,32 @@ class Contract < ActiveRecord::Base
   end
 
   def instant_rate
-    data = {}
-    total_up = 0
-    total_down = 0
-    date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
-    date_keys = $redis.keys("#{redis_key}_*").sort
+    begin
+      data = {}
+      total_up = 0
+      total_down = 0
+      date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+      date_keys = $redis.keys("#{redis_key}_*").sort
 
-    ContractSample.compact_keys.each do |rkey|
-      value = if Rails.env.production?
-                date_keys.empty? ? 0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8)
-              else
-                rand(1024)
-              end
-      total_up += value if rkey[:name].include?("up")
-      total_down += value if rkey[:name].include?("down")
-      data[rkey[:name].to_sym] = [ date_time_now, value ]
+      ContractSample.compact_keys.each do |rkey|
+        value = if Rails.env.production?
+                  date_keys.empty? ? 0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8).round
+                else
+                  rand(1024)
+                end
+        total_up += value if rkey[:name].include?("up")
+        total_down += value if rkey[:name].include?("down")
+        data[rkey[:name].to_sym] = [ date_time_now, value ]
+      end
+
+      data[:total_up] = [ date_time_now, total_up ]
+      data[:total_down] = [ date_time_now, total_down ]
+      data
+    rescue => e
+      $application_logger.error(e)
+    ensure
+      data
     end
-
-    data[:total_up] = [ date_time_now, total_up ]
-    data[:total_down] = [ date_time_now, total_down ]
-    data
   end
 
   # Retorna el tiempo de respuesta del cliente ante un mensaje arp o icmp
