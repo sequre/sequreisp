@@ -86,7 +86,7 @@ class Backup
   end
 
   def restore_full(file, reboot=false, failsafe=false)
-    failsafe_backup = Backup.new.full(false) unless failsafe
+    failsafe_backup = Backup.new.full unless failsafe
     success = false
     # tar exit_status == 1 is not fatal
     if system("#{SequreispConfig::CONFIG["tar_command"]} -zxpf #{file} -C /") or $?.exitstatus == 1
