@@ -54,7 +54,7 @@ class BackupController < ApplicationController
 
   def create_full
     Configuration.first.include_exclude_files_in_backup(params[:backup])
-    if file = Backup.new.full(params[:backup][:include_graph] == "1")
+    if file = Backup.new.full
       send_file file, :type => 'application/x-gzip'
     else
       flash[:error] = t 'backup.notice.create_error'
