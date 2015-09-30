@@ -586,12 +586,12 @@ class DaemonCompactSamples < DaemonTask
       end
       @klass.transaction {
         transactions[:destroy].each do |transaction|
-          @daemon_logger.debug("[#{@klass.name}Transactions][#{model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
+          @daemon_logger.debug("[#{@klass.name}Transactions][#{model.class.name}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
           transaction.delete
         end
         transactions[:create].each do |transaction|
           sample = @klass.create(transaction)
-          @daemon_logger.debug("[#{@klass.name}Transactions][#{model}:#{sample.object.id}][CREATE] #{sample.inspect}")
+          @daemon_logger.debug("[#{@klass.name}Transactions][#{model.class.name}:#{sample.object.id}][CREATE] #{sample.inspect}")
         end
       }
     end
@@ -612,9 +612,9 @@ class DaemonCompactSamples < DaemonTask
     data.each do |k|
       if range.include?(k.sample_number.to_i)
         samples[:destroy] << k
-        @daemon_logger.debug("[DataSelected][#{@klass.name}][Compact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
+        @daemon_logger.debug("[DataSelected][#{@klass.name}][Compact] (#{@model.class.name}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
       else
-        @daemon_logger.debug("[DataSelected][#{@klass.name}][NoCompact] (#{@model}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
+        @daemon_logger.debug("[DataSelected][#{@klass.name}][NoCompact] (#{@model.class.name}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
       end
     end
     new_sample = @klass.compact(period, samples[:destroy])
