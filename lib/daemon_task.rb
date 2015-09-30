@@ -431,7 +431,7 @@ class DaemonRedis < DaemonTask
    InterfaceSample.transaction {
      transactions[:create].each do |transaction|
        sample = InterfaceSample.create(transaction)
-       @daemon_logger.debug("[InterfaceTransactions][CREATE] #{sample.inspect}")
+       @daemon_logger.debug("[InterfaceTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
      end
    }
  end
@@ -477,7 +477,7 @@ class DaemonRedis < DaemonTask
    ContractSample.transaction {
      transactions[:create].each do |transaction|
        sample = ContractSample.create(transaction)
-       @daemon_logger.debug("[ContractTransactions][CREATE] #{sample.inspect}")
+       @daemon_logger.debug("[ContractTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
      end
    }
  end
@@ -509,7 +509,7 @@ class DaemonRedis < DaemonTask
      $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total )
    end
 
-   @daemon_logger.debug("[#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
+   @daemon_logger.debug("[SAMPLE_GENERATED][#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
  end
 
  def compact_to_db
@@ -608,7 +608,7 @@ class DaemonCompactSamples < DaemonTask
     end_time_new_sample = init_time_new_sample + (time_period - 1)
     range = (init_time_new_sample..end_time_new_sample)
     sample_time = Time.at(init_time_new_sample)
-    @daemon_logger.debug("[Range] (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
+    @daemon_logger.debug("[Range](#{@model.class.name}:#{@relation_id} (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
     data.each do |k|
       if range.include?(k.sample_number.to_i)
         samples[:destroy] << k
