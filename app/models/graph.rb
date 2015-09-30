@@ -19,6 +19,7 @@ class Graph
   GREEN = '#00aa00'
   RED = '#aa0000'
   BLUE = '#0000aa'
+  VIOLET = '#8000ff'
 
   attr_accessor :model, :method, :render, :height, :width, :float
 

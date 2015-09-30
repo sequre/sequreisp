@@ -1,6 +1,6 @@
 class ContractGraph < Graph
   GRAPHS = [ "rate_up_instant", "rate_down_instant", "total_rate_instant", "latency_instant", "data_count" ]
-  COLORS = {"up" => RED, "down" => GREEN }
+  COLORS = {"up" => RED, "down" => GREEN, "prio1" => RED, "prio2" => GREEN, "prio3" => VIOLET, "supercache" => BLUE }
 
   # Dynamic method for up and down
   ["up", "down"].each do |up_or_down|
@@ -31,6 +31,7 @@ class ContractGraph < Graph
 
         series << { :name  => rkey[:name],
                     :type  => "spline",
+                    :color => COLORS[rkey[:sample]],
                     :stack => rkey[:up_or_down],
                     :data  => data.sort }
       end
@@ -61,6 +62,7 @@ class ContractGraph < Graph
 
           series << { :name  => rkey[:name],
                       :type  => "spline",
+                      :color => COLORS[rkey[:sample]],
                       :stack => rkey[:up_or_down],
                       :data  => data.sort }
         end
@@ -175,6 +177,7 @@ class ContractGraph < Graph
   def data_count
     series = [{ :name => I18n.t('graph.traffic'),
                 :type => 'column',
+                :color => GREEN,
                 :data => @model.data_count_for_last_year }]
 
     graph = { :title  => I18n.t("graphs.titles.contracts.#{(__method__).to_s}"),
