@@ -30,8 +30,9 @@ case "$1" in
         ;;
     stop)
         echo -n "Stopping $NAME: "
-        initctl --quiet emit sequreisp-stopped
         stop
+	sleep 5
+        initctl --quiet emit sequreisp-stopped
         ;;
     restart|reload)
         echo -n "Restarting $NAME: "

@@ -31,7 +31,9 @@ rescue LoadError => err
   warn "Couldn't load awesome_print: #{err}"
 end
 
-# irb history
-IRB.conf[:EVAL_HISTORY] = 1000
-IRB.conf[:SAVE_HISTORY] = 1000
-IRB.conf[:HISTORY_FILE] = File::expand_path("~/.irbhistory")
+if Rails.env.development?
+  # irb history
+  IRB.conf[:EVAL_HISTORY] = 1000
+  IRB.conf[:SAVE_HISTORY] = 1000
+  IRB.conf[:HISTORY_FILE] = File::expand_path("~/.irbhistory")
+end

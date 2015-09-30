@@ -2,14 +2,19 @@
 require 'rubygems'
 require "daemons"
 require 'yaml'
+require 'syslog'
 
-options =  YAML::load(File.open(File.dirname(__FILE__) + "/../../config/daemons.yml"))
-options = options.inject({}) do |opt, (key, value)|
+begin
+  options =  YAML::load(File.open(File.dirname(__FILE__) + "/../../config/daemons.yml"))
+  options = options.inject({}) do |opt, (key, value)|
     opt[(key.to_sym rescue key) || key] = value
-  opt
+    opt
+  end
+  options[:dir_mode] = options[:dir_mode].to_sym
+
+  Daemons.run File.dirname(__FILE__) + '/sequreispd.rb', options
+rescue => e
+  Syslog.open if not Syslog.opened?
+  Syslog.log(Syslog::LOG_ERR, "[Wispro][sequreisp_ctl]: #{e.message}")
+  exception.backtrace.each{ |bt| Syslog.log(Syslog::LOG_ERR, "[Wispro][sequreisp_ctl] #{e.class} #{bt}") }
 end
-options[:dir_mode] = options[:dir_mode].to_sym
-
-Daemons.run File.dirname(__FILE__) + '/sequreispd.rb', options
-
-
