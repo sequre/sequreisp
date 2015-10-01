@@ -574,24 +574,27 @@ class DaemonCompactSamples < DaemonTask
       transactions = { :create => [],:destroy => [] }
       @klass = "#{model}_sample".camelize.constantize
       @model = model
-      @sample_conf = @klass.sample_conf
-      numbers_of_period =  @sample_conf.count
+      numbers_of_period =  @klass::CONF_PERIODS.count
+      @last_samples_time = @klass.get_last_samples
+      @samples_to_compact = @klass.samples_to_compact(@last_samples_time)
+
       numbers_of_period.times do |i|
-        @sample_conf["period_#{i}".to_sym][:samples_to_compact].each do |key, values|
-          @relation_id = key
-          last_sample_time_for_next_period = @sample_conf["period_#{i.next}".to_sym][:last_sample_time][key]
-          @daemon_logger.debug("[NeedCompact][#{@klass.name}] #{model.camelize}:#{key})")
-          transactions += compact(i.next, values, last_sample_time_for_next_period)
+        @samples_to_compact["period_#{i}".to_sym].each do |model_id, samples|
+          @relation_id = model_id
+          last_sample_time_for_next_period = @last_samples_time["period_#{i.next}".to_sym][model_id]
+          @daemon_logger.debug("[NeedCompact][#{@klass.name}] #{@model.camelize}:#{key})")
+          transactions += compact(i.next, samples, last_sample_time_for_next_period)
         end
       end
+
       @klass.transaction {
         transactions[:destroy].each do |transaction|
-          @daemon_logger.debug("[#{@klass.name}Transactions][#{model.class.name}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
+          @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
           transaction.delete
         end
         transactions[:create].each do |transaction|
           sample = @klass.create(transaction)
-          @daemon_logger.debug("[#{@klass.name}Transactions][#{model.class.name}:#{sample.object.id}][CREATE] #{sample.inspect}")
+          @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{sample.object.id}][CREATE] #{sample.inspect}")
         end
       }
     end
@@ -599,26 +602,32 @@ class DaemonCompactSamples < DaemonTask
 
   private
 
-  def compact(period, data, time_sample=nil)
+  def compact(period, samples_to_compact, time_sample=nil)
     samples = { :create => [], :destroy => [] }
-    time_period = (60 * @sample_conf["period_#{period}".to_sym][:time_sample])
-    time_samples = data.collect(&:sample_number).map(&:to_i).sort
+    time_period = @sample_conf["period_#{period}".to_sym][:time_sample]
+    time_samples = samples_to_compact.collect(&:sample_number).sort
+    last_sample_time = time_samples.last
 
     init_time_new_sample = time_sample.nil? ? time_samples.first : (time_sample + time_period)
     end_time_new_sample = init_time_new_sample + (time_period - 1)
-    range = (init_time_new_sample..end_time_new_sample)
-    sample_time = Time.at(init_time_new_sample)
-    @daemon_logger.debug("[Range](#{@model.class.name}:#{@relation_id} (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
-    data.each do |k|
-      if range.include?(k.sample_number.to_i)
-        samples[:destroy] << k
-        @daemon_logger.debug("[DataSelected][#{@klass.name}][Compact] (#{@model.class.name}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
-      else
-        @daemon_logger.debug("[DataSelected][#{@klass.name}][NoCompact] (#{@model.class.name}:#{@relation_id}, :sample_number => #{k.sample_number} --> #{k.inspect}")
-      end
+
+    while end_time_new_sample <= last_sample_time
+      range = (init_time_new_sample..end_time_new_sample)
+
+      new_sample = { :period => period,
+                     :sample_time => Time.at(init_time_new_sample),
+                     :sample_number => init_time_new_sample,
+                     "#{@model}_id".to_sym => @relation_id }
+
+      @daemon_logger.debug("[Range](#{@model.camelize}:#{@relation_id} (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
+      selected_samples = samples_to_compact.select { |sample| range.include?(sample.sample_number) }
+      samples[:create] << new_sample.merge(@klass.compact(period, selected_samples))
+      samples[:destroy] += selected_samples
+
+      init_time_new_sample += time_period
+      end_time_new_samples += time_period
     end
-    new_sample = @klass.compact(period, samples[:destroy])
-    samples[:create] << new_sample.merge({:period => period, :sample_time => sample_time, :sample_number => init_time_new_sample, "#{@model}_id".to_sym => @relation_id })
+
     samples
   end
 end
