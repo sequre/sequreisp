@@ -162,7 +162,7 @@ class Interface < ActiveRecord::Base
         date_keys = $redis.keys("#{redis_key}_*").sort
         # time = ((date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i)
         InterfaceSample.compact_keys.each do |rkey|
-          value = date_keys.empty? ? 0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8).round
+          value = date_keys.empty? ? 0 : ((($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_i) * 8).round rescue 0)
           data[rkey[:name].to_sym] = [ date_time_now, value ]
         end
       else

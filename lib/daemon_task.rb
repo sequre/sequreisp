@@ -582,7 +582,7 @@ class DaemonCompactSamples < DaemonTask
         @samples_to_compact["period_#{i}".to_sym].each do |model_id, samples|
           @relation_id = model_id
           last_sample_time_for_next_period = @last_samples_time["period_#{i.next}".to_sym][model_id]
-          @daemon_logger.debug("[LAST_SAMPLE_TIME_FOR_NEXT_PERIOD] #{time.at(last_sample_time_for_next_period)}") unless last_sample_time_for_next_period.nil?
+          @daemon_logger.debug("[LAST_SAMPLE_TIME_FOR_NEXT_PERIOD] #{Time.at(last_sample_time_for_next_period)}") unless last_sample_time_for_next_period.nil?
           @daemon_logger.debug("[NeedCompact][#{@klass.name}][#{@model.camelize}:#{@relation_id}][PERIOD:#{i}][SAMPLES_TO_COMPACT] #{samples.collect(&:id).inspect}")
           transactions += compact(i.next, samples, last_sample_time_for_next_period)
         end

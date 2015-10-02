@@ -396,7 +396,7 @@ class Contract < ActiveRecord::Base
 
       ContractSample.compact_keys.each do |rkey|
         value = if Rails.env.production?
-                  date_keys.empty? ? 0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8).round
+                  date_keys.empty? ? 0 : ((($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8).round rescue 0)
                 else
                   rand(1024)
                 end
