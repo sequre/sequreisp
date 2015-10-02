@@ -47,10 +47,10 @@ class InterfaceSample < ActiveRecord::Base
     InterfaceSample.transaction {
       CONF_PERIODS.count.times do |period|
         samples_to_compact[period] = {}
-        unless CONF_PERIODS[period][:excess_count].nil?
-          InterfaceSample.for_period(CONF_PERIODS[period][:period_number]).total_samples_for_period.all.each do |is|
-            if is.total_samples.to_i >= CONF_PERIODS[period][:sample_size_cut]
-              samples_to_compact[period][is.interface_id] = InterfaceSample.for_period(CONF_PERIODS[period][:period_number]).samples_to_compact(is.interface_id, (is.total_samples.to_i - CONF_PERIODS[period][:sample_size])).all
+        unless CONF_PERIODS["period_#{period}".to_sym][:excess_count].nil?
+          InterfaceSample.for_period(CONF_PERIODS["period_#{period}".to_sym][:period_number]).total_samples_for_period.all.each do |is|
+            if is.total_samples.to_i >= CONF_PERIODS["period_#{period}".to_sym][:sample_size_cut]
+              samples_to_compact[period][is.interface_id] = InterfaceSample.for_period(CONF_PERIODS["period_#{period}".to_sym][:period_number]).samples_to_compact(is.interface_id, (is.total_samples.to_i - CONF_PERIODS["period_#{period}".to_sym][:sample_size])).all
             end
           end
         end
