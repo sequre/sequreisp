@@ -23,77 +23,40 @@ class ContractSample < ActiveRecord::Base
   named_scope :samples_to_compact, lambda { |id,limit| { :conditions => "contract_samples.contract_id = #{id}",
                                                          :limit => limit } }
 
+  named_scope :get_new_samples, lambda { |period| { :order => "sample_number DESC",
+                                                    :conditions => "contract_samples.sample_number = (SELECT MAX(sample_number)
+                                                                                                      FROM contract_samples as foo
+                                                                                                      WHERE contract_samples.period = #{period} AND
+                                                                                                            contract_samples.contract_id = foo.contract_id
+                                                                                                      ORDER BY sample_number LIMIT 1) AND
+                                                                    contract_samples.period = #{period}" }}
 
-  def self.get_last_samples
-    last_samples_time = {}
+  def self.last_samples_created
+    samples = {}
     ContractSample.transaction {
       CONF_PERIODS.count.times do |i|
-        last_samples_time["period_#{i}".to_sym] = Hash[ContractSample.all( :group => "contract_id",
-                                                                            :conditions => {:period => period}).collect{ |c| [c.contract_id, c.sample_number.to_i] }]
+        samples["period_#{i}".to_sym] = Hash[ContractSample.get_new_samples(i).collect{ |c| [c.contract_id, c.sample_number.to_i] }]
       end
     }
-    last_samples_time
+    samples
   end
 
-
-  def self.samples_to_compact(last_samples_time)
+  def self.samples_to_compact
     samples_to_compact = {}
     ContractSample.transaction {
-      last_samples_time.each do |period, last_sample_times|
+      CONF_PERIODS.count.times do |period|
+        samples_to_compact[period] = {}
         unless CONF_PERIODS[period][:excess_count].nil?
-          samples_to_compact[period] = {}
-          ContractSample.for_period(period).total_samples_for_period.all.each do |cs|
+          ContractSample.for_period(CONF_PERIODS[period][:period_number]).total_samples_for_period.all.each do |cs|
             if cs.total_samples.to_i >= CONF_PERIODS[period][:sample_size_cut]
-              samples_to_compact[period][cs.contract_id] = ContractSample.for_period(period).samples_to_compact(cs.contract_id, (cs.total_samples.to_i - CONF_PERIODS[period][:sample_size])).all
+              samples_to_compact[period][cs.contract_id] = ContractSample.for_period(CONF_PERIODS[period][:period_number]).samples_to_compact(cs.contract_id, (cs.total_samples.to_i - CONF_PERIODS[period][:sample_size])).all
             end
           end
         end
       end
     }
     samples_to_compact
-
-
-
-
-    # ContractSample.transaction {
-    #   sample_conf.each_key do |key|
-    #     sample_conf[key][:samples_to_compact] = {}
-
-    #     if sample_conf[key][:sample_size_cut]
-    #       ContractSample.for_period(conf[key][:period_number]).total_samples_for_period.all.each do |cs|
-    #         sample_conf[key][:last_sample_time][cs.contract_id]   = last.find{ |ls| ls.contract_id == cs.contract_id }.sample_number.to_i
-    #         sample_conf[key][:samples_to_compact][cs.contract_id] = ContractSample.for_period(conf[key][:period_number]).samples_to_compact(cs.contract_id, conf[key][:excess_count]).all if cs.total_samples.to_i >= conf[key][:sample_size_cut]
-    #       end
-    #     else
-    #        conf[key][:last_sample_time] = Hash[last.collect{ |cs| [cs.contract_id, cs.sample_number.to_i] }]
-    #     end
-    #   end
-    # }
-    # conf
   end
-
-  def self.sample_conf
-    conf = CONF_PERIODS
-    ContractSample.transaction {
-      conf.each_key do |key|
-        # conf[key][:last_sample_time] = {}
-        # last = Contract.all.collect{|c| c.contract_samples.for_period(conf[key][:period_number]).all( :order => "sample_number DESC", :limit => 1) }.flatten
-        # last = Contract.all.collect{|c| c.contract_samples.for_period(conf[key][:period_number]).all( :order => "sample_number ASC", :limit => 1) }.flatten
-        conf[key][:samples_to_compact] = {}
-
-        if conf[key][:sample_size_cut]
-          ContractSample.for_period(conf[key][:period_number]).total_samples_for_period.all.each do |cs|
-            conf[key][:last_sample_time][cs.contract_id]   = last.find{ |ls| ls.contract_id == cs.contract_id }.sample_number.to_i
-            conf[key][:samples_to_compact][cs.contract_id] = ContractSample.for_period(conf[key][:period_number]).samples_to_compact(cs.contract_id, conf[key][:excess_count]).all if cs.total_samples.to_i >= conf[key][:sample_size_cut]
-          end
-        else
-           conf[key][:last_sample_time] = Hash[last.collect{ |cs| [cs.contract_id, cs.sample_number.to_i] }]
-        end
-      end
-    }
-    conf
-  end
-
 
   def self.compact(period, samples)
     new_sample = {}

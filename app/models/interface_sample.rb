@@ -24,25 +24,39 @@ class InterfaceSample < ActiveRecord::Base
   named_scope :samples_to_compact, lambda { |id,limit| { :conditions => "interface_samples.interface_id = #{id}",
                                                          :limit => limit } }
 
-  def self.sample_conf
-    conf = CONF_PERIODS
-    InterfaceSample.transaction {
-      conf.each_key do |key|
-        last = Interface.all.collect{|i| i.interface_samples.for_period(conf[key][:period_number]).all( :order => "sample_number DESC", :limit => 1) }.flatten
-        conf[key][:samples_to_compact] = {}
-        conf[key][:last_sample_time] = {}
+  named_scope :get_new_samples, lambda { |period| { :order => "sample_number DESC",
+                                                    :conditions => "interface_samples.sample_number = (SELECT MAX(sample_number)
+                                                                                                      FROM interface_samples as foo
+                                                                                                      WHERE interface_samples.period = #{period} AND
+                                                                                                            interface_samples.interface_id = foo.interface_id
+                                                                                                      ORDER BY sample_number LIMIT 1) AND
+                                                                    interface_samples.period = #{period}" }}
 
-        if conf[key][:sample_size_cut]
-          InterfaceSample.for_period(conf[key][:period_number]).total_samples_for_period.all.each do |is|
-            conf[key][:last_sample_time][is.interface_id]   = last.find{ |ls| ls.interface_id == is.interface_id }.sample_number.to_i
-            conf[key][:samples_to_compact][is.interface_id] = InterfaceSample.for_period(conf[key][:period_number]).samples_to_compact(is.interface_id, conf[key][:excess_count]).all if is.total_samples.to_i >= conf[key][:sample_size_cut]
+  def self.last_samples_created
+    samples = {}
+    InterfaceSample.transaction {
+      CONF_PERIODS.count.times do |i|
+        samples["period_#{i}".to_sym] = Hash[InterfaceSample.get_new_samples(i).collect{ |i| [i.interface_id, i.sample_number.to_i] }]
+      end
+    }
+    samples
+  end
+
+  def self.samples_to_compact
+    samples_to_compact = {}
+    InterfaceSample.transaction {
+      CONF_PERIODS.count.times do |period|
+        samples_to_compact[period] = {}
+        unless CONF_PERIODS[period][:excess_count].nil?
+          InterfaceSample.for_period(CONF_PERIODS[period][:period_number]).total_samples_for_period.all.each do |is|
+            if is.total_samples.to_i >= CONF_PERIODS[period][:sample_size_cut]
+              samples_to_compact[period][is.interface_id] = InterfaceSample.for_period(CONF_PERIODS[period][:period_number]).samples_to_compact(is.interface_id, (is.total_samples.to_i - CONF_PERIODS[period][:sample_size])).all
+            end
           end
-        else
-          conf[key][:last_sample_time] = Hash[last.collect{ |is| [is.interface_id, is.sample_number.to_i] }]
         end
       end
     }
-    conf
+    samples_to_compact
   end
 
   def self.compact(period, samples)

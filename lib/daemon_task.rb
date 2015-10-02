@@ -576,13 +576,14 @@ class DaemonCompactSamples < DaemonTask
       @model = model
       numbers_of_period =  @klass::CONF_PERIODS.count
       @last_samples_time = @klass.get_last_samples
-      @samples_to_compact = @klass.samples_to_compact(@last_samples_time)
+      @samples_to_compact = @klass.samples_to_compact
 
       numbers_of_period.times do |i|
         @samples_to_compact["period_#{i}".to_sym].each do |model_id, samples|
           @relation_id = model_id
           last_sample_time_for_next_period = @last_samples_time["period_#{i.next}".to_sym][model_id]
-          @daemon_logger.debug("[NeedCompact][#{@klass.name}] #{@model.camelize}:#{key})")
+          @daemon_logger.debug("[LAST_SAMPLE_TIME_FOR_NEXT_PERIOD] #{time.at(last_sample_time_for_next_period)}") unless last_sample_time_for_next_period.nil?
+          @daemon_logger.debug("[NeedCompact][#{@klass.name}][#{@model.camelize}:#{@relation_id}][PERIOD:#{i}][SAMPLES_TO_COMPACT] #{samples.collect(&:id).inspect}")
           transactions += compact(i.next, samples, last_sample_time_for_next_period)
         end
       end
@@ -604,14 +605,19 @@ class DaemonCompactSamples < DaemonTask
 
   def compact(period, samples_to_compact, time_sample=nil)
     samples = { :create => [], :destroy => [] }
-    time_period = @sample_conf["period_#{period}".to_sym][:time_sample]
-    time_samples = samples_to_compact.collect(&:sample_number).sort
+    time_period = @klass::CONF_PERIODS["period_#{period}".to_sym][:time_sample]
+    time_samples = samples_to_compact.collect(&:sample_number).map(&:to_i).sort
     last_sample_time = time_samples.last
 
     init_time_new_sample = time_sample.nil? ? time_samples.first : (time_sample + time_period)
-    end_time_new_sample = init_time_new_sample + (time_period - 1)
+    end_time_new_sample = init_time_new_sample + (time_period - @klass::CONF_PERIODS["period_#{period-1}".to_sym][:time_sample])
+
+    @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][INIT_SAMPLE_FRAME] #{Time.at(init_time_new_sample)} - [END_SAMPLE_FRAME] #{Time.at(end_time_new_sample)} #{@model.camelize}:#{@relation_id}")
+    @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][LAST_SAMPLE_TIME] #{@model.camelize}:#{@relation_id} #{Time.at(last_sample_time)}")
 
     while end_time_new_sample <= last_sample_time
+      @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][RANGE_FOR_FRAME] #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
+
       range = (init_time_new_sample..end_time_new_sample)
 
       new_sample = { :period => period,
@@ -619,13 +625,14 @@ class DaemonCompactSamples < DaemonTask
                      :sample_number => init_time_new_sample,
                      "#{@model}_id".to_sym => @relation_id }
 
-      @daemon_logger.debug("[Range](#{@model.camelize}:#{@relation_id} (#{init_time_new_sample} - #{end_time_new_sample}) ---> #{Time.at(init_time_new_sample)} - #{Time.at(end_time_new_sample)}")
-      selected_samples = samples_to_compact.select { |sample| range.include?(sample.sample_number) }
+      selected_samples = samples_to_compact.select { |sample| range.include?(sample.sample_number.to_i) }
+      @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][SELECTED_SAMPLES] #{selected_samples.collect(&:sample_time).inspect}")
+
       samples[:create] << new_sample.merge(@klass.compact(period, selected_samples))
       samples[:destroy] += selected_samples
 
       init_time_new_sample += time_period
-      end_time_new_samples += time_period
+      end_time_new_sample += time_period
     end
 
     samples
