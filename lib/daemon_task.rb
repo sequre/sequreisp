@@ -514,7 +514,7 @@ class DaemonRedis < DaemonTask
 
  def compact_to_db
    samples = { :create => [], :total => 0 }
-   time_period = ContractSample::CONF_PERIODS[:period_0][:time_sample].minutes
+   time_period = ContractSample::CONF_PERIODS[:period_0][:time_sample]
    period = ContractSample::CONF_PERIODS[:period_0][:period_number]
    date_keys = $redis.keys("#{@redis_key}_*").sort
    time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
