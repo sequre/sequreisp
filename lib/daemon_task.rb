@@ -575,7 +575,7 @@ class DaemonCompactSamples < DaemonTask
       @klass = "#{model}_sample".camelize.constantize
       @model = model
       numbers_of_period =  @klass::CONF_PERIODS.count
-      @last_samples_time = @klass.get_last_samples
+      @last_samples_time = @klass.last_samples_created
       @samples_to_compact = @klass.samples_to_compact
 
       numbers_of_period.times do |i|
