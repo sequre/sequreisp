@@ -45,7 +45,7 @@ class ContractSample < ActiveRecord::Base
     samples_to_compact = {}
     ContractSample.transaction {
       CONF_PERIODS.count.times do |period|
-        samples_to_compact[period] = {}
+        samples_to_compact["period_#{period}".to_sym] = {}
         unless CONF_PERIODS["period_#{period}".to_sym][:excess_count].nil?
           ContractSample.for_period(CONF_PERIODS["period_#{period}".to_sym][:period_number]).total_samples_for_period.all.each do |cs|
             if cs.total_samples.to_i >= CONF_PERIODS["period_#{period}".to_sym][:sample_size_cut]
