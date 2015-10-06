@@ -31,12 +31,13 @@
 
     <% @graphs.each do |g| %>
       <%= "interface_#{g.model.id}_instant" %> = new Highcharts.Chart(<%= g.minimal_graph %>);
+    <% end %>
+
     get_data();
 
     setInterval(function() {
       get_data();
-    }, 5000);
-    <% end %>
+    }, 2000);
   });
 </script>
 <% content_for :title, t('menu.providers') %>

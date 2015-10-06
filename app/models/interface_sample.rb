@@ -60,13 +60,14 @@ class InterfaceSample < ActiveRecord::Base
   end
 
   def self.compact(period, samples)
-    time = CONF_PERIODS["period_#{period}".to_sym][:scope]
+    # time = CONF_PERIODS["period_#{period}".to_sym][:scope]
+    time = CONF_PERIODS["period_#{period}".to_sym][:time_sample]
     new_sample = {}
     compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] = 0 }
     samples.each do |destroy_sample|
-      compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] += (destroy_sample[rkey[:name]] / time )}
+      compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] += (destroy_sample[rkey[:name]])}
     end
-    new_sample
+    new_sample / CONF_PERIODS["period_#{period}".to_sym][:time_sample]
   end
 
   # this has an alias_method_chain

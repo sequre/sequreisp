@@ -25,6 +25,7 @@ class DaemonTask
     @thread_daemon = nil
     @name = self.class.to_s
     @conf_daemon = $daemon_configuration[@name.underscore]
+    @exec_as_process = @conf_daemon["exec_as_process"].present?
     @time_for_exec[:frecuency] = eval(@conf_daemon["frecuency"])
     @priority = @conf_daemon.has_key?("priority") ? @conf_daemon["priority"].to_i : -5
     @daemon_logger = DaemonLogger.new(@name.underscore.downcase, @conf_daemon["level_log"].to_i, @priority)
@@ -43,15 +44,11 @@ class DaemonTask
     result_command
   end
 
-  def join
-    @thread_daemon.join
-  end
-
   def stop
     begin
       @daemon_logger.debug("[REMOVE_DAEMON_LOG_FILE]")
       @daemon_logger.remove_log_file
-      @thread_daemon.exit
+      @exec_as_process ? Process.kill("TERM", pid) : @thread_daemon.exit
       @daemon_logger.info("[STOP]")
     rescue Exception => e
       @daemon_logger.error(e)
@@ -91,7 +88,9 @@ class DaemonTask
     end
   end
 
-  def start
+  def start; @exec_as_process ? start_as_process : start_as_thread; end
+
+  def start_as_thread
     @thread_daemon = Thread.new do
       @@threads << self
       Thread.current["name"] = @name
@@ -114,32 +113,52 @@ class DaemonTask
     end
   end
 
+  def start_as_process
+    ::ActiveRecord::Base.clear_all_connections!
+    @thread_daemon = fork do
+      $0 = @name
+      ::ActiveRecord::Base.establish_connection
+      loop do
+        begin
+          if Time.now >= @next_exec
+            Configuration.do_reload
+            @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
+            set_next_execution_time
+            @proc.call #if Rails.env.production?
+            @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+          end
+        rescue Exception => e
+          @daemon_logger.error(e)
+        end
+        to_sleep
+      end
+    end
+    @@threads << @thread_daemon
+  end
+
   def to_sleep
     time_to_sleep = ((@next_exec.to_i - Time.now.to_i) <= 0)? 0.5 : (@next_exec.to_i - Time.now.to_i)
     sleep [time_to_sleep, 5].min
   end
 
-  def state
-    # "run"       thread is runnable
-    # "sleep"     thread is sleeping
-    # "aborting"  thread is aborting
-    # false       thread terminated normally
-    # nil         thread terminated abnormally
-    @thread_daemon.status
+  def running?; @exec_as_process ? process_running? : thread_running?; end
+
+  def process_running?; Process.wait2(pid, Process::WNOHANG).nil?; end
   end
 
-  def name
-    @name
-  end
+  def thread_running?; not @thread_daemon.status.nil?; end
 
-  def thread
-    @thread_daemon
-  end
+  def name; @name; end
 
-  #Only works in development
-  def self.threads
-    @@threads
-  end
+  def thread; @thread_daemon; end
+
+  def self.threads; @@threads; end #Only works in development
+
+  def join; @thread_daemon.join; end
+
+  def is_a_process?; @exec_as_process; end
+
+  def pid; @exec_as_process ? @thread_daemon : $?.pid; end
 
   def applying_changes?
     $mutex.synchronize {

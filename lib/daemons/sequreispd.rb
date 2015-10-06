@@ -62,18 +62,25 @@ ensure
   begin
     while($running) do
       daemons.each do |daemon|
-        if daemon.state.nil?
+        unless daemon.running?
           daemon.start
           @general_daemon_logger.debug("[RESTART_DAEMON] #{daemon.name}")
         end
       end
       sleep 1
     end
+
     daemons.each do |daemon|
-      @general_daemon_logger.debug("[SIGNAL_DAEMON_STOP] #{daemon.name}")
-      daemon.stop
-      @general_daemon_logger.debug("[WAITH_FOR_DAEMON] #{daemon.name}")
-      daemon.join
+      if daemon.is_a_process?
+        @general_daemon_logger.info("[SEND_SIGNAL_TERM] #{p.name}")
+        Process.kill("TERM", p.pid)
+        status = Process.wait2(p.pid).last
+        @general_daemon_logger.info("[WAITH_FOR_DAEMON_PROCESS] NAME: #{p.name} PID: #{status.pid} EXITSTATUS: #{status.exitstatus}")
+      else
+        daemon.stop
+        @general_daemon_logger.info("[WAITH_FOR_DAEMON_THREAD] #{daemon.name}")
+        daemon.join
+      end
     end
   rescue Exception => exception
     @general_daemon_logger.error(exception)
