@@ -144,7 +144,6 @@ class DaemonTask
   def running?; @exec_as_process ? process_running? : thread_running?; end
 
   def process_running?; Process.wait2(pid, Process::WNOHANG).nil?; end
-  end
 
   def thread_running?; not @thread_daemon.status.nil?; end
 
