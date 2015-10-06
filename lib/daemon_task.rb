@@ -19,7 +19,6 @@ $mutex = Mutex.new
 $resource = ConditionVariable.new
 
 class DaemonTask
-  @@threads ||= []
 
   def initialize
     @thread_daemon = nil
@@ -92,7 +91,6 @@ class DaemonTask
 
   def start_as_thread
     @thread_daemon = Thread.new do
-      @@threads << self
       Thread.current["name"] = @name
       Thread.current.priority = @priority
       loop do
@@ -120,6 +118,7 @@ class DaemonTask
       ::ActiveRecord::Base.establish_connection
       loop do
         begin
+          Signal.trap("TERM") { break }
           if Time.now >= @next_exec
             Configuration.do_reload
             @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
@@ -133,7 +132,6 @@ class DaemonTask
         to_sleep
       end
     end
-    @@threads << @thread_daemon
   end
 
   def to_sleep
@@ -150,8 +148,6 @@ class DaemonTask
   def name; @name; end
 
   def thread; @thread_daemon; end
-
-  def self.threads; @@threads; end #Only works in development
 
   def join; @thread_daemon.join; end
 
