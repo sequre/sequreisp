@@ -46,7 +46,7 @@ daemon_compact_samples:
   frecuency: 60.minutes
   level_log: 1
   enabled: true
-  priority: -3
+  priority: 0
   exec_as_process: true
 
 daemon_check_bind:

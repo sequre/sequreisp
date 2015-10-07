@@ -114,7 +114,8 @@ class DaemonTask
   def start_as_process
     ::ActiveRecord::Base.clear_all_connections!
     @thread_daemon = fork do
-      $0 = @name
+      $0 = "sequreispd_#{@name.underscore}"
+      Process.setpriority(Process::PRIO_PROCESS, 0, @priority)
       ::ActiveRecord::Base.establish_connection
       loop do
         begin
