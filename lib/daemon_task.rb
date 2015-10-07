@@ -2,6 +2,7 @@ if Rails.env.development?
   require 'sequreisp_logger'
   require 'sequreisp_constants'
   #Thread::abort_on_exception = true
+  require 'benchmark'
 
   def start_all
     daemons = []
@@ -119,15 +120,20 @@ class DaemonTask
       ::ActiveRecord::Base.establish_connection
       loop do
         begin
-          Signal.trap("TERM") { break }
-          if Time.now >= @next_exec
-            Configuration.do_reload
-            @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
-            set_next_execution_time
-            @proc.call #if Rails.env.production?
-            @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+          Benchmark.bmbm do |x|
+            report = x.report(@name) {
+              Signal.trap("TERM") { break }
+              if Time.now >= @next_exec
+                Configuration.do_reload
+                @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
+                set_next_execution_time
+                @proc.call #if Rails.env.production?
+                @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+              end
+            }
+            @daemon_logger.info("[REPORT_TIME_EXEC] #{report.inspect}")
           end
-        rescue Exception => e
+          rescue Exception => e
           @daemon_logger.error(e)
         end
         to_sleep
