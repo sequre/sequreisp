@@ -100,14 +100,13 @@ class DaemonTask
            report = Benchmark.bmbm do |x|
               x.report(@name) {
                 Configuration.do_reload
-                @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
                 set_next_execution_time
                 applying_changes? if @wait_for_apply_changes and Rails.env.production?
                 @proc.call #if Rails.env.production?
                 @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
               }
             end
-           @daemon_logger.info("[REPORT_TIME_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
+           @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report[0].utime}, TOTAL_TIME => #{report[0].total}, REAL_TIME => #{report[0].real}")
           end
         rescue Exception => e
           @daemon_logger.error(e)
@@ -130,13 +129,12 @@ class DaemonTask
             report = Benchmark.bmbm do |x|
               x.report(@name) {
                 Configuration.do_reload
-                @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
                 set_next_execution_time
                 @proc.call #if Rails.env.production?
                 @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
               }
             end
-            @daemon_logger.info("[REPORT_TIME_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
+            @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report[0].utime}, TOTAL_TIME => #{report[0].total}, REAL_TIME => #{report[0].real}")
           end
         rescue Exception => e
           @daemon_logger.error(e)
