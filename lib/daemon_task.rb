@@ -96,13 +96,18 @@ class DaemonTask
       Thread.current.priority = @priority
       loop do
         begin
-          if Time.now >= @next_exec
-            Configuration.do_reload
-            @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
-            set_next_execution_time
-            applying_changes? if @wait_for_apply_changes and Rails.env.production?
-            @proc.call #if Rails.env.production?
-            @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+         if Time.now >= @next_exec
+           report = Benchmark.bmbm do |x|
+              x.report(@name) {
+                Configuration.do_reload
+                @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
+                set_next_execution_time
+                applying_changes? if @wait_for_apply_changes and Rails.env.production?
+                @proc.call #if Rails.env.production?
+                @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+              }
+            end
+           @daemon_logger.info("[REPORT_TIME_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
           end
         rescue Exception => e
           @daemon_logger.error(e)
@@ -120,20 +125,20 @@ class DaemonTask
       ::ActiveRecord::Base.establish_connection
       loop do
         begin
-          Benchmark.bmbm do |x|
-            report = x.report(@name) {
-              Signal.trap("TERM") { break }
-              if Time.now >= @next_exec
+          Signal.trap("TERM") { break }
+          if Time.now >= @next_exec
+            report = Benchmark.bmbm do |x|
+              x.report(@name) {
                 Configuration.do_reload
                 @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
                 set_next_execution_time
                 @proc.call #if Rails.env.production?
                 @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
-              end
-            }
-            @daemon_logger.info("[REPORT_TIME_EXEC] #{report.inspect}")
+              }
+            end
+            @daemon_logger.info("[REPORT_TIME_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
           end
-          rescue Exception => e
+        rescue Exception => e
           @daemon_logger.error(e)
         end
         to_sleep
