@@ -465,9 +465,12 @@ class DaemonRedis < DaemonTask
    data_counting = {}
    @compact_keys = ContractSample.compact_keys
    counter_key = "contract_counters"
-   hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
-                  "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
 
+   # hfsc_class = { "up"   => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
+   #                "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
+
+   hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`,
+                  "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}` }
 
    contracts = Contract.all(:include => :current_traffic)
 
@@ -482,8 +485,10 @@ class DaemonRedis < DaemonTask
        tc_class = c.send("tc_#{rkey[:sample]}")
        classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
        parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
-       contract_class = hfsc_class[rkey[:up_or_down]].select{|k| k.include?("class hfsc #{classid} parent #{parent}")}.first
-       catchs["#{rkey[:name]}"] = contract_class.split("\n").select{|k| k.include?("Sent ")}.first.split(" ")[1].to_i
+       @daemon_logger.debug("[TC_CLASS][#{c.class.name}:#{c.id}] #{rkey[:sample]} class hfsc #{classid} parent #{parent}")
+       catchs["#{rkey[:name]}"] = hfsc_class[rkey[:up_or_down]][/class hfsc #{classid} parent #{parent}.*\n Sent (\d+) bytes/,1].to_i
+       # contract_class = hfsc_class[rkey[:up_or_down]].select{|k| k.include?("class hfsc #{classid} parent #{parent}")}.first
+       # catchs["#{rkey[:name]}"] = contract_class.split("\n").select{|k| k.include?("Sent ")}.first.split(" ")[1].to_i
      end
      counter = $redis.hget(counter_key, c.id.to_s).to_i
      generate_sample(catchs)
