@@ -9,6 +9,7 @@ require File.join(File.dirname(__FILE__), '../vendor/plugins/engines/boot')
 
 # load de files de configuración
 require 'sequreisp_config'
+require 'daemon_task'
 
 Rails::Initializer.run do |config|
   # Settings in config/environments/* take precedence over those specified here.
