@@ -8,6 +8,7 @@ class DaemonLogger
       "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [Priority:#{priority}][#{severity}][#{name}][#{caller[5].scan(/:in `(.*)'/).flatten.first}] #{msg} \n"
      end
     @log_file_path = "#{DEPLOY_DIR}/log/#{name}"
+    remove_log_file
     FileUtils.touch @log_file_path
   end
 

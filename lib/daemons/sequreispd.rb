@@ -81,6 +81,7 @@ ensure
       Process.kill("TERM", daemon.pid)
       status = Process.wait2(daemon.pid).last
       @general_daemon_logger.info("[WAITH_FOR_DAEMON_PROCESS] NAME: #{daemon.name} PID: #{status.pid} EXITSTATUS: #{status.exitstatus.inspect}")
+      sleep 3
     end
 
   rescue Exception => exception

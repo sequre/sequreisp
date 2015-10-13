@@ -64,7 +64,7 @@ class ContractSample < ActiveRecord::Base
     samples.each do |destroy_sample|
       compact_keys.each { |rkey| new_sample[rkey[:name].to_sym] += destroy_sample[rkey[:name]] }
     end
-    new_sample / CONF_PERIODS["period_#{period}".to_sym][:time_sample]
+    new_sample / (CONF_PERIODS["period_#{period}".to_sym][:time_sample] / 60)
   end
 
   # this has an alias_method_chain

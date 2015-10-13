@@ -485,9 +485,9 @@ en:
     website_url: "Website"
   dashboard:
     services: "Services"
-    daemons: "Daemons"
+    daemons: "Process"
     daemons_table:
-      daemon: "Daemon name"
+      daemon: "Process name"
       status: "Status"
     cpu: "CPU usage"
     memory: "Memory usage"
@@ -505,6 +505,8 @@ en:
       use: "In use"
     name_service:
       sequreisp_daemon: "wispro Daemon"
+      sequreisp_redis_process: "Redis Process"
+      sequreisp_compact_process: "Compact Informatio Process"
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"

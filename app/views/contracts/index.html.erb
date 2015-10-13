@@ -77,6 +77,14 @@
      <% @contracts.each do |contract| %>
        <%= "total_rate_instant_#{contract.id}" %>.series[0].addPoint(data[<%= contract.id %>].total_up, true, true);
        <%= "total_rate_instant_#{contract.id}" %>.series[1].addPoint(data[<%= contract.id %>].total_down, true, true);
+       if((data[<%= contract.id %>].total_down[1] + data[<%= contract.id %>].total_up[1]) > 0){
+         $("#<%= "show_contract_#{contract.id}_as_no_connected" %>" ).hide();
+         $("#<%= "show_contract_#{contract.id}_as_connected" %>" ).show();
+       }
+       else{
+         $("#<%= "show_contract_#{contract.id}_as_connected" %>" ).hide();
+         $("#<%= "show_contract_#{contract.id}_as_no_connected" %>" ).show();
+       }
      <% end %>
     },'json');
   };
@@ -220,9 +228,12 @@
           <td>
             <%=h contract.state.human %>
             <br />
-            <span class=<%= contract.is_connected? ? "green" : "red" %>>
-              <b><%= contract.is_online? %></b>
-            </span>
+	    <div id=<%= "show_contract_#{contract.id}_as_connected" %>>
+	      <b><span class="green"><%= t("messages.contract.connected") %></span></b>
+	    </div>
+	    <div id=<%= "show_contract_#{contract.id}_as_no_connected" %>>
+	      <b><span class="red"><%= t("messages.contract.not_connected") %></span></b>
+	    </div>
           </td>
           <td><%= show_traffic(contract) rescue 0 %> <%= current_consumption_percentage_of contract %></td>
           <%= render :partial => "shared/plugins_table_cells", :locals => {:object => contract} %>
