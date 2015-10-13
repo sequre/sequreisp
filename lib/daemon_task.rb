@@ -130,7 +130,7 @@ class DaemonTask
         begin
           if Time.now >= @next_exec
             report = nil
-            Benchmark.bmbm do |x|
+            Benchmark.bm do |x|
               report = x.report {
                 Configuration.do_reload
                 @proc.call #if Rails.env.production?
@@ -178,10 +178,8 @@ class DaemonTask
 
   # give all subclasses
   def self.descendants
-    # $daemon_configuration.select{ |key, value| value['enabled'] }.collect{ |d| first.camelize }
-    (ObjectSpace.each_object(Class).select{ |klass| klass < self }.map(&:to_s) & $daemon_configuration.reject{|key, value| not value['enabled'] }.keys.map(&:camelize)).map(&:constantize)
+    ObjectSpace.each_object(Class).select{ |klass| klass < self }.reject{|d| $daemon_configuration.has_key?(d.to_s.underscore) and not $daemon_configuration[d.to_s.underscore]['enabled'] }
   end
-
 end
 
 class DaemonApplyChange < DaemonTask
