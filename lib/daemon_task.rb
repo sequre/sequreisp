@@ -24,7 +24,7 @@ class DaemonTask
   def initialize
     @thread_daemon = nil
     @name = self.class.to_s
-    @conf_daemon = $daemon_configuration[@name.underscore]
+    @conf_daemon ||= $daemon_configuration[@name.underscore]
     @exec_as_process = @conf_daemon["exec_as_process"].present?
     @time_for_exec[:frecuency] = eval(@conf_daemon["frecuency"])
     @priority = @conf_daemon.has_key?("priority") ? @conf_daemon["priority"].to_i : -5
@@ -122,8 +122,8 @@ class DaemonTask
     ::ActiveRecord::Base.clear_all_connections!
     @thread_daemon = fork do
       $0 = process_name
-      Process.setpriority(Process::PRIO_PROCESS, 0, @priority)
       ::ActiveRecord::Base.establish_connection
+      Process.setpriority(Process::PRIO_PROCESS, 0, @priority)
       @condition = true
       Signal.trap("TERM") { @condition = false }
       while @condition
@@ -438,12 +438,19 @@ class DaemonRedis < DaemonTask
      end
    end
 
-   InterfaceSample.transaction {
-     transactions[:create].each do |transaction|
-       sample = InterfaceSample.create(transaction)
-       @daemon_logger.debug("[InterfaceTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
-     end
-   }
+   unless transactions[:create].empty?
+     @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize} [CREATE_SAMPLES] samples_size: #{transactions[:create].size}")
+     keys = transactions[:create].first.keys.join(',')
+     values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
+     ActiveRecord::Base.connection.execute("INSERT INTO interface_samples (#{keys}) VALUES (#{values})")
+   end
+
+   # InterfaceSample.transaction {
+   #   transactions[:create].each do |transaction|
+   #     sample = InterfaceSample.create(transaction)
+   #     @daemon_logger.debug("[InterfaceTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
+   #   end
+   # }
  end
 
  def contracts_to_redis
@@ -496,16 +503,20 @@ class DaemonRedis < DaemonTask
      end
    end
 
-   pid = fork do
-     data_count(contracts, data_counting)
-     ContractSample.transaction {
-       transactions[:create].each do |transaction|
-         sample = ContractSample.create(transaction)
-         @daemon_logger.debug("[ContractTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
-       end
-     }
+   data_count(contracts, data_counting) unless data_counting.empty?
+
+   unless transactions[:create].empty?
+     @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize} [CREATE_SAMPLES] size: #{transactions[:create].size}")
+     keys = transactions[:create].first.keys.join(',')
+     values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
+     ActiveRecord::Base.connection.execute("INSERT INTO contract_samples (#{keys}) VALUES (#{values})")
    end
-   Process.detach(pid)
+   # ContractSample.transaction {
+   #   transactions[:create].each do |transaction|
+   #     sample = ContractSample.create(transaction)
+   #     @daemon_logger.debug("[ContractTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
+   #   end
+   # }
  end
 
  def round_robin
@@ -568,9 +579,11 @@ class DaemonRedis < DaemonTask
      samples_to_compact = []
 
      new_sample = { :period => period,
-                    :sample_time => Time.at(@init_time_new_sample),
+                    :sample_time => Time.at(@init_time_new_sample).utc.to_s(:db),
                     :sample_number => @init_time_new_sample.to_s,
-                    "#{@relation.class.name.downcase}_id".to_sym => @relation.id }
+                    "#{@relation.class.name.downcase}_id".to_sym => @relation.id,
+                    :created_at => DateTime.now.utc.to_s(:db),
+                    :updated_at => DateTime.now.utc.to_s(:db) }
 
      @daemon_logger.debug("[PeriodForNewSample][#{@relation.class.name}:#{@relation.id}] (#{Time.at(@init_time_new_sample)}) - (#{Time.at(@end_time_new_sample)}")
 
@@ -628,17 +641,33 @@ class DaemonCompactSamples < DaemonTask
           transactions += compact(i.next, samples, last_sample_time_for_next_period)
         end
       end
+      mass_insert(transactions)
+      # @klass.transaction {
+      #   transactions[:destroy].each do |transaction|
+      #     @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
+      #     transaction.delete
+      #   end
 
-      @klass.transaction {
-        transactions[:destroy].each do |transaction|
-          @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
-          transaction.delete
-        end
-        transactions[:create].each do |transaction|
-          sample = @klass.create(transaction)
-          @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{sample.object.id}][CREATE] #{sample.inspect}")
-        end
-      }
+      #   transactions[:create].each do |transaction|
+      #     sample = @klass.create(transaction)
+      #     @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{sample.object.id}][CREATE] #{sample.inspect}")
+      #   end
+      # }
+    end
+  end
+
+  def mass_insert(transactions)
+    unless transactions[:destroy].empty?
+      @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize} [DESTROY_SAMPLES] size: #{transactions[:destroy].size}")
+      @klass.delete_all("id IN (#{transactions[:destroy].collect(&:id).join(',')})")
+      #ActiveRecord::Base.connection.execute("DELETE FROM #{@model}_samples WHERE id IN (#{transactions[:destroy].collect(&:id).join(',')})")
+    end
+
+    unless transactions[:create].empty?
+      @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize} [CREATE_SAMPLES] size: #{transactions[:create].size}")
+      keys = transactions[:create].first.keys.join(',')
+      values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
+      ActiveRecord::Base.connection.execute("INSERT INTO #{@model}_samples (#{keys}) VALUES (#{values})")
     end
   end
 
@@ -662,9 +691,11 @@ class DaemonCompactSamples < DaemonTask
       range = (init_time_new_sample..end_time_new_sample)
 
       new_sample = { :period => period,
-                     :sample_time => Time.at(init_time_new_sample),
+                     :sample_time => Time.at(init_time_new_sample).utc.to_s(:db),
                      :sample_number => init_time_new_sample,
-                     "#{@model}_id".to_sym => @relation_id }
+                     "#{@model}_id".to_sym => @relation_id,
+                     :created_at => DateTime.now.utc.to_s(:db),
+                     :updated_at => DateTime.now.utc.to_s(:db) }
 
       selected_samples = samples_to_compact.select { |sample| range.include?(sample.sample_number.to_i) }
       @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][SELECTED_SAMPLES] #{selected_samples.collect(&:sample_time).inspect}")
@@ -693,8 +724,3 @@ class DaemonSynchronizeTime < DaemonTask
     exec_command("hwclock --systohc")
   end
 end
-
-#########################################################
-#
-#
-#########################################################
