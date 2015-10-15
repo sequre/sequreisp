@@ -36,18 +36,18 @@
     def self.massive_creation(transactions)
       keys = transactions.first.keys.join(',')
       values = transactions.map{|t| "'#{t.values.join("','")}'" }.join('),(')
-      connection.execute("INSERT INTO #{self.to_s.undescore.pluralize} (#{keys}) VALUES (#{values})")
+      connection.execute("INSERT INTO #{self.to_s.underscore.pluralize} (#{keys}) VALUES (#{values})")
     end
 
     def self.massive_update(transactions)
-      connection.execute("UPDATE #{self.to_s.undescore.pluralize}
+      connection.execute("UPDATE #{self.to_s.underscore.pluralize}
                           SET #{transactions[:update_attr]} = CASE #{transactions[:condition_attr]} " +
                           transactions[:values].map { |key, value| "WHEN #{key} THEN #{value}"}.join(' ') +
                          " END WHERE id IN (#{transactions[:values].keys.join(',')})")
     end
 
     def self.massive_sum(transactions)
-      connection.execute("UPDATE #{self.to_s.undescore.pluralize}
+      connection.execute("UPDATE #{self.to_s.underscore.pluralize}
                           SET #{transactions[:update_attr]} = #{transactions[:update_attr]} + CASE #{transactions[:condition_attr]} " +
                           transactions[:values].map { |key, value| "WHEN #{key} THEN #{value}"}.join(' ') +
                          " END WHERE id IN (#{transactions[:values].keys.join(',')})")

@@ -10,7 +10,6 @@ class DaemonLogger
     @log_file_path = "#{DEPLOY_DIR}/log/#{name}"
     remove_log_file
     FileUtils.touch @log_file_path
-    File.chmod(0666, @log_file_path)
   end
 
   def info message
@@ -48,7 +47,6 @@ class ApplicationLogger
 
   def initialize
     @log = Logger.new(APPLICATION_LOG, shift_age = 7, shift_size = 10.megabytes)
-    File.chmod(0666, APPLICATION_LOG)
     @log.formatter = proc do |severity, datetime, progname, msg|
       datetime_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
       model, method = caller[5].scan(/\/models\/(.*)\.rb.*:in `(.*)'/).map{|i| [i.first.camelize, i.last] }.flatten

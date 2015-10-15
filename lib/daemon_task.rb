@@ -667,7 +667,7 @@ class DaemonCompactSamples < DaemonTask
       selected_samples = samples_to_compact.select { |sample| range.include?(sample.sample_number.to_i) }
       @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][SELECTED_SAMPLES] #{selected_samples.collect(&:sample_time).inspect}")
 
-      samples[:cr4eate] << new_sample.merge(@klass.compact(period, selected_samples))
+      samples[:create] << new_sample.merge(@klass.compact(period, selected_samples))
       samples[:destroy] += selected_samples
 
       init_time_new_sample += time_period
