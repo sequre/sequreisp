@@ -33,12 +33,12 @@
      total_rate_instant.series[0].addPoint(data.rates.total_up, true, true);
      total_rate_instant.series[1].addPoint(data.rates.total_down, true, true);
      if((data.rates.total_down[1] + data.rates.total_up[1]) > 0){
-       $("#<%= "show_contract_#{contract.id}_as_no_connected" %>" ).hide();
-       $("#<%= "show_contract_#{contract.id}_as_connected" %>" ).show();
+       $("#<%= "show_contract_#{@contract.id}_as_no_connected" %>" ).hide();
+       $("#<%= "show_contract_#{@contract.id}_as_connected" %>" ).show();
      }
      else{
-       $("#<%= "show_contract_#{contract.id}_as_connected" %>" ).hide();
-       $("#<%= "show_contract_#{contract.id}_as_no_connected" %>" ).show();
+       $("#<%= "show_contract_#{@contract.id}_as_connected" %>" ).hide();
+       $("#<%= "show_contract_#{@contract.id}_as_no_connected" %>" ).show();
      }
      latency_instant.series[0].addPoint(data.latency.ping, true, true);
      latency_instant.series[1].addPoint(data.latency.arping, true, true);
@@ -106,10 +106,10 @@
 	<td>
 	  <%= show_traffic(@contract) rescue 0 %> <%= current_consumption_percentage_of(@contract) %>
 	  <br/>
-	  <div id=<%="show_contract_#{contract.id}_as_connected" %>>
+	  <div id=<%="show_contract_#{@contract.id}_as_connected" %>>
 	    <b><span class="green"><%= t("messages.contract.connected") %></span></b>
           </div>
-          <div id=<%="show_contract_#{contract.id}_as_no_connected" %>>
+          <div id=<%="show_contract_#{@contract.id}_as_no_connected" %>>
             <b><span class="red"><%= t("messages.contract.not_connected") %></span></b>
           </div>
       </tr>

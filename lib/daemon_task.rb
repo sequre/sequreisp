@@ -428,6 +428,7 @@ class DaemonRedis < DaemonTask
      round_robin()
      catchs = {}
      @compact_keys.each { |rkey| catchs[rkey[:name]] = i.send("#{rkey[:name]}_bytes") }
+     @current_time = DateTime.now.to_i
      counter = $redis.hget(counter_key, i.id.to_s).to_i
      generate_sample(catchs)
      $redis.hincrby(counter_key, i.id.to_s, 1)
@@ -439,23 +440,18 @@ class DaemonRedis < DaemonTask
    end
 
    unless transactions[:create].empty?
-     @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize} [CREATE_SAMPLES] samples_size: #{transactions[:create].size}")
-     keys = transactions[:create].first.keys.join(',')
-     values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
-     ActiveRecord::Base.connection.execute("INSERT INTO interface_samples (#{keys}) VALUES (#{values})")
+     InterfaceSample.massive_creation(transactions[:create])
+     @daemon_logger.debug("[MassiveTransactions][InterfaceSampleModel][CREATE]")
    end
-
-   # InterfaceSample.transaction {
-   #   transactions[:create].each do |transaction|
-   #     sample = InterfaceSample.create(transaction)
-   #     @daemon_logger.debug("[InterfaceTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
-   #   end
-   # }
+   # keys = transactions[:create].first.keys.join(',')
+   # values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
+   # ActiveRecord::Base.connection.execute("INSERT INTO interface_samples (#{keys}) VALUES (#{values})")
  end
 
  def contracts_to_redis
    transactions = { :create => [] }
-   data_counting = {}
+   traffic_data_count = {}
+   contract_connected = {}
    @compact_keys = ContractSample.compact_keys
    counter_key = "contract_counters"
 
@@ -474,7 +470,6 @@ class DaemonRedis < DaemonTask
    contracts = Contract.all(:include => :current_traffic)
 
    contracts.each do |c|
-
      next if c.disabled?
      @relation = c
      @redis_key  = c.redis_key
@@ -498,25 +493,30 @@ class DaemonRedis < DaemonTask
      if counter == 25
        samples = compact_to_db()
        transactions[:create] += samples[:create]
-       data_counting[c.id.to_s] = samples[:total]
+       traffic_data_count[c.current_traffic.id.to_s] = samples[:total] if samples[:total] > 0
+       contract_connected[c.id.to_s] = samples[:total] > 0 ? 1 : 0
        $redis.hset(counter_key, c.id.to_s, $redis.keys("#{@redis_key}_*").count)
      end
    end
 
-   data_count(contracts, data_counting) unless data_counting.empty?
+   unless traffic_data_count.empty?
+     @daemon_logger.debug("[MassiveTransactions]TrafficModel][Data_count]")
+     Traffic.massive_sum( { :update_attr => "data_count",
+                            :condition_attr => "id",
+                            :values => traffic_data_count } )
+   end
+
+   unless contract_connected.empty?
+     @daemon_logger.debug("[MassiveTransactions][ContractModel][Is_Connected]")
+     Contract.massive_update( { :update_attr => "is_connected",
+                                :condition_attr => "id",
+                                :values => contract_connected } )
+   end
 
    unless transactions[:create].empty?
-     @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize} [CREATE_SAMPLES] size: #{transactions[:create].size}")
-     keys = transactions[:create].first.keys.join(',')
-     values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
-     ActiveRecord::Base.connection.execute("INSERT INTO contract_samples (#{keys}) VALUES (#{values})")
+     @daemon_logger.debug("[MassiveTransactions][ContractSampleModel][CREATE]")
+     ContractSample.massive_creation(transactions[:create])
    end
-   # ContractSample.transaction {
-   #   transactions[:create].each do |transaction|
-   #     sample = ContractSample.create(transaction)
-   #     @daemon_logger.debug("[ContractTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
-   #   end
-   # }
  end
 
  def round_robin
@@ -546,22 +546,6 @@ class DaemonRedis < DaemonTask
    end
 
    @daemon_logger.debug("[SAMPLE_GENERATED][#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
- end
-
- def data_count(contracts, data_counting)
-   Contract.transaction {
-     contracts.each do |c|
-       next if data_counting[c.id.to_s].nil?
-       c.is_connected = data_counting[c.id.to_s].zero? ? false : true
-       traffic_current = c.current_traffic || c.create_traffic_for_this_period
-       value_before_update = "#{traffic_current.data_count} + #{data_counting[c.id.to_s]}"
-       traffic_current.data_count += data_counting[c.id.to_s]
-       traffic_current.save
-       c.current_traffic = traffic_current
-       @daemon_logger.debug("[UpdateDataCounting][#{c.class.name}:#{c.id}] #{value_before_update} = #{c.current_traffic.data_count}")
-       c.save
-     end
-   }
  end
 
  def compact_to_db
@@ -641,33 +625,16 @@ class DaemonCompactSamples < DaemonTask
           transactions += compact(i.next, samples, last_sample_time_for_next_period)
         end
       end
-      mass_insert(transactions)
-      # @klass.transaction {
-      #   transactions[:destroy].each do |transaction|
-      #     @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
-      #     transaction.delete
-      #   end
 
-      #   transactions[:create].each do |transaction|
-      #     sample = @klass.create(transaction)
-      #     @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{sample.object.id}][CREATE] #{sample.inspect}")
-      #   end
-      # }
-    end
-  end
+      unless transactions[:destroy].empty?
+        @daemon_logger.debug("[MassiveTransactions][#{@klass}Model][DELETE]")
+        @klass.delete_all("id IN (#{transactions[:destroy].collect(&:id).join(',')})")
+      end
 
-  def mass_insert(transactions)
-    unless transactions[:destroy].empty?
-      @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize} [DESTROY_SAMPLES] size: #{transactions[:destroy].size}")
-      @klass.delete_all("id IN (#{transactions[:destroy].collect(&:id).join(',')})")
-      #ActiveRecord::Base.connection.execute("DELETE FROM #{@model}_samples WHERE id IN (#{transactions[:destroy].collect(&:id).join(',')})")
-    end
-
-    unless transactions[:create].empty?
-      @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize} [CREATE_SAMPLES] size: #{transactions[:create].size}")
-      keys = transactions[:create].first.keys.join(',')
-      values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
-      ActiveRecord::Base.connection.execute("INSERT INTO #{@model}_samples (#{keys}) VALUES (#{values})")
+      unless transactions[:create].empty?
+        @daemon_logger.debug("[MassiveTransactions][#{@klass}Model][CREATE]")
+        @klass.massive_creation(transactions[:create])
+      end
     end
   end
 
@@ -700,7 +667,7 @@ class DaemonCompactSamples < DaemonTask
       selected_samples = samples_to_compact.select { |sample| range.include?(sample.sample_number.to_i) }
       @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][SELECTED_SAMPLES] #{selected_samples.collect(&:sample_time).inspect}")
 
-      samples[:create] << new_sample.merge(@klass.compact(period, selected_samples))
+      samples[:cr4eate] << new_sample.merge(@klass.compact(period, selected_samples))
       samples[:destroy] += selected_samples
 
       init_time_new_sample += time_period

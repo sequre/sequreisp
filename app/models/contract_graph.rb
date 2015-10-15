@@ -16,6 +16,7 @@ class ContractGraph < Graph
           date_keys.each do |key|
             time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
             value = (($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8).round
+            value = value.nan? ? 0 : value.round
             data << [ time, value ]
           end
         else

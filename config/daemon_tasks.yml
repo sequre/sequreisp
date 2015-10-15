@@ -35,15 +35,15 @@ daemon_backup_restore:
 
 daemon_redis:
   # default frecuency value 5.seconds
-  frecuency: 1.seconds
+  frecuency: 5.seconds
   level_log: 1
   enabled: true
-  priority: -4
+  priority: -1
   exec_as_process: true
 
 daemon_compact_samples:
   # default frecuency value 20.seconds
-  frecuency: 10.minutes
+  frecuency: 2.minutes
   level_log: 1
   enabled: true
   priority: -1
