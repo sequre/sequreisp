@@ -306,6 +306,10 @@ class Configuration < ActiveRecord::Base
   def self.daemons
     (Dir.entries("#{DEPLOY_DIR}/log") -[".", ".."]).select{|file| file.include?("daemon_")}.delete_if{|file| file.include?("comercial")}.sort
   end
+
+  def self.daemon_processes
+    $daemon_configuration.select{|daemon, attrs| attrs["exec_as_process"] }.map(&:first)
+  end
 ##############################################################
 #
 ##############################################################
