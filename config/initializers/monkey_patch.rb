@@ -34,22 +34,37 @@
     #instance method, E.g: Order.new.foo
     #class method, E.g: Order.top_ten
     def self.massive_creation(transactions)
-      keys = transactions.first.keys.join(',')
-      values = transactions.map{|t| "'#{t.values.join("','")}'" }.join('),(')
-      connection.execute("INSERT INTO #{self.to_s.underscore.pluralize} (#{keys}) VALUES (#{values})")
+      begin
+        transactions.each{|transaction| transaction.stringify_keys!.merge!({"created_at" => DateTime.now.utc.to_s(:db), "updated_at" => DateTime.now.utc.to_s(:db) })}
+        keys = transactions.first.keys.map(&:to_s).join(',')
+        values = transactions.map{|t| "'#{t.values.map{|v| v.nil? ? 'NULL' : v}.join("','")}'" }.join('),(')
+        connection.execute("INSERT INTO #{self.to_s.underscore.pluralize} (#{keys}) VALUES (#{values})")
+      rescue => e
+        $application_logger.error(e)
+      end
     end
 
     def self.massive_update(transactions)
-      connection.execute("UPDATE #{self.to_s.underscore.pluralize}
-                          SET #{transactions[:update_attr]} = CASE #{transactions[:condition_attr]} " +
-                          transactions[:values].map { |key, value| "WHEN #{key} THEN #{value}"}.join(' ') +
-                         " END WHERE id IN (#{transactions[:values].keys.join(',')})")
+      begin
+        transactions.each{|transaction| transaction.stringify_keys!.merge!({"updated_at" => DateTime.now.utc.to_s(:db) })}
+        connection.execute("UPDATE #{self.to_s.underscore.pluralize}
+                            SET #{transactions[:update_attr]} = CASE #{transactions[:condition_attr]} " +
+                            transactions[:values].map { |key, value| "WHEN #{key} THEN #{value}"}.join(' ') +
+                           " END WHERE id IN (#{transactions[:values].keys.join(',')})")
+      rescue => e
+        $application_logger.error(e)
+      end
     end
 
     def self.massive_sum(transactions)
-      connection.execute("UPDATE #{self.to_s.underscore.pluralize}
-                          SET #{transactions[:update_attr]} = #{transactions[:update_attr]} + CASE #{transactions[:condition_attr]} " +
-                          transactions[:values].map { |key, value| "WHEN #{key} THEN #{value}"}.join(' ') +
-                         " END WHERE id IN (#{transactions[:values].keys.join(',')})")
+      begin
+        transactions.each{|transaction| transaction.stringify_keys!.merge!({"updated_at" => DateTime.now.utc.to_s(:db) })}
+        connection.execute("UPDATE #{self.to_s.underscore.pluralize}
+                            SET #{transactions[:update_attr]} = #{transactions[:update_attr]} + CASE #{transactions[:condition_attr]} " +
+                            transactions[:values].map { |key, value| "WHEN #{key} THEN #{value}"}.join(' ') +
+                           " END WHERE id IN (#{transactions[:values].keys.join(',')})")
+      rescue => e
+        $application_logger.error(e)
+      end
     end
   end

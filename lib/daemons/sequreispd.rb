@@ -76,13 +76,13 @@ ensure
       daemon.join
     end
 
-    daemons.select(&:is_a_process?).each do |daemon|
-      @general_daemon_logger.info("[SEND_SIGNAL_TERM] #{daemon.name} (#{daemon.pid})")
-      Process.kill("TERM", daemon.pid)
-      status = Process.wait2(daemon.pid).last
-      @general_daemon_logger.info("[WAITH_FOR_DAEMON_PROCESS] NAME: #{daemon.name} PID: #{status.pid} EXITSTATUS: #{status.exitstatus.inspect}")
-      sleep 3
-    end
+    daemons.select(&:is_a_process?).each { |daemon| daemon.stop; sleep 3 }
+    #   @general_daemon_logger.info("[SEND_SIGNAL_TERM] #{daemon.name} (#{daemon.pid})")
+    #   Process.kill("TERM", daemon.pid)
+    #   status = Process.wait2(daemon.pid).last
+    #   @general_daemon_logger.info("[WAITH_FOR_DAEMON_PROCESS] NAME: #{daemon.name} PID: #{status.pid} EXITSTATUS: #{status.exitstatus.inspect}")
+    #   sleep 3
+    # end
 
   rescue Exception => exception
     @general_daemon_logger.error(exception)

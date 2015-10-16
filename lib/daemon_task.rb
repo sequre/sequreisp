@@ -44,13 +44,22 @@ class DaemonTask
     result_command
   end
 
-  def stop
+  def stop; @exec_as_process ? stop_process : stop_thread; end
+
+  def stop_thread
     begin
       @thread_daemon.exit
       @daemon_logger.info("[STOP]")
     rescue Exception => e
       @daemon_logger.error(e)
     end
+  end
+
+  def stop_process
+    @daemon_logger.info("[SEND_SIGNAL_TERM] #{@name} (#{pid})")
+    Process.kill("TERM", pid)
+    status = Process.wait2(pid).last
+    @daemon_logger.info("[WAITH_FOR_DAEMON_PROCESS] NAME: #{name} PID: #{status.pid} EXITSTATUS: #{status.exitstatus.inspect}")
   end
 
   def init_next_execution_time
@@ -565,9 +574,7 @@ class DaemonRedis < DaemonTask
      new_sample = { :period => period,
                     :sample_time => Time.at(@init_time_new_sample).utc.to_s(:db),
                     :sample_number => @init_time_new_sample.to_s,
-                    "#{@relation.class.name.downcase}_id".to_sym => @relation.id,
-                    :created_at => DateTime.now.utc.to_s(:db),
-                    :updated_at => DateTime.now.utc.to_s(:db) }
+                    "#{@relation.class.name.downcase}_id".to_sym => @relation.id }
 
      @daemon_logger.debug("[PeriodForNewSample][#{@relation.class.name}:#{@relation.id}] (#{Time.at(@init_time_new_sample)}) - (#{Time.at(@end_time_new_sample)}")
 
@@ -660,9 +667,7 @@ class DaemonCompactSamples < DaemonTask
       new_sample = { :period => period,
                      :sample_time => Time.at(init_time_new_sample).utc.to_s(:db),
                      :sample_number => init_time_new_sample,
-                     "#{@model}_id".to_sym => @relation_id,
-                     :created_at => DateTime.now.utc.to_s(:db),
-                     :updated_at => DateTime.now.utc.to_s(:db) }
+                     "#{@model}_id".to_sym => @relation_id }
 
       selected_samples = samples_to_compact.select { |sample| range.include?(sample.sample_number.to_i) }
       @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][SELECTED_SAMPLES] #{selected_samples.collect(&:sample_time).inspect}")
