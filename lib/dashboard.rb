@@ -10,10 +10,6 @@ module Dashboard
       { :id => 7,:name => I18n.t("dashboard.name_service.sequreisp_compact_process"), :command => 'ruby' , :pattern => 'sequreispd_daemon_compact_samples ' }
     ]
 
-    Configuration.daemon_processes.each do |daemon|
-      SERVICES << { :id => SERVICES.count + 1, :name => I18n.t("daemons.name.sequreisp_#{daemon}"), :command => 'ruby' , :pattern => 'sequreispd_#{daemon} ' }
-    end
-
     SERVICES << { :id => 99,:name => 'SSH Server', :command => 'sshd', :pattern => 'sshd' } if Rails.env.development?
 
     attr_reader :name, :mem_p, :cpu_p, :mem, :up, :id, :mem_p_html, :cpu_p_html, :up_html
