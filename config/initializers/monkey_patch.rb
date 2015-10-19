@@ -37,7 +37,7 @@
       begin
         transactions.each{|transaction| transaction.stringify_keys!.merge!({"created_at" => DateTime.now.utc.to_s(:db), "updated_at" => DateTime.now.utc.to_s(:db) })}
         keys = transactions.first.keys.map(&:to_s).join(',')
-        values = transactions.map{|t| "'#{t.values.map{|v| v.nil? ? 'NULL' : v}.join("','")}'" }.join('),(')
+        values = transactions.map{|t| t.values.map{|v| v.nil? ? 'NULL' : "'#{v.to_s}'"}.join(',') }.join('),(')
         connection.execute("INSERT INTO #{self.to_s.underscore.pluralize} (#{keys}) VALUES (#{values})")
       rescue => e
         $application_logger.error(e)
