@@ -505,9 +505,9 @@ es:
     cpu: "Uso de CPU"
     memory: "Uso de memoria"
     disks: "Uso de discos"
-    daemons: "Demonios"
+    daemons: "Procesos"
     daemons_table:
-      daemon: "Nombre demonio"
+      daemon: "Nombre Proceso"
       status: "Estado"
     services_table:
       service: "Servicio"
@@ -521,7 +521,9 @@ es:
       free: "Libre"
       use: "En uso"
     name_service:
-      sequreisp_daemon: "Demonio Wispro"
+      sequreisp_daemon: "Wispro"
+      sequreisp_redis_process: "Proceso Redis"
+      sequreisp_compact_process: "Proceso Compactador"
       bind_dns_server: "Servicio Bind DNS"
       apache_web_server: "Servicio Apache Web"
       mysql_server: "Servicio MySQL"

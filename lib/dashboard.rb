@@ -5,7 +5,9 @@ module Dashboard
       { :id => 2,:name => I18n.t("dashboard.name_service.bind_dns_server"), :command => 'named', :pattern => 'named'},
       { :id => 3,:name => I18n.t("dashboard.name_service.apache_web_server"), :command => 'apache2', :pattern => 'apache2' },
       { :id => 4,:name => I18n.t("dashboard.name_service.mysql_server"), :command => 'mysqld', :pattern => 'mysqld' },
-      { :id => 5,:name => I18n.t("dashboard.name_service.redis_server"), :command => 'redis-server', :pattern => 'redis-server' }
+      { :id => 5,:name => I18n.t("dashboard.name_service.redis_server"), :command => 'redis-server', :pattern => 'redis-server' },
+      { :id => 6,:name => I18n.t("dashboard.name_service.sequreisp_redis_process"), :command => 'ruby' , :pattern => 'sequreispd_daemon_redis ' },
+      { :id => 7,:name => I18n.t("dashboard.name_service.sequreisp_compact_process"), :command => 'ruby' , :pattern => 'sequreispd_daemon_compact_samples ' }
     ]
 
     SERVICES << { :id => 99,:name => 'SSH Server', :command => 'sshd', :pattern => 'sshd' } if Rails.env.development?

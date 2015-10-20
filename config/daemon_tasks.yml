@@ -43,10 +43,10 @@ daemon_redis:
 
 daemon_compact_samples:
   # default frecuency value 20.seconds
-  frecuency: 60.minutes
+  frecuency: 2.minutes
   level_log: 1
   enabled: true
-  priority: 0
+  priority: -1
   exec_as_process: true
 
 daemon_check_bind:

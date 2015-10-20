@@ -2,6 +2,7 @@ if Rails.env.development?
   require 'sequreisp_logger'
   require 'sequreisp_constants'
   #Thread::abort_on_exception = true
+  require 'benchmark'
 
   def start_all
     daemons = []
@@ -23,7 +24,7 @@ class DaemonTask
   def initialize
     @thread_daemon = nil
     @name = self.class.to_s
-    @conf_daemon = $daemon_configuration[@name.underscore]
+    @conf_daemon ||= $daemon_configuration[@name.underscore]
     @exec_as_process = @conf_daemon["exec_as_process"].present?
     @time_for_exec[:frecuency] = eval(@conf_daemon["frecuency"])
     @priority = @conf_daemon.has_key?("priority") ? @conf_daemon["priority"].to_i : -5
@@ -43,15 +44,22 @@ class DaemonTask
     result_command
   end
 
-  def stop
+  def stop; @exec_as_process ? stop_process : stop_thread; end
+
+  def stop_thread
     begin
-      @daemon_logger.debug("[REMOVE_DAEMON_LOG_FILE]")
-      @daemon_logger.remove_log_file
-      @exec_as_process ? Process.kill("TERM", pid) : @thread_daemon.exit
+      @thread_daemon.exit
       @daemon_logger.info("[STOP]")
     rescue Exception => e
       @daemon_logger.error(e)
     end
+  end
+
+  def stop_process
+    @daemon_logger.info("[SEND_SIGNAL_TERM] #{@name} (#{pid})")
+    Process.kill("TERM", pid)
+    status = Process.wait2(pid).last
+    @daemon_logger.info("[WAITH_FOR_DAEMON_PROCESS] NAME: #{name} PID: #{status.pid} EXITSTATUS: #{status.exitstatus.inspect}")
   end
 
   def init_next_execution_time
@@ -95,13 +103,18 @@ class DaemonTask
       Thread.current.priority = @priority
       loop do
         begin
-          if Time.now >= @next_exec
-            Configuration.do_reload
-            @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
-            set_next_execution_time
-            applying_changes? if @wait_for_apply_changes and Rails.env.production?
-            @proc.call #if Rails.env.production?
-            @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+         if Time.now >= @next_exec
+           report = nil
+           Benchmark.bm do |x|
+              report = x.report {
+                Configuration.do_reload
+                set_next_execution_time
+                applying_changes? if @wait_for_apply_changes and Rails.env.production?
+                @proc.call #if Rails.env.production?
+                @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+              }
+            end
+           @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
           end
         rescue Exception => e
           @daemon_logger.error(e)
@@ -112,21 +125,31 @@ class DaemonTask
   end
 
   def start_as_process
+    process_name = "sequreispd_#{@name.underscore}"
+    pid = `pidof #{process_name}`.chomp
+    Process.kill("KILL", pid.to_i) unless pid.blank?
     ::ActiveRecord::Base.clear_all_connections!
     @thread_daemon = fork do
-      $0 = "sequreispd_#{@name.underscore}"
-      Process.setpriority(Process::PRIO_PROCESS, 0, @priority)
+      $0 = process_name
       ::ActiveRecord::Base.establish_connection
-      loop do
+      Process.setpriority(Process::PRIO_PROCESS, 0, @priority)
+      @condition = true
+      Signal.trap("TERM") { @condition = false }
+      while @condition
         begin
-          Signal.trap("TERM") { break }
           if Time.now >= @next_exec
-            Configuration.do_reload
-            @daemon_logger.info("[EXEC_THREAD_AT] #{@next_exec}")
-            set_next_execution_time
-            @proc.call #if Rails.env.production?
-            @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+            report = nil
+            Benchmark.bm do |x|
+              report = x.report {
+                Configuration.do_reload
+                @proc.call #if Rails.env.production?
+                set_next_execution_time
+                @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
+              }
+            end
+            @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
           end
+
         rescue Exception => e
           @daemon_logger.error(e)
         end
@@ -164,10 +187,8 @@ class DaemonTask
 
   # give all subclasses
   def self.descendants
-    # $daemon_configuration.select{ |key, value| value['enabled'] }.collect{ |d| first.camelize }
-    (ObjectSpace.each_object(Class).select{ |klass| klass < self }.map(&:to_s) & $daemon_configuration.reject{|key, value| not value['enabled'] }.keys.map(&:camelize)).map(&:constantize)
+    ObjectSpace.each_object(Class).select{ |klass| klass < self }.reject{|d| $daemon_configuration.has_key?(d.to_s.underscore) and not $daemon_configuration[d.to_s.underscore]['enabled'] }
   end
-
 end
 
 class DaemonApplyChange < DaemonTask
@@ -405,23 +426,6 @@ class DaemonRedis < DaemonTask
    end
  end
 
- def data_count(contracts, data_counting)
-   Contract.transaction {
-     contracts.each do |c|
-       unless data_counting[c.id.to_s].nil?
-         c.is_connected = data_counting[c.id.to_s].zero? ? false : true
-         traffic_current = c.current_traffic || c.create_traffic_for_this_period
-         value_before_update = "#{traffic_current.data_count} + #{data_counting[c.id.to_s]}"
-         traffic_current.data_count += data_counting[c.id.to_s]
-         traffic_current.save
-         c.current_traffic = traffic_current
-         @daemon_logger.debug("[UpdateDataCounting][#{c.class.name}:#{c.id}] #{value_before_update} = #{c.current_traffic.data_count}")
-         c.save
-       end
-     end
-   }
- end
-
  def interfaces_to_redis
    transactions = { :create => [] }
    @compact_keys = InterfaceSample.compact_keys
@@ -433,32 +437,44 @@ class DaemonRedis < DaemonTask
      round_robin()
      catchs = {}
      @compact_keys.each { |rkey| catchs[rkey[:name]] = i.send("#{rkey[:name]}_bytes") }
+     @current_time = DateTime.now.to_i
      counter = $redis.hget(counter_key, i.id.to_s).to_i
      generate_sample(catchs)
      $redis.hincrby(counter_key, i.id.to_s, 1)
-     if counter == 13
+     if counter == 25
        samples = compact_to_db()
        transactions[:create] += samples[:create]
-       $redis.hset(counter_key, i.id.to_s, 0)
+       $redis.hset(counter_key, i.id.to_s, $redis.keys("#{@redis_key}_*").count)
      end
    end
 
-   InterfaceSample.transaction {
-     transactions[:create].each do |transaction|
-       sample = InterfaceSample.create(transaction)
-       @daemon_logger.debug("[InterfaceTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
-     end
-   }
+   unless transactions[:create].empty?
+     InterfaceSample.massive_creation(transactions[:create])
+     @daemon_logger.debug("[MassiveTransactions][InterfaceSampleModel][CREATE]")
+   end
+   # keys = transactions[:create].first.keys.join(',')
+   # values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
+   # ActiveRecord::Base.connection.execute("INSERT INTO interface_samples (#{keys}) VALUES (#{values})")
  end
 
  def contracts_to_redis
    transactions = { :create => [] }
-   data_counting = {}
+   traffic_data_count = {}
+   contract_connected = {}
    @compact_keys = ContractSample.compact_keys
    counter_key = "contract_counters"
-   hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
-                  "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
 
+   # hfsc_class = { "up"   => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
+   #                "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
+
+   # hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`,
+   #                "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}` }
+
+   hfsc_class={"up" => {}, "down" => {}}
+   File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["up"][v[0]]=v[1]}
+   File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["down"][v[0]]=v[1]}
+
+   @current_time = DateTime.now.to_i
 
    contracts = Contract.all(:include => :current_traffic)
 
@@ -471,30 +487,45 @@ class DaemonRedis < DaemonTask
      catchs = {}
      @compact_keys.each do |rkey|
        tc_class = c.send("tc_#{rkey[:sample]}")
-       classid = "#{tc_class[:qdisc]}:#{tc_class[:mark]}"
+       mark = tc_class[:mark]
+       classid = "#{tc_class[:qdisc]}:#{mark}"
        parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
-       contract_class = hfsc_class[rkey[:up_or_down]].select{|k| k.include?("class hfsc #{classid} parent #{parent}")}.first
-       catchs["#{rkey[:name]}"] = contract_class.split("\n").select{|k| k.include?("Sent ")}.first.split(" ")[1].to_i
+       @daemon_logger.debug("[TC_CLASS][#{c.class.name}:#{c.id}] #{rkey[:sample]} class hfsc #{classid} parent #{parent} contract_mark #{mark}")
+       catchs["#{rkey[:name]}"] = hfsc_class[rkey[:up_or_down]][mark].to_i
+       # catchs["#{rkey[:name]}"] = hfsc_class[rkey[:up_or_down]][/class hfsc #{classid} parent #{parent}.*\n Sent (\d+) bytes/,1].to_i
+       # contract_class = hfsc_class[rkey[:up_or_down]].select{|k| k.include?("class hfsc #{classid} parent #{parent}")}.first
+       # catchs["#{rkey[:name]}"] = contract_class.split("\n").select{|k| k.include?("Sent ")}.first.split(" ")[1].to_i
      end
      counter = $redis.hget(counter_key, c.id.to_s).to_i
      generate_sample(catchs)
      $redis.hincrby(counter_key, c.id.to_s, 1)
-     if counter == 13
+     if counter == 25
        samples = compact_to_db()
        transactions[:create] += samples[:create]
-       data_counting[c.id.to_s] = samples[:total]
-       $redis.hset(counter_key, c.id.to_s, 0)
+       traffic_data_count[c.current_traffic.id.to_s] = samples[:total] if samples[:total] > 0
+       contract_connected[c.id.to_s] = samples[:total] > 0 ? 1 : 0
+       $redis.hset(counter_key, c.id.to_s, $redis.keys("#{@redis_key}_*").count)
      end
    end
 
-   data_count(contracts, data_counting)
+   unless traffic_data_count.empty?
+     @daemon_logger.debug("[MassiveTransactions]TrafficModel][Data_count]")
+     Traffic.massive_sum( { :update_attr => "data_count",
+                            :condition_attr => "id",
+                            :values => traffic_data_count } )
+   end
 
-   ContractSample.transaction {
-     transactions[:create].each do |transaction|
-       sample = ContractSample.create(transaction)
-       @daemon_logger.debug("[ContractTransactions][CREATE][#{sample.class.name}:#{sample.id}] #{sample.inspect}")
-     end
-   }
+   unless contract_connected.empty?
+     @daemon_logger.debug("[MassiveTransactions][ContractModel][Is_Connected]")
+     Contract.massive_update( { :update_attr => "is_connected",
+                                :condition_attr => "id",
+                                :values => contract_connected } )
+   end
+
+   unless transactions[:create].empty?
+     @daemon_logger.debug("[MassiveTransactions][ContractSampleModel][CREATE]")
+     ContractSample.massive_creation(transactions[:create])
+   end
  end
 
  def round_robin
@@ -507,12 +538,11 @@ class DaemonRedis < DaemonTask
 
  def generate_sample(catchs)
    new_sample = {}
-   current_time = DateTime.now.to_i
-   new_key = "#{@redis_key}_#{current_time}"
+   new_key = "#{@redis_key}_#{@current_time}"
    last_key = $redis.keys("#{@redis_key}_*").sort.last
-   last_time = $redis.hget("#{last_key}", "time").to_i
-   total_seconds = (current_time - last_time).zero? ? 1 : (current_time - last_time)
-   $redis.hmset("#{new_key}", "time", current_time)
+   last_time = $redis.hget("#{last_key}", "time")
+   total_seconds = last_time.nil? ? 1 : (@current_time.to_f - last_time.to_f)
+   $redis.hmset("#{new_key}", "time", @current_time)
    $redis.hmset("#{new_key}", "total_seconds", total_seconds)
 
    catchs.each do |prio_key, current_total|
@@ -531,7 +561,7 @@ class DaemonRedis < DaemonTask
    samples = { :create => [], :total => 0 }
    time_period = ContractSample::CONF_PERIODS[:period_0][:time_sample]
    period = ContractSample::CONF_PERIODS[:period_0][:period_number]
-   date_keys = $redis.keys("#{@redis_key}_*").sort
+   date_keys = $redis.keys("#{@redis_key}_*").sort[0..12]
    time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
    @init_time_new_sample = (ContractSample.all(:conditions => {:period => period, :contract_id => @relation.id} ).last.sample_number + time_period) rescue false ||
                            (Time.at($redis.hget("#{date_keys.first}", "time").to_i).change(:sec => 0)).to_i
@@ -542,7 +572,7 @@ class DaemonRedis < DaemonTask
      samples_to_compact = []
 
      new_sample = { :period => period,
-                    :sample_time => Time.at(@init_time_new_sample),
+                    :sample_time => Time.at(@init_time_new_sample).utc.to_s(:db),
                     :sample_number => @init_time_new_sample.to_s,
                     "#{@relation.class.name.downcase}_id".to_sym => @relation.id }
 
@@ -603,16 +633,15 @@ class DaemonCompactSamples < DaemonTask
         end
       end
 
-      @klass.transaction {
-        transactions[:destroy].each do |transaction|
-          @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{transaction.object.id}][DESTROY] #{transaction.inspect}")
-          transaction.delete
-        end
-        transactions[:create].each do |transaction|
-          sample = @klass.create(transaction)
-          @daemon_logger.debug("[#{@klass.name}Transactions][#{@model.camelize}:#{sample.object.id}][CREATE] #{sample.inspect}")
-        end
-      }
+      unless transactions[:destroy].empty?
+        @daemon_logger.debug("[MassiveTransactions][#{@klass}Model][DELETE]")
+        @klass.delete_all("id IN (#{transactions[:destroy].collect(&:id).join(',')})")
+      end
+
+      unless transactions[:create].empty?
+        @daemon_logger.debug("[MassiveTransactions][#{@klass}Model][CREATE]")
+        @klass.massive_creation(transactions[:create])
+      end
     end
   end
 
@@ -636,7 +665,7 @@ class DaemonCompactSamples < DaemonTask
       range = (init_time_new_sample..end_time_new_sample)
 
       new_sample = { :period => period,
-                     :sample_time => Time.at(init_time_new_sample),
+                     :sample_time => Time.at(init_time_new_sample).utc.to_s(:db),
                      :sample_number => init_time_new_sample,
                      "#{@model}_id".to_sym => @relation_id }
 
@@ -667,8 +696,3 @@ class DaemonSynchronizeTime < DaemonTask
     exec_command("hwclock --systohc")
   end
 end
-
-#########################################################
-#
-#
-#########################################################

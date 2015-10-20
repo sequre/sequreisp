@@ -482,9 +482,9 @@ pt:
     cpu: "Uso de CPU"
     memory: "Uso de memória"
     disks: "Uso de discos"
-    daemons: "Daemons"
+    daemons: "Process"
     daemons_table:
-      daemon: "Daemon name"
+      daemon: "Process name"
       status: "Status"
     services_table:
       service: "Serviço"
@@ -499,6 +499,8 @@ pt:
       use: "Em uso"
     name_service:
       sequreisp_daemon: "wispro Daemon"
+      sequreisp_redis_process: "Redis Process"
+      sequreisp_compact_process: "Compact Informatio Process"
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"

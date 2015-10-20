@@ -63,7 +63,7 @@ class IPTree
   def to_iptables
     o=[]
 
-    @ips=@ips-nets if need_net_processing?  # Saco las reded de las IPs a procesar en ramas
+    @ips=@ips-nets if not @ips.empty? and need_net_processing? # Saco las reded de las IPs a procesar en ramas
 
     if parent.nil? # Cadena del nodo inicial
       o << "#{indent}:#{chain} -"
@@ -82,7 +82,7 @@ class IPTree
         # o << "-A #{chain} #{match} #{ip.to_cidr} -j sq.#{ip.to_cidr}"
       end
     end
-    if need_net_processing?
+    if not @ips.empty? and need_net_processing?
       nets.each do |net|
         o << "#{indent}-A #{chain} #{match} #{net.to_cidr} -j #{prefix_leaf}.#{net.to_cidr}"
       end
