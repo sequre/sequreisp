@@ -504,9 +504,9 @@ en:
       free: "Free"
       use: "In use"
     name_service:
-      sequreisp_daemon: "wispro Daemon"
+      sequreisp_daemon: "Wispro"
       sequreisp_redis_process: "Redis Process"
-      sequreisp_compact_process: "Compact Informatio Process"
+      sequreisp_compact_process: "Compact Information Process"
       bind_dns_server: "Bind DNS Server"
       apache_web_server: "Apache Web Server"
       mysql_server: "MySQL Server"

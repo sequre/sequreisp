@@ -521,7 +521,7 @@ es:
       free: "Libre"
       use: "En uso"
     name_service:
-      sequreisp_daemon: "Demonio Wispro"
+      sequreisp_daemon: "Wispro"
       sequreisp_redis_process: "Proceso Redis"
       sequreisp_compact_process: "Proceso Compactador"
       bind_dns_server: "Servicio Bind DNS"
