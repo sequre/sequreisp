@@ -136,7 +136,8 @@ opts = OptionParser.new do |opts|
     daemons.each do |daemon|
       root_path = PATH_APP
       plugin = daemon.sub('daemon_', '')
-      root_path += "vendor/plugins/#{plugin_dir}" if plugin_dir = PLUGINS.select{|p| p.include?(plugin)}.first
+      plugin_dir = PLUGINS.select{|p| p.include?(plugin)}.first
+      root_path += "vendor/plugins/#{plugin_dir}" if plugin_dir
       daemon_path = "#{root_path}/config/daemon_tasks.yml"
       daemon_config = YAML.load(File.read(daemon_path))
       daemon_config[daemon][attribute] = value
