@@ -46,11 +46,10 @@
 
     def self.massive_update(transactions)
       begin
-        transactions.each{|transaction| transaction.stringify_keys!.merge!({"updated_at" => DateTime.now.utc.to_s(:db) })}
         connection.execute("UPDATE #{self.to_s.underscore.pluralize}
                             SET #{transactions[:update_attr]} = CASE #{transactions[:condition_attr]} " +
                             transactions[:values].map { |key, value| "WHEN #{key} THEN #{value}"}.join(' ') +
-                           " END WHERE id IN (#{transactions[:values].keys.join(',')})")
+                           " END, updated_at = '#{DateTime.now.utc.to_s(:db)}' WHERE id IN (#{transactions[:values].keys.join(',')})")
       rescue => e
         $application_logger.error(e)
       end
@@ -58,11 +57,10 @@
 
     def self.massive_sum(transactions)
       begin
-        transactions.each{|transaction| transaction.stringify_keys!.merge!({"updated_at" => DateTime.now.utc.to_s(:db) })}
         connection.execute("UPDATE #{self.to_s.underscore.pluralize}
                             SET #{transactions[:update_attr]} = #{transactions[:update_attr]} + CASE #{transactions[:condition_attr]} " +
                             transactions[:values].map { |key, value| "WHEN #{key} THEN #{value}"}.join(' ') +
-                           " END WHERE id IN (#{transactions[:values].keys.join(',')})")
+                           " END, updated_at = '#{DateTime.now.utc.to_s(:db)}' WHERE id IN (#{transactions[:values].keys.join(',')})")
       rescue => e
         $application_logger.error(e)
       end
