@@ -24,7 +24,8 @@ puts "#{F_GREEN}Version:#{CLOSE_COLOR} " + Configuration.app_version
 puts
 puts "#{F_YELLOW}Interfaces#{CLOSE_COLOR}"
 Interface.only_wan.each do |iface|
-  puts "  #{F_GREEN}#{iface.name}#{CLOSE_COLOR}#{F_YELLOW} WAN#{CLOSE_COLOR} [" + (iface.status == 'up' ? "#{F_GREEN}UP" : "#{F_RED}DOWN") + "#{CLOSE_COLOR}] " + "#{iface.provider.name} (#{iface.provider.kind}) #{iface.provider.ip} #{iface.provider.rate_down}/#{iface.provider.rate_up}" + " (#{F_MAGENTA}#{iface.provider.provider_group.name}#{CLOSE_COLOR})" + " [" + (iface.provider.status == 'online' ? "#{F_GREEN}ONLINE" : "#{F_RED}OFFLINE") + "#{CLOSE_COLOR}] "
+  puts "  #{F_GREEN}#{iface.name}#{CLOSE_COLOR}#{F_YELLOW} WAN#{CLOSE_COLOR} [" + (iface.status == 'up' ? "#{F_GREEN}UP" : "#{F_RED}DOWN") + "#{CLOSE_COLOR}]" +
+       (iface.provider.present ? " #{iface.provider.name} (#{iface.provider.kind}) #{iface.provider.ip} #{iface.provider.rate_down}/#{iface.provider.rate_up}" + " (#{F_MAGENTA}#{iface.provider.provider_group.name}#{CLOSE_COLOR})" + " [" + (iface.provider.status == 'online' ? "#{F_GREEN}ONLINE" : "#{F_RED}OFFLINE") + "#{CLOSE_COLOR}] " : '')
 end
 
 Interface.only_lan.each do |iface|
