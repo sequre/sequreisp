@@ -68,7 +68,7 @@ opts = OptionParser.new do |opts|
   end
 
   opts.on("-t", "--tail FILE", "Show tail for production, command, command_human, daemon log. Example:
-                                          wispro -t [production|command|command_human|command_server|DAEMON]") do |log_file|
+                                          wispro -t [production|application|command|command_human|command_server|DAEMON]") do |log_file|
     options.cmd = "tail"
     options.extension = "-n80 -F"
     daemon = log_file.scan(/(daemon_.*)/).flatten.first.to_s
@@ -172,4 +172,3 @@ if options.cmd
     exec("#{options.path}script/#{options.cmd} -e #{options.env} \"#{options.extension}\"")
   end
 end
-
