@@ -19,9 +19,25 @@ B_CYAN = "\033[46m"
 B_WHITE = "\033[47m"
 CLOSE_COLOR="\033[0m"
 
+def show_human_down_up down, up
+  _suffix = suffix [ down, up ].max
+  "#{to_suffix(down, _suffix)} / #{to_suffix(up, _suffix)} #{_suffix}"
+end
+
+def suffix number
+  number < 1024 ? "kbps" : "mbps"
+end
+
+def to_suffix number, suffix
+  if suffix == "kbps"
+    number
+  else
+    "%g" % (number / 1024.0).round(2)
+  end
+end
+
 puts
-puts "#{F_GREEN}Version:#{CLOSE_COLOR} " + Configuration.app_version
-puts
+puts "#{F_GREEN}Wispro Version:#{CLOSE_COLOR} " + Configuration.app_version
 puts "#{F_GREEN}Kernel Version:#{CLOSE_COLOR} " + Configuration.kernel_version
 puts
 
@@ -47,6 +63,31 @@ notified_clients = NotifiedClient.unconfirmed.applicables.all(:group => "client_
 puts "     #{F_CYAN}Notified (#{notified_contracts + notified_clients})#{CLOSE_COLOR}"
 puts
 
+puts "#{F_YELLOW}Plans (only with contracts)#{CLOSE_COLOR}"
+plans = []
+ljusts = [0,0,0,0,0]
+Plan.all.each do |p|
+  plan = []
+  contract_counts = p.contracts.count
+  if contract_counts > 0
+    name = p.name
+    ceil = show_human_down_up(p.ceil_down, p.ceil_up)
+    cir = show_human_down_up(p.cir_total_down, p.cir_total_up)
+    strategy = p.cir_strategy
+    pgroup = p.provider_group.name rescue 'Undefined'
+    ljusts[0] = name.length     if name.length     > ljusts[0]
+    ljusts[1] = ceil.length     if ceil.length     > ljusts[1]
+    ljusts[2] = cir.length      if cir.length      > ljusts[2]
+    ljusts[3] = strategy.lengthif strategy.length > ljusts[3]
+    ljusts[4] =pgroup.length if pgroup.length   > ljusts[4]
+    plan = [name, ceil, cir, strategy, pgroup, contract_counts]
+  end
+  plans << plan unless plan.empty?
+end
+
+plans.each { |p| puts "  #{p[0].ljust(ljusts[0])} #{F_GREEN}#{p[1].ljust(ljusts[1])}#{CLOSE_COLOR} #{F_YELLOW}#{p[2].ljust(ljusts[2])}#{CLOSE_COLOR} #{F_CYAN}(#{p[3].ljust(ljusts[3])})#{CLOSE_COLOR} #{F_MAGENTA}(#{p[4].ljust(ljusts[4])})#{CLOSE_COLOR} #{F_GREEN}(#{p[5]})#{CLOSE_COLOR}" }
+puts
+
 daemons = Dashboard::Daemon.load_all
 services = Dashboard::Service.load_all
 
@@ -69,6 +110,9 @@ puts "#{F_YELLOW}#{'Daemons'.ljust(daemons_row_size)}#{CLOSE_COLOR}" + " " * 8 +
 end
 
 puts
+puts "#{F_YELLOW}APPLICATION LOGGER:#{CLOSE_COLOR} " + (File.zero?("#{DEPLOY_DIR}/log/application.log") ? "#{F_GREEN}[NO ERROR]#{CLOSE_COLOR}" : ("#{F_RED}[PLEASE CHECK IT]#{CLOSE_COLOR}" + " #{F_CYAN}#{DEPLOY_DIR}/log/application.log#{CLOSE_COLOR}"))
+puts
+
 puts "#{F_YELLOW}CPU#{CLOSE_COLOR}"
 load_average = Dashboard::LoadAverage.new
 cpus = Dashboard::Cpu.new.stats.sort_by_key.collect{|cpu, values| {cpu => "  #{cpu.upcase.ljust(7)}: [#{F_GREEN}" + ("|" * (values[:total].to_i/2) + " " * ((100 - values[:total].to_i)/2)).rjust(50,"|") + "#{CLOSE_COLOR}#{values[:total].to_s.rjust(6)}%]"} }
