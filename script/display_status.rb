@@ -22,6 +22,9 @@ CLOSE_COLOR="\033[0m"
 puts
 puts "#{F_GREEN}Version:#{CLOSE_COLOR} " + Configuration.app_version
 puts
+puts "#{F_GREEN}Kernel Version:#{CLOSE_COLOR} " + Configuration.kernel_version
+puts
+
 puts "#{F_YELLOW}Interfaces#{CLOSE_COLOR}"
 max_interface_name_size = Interface.all.collect{|i| i.name.length }.max
 Interface.only_wan.each do |iface|
