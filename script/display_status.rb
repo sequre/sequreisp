@@ -78,8 +78,8 @@ Plan.all.each do |p|
     ljusts[0] = name.length     if name.length     > ljusts[0]
     ljusts[1] = ceil.length     if ceil.length     > ljusts[1]
     ljusts[2] = cir.length      if cir.length      > ljusts[2]
-    ljusts[3] = strategy.lengthif strategy.length > ljusts[3]
-    ljusts[4] =pgroup.length if pgroup.length   > ljusts[4]
+    ljusts[3] = strategy.length if strategy.length > ljusts[3]
+    ljusts[4] = pgroup.length   if pgroup.length   > ljusts[4]
     plan = [name, ceil, cir, strategy, pgroup, contract_counts]
   end
   plans << plan unless plan.empty?
