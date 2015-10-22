@@ -310,6 +310,10 @@ class Configuration < ActiveRecord::Base
   def self.daemon_processes
     $daemon_configuration.select{|daemon, attrs| attrs["exec_as_process"] }.map(&:first)
   end
+
+  def self.kernel_version
+    `uname -r`.chomp
+  end
 ##############################################################
 #
 ##############################################################

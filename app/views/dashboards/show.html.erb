@@ -57,7 +57,7 @@
 <td>
 
 <% content_for :title, t('menu.dashboard') %>
-<% heading "#{t('menu.uptime')}: #{Configuration.uptime}"  %>
+<% heading "#{t('menu.uptime')}: #{Configuration.uptime} Kernel: #{Configuration.kernel_version}"  %>
 
 <ul class="nav" style="float:right">
   <% if current_user.may_reboot_dashboard? %>

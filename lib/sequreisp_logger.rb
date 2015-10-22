@@ -52,6 +52,7 @@ class ApplicationLogger
       model, method = caller[5].scan(/\/models\/(.*)\.rb.*:in `(.*)'/).map{|i| [i.first.camelize, i.last] }.flatten
       "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [#{severity}][Model][#{model}][Method][#{method}] #{msg} \n"
     end
+    FileUtils.chown('sequreisp', 'sequreisp', APPLICATION_LOG) if Rails.env.production?
   end
 
   def info message
