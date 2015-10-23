@@ -377,9 +377,9 @@ class Contract < ActiveRecord::Base
     (self.klass.prio3 | prefix).to_s(16)
   end
 
-  def redis_key
-    "contract_#{id}_sample"
-  end
+  def redis_key; Contract.redis_key(id); end
+
+  def self.redis_key(id); "contract_#{id}_sample"; end
 
   def instant
     { :rates   => instant_rate,

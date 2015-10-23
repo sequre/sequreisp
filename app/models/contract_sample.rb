@@ -35,7 +35,7 @@ class ContractSample < ActiveRecord::Base
     samples = {}
     ContractSample.transaction {
       CONF_PERIODS.count.times do |i|
-        samples["period_#{i}".to_sym] = Hash[ContractSample.get_new_samples(i).collect{ |c| [c.contract_id, c.sample_number.to_i] }]
+        samples["period_#{i}"] = Hash[ContractSample.get_new_samples(i).collect{ |c| [c.contract_id, c.sample_number.to_i] }]
       end
     }
     samples

@@ -557,14 +557,27 @@ class DaemonRedis < DaemonTask
    @daemon_logger.debug("[SAMPLE_GENERATED][#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
  end
 
+ def next_init_time_new_sample(time_period, period, first_redis_key)
+   next_time = $redis.hget(@redis_key, "period_#{period}")
+   if next_time.nil?
+     last_sample_in_db = ContractSample.all(:conditions => {:period => period, :contract_id => @relation.id} ).last
+     next_time = if last_sample_in_db.nil?
+                   (Time.at($redis.hget("#{first_redis_key}", "time").to_i).change(:sec => 0)).to_i
+                 else
+                   (last_sample_in_db.sample_number.to_i + time_period)
+                 end
+   end
+   next_time.to_i
+ end
+
  def compact_to_db
    samples = { :create => [], :total => 0 }
    time_period = ContractSample::CONF_PERIODS[:period_0][:time_sample]
    period = ContractSample::CONF_PERIODS[:period_0][:period_number]
    date_keys = $redis.keys("#{@redis_key}_*").sort[0..12]
    time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
-   @init_time_new_sample = (ContractSample.all(:conditions => {:period => period, :contract_id => @relation.id} ).last.sample_number + time_period) rescue false ||
-                           (Time.at($redis.hget("#{date_keys.first}", "time").to_i).change(:sec => 0)).to_i
+
+   @init_time_new_sample = next_init_time_new_sample(time_period, period, date_keys.first)
    @end_time_new_sample  = @init_time_new_sample + (time_period - 1)
 
    while (not date_keys.empty?) and time_last_sample >= @end_time_new_sample
@@ -598,6 +611,7 @@ class DaemonRedis < DaemonTask
      @init_time_new_sample += time_period
      @end_time_new_sample  += time_period
    end
+   $redis.hmset(@redis_key, "period_#{period}", @init_time_new_sample)
    samples
  end
 
@@ -614,22 +628,33 @@ class DaemonCompactSamples < DaemonTask
 
   def models_to_compact; ["contract", "interface"]; end
 
+  def create_last_samples_time_into_redis
+    @klass.last_samples_created.each do |period, values|
+      values.each do |id, sample_time|
+        redis_key = @model.camelize.constantize.redis_key(id)
+        next_init_sample_time = sample_time + @klass::CONF_PERIODS[period.to_sym][:time_sample]
+        $redis.hmset(redis_key, period, next_init_sample_time)
+      end
+    end
+    $redis.set("compactor_up_to_date", true)
+  end
+
   def exec_daemon_compact_samples
     models_to_compact.each do |model|
       transactions = { :create => [],:destroy => [] }
       @klass = "#{model}_sample".camelize.constantize
       @model = model
       numbers_of_period =  @klass::CONF_PERIODS.count
-      @last_samples_time = @klass.last_samples_created
+
+      create_last_samples_time_into_redis if $redis.get("compactor_up_to_date").nil?
+
       @samples_to_compact = @klass.samples_to_compact
 
       numbers_of_period.times do |i|
         @samples_to_compact["period_#{i}".to_sym].each do |model_id, samples|
           @relation_id = model_id
-          last_sample_time_for_next_period = @last_samples_time["period_#{i.next}".to_sym][model_id]
-          @daemon_logger.debug("[LAST_SAMPLE_TIME_FOR_NEXT_PERIOD] #{Time.at(last_sample_time_for_next_period)}") unless last_sample_time_for_next_period.nil?
           @daemon_logger.debug("[NeedCompact][#{@klass.name}][#{@model.camelize}:#{@relation_id}][PERIOD:#{i}][SAMPLES_TO_COMPACT] #{samples.collect(&:id).inspect}")
-          transactions += compact(i.next, samples, last_sample_time_for_next_period)
+          transactions += compact(i.next, samples)
         end
       end
 
@@ -647,13 +672,20 @@ class DaemonCompactSamples < DaemonTask
 
   private
 
-  def compact(period, samples_to_compact, time_sample=nil)
+  def next_init_time_new_sample(redis_key, time_period, period, sample_time)
+    next_time = $redis.hget(redis_key, "period_#{period}")
+    next_time.nil? ? sample_time : next_time.to_i
+  end
+
+  def compact(period, samples_to_compact)
     samples = { :create => [], :destroy => [] }
     time_period = @klass::CONF_PERIODS["period_#{period}".to_sym][:time_sample]
     time_samples = samples_to_compact.collect(&:sample_number).map(&:to_i).sort
     last_sample_time = time_samples.last
+    redis_key = @model.camelize.constantize.redis_key(@relation_id)
 
-    init_time_new_sample = time_sample.nil? ? time_samples.first : (time_sample + time_period)
+    init_time_new_sample = next_init_time_new_sample(redis_key, time_period, period, time_samples.first)
+
     end_time_new_sample = init_time_new_sample + (time_period - @klass::CONF_PERIODS["period_#{period-1}".to_sym][:time_sample])
 
     @daemon_logger.debug("[PERIOD:#{period}][#{@model.camelize}:#{@relation_id}][INIT_SAMPLE_FRAME] #{Time.at(init_time_new_sample)} - [END_SAMPLE_FRAME] #{Time.at(end_time_new_sample)} #{@model.camelize}:#{@relation_id}")
@@ -678,7 +710,7 @@ class DaemonCompactSamples < DaemonTask
       init_time_new_sample += time_period
       end_time_new_sample += time_period
     end
-
+    $redis.hmset(redis_key, "period_#{period}", init_time_new_sample)
     samples
   end
 end
