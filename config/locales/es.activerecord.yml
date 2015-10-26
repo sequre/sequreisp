@@ -533,7 +533,7 @@ es:
     new: "Creando %{model}"
     login: "Acceso"
   messages:
-    in_safe_mode: "MODO SEGUDO"
+    in_safe_mode: "MODO SEGURO"
     uptime: "%{day} dias, %{hour} horas, %{minute} minutos y %{second} segundos"
     audits:
       changes_in: "Cambios en"
