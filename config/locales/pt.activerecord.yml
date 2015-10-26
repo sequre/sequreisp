@@ -510,6 +510,7 @@ pt:
     new: "Criando %{model}"
     login: "Aceso"
   messages:
+    in_safe_mode: "Modo de segurança"
     uptime: "%{day} dias, %{hour} horas, %{minute} atas e %{second} segundos"
     audits:
       changes_in: "Alterações"

@@ -516,6 +516,7 @@ en:
     new: "Creating %{model}"
     login: "Sign In"
   messages:
+    in_safe_mode: "SAFE MODE"
     uptime: "%{day} days, %{hour} hours, %{minute} minutes and %{second} seconds"
     audits:
       changes_in: "Changes in"

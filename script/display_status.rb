@@ -36,6 +36,14 @@ def to_suffix number, suffix
   end
 end
 
+if Configuration.first.in_safe_mode?
+  puts "             #{F_RED}##########################################{CLOSE_COLOR}"
+  puts
+  puts "                         #{F_RED}YOU ARE IN SAFE MODE#{CLOSE_COLOR}         "
+  puts
+  puts "             #{F_RED}##########################################{CLOSE_COLOR}"
+end
+
 puts
 puts "#{F_GREEN}Wispro Version:#{CLOSE_COLOR} " + Configuration.app_version
 puts "#{F_GREEN}Kernel Version:#{CLOSE_COLOR} " + Configuration.kernel_version

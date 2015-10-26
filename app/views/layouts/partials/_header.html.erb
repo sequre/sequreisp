@@ -12,5 +12,11 @@
   <% if current_user %>
     <%= link_to "#{current_user.name} (Logout)", logout_path, :class => "logout" %>
   <% end %>
-  <span id="header_version">v <%= Configuration.app_version %></span>
+  <span id="header_version">
+    v <%= Configuration.app_version %>
+    <% if Configuration.first.in_safe_mode? %>
+      <br />
+      <span class="green"><%= t("messages.in_safe_mode") %></span>
+    <% end %>
+  </span>
 </div>

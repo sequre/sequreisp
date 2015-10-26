@@ -101,3 +101,10 @@ div#notification{
   padding-left: 20px;
   overflow: hidden;
 }
+
+span.red{
+  color: red;
+}
+span.green{
+  color: green;
+}
