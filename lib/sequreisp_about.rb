@@ -1,6 +1,6 @@
 module SequreISP
   URL = "http://www.wispro.co/"
-  PORTAL_URL = "http://www.wispro.co/portal/client_root"
+  PORTAL_URL = "http://www.wispro.co/portal/"
 
   class Version
     RELEASE = 3
