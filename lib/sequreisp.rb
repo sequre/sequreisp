@@ -405,15 +405,15 @@ def gen_iptables
       # FILTER  #
       #---------#
       f.puts "*filter"
+      f.puts ":dns-query -"
+      f.puts ":sequreisp-allowedsites - [0:0]"
+      f.puts "-A OUTPUT -o lo -j ACCEPT"
+
+      contracts = Contract.descend_by_netmask
+      providers = Provider.enabled.with_klass_and_interface
+      lan_interfaces = Interface.only_lan
+
       unless Configuration.in_safe_mode?
-        f.puts ":dns-query -"
-        f.puts ":sequreisp-allowedsites - [0:0]"
-        f.puts "-A OUTPUT -o lo -j ACCEPT"
-
-        contracts = Contract.descend_by_netmask
-        providers = Provider.enabled.with_klass_and_interface
-        lan_interfaces = Interface.only_lan
-
         contracts.each do |contract|
           f.puts contract.rules_for_up_data_counting
           f.puts contract.rules_for_down_data_counting
@@ -433,56 +433,50 @@ def gen_iptables
             f.puts "-A sequreisp-allowedsites -p tcp -d #{ip} -j ACCEPT"
           end
         end
-        if Configuration.firewall_enabled?
-          f.puts "-A INPUT -i lo  -j ACCEPT"
-          f.puts "-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT"
-          # app redirects, and ssh
-          f.puts "-A INPUT -m multiport -p tcp --destination-ports 81,82,22000 -j ACCEPT"
-          # dhcp
-          f.puts "-A INPUT -m multiport -p udp --destination-ports 67,68,69 -j ACCEPT"
-          f.puts "-A INPUT -p icmp -j ACCEPT"
-          Configuration.firewall_open_tcp_ports_array.uniq.each_slice(15).to_a.each do |group|
-             f.puts "-A INPUT -p tcp -m multiport --dports #{group.join(',')} -j ACCEPT"
-          end
-          Configuration.firewall_open_udp_ports_array.uniq.each_slice(15).to_a.each do |group|
-             f.puts "-A INPUT -p udp -m multiport --dports #{group.join(',')} -j ACCEPT"
-          end
+      end
+
+      if Configuration.firewall_enabled? || Configuration.in_safe_mode?
+        f.puts "-A INPUT -i lo  -j ACCEPT"
+        f.puts "-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT"
+        # app redirects, and ssh
+        f.puts "-A INPUT -m multiport -p tcp --destination-ports 81,82,22000 -j ACCEPT"
+        # dhcp
+        f.puts "-A INPUT -m multiport -p udp --destination-ports 67,68,69 -j ACCEPT"
+        f.puts "-A INPUT -p icmp -j ACCEPT"
+        Configuration.firewall_open_tcp_ports_array.uniq.each_slice(15).to_a.each do |group|
+          f.puts "-A INPUT -p tcp -m multiport --dports #{group.join(',')} -j ACCEPT"
         end
-        f.puts "-A INPUT -p udp --dport 53 -j dns-query"
-
-        lan_interfaces.each do |i|
-          f.puts "-A INPUT -i #{i.name} -p udp --dport 53 -j ACCEPT"
-          f.puts "-A INPUT -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+        Configuration.firewall_open_udp_ports_array.uniq.each_slice(15).to_a.each do |group|
+          f.puts "-A INPUT -p udp -m multiport --dports #{group.join(',')} -j ACCEPT"
         end
-
-        providers.each do |p|
-          if p.allow_dns_queries
-            f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j ACCEPT"
-            f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j ACCEPT"
-          end
-        end
-
-        BootHook.run :hook => :filter_before_all, :iptables_script => f
-
-        lan_interfaces.each do |i|
-          f.puts "-A FORWARD -i #{i.name} -p udp --dport 53 -j ACCEPT"
-          f.puts "-A FORWARD -i #{i.name} -p tcp --dport 53 -j ACCEPT"
-        end
-
-        f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
       end
 
       f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
 
+      providers.each do |p|
+        target = p.allow_dns_queries? ? "ACCEPT" : "DROP"
+        f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j #{target}"
+        f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j #{target}"
+      end
+
+      f.puts "-A INPUT -p udp --dport 53 -j dns-query"
+
+      lan_interfaces.each do |i|
+        f.puts "-A INPUT -i #{i.name} -p udp --dport 53 -j ACCEPT"
+        f.puts "-A INPUT -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+      end
+
+      BootHook.run(:hook => :filter_before_all, :iptables_script => f) unless Configuration.in_safe_mode?
+
+      f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
+
+      lan_interfaces.each do |i|
+        f.puts "-A FORWARD -i #{i.name} -p udp --dport 53 -j ACCEPT"
+        f.puts "-A FORWARD -i #{i.name} -p tcp --dport 53 -j ACCEPT"
+      end
+
       unless Configuration.in_safe_mode?
         BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
-
-        Interface.only_lan.each do |i|
-          ["INPUT","FORWARD"].each do |chain|
-            f.puts "-A #{chain} -i #{i.name} -p udp --dport 53 -j ACCEPT"
-            f.puts "-A #{chain} -i #{i.name} -p tcp --dport 53 -j ACCEPT"
-          end
-        end
 
         ######################if
         contracts = Contract.descend_by_netmask.all(:include => {:plan => :time_modifiers})
@@ -494,7 +488,7 @@ def gen_iptables
         unless contracts.empty?
           f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
           providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
-          f.puts "-A enabled-MAIN -j DROP"
+          #f.puts "-A enabled-MAIN -j DROP"
         end
       end
       f.puts "COMMIT"
@@ -919,25 +913,25 @@ def setup_iptables
   gen_iptables
   commands = []
   status = false
-  if Configuration.firewall_enabled
+  if Configuration.firewall_enabled || Configuration.in_safe_mode?
     status = exec_context_commands "setup_iptables", "iptables-restore < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}", I18n.t("command.human.setup_iptables_try")
   else
     exec_context_commands "setup_iptables_pre", "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}", I18n.t("command.human.setup_iptables_try")
     status = exec_context_commands "setup_iptables", "iptables-restore -n < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}", I18n.t("command.human.setup_iptables_try")
   end
-  exec_context_commands "setup_iptables_post", "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}", I18n.t("command.human.setup_iptables_try")
+  exec_context_commands "setup_iptables_post", "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}", I18n.t("command.human.setup_iptables_try") unless Configuration.in_safe_mode?
 
   if not status
     commands = []
     commands << "mv #{File.join(BASE_SCRIPTS, IPTABLES_FILE)} #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}.error"
     commands << "mv #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}.tmp #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
-    if Configuration.firewall_enabled
+    if Configuration.firewall_enabled || Configuration.in_safe_mode?
       commands << "iptables-restore < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
     else
       commands << "[ -x #{IPTABLES_PRE_FILE} ] && #{IPTABLES_PRE_FILE}"
       commands << "iptables-restore -n < #{File.join(BASE_SCRIPTS, IPTABLES_FILE)}"
     end
-    commands << "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}"
+    commands << "[ -x #{IPTABLES_POST_FILE} ] && #{IPTABLES_POST_FILE}" unless Configuration.in_safe_mode?
     exec_context_commands "restore_old_iptables", commands, I18n.t("command.human.setup_iptables_restore_old"), boot=false
   end
 end
