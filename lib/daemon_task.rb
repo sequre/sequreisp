@@ -23,6 +23,7 @@ class DaemonTask
 
   def initialize
     @thread_daemon = nil
+<<<<<<< HEAD
     @name = self.class.to_s
     @conf_daemon ||= $daemon_configuration[@name.underscore]
     @exec_as_process = @conf_daemon["exec_as_process"].present?
@@ -54,6 +55,7 @@ class DaemonTask
       @daemon_logger.error(e)
     end
   end
+
 
   def stop_process
     @daemon_logger.info("[SEND_SIGNAL_TERM] #{@name} (#{pid})")
@@ -149,7 +151,6 @@ class DaemonTask
             end
             @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
           end
-
         rescue Exception => e
           @daemon_logger.error(e)
         end
