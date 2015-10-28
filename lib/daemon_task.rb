@@ -23,7 +23,6 @@ class DaemonTask
 
   def initialize
     @thread_daemon = nil
-<<<<<<< HEAD
     @name = self.class.to_s
     @conf_daemon ||= $daemon_configuration[@name.underscore]
     @exec_as_process = @conf_daemon["exec_as_process"].present?
