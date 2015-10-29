@@ -86,4 +86,8 @@ module HooksHelper
   def current_consumption_percentage_of contract
     ""
   end
+
+  def favicon
+    "/favicon.ico"
+  end
 end
