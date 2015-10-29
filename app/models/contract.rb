@@ -693,26 +693,27 @@ end
     ul_m2_prio3 = [ (ceil * ceil_dfl_percent / 100).round, 1 ].max
 
     #padre
-    tc_rules << "##{client.name} - IP: #{ip} ID: #{id} KLASS_NUMBER: #{class_hex}"
+    tc_rules << "##{client.name} - IP: #{ip} ID: #{id} KLASS_NUMBER: #{class_hex}" if action == "add"
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{parent_minor} classid #{parent_mayor}:#{class_hex} hfsc ls m2 #{rate}kbit ul m2 #{ceil}kbit"
     #hijos
     #prio1
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio1_hex} " +
             "est 1sec 5sec hfsc rt m2 #{rate}kbit ls m2 #{rate}kbit"
-    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio1_hex}"
-    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio1_hex} sfq perturb 10"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio1_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio1_hex}" if action == "add"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio1_hex} sfq perturb 10" if action == "add"
 
     #prio2
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio2_hex} " +
             "est 1sec 5sec hfsc ls m2 #{rate}kbit"
-    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio2_hex}"
-    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio2_hex} sfq perturb 10"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio2_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio2_hex}" if action == "add"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio2_hex} sfq perturb 10" if action == "add"
 
     #prio3
     tc_rules << "class #{action} dev #{iface} parent #{parent_mayor}:#{class_hex} classid #{parent_mayor}:#{class_prio3_hex} " +
             "est 1sec 5sec hfsc ls m1 #{ls_m1_prio3}kbit d 3s m2 #{ls_m2_prio3}kbit ul m2 #{ul_m2_prio3}kbit"
-    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio3_hex}"
-    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10"
+    tc_rules << "filter #{action} dev #{iface} parent #{parent_mayor}: protocol all prio 200 handle 0x#{mark_prio3_hex}/0x#{mask} fw classid #{parent_mayor}:#{class_prio3_hex}" if action == "add"
+    tc_rules << "qdisc #{action} dev #{iface} parent #{parent_mayor}:#{class_prio3_hex} sfq perturb 10" if action == "add"
+    tc_rules
   end
 
   def rules_for_up_data_counting
