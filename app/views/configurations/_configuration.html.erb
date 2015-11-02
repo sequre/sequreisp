@@ -106,7 +106,7 @@ float: left;
     <% form.inputs :name => t('fieldsets.configuration.notifications'),
                    :context_help => { :path => { :custom => 'configuration.fieldsets.notifications' } } do %>
       <%= form.input :deliver_notifications %>
-      <%= form.input :notification_email %>
+      <%= form.input :notification_email, :as => :string %>
       <%= form.input :notification_timeframe  %>
     <% end %>
     <% form.inputs :name => t('fieldsets.configuration.users') do %>
@@ -141,9 +141,9 @@ float: left;
         <%= form.input :mail_relay_used, :as => :boolean %>
         <div id="mail_relay" >
           <%= form.input :mail_relay_option_server, :as => :select, :collection => options_for_mail_relay %>
-          <%= form.input :mail_relay_smtp_server %>
+          <%= form.input :mail_relay_smtp_server, :as => :string %>
           <%= form.input :mail_relay_smtp_port %>
-          <%= form.input :mail_relay_mail %>
+          <%= form.input :mail_relay_mail, :as => :string %>
           <%= form.input :mail_relay_password, :as => :string %>
         </div>
       </div>
