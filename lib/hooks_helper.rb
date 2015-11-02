@@ -87,7 +87,7 @@ module HooksHelper
     ""
   end
 
-  def favicon
+  def favicon_logo_extension
     "/favicon.ico"
   end
 end
