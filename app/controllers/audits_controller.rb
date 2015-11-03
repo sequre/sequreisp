@@ -31,6 +31,7 @@ class AuditsController < ApplicationController
       csv << [ "",
               t('activerecord.attributes.audit.created_at'),
               t('activerecord.attributes.audit.auditable_type'),
+              t('activerecord.attributes.audit.auditable_id'),
               t('activerecord.attributes.audit.user'),
               t('activerecord.attributes.audit.action'),
               t('activerecord.attributes.audit.changes')]
@@ -38,6 +39,7 @@ class AuditsController < ApplicationController
        csv << [audit.id,
                audit.created_at,
                audit.auditable_type,
+               audit.auditable_id,
                audit.user.try(:name),
                audit.action,
                audit.changes.to_yaml(:UseBlock => true, :UseHeader => false, :Separator => "", :ExplicitTypes => true, :UseFold => true) ]
