@@ -15,7 +15,7 @@ class ContractGraph < Graph
         if Rails.env.production?
           date_keys.each do |key|
             time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
-            value = (($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8)
+            value = (($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8).to_f
             value = value.nan? ? 0 : value.round
             data << [ time, value ]
           end
@@ -129,7 +129,7 @@ class ContractGraph < Graph
         time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
         total = 0
         rkeys.each do |rkey|
-          val = (($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8)
+          val = (($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8).to_f
           total += val.nan? ? 0 : val.round
         end
         data << [time, total]
