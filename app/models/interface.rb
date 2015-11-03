@@ -151,9 +151,11 @@ class Interface < ActiveRecord::Base
   def tx_bytes
     File.open("/sys/class/net/#{name}/statistics/tx_bytes").read.chomp.to_i rescue 0
   end
-  def redis_key
-    "interface_#{id}_sample"
-  end
+
+  def redis_key; Interface.redis_key(id); end
+
+  def self.redis_key(id); "interface_#{id}_sample"; end
+
   def instant
     begin
       data = {}
