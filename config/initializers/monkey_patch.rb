@@ -42,6 +42,8 @@
                                           "'#{v.to_s}'"
                                         elsif v.nil?
                                           'NULL'
+                                        elsif (v.is_a?(Time) || v.is_a?(Date))
+                                          "'#{v.utc.to_s(:db)}'"
                                         else
                                           v.to_s
                                         end
