@@ -55,6 +55,7 @@ class DaemonTask
     end
   end
 
+
   def stop_process
     @daemon_logger.info("[SEND_SIGNAL_TERM] #{@name} (#{pid})")
     Process.kill("TERM", pid)
@@ -149,7 +150,6 @@ class DaemonTask
             end
             @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
           end
-
         rescue Exception => e
           @daemon_logger.error(e)
         end

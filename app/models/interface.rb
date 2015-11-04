@@ -151,9 +151,11 @@ class Interface < ActiveRecord::Base
   def tx_bytes
     File.open("/sys/class/net/#{name}/statistics/tx_bytes").read.chomp.to_i rescue 0
   end
-  def redis_key
-    "interface_#{id}_sample"
-  end
+
+  def redis_key; Interface.redis_key(id); end
+
+  def self.redis_key(id); "interface_#{id}_sample"; end
+
   def instant
     begin
       data = {}
@@ -162,7 +164,7 @@ class Interface < ActiveRecord::Base
         date_keys = $redis.keys("#{redis_key}_*").sort
         # time = ((date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i)
         InterfaceSample.compact_keys.each do |rkey|
-          value = date_keys.empty? ? 0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_i) * 8)
+          value = date_keys.empty? ? 0.0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_i) * 8)
           value = value.nan? ? 0 : value.round
           data[rkey[:name].to_sym] = [ date_time_now, value ]
         end
