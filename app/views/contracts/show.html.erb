@@ -40,9 +40,13 @@
   };
 
   $(document).ready(function() {
-     <% @graphs.each do |key, graph| %>
-       <%= key %> = new Highcharts.Chart(<%= graph.graph! %>);
-     <% end %>
+    <% @graphs.each do |key, graph| %>
+      <% if key.include?("period") %>
+        <%= key %> = new Highcharts.StockChart(<%= graph.graph! %>);
+      <% else %>
+        <%= key %> = new Highcharts.Chart(<%= graph.graph! %>);
+      <% end %>
+    <% end %>
 
     get_data();
 
