@@ -1,7 +1,8 @@
 class DevicesController < ApplicationController
   def index
     @search = Device.search(params[:devices_search])
-    @devices = @search.paginate(:page => params[:page], :per_page => 20)
+    per_page = (params[:search] and params[:search][:not_paged]) ? Device.count : 20
+    @devices = @search.paginate(:page => params[:page], :per_page => per_page)
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @devices }
