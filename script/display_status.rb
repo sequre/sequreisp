@@ -121,6 +121,13 @@ puts
 puts "#{F_YELLOW}APPLICATION LOGGER:#{CLOSE_COLOR} " + (File.zero?("#{DEPLOY_DIR}/log/application.log") ? "#{F_GREEN}[NO ERROR]#{CLOSE_COLOR}" : ("#{F_RED}[PLEASE CHECK IT]#{CLOSE_COLOR}" + " #{F_CYAN}#{DEPLOY_DIR}/log/application.log#{CLOSE_COLOR}"))
 puts
 
+daemon_end_execution_time_path = DEPLOY_DIR+"/log/daemon_end_execution_time"
+if File.exist?(daemon_end_execution_time_path)
+  puts("#{F_YELLOW}The Daemon have been restarted for last time at:#{CLOSE_COLOR} #{F_RED}#{IO.readlines(daemon_end_execution_time_path).last.chomp}#{CLOSE_COLOR}")
+  puts("#{F_YELLOW}For more information check:#{CLOSE_COLOR} #{F_CYAN}#{daemon_end_execution_time_path}#{CLOSE_COLOR}")
+  puts
+end
+
 puts "#{F_YELLOW}CPU#{CLOSE_COLOR}"
 load_average = Dashboard::LoadAverage.new
 cpus = Dashboard::Cpu.new.stats.sort_by_key.collect{|cpu, values| {cpu => "  #{cpu.upcase.ljust(7)}: [#{F_GREEN}" + ("|" * (values[:total].to_i/2) + " " * ((100 - values[:total].to_i)/2)).rjust(50,"|") + "#{CLOSE_COLOR}#{values[:total].to_s.rjust(6)}%]"} }
