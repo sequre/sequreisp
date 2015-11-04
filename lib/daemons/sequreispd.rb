@@ -46,7 +46,7 @@ require 'command_context'
 daemons = []
 
 @general_daemon_logger ||= DaemonLogger.new("general_daemon", 0, 0)
-@file_with_end_execution_time = DEPLOY_DIR + "/log/daemon_end_execution_time"
+@file_with_end_execution_time = DEPLOY_DIR + "/log/execution_time_daemon"
 
 begin
   if $running

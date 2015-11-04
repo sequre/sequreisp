@@ -121,7 +121,7 @@ puts
 puts "#{F_YELLOW}APPLICATION LOGGER:#{CLOSE_COLOR} " + (File.zero?("#{DEPLOY_DIR}/log/application.log") ? "#{F_GREEN}[NO ERROR]#{CLOSE_COLOR}" : ("#{F_RED}[PLEASE CHECK IT]#{CLOSE_COLOR}" + " #{F_CYAN}#{DEPLOY_DIR}/log/application.log#{CLOSE_COLOR}"))
 puts
 
-daemon_end_execution_time_path = DEPLOY_DIR+"/log/daemon_end_execution_time"
+daemon_end_execution_time_path = DEPLOY_DIR+"/log/end_execution_time_daemon"
 if File.exist?(daemon_end_execution_time_path)
   puts("#{F_YELLOW}The Daemon have been restarted for last time at:#{CLOSE_COLOR} #{F_RED}#{IO.readlines(daemon_end_execution_time_path).last.chomp}#{CLOSE_COLOR}")
   puts("#{F_YELLOW}For more information check:#{CLOSE_COLOR} #{F_CYAN}#{daemon_end_execution_time_path}#{CLOSE_COLOR}")
