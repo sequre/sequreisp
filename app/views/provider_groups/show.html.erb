@@ -29,7 +29,7 @@
   });
 </script>
 
-<%= heading "#{@provider_group.name} #{@provider_group.state}" %>
+<%= heading "#{@provider_group.name} [#{show_human_down_up(@provider_group.cir_total_down, @provider_group.cir_total_up)}] [#{@provider_group.state}]" %>
 <% content_for :title, @provider_group.name %>
 
 <div id=<%= @graphs["provider_group_instant"].render %> style="height:247px; width:860px; float:left;"></div>
