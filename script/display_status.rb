@@ -118,6 +118,18 @@ puts "#{F_YELLOW}#{'Daemons'.ljust(daemons_row_size)}#{CLOSE_COLOR}" + " " * 8 +
 end
 
 puts
+
+puts "#{F_YELLOW}Processes#{CLOSE_COLOR}"
+processes = `/bin/ps x | grep [s]equreispd`.split("\n").collect{|l| "#{l.split.last} (#{l.split.first})" }
+monitor_process = processes.delete(processes.select{|p| p.include?('sequreispd.rb_monitor')}.first)
+main_process = processes.delete(processes.select{|p| p.include?('sequreispd.rb')}.first)
+puts "  #{F_MAGENTA}#{monitor_process}#{CLOSE_COLOR}" if monitor_process
+puts "  #{F_MAGENTA}#{main_process}#{CLOSE_COLOR}" if main_process
+indent = (main_process ? "    " : "  ")
+processes.each{|p| puts indent + F_CYAN + p + CLOSE_COLOR }
+
+puts
+
 puts "#{F_YELLOW}APPLICATION LOGGER:#{CLOSE_COLOR} " + (File.zero?("#{DEPLOY_DIR}/log/application.log") ? "#{F_GREEN}[NO ERROR]#{CLOSE_COLOR}" : ("#{F_RED}[PLEASE CHECK IT]#{CLOSE_COLOR}" + " #{F_CYAN}#{DEPLOY_DIR}/log/application.log#{CLOSE_COLOR}"))
 puts
 
