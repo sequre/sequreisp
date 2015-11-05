@@ -29,7 +29,7 @@
   });
 </script>
 
-<%= heading "#{@provider.name} #{@provider.interface.name} [#{@provider.provider_group.name}]" %>
+<%= heading "#{@provider.name} [#{@provider.interface.name}] [#{@provider.provider_group.name}] [#{show_human_down_up(@provider.rate_down, @provider.rate_up)}] [#{@provider.online ? 'online' : 'offline'}]" %>
 <% content_for :title, @provider.name %>
 
 <div id=<%= @graphs["interface_instant"].render %> style="height:247px; width:860px; float:left;"></div>

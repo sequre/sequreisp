@@ -16,6 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class Provider < ActiveRecord::Base
+  include ActionView::Helpers
   DYNAMIC_PROVIDER_PATH="/tmp/sequreisp"
 
   acts_as_audited

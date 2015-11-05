@@ -16,6 +16,7 @@
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
 class ProviderGroup < ActiveRecord::Base
+  include ActionView::Helpers
   acts_as_audited
   has_many :plans, :dependent => :nullify
   has_many :providers, :dependent => :nullify, :include => :interface
