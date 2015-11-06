@@ -23,7 +23,7 @@ class DevicesController < ApplicationController
     respond_to do |format|
       if @device.save
         flash[:notice] = t 'controllers.successfully_created'
-        format.html { redirect_to(devices_path) }
+        format.html { redirect_back_from_edit_or_to(devices_path) }
         format.xml  { render :xml => @device, :status => :created, :location => @device }
       else
         format.html { render :action => "new" }
@@ -39,7 +39,7 @@ class DevicesController < ApplicationController
     respond_to do |format|
       if @device.save
         flash[:notice] = t 'controllers.successfully_updated'
-        format.html { redirect_to(device_path(@device)) }
+        format.html { redirect_back_from_edit_or_to(device_path(@device)) }
         format.xml  { head :ok }
       else
         format.html { render :action => "edit" }
