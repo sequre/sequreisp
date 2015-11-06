@@ -982,7 +982,7 @@ def boot(run=true)
       BootHook.run :hook => :service_restart
 
       exec_context_commands "sequreisp_post", "[ -x #{SEQUREISP_POST_FILE} ] && #{SEQUREISP_POST_FILE}", I18n.t("command.human.sequreisp_post")
-      exec_context_commands "delete_tmp_file", ["rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.delete_tmp_file")
+      exec_context_commands "delete_tmp_file", ["[ -f #{DEPLOY_DIR}/tmp/apply_changes.lock ] && rm #{DEPLOY_DIR}/tmp/apply_changes.lock"], I18n.t("command.human.delete_tmp_file")
       FileUtils.cp File.join(BASE_SCRIPTS_TMP, BOOT_FILE), BASE_SCRIPTS if File.exists?(File.join(BASE_SCRIPTS_TMP, BOOT_FILE))
     rescue => e
       @daemon_logger.error(e)
