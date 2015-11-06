@@ -476,7 +476,7 @@ def gen_iptables
         unless contracts.empty?
           f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
           providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
-          #f.puts "-A enabled-MAIN -j DROP"
+          f.puts "-A enabled-MAIN -j DROP"
         end
       end
       f.puts "COMMIT"
