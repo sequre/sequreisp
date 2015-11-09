@@ -320,6 +320,8 @@ en:
           switch: 'Switch'
           server: 'Server'
           router: 'Router'
+        brands:
+          other: 'Other'
       device_brand:
         name: "Name"
   formtastic:

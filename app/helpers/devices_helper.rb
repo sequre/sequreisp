@@ -14,7 +14,7 @@ module DevicesHelper
      ["Ubiquiti", Device::BRAND_UBIQUITI],
      ["MikroTik", Device::BRAND_MIKROTIK],
      ["Cisco", Device::BRAND_CISCO],
-     ["Other", Device::BRAND_OTHER]
+     [I18n.t("activerecord.attributes.device.brands.other"), Device::BRAND_OTHER]
     ]
   end
 end

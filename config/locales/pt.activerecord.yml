@@ -317,6 +317,8 @@ pt:
           switch: 'Switch'
           server: 'Servidor'
           router: 'Router'
+        brands:
+          other: 'Outros'
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"
