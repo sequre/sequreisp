@@ -76,3 +76,21 @@
       end
     end
   end
+
+  class Integer
+    def to_kb
+      self / 2**10
+    end
+
+    def to_mb
+      self / 2**20
+    end
+
+    def to_gb
+      self / 2**30
+    end
+
+    def to_tb
+      self / 2**40
+    end
+  end
