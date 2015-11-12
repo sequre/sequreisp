@@ -123,15 +123,13 @@ class ProviderGroup < ActiveRecord::Base
   end
   def instant
     instant = {:rx => [0,0], :tx => [0,0]}
-
     providers.enabled.each do  |p|
       iface_instant = p.interface.instant
-      instant[:rx][0] += iface_instant[:rx][0]
-      instant[:rx][1] = iface_instant[:rx][1]
-      instant[:tx][0] += iface_instant[:tx][0]
-      instant[:tx][1] = iface_instant[:tx][1]
+      instant[:rx][0] = iface_instant[:rx][0]
+      instant[:rx][1] += iface_instant[:rx][1]
+      instant[:tx][0] = iface_instant[:tx][0]
+      instant[:tx][1] += iface_instant[:tx][1]
     end
-
     instant
   end
   def auditable_name
