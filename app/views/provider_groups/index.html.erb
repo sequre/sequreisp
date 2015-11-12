@@ -4,9 +4,24 @@
 
 <script type="text/javascript">
   $(document).ready(function() {
+    function get_data(){
+      $.get('<%= instant_group_provider_groups_path(@provider_groups.collect(&:id).join(",")) %>', null, function(data) {
+        <% @provider_groups.each do |pg| %>
+          <%= "provider_group_#{pg.id}_provider_group_instant" %>.series[0].addPoint(data[<%= pg.id %>].rx, true, true);
+          <%= "provider_group_#{pg.id}_provider_group_instant" %>.series[1].addPoint(data[<%= pg.id %>].tx, true, true);
+         <% end %>
+       },'json');
+    };
+
     <% @graphs.each do |g| %>
       new Highcharts.Chart(<%= g.minimal_graph %>);
     <% end %>
+
+    get_data();
+
+    setInterval(function() {
+      get_data();
+    }, 2000);
   });
 </script>
 

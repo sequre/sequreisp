@@ -122,7 +122,15 @@ class ProviderGroup < ActiveRecord::Base
     (self.klass.number << 16).to_s(16)
   end
   def instant
-    providers.enabled.map{ |p| p.interface.instant }.sum
+    instant = {:rx => [], :tx => []}
+    providers.enabled.each do  |p|
+      iface_instant = p.interface.instant
+      instant[:rx] << iface_instant[:rx]
+      instant[:tx] << iface_instant[:tx]
+    end
+    instant[:rx] = instant[:rx].transpose.map(&:sum)
+    instant[:tx] = instant[:tx].transpose.map(&:sum)
+    instant
   end
   def auditable_name
     "#{self.class.human_name}: #{name}"

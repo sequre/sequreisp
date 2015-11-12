@@ -112,6 +112,17 @@ class ProviderGroupsController < ApplicationController
       redirect_back_from_edit_or_to provider_groups_url
     end
   end
+
+  def instant_group
+    data = {}
+    ProviderGroup.find(params["ids"].split(",")).each do |pg|
+      data[pg.id] = pg.instant
+    end
+    respond_to do |format|
+      format.json { render :json => data }
+    end
+  end
+
   def instant
     @provider_group = object
     respond_to do |format|

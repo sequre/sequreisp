@@ -26,7 +26,7 @@ class Graph
   def initialize(model, method, options={})
     @model = model
     @method = method
-    @render = "#{@model.class.name.downcase}_#{@model.id}_#{@method}"
+    @render = "#{@model.class.name.underscore}_#{@model.id}_#{@method}"
     @minimal = false
   end
 

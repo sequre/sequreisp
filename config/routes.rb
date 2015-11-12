@@ -5,6 +5,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.instant_group_interfaces '/interfaces/instant_group/:ids', :controller => 'interfaces', :action => 'instant_group', :conditions => { :method => :get }
 
+  map.instant_group_provider_groups '/provider_groups/instant_group/:ids', :controller => 'provider_groups', :action => 'instant_group', :conditions => { :method => :get }
+
   map.resources :configurations, :collection => {:doreload => :get, :is_apply_changes => :get }
 
   map.resources :users
