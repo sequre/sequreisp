@@ -979,7 +979,9 @@ def boot(run=true)
     Rails.logger.debug "[Boot] setup_tc"
     setup_tc
     Rails.logger.debug "[Boot] setup_iptables"
+    exec_context_commands "enabled_iptables_lock", ["touch #{DEPLOY_DIR}/tmp/iptables.lock"], I18n.t("command.human.enabled_iptables_lock")
     setup_iptables
+    exec_context_commands "disabled_iptables_lock", ["[ -f #{DEPLOY_DIR}/tmp/iptables.lock ] && rm #{DEPLOY_DIR}/tmp/iptables.lock"], I18n.t("command.human.disabled_iptables_lock")
     Rails.logger.debug "[Boot] setup_mail_relay"
     setup_mail_relay
 
