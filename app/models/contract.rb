@@ -388,12 +388,12 @@ class Contract < ActiveRecord::Base
 
   def instant_rate
     begin
+      Configuration.first.check_redis
       data = {}
       total_up = 0
       total_down = 0
       date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
       date_keys = $redis.keys("#{redis_key}_*").sort
-
       ContractSample.compact_keys.each do |rkey|
         value = if Rails.env.production?
                   val = date_keys.empty? ? 0.0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8)
@@ -411,8 +411,6 @@ class Contract < ActiveRecord::Base
       data
     rescue => e
       $application_logger.error(e)
-    ensure
-      data
     end
   end
 

@@ -158,6 +158,7 @@ class Interface < ActiveRecord::Base
 
   def instant
     begin
+      Configuration.first.check_redis
       data = {}
       date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
       if Rails.env.production?
@@ -181,8 +182,6 @@ class Interface < ActiveRecord::Base
       data
     rescue => e
       $application_logger.error(e)
-    ensure
-      data
     end
   end
 
