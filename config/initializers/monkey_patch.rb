@@ -34,24 +34,29 @@
     #instance method, E.g: Order.new.foo
     #class method, E.g: Order.top_ten
     def self.massive_creation(transactions)
+      status = true
       begin
-        transactions.each{|transaction| transaction.stringify_keys!.merge!({"created_at" => DateTime.now.utc.to_s(:db), "updated_at" => DateTime.now.utc.to_s(:db) })}
-        keys = transactions.first.keys.map(&:to_s).join(',')
-        values = transactions.map{|t| t.values.map do |v|
-                                        if v.is_a?(String)
-                                          "'#{v.to_s}'"
-                                        elsif v.nil?
-                                          'NULL'
-                                        elsif (v.is_a?(Time) || v.is_a?(Date))
-                                          "'#{v.utc.to_s(:db)}'"
-                                        else
-                                          v.to_s
-                                        end
-                                      end.join(',') }.join('),(')
-        connection.execute("INSERT INTO #{self.to_s.underscore.pluralize} (#{keys}) VALUES (#{values})")
+        if transactions.present?
+          transactions.each{|transaction| transaction.stringify_keys!.merge!({"created_at" => DateTime.now.utc.to_s(:db), "updated_at" => DateTime.now.utc.to_s(:db) })}
+          keys = transactions.first.keys.map(&:to_s).join(',')
+          values = transactions.map{|t| t.values.map do |v|
+                                          if v.is_a?(String)
+                                            "'#{v.to_s}'"
+                                          elsif v.nil?
+                                            'NULL'
+                                          elsif (v.is_a?(Time) || v.is_a?(Date))
+                                            "'#{v.utc.to_s(:db)}'"
+                                          else
+                                            v.to_s
+                                          end
+                                        end.join(',') }.join('),(')
+          connection.execute("INSERT INTO #{self.to_s.underscore.pluralize} (#{keys}) VALUES (#{values})")
+        end
       rescue => e
+        status = false
         $application_logger.error(e)
       end
+      status
     end
 
     def self.massive_update(transactions)
