@@ -722,6 +722,8 @@ pt:
       update_provider_route: "Update provider route for %{name} (%{id})"
       do_provider_up: "Do provider up"
       do_provider_down: "Do provider down"
+      enabled_iptables_lock: "Lock iptables"
+      disabled_iptables_lock: "Unlock iptables"
   daemons:
     name:
       daemon_apply_change: "Daemon Apply changes"
