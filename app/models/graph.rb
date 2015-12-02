@@ -74,6 +74,7 @@ class Graph
     options[:xtype] ||= 'datetime'
     options[:tooltip_formatter] ||= ''
     options[:zoomType] ||= 'x'
+    options[:navigator] ||= 'false'
 
     { :credits       => { :enabled => @minimal? false : true,
                           :text => Graph.credit_text,
@@ -82,7 +83,7 @@ class Graph
       :chart         => { :renderTo => @render,
                           :zoomType => @minimal? "" : options[:zoomType],
                           :type => options[:type] },
-      :tooltip      => { :formatter => options[:tooltip_formatter] },
+      :tooltip       => { :formatter => options[:tooltip_formatter] },
       :exporting     => { :enabled => @minimal? false : true },
       :legend        => { :enabled => @minimal? false : true,
                           :verticalAlign => 'bottom' },
@@ -91,7 +92,9 @@ class Graph
       :yAxis         => { :title => { :text => @minimal? '' : options[:ytitle] } },
       :plotOptions   => { options[:type].to_sym => { :stacking => options[:stacking] } },
       :series        => options[:series],
-      :colors        => [GREEN, RED, BLUE, VIOLET]
+      :colors        => [GREEN, RED, BLUE, VIOLET],
+      :scrollbar     => { :enabled => false },
+      :navigator     => { :enabled => options[:navigator] }
     }
   end
 
