@@ -17,6 +17,7 @@
 
 class Configuration < ActiveRecord::Base
   require 'sequreisp_constants'
+  require 'command_context'
 
   ACCEPTED_LOCALES = ["es","en","pt"]
   GUIDES_URL = "http://doc.wispro.co/index.php?title=P%C3%A1gina_principal"
@@ -290,6 +291,16 @@ class Configuration < ActiveRecord::Base
     result[:load_average_instant][:arg3] = [ date_time_now, load_average.min15.to_f ]
 
     result
+  end
+
+  def exec_command(command)
+    c = Command.new(command)
+    c.exec
+    c.status
+  end
+
+  def check_redis
+    exec_command("/bin/ps -eo command | egrep \"^/usr/local/bin/redis-server *:6379\" &>/dev/null || /etc/init.d/redis start")
   end
 
   def self.uptime
