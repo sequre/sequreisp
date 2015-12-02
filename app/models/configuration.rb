@@ -272,23 +272,26 @@ class Configuration < ActiveRecord::Base
 
   def system_information
     result = {}
-    cpus = Dashboard::Cpu.new.stats
-    load_average = Dashboard::LoadAverage.new
+    cpus = MoolCpu.all
+    load_average = MoolLoadAverage.new
     result[:daemons] = Dashboard::Daemon.load_all
-    result[:services] = Dashboard::Service.load_all
     date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
 
-    cpus.each do |key, sample|
-      result["#{key}_instant"] = {}
-      result["#{key}_instant"][:arg1] = [ date_time_now, sample[:total]  ]
-      result["#{key}_instant"][:arg2] = [ date_time_now, sample[:kernel] ]
-      result["#{key}_instant"][:arg3] = [ date_time_now, sample[:iowait] ]
+    cpus.each do |cpu|
+      result["#{cpu.cpu_name}_instant"] = {}
+      result["#{cpu.cpu_name}_instant"][:arg1] = [ date_time_now, cpu.total ]
+      result["#{cpu.cpu_name}_instant"][:arg2] = [ date_time_now, cpu.sys ]
+      result["#{cpu.cpu_name}_instant"][:arg3] = [ date_time_now, cpu.iowait ]
     end
 
     result[:load_average_instant] = {}
-    result[:load_average_instant][:arg1] = [ date_time_now, load_average.now.to_f   ]
-    result[:load_average_instant][:arg2] = [ date_time_now, load_average.min5.to_f  ]
-    result[:load_average_instant][:arg3] = [ date_time_now, load_average.min15.to_f ]
+    result[:load_average_instant][:arg1] = [ date_time_now, load_average.current_loadavg   ]
+    result[:load_average_instant][:arg2] = [ date_time_now, load_average.last_5min_loadavg  ]
+    result[:load_average_instant][:arg3] = [ date_time_now, load_average.last_15min_loadavg ]
+
+    conf = Configuration.first
+    graph = SystemGraph.new(conf, 'ram')
+    result[:memory_graph_data] = SystemGraph.new(conf, 'ram').ram[:series].first[:data]
 
     result
   end

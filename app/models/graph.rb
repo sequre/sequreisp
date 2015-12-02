@@ -92,9 +92,7 @@ class Graph
       :yAxis         => { :title => { :text => @minimal? '' : options[:ytitle] } },
       :plotOptions   => { options[:type].to_sym => { :stacking => options[:stacking] } },
       :series        => options[:series],
-      :colors        => [GREEN, RED, BLUE, VIOLET],
-      :scrollbar     => { :enabled => false },
-      :navigator     => { :enabled => options[:navigator] }
+      :colors        => [GREEN, RED, BLUE, VIOLET]
     }
   end
 

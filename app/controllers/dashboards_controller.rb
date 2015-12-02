@@ -2,8 +2,7 @@ class DashboardsController < ApplicationController
   before_filter :require_user
   permissions :dashboard
   def show
-    # @swap = Dashboard::Memory.new(/Swap:/)
-    @services = Dashboard::Service.load_all
+    @services = MoolService.all(Dashboard::Service::SERVICES.collect{|s| {:name => s[:name], :pattern => s[:pattern]} })
     @daemons = Dashboard::Daemon.load_all
     @graphs_instant = {}
     @graphs = {}
@@ -26,8 +25,11 @@ class DashboardsController < ApplicationController
   end
 
   def instant
+    system_information = Configuration.system_information
+    @services = MoolService.all(Dashboard::Service::SERVICES.collect{|s| {:name => s[:name], :pattern => s[:pattern]} })
+    system_information[:services] = render_to_string :partial => "services_rows", :layout => false
     respond_to do |format|
-      format.json { render :json => Configuration.system_information }
+      format.json { render :json => system_information }
     end
   end
 

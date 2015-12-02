@@ -39,12 +39,9 @@
         $('#daemon_'+ daemon.id).html(daemon.status_html);
       });
 
+      $('#services_rows').html(data.services);
       $('.services_loader').show().delay(2000).fadeOut();
-      $.each(data.services, function (index, s) {
-        $('#up_'+ s.id).html(s.up_html);
-        $('#cpu_p_'+ s.id).html(s.cpu_p_html);
-        $('#mem_p_'+ s.id).html(s.mem_p_html);
-      });
+      ram.series[0].setData(data.memory_graph_data,true);
 
       <% keys.each do |key| %>
         <%= key %>.series[0].addPoint(data.<%= key %>.arg1, true, true);
@@ -54,7 +51,6 @@
     },'json');
   };
 </script>
-<td>
 
 <% content_for :title, t('menu.dashboard') %>
 <% heading "#{t('menu.uptime')}: #{Configuration.uptime} Kernel: #{Configuration.kernel_version}"  %>
@@ -90,46 +86,39 @@
       <h2><%=t 'dashboard.daemons' %></h2>
       <div id="daemons">
         <table>
-	  <tbody>
-	    <tr class="odd">
-	       <th  style="width: 14px"></th>
+          <tbody>
+            <tr class="odd">
+              <th  style="width: 14px"></th>
               <th><%=t 'dashboard.daemons_table.daemon' %></th>
               <th><%=t 'dashboard.daemons_table.status' %></th>
-	    </tr>
-	    <% @daemons.each do |daemon| %>
-	      <tr class="even" >
-		<td  style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
-		<td> <%= daemon.name %></td>
-		<td id="daemon_<%= daemon.id %>"> <%= daemon.status_html %> </td>
-	      </tr>
-	    <% end %>
-	  </tbody>
-	</table>
+            </tr>
+            <% @daemons.each do |daemon| %>
+              <tr class="even" >
+                <td  style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'daemons_loader' %></td>
+                <td> <%= daemon.name %></td>
+                <td id="daemon_<%= daemon.id %>"> <%= daemon.status_html %> </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
       </div>
     </td>
     <td valign="top">
       <h2><%=t 'dashboard.services' %></h2>
       <div id="services">
-	<table>
-	  <tbody>
-	    <tr class="odd">
-	       <th style="width: 14px"></th>
-              <th><%=t 'dashboard.services_table.service' %></th>
-              <th><%=t 'dashboard.services_table.status' %></th>
-              <th>CPU %</th>
-              <th>MEM % (MB)</th>
-	    </tr>
-	    <% @services.each do |s| %>
-	      <tr class="even" >
-		<td style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
-		<td> <%= s.name %></td>
-		<td id="up_<%= s.id %>"> <%= s.up_html %> </td>
-		<td id="cpu_p_<%= s.id %>"> <%= s.cpu_p_html %> </td>
-		<td id="mem_p_<%= s.id %>"> <%= s.mem_p_html %> </td>
-	      </tr>
-	    <% end %>
-	  </tbody>
-	</table>
+        <table>
+          <tr class="odd">
+            <th style="width: 14px"></th>
+            <th><%=t 'dashboard.services_table.service' %></th>
+            <th><%=t 'dashboard.services_table.status' %></th>
+            <th>PID</th>
+            <th>CPU %</th>
+            <th>MEM % (MB)</th>
+          </tr>
+          <tbody id="services_rows">
+            <%= render :partial => "services_rows" %>
+          </tbody>
+        </table>
       </div>
     </td>
   </tr>

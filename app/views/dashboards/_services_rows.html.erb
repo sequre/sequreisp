@@ -1,0 +1,17 @@
+<% @services.each do |key, s| %>
+  <tr class="even" >
+    <td style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
+    <td><%= key %></td>
+    <td id="status_<%= s.pattern %>"><%= s.messure.present? ? "<span style=\"color: #00aa00\">UP</span>" : "<span style=\"color: #ff0000\">DOWN</span>" %></td>
+  </tr>
+  <% s.messure.each do |service_data| %>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><%= service_data[:pid] %> </td>
+      <td><%= service_data[:cpu_percentage] %> </td>
+      <td><%= "#{service_data[:mem_percentage]} (#{(service_data[:memory_in_kb].to_f / 1024).round(2)}MB)" %> </td>
+    </tr>
+  <% end %>
+<% end %>

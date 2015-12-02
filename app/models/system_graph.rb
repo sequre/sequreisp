@@ -1,5 +1,5 @@
 class SystemGraph < Graph
-  GRAPHS = ["load_average_instant"]
+  GRAPHS = ["load_average_instant", "ram"]
 
   MoolDisk.all.each do |disk|
     GRAPHS << "disk_#{disk.logical_name}"
@@ -76,6 +76,26 @@ class SystemGraph < Graph
     end
   end
 
+  swap_disk = MoolDisk.swap
+  GRAPHS << "swap_disk_#{swap_disk.logical_name}"
+  define_method("swap_disk_#{swap_disk.logical_name}") do
+    series = [ { :colorByPoint => true,
+                 :data => [ { :name => 'Used',
+                              :color => RED,
+                              :sliced => true,
+                              :selected => true,
+                              :y => (swap_disk.block_used / 2**20).round(2) },
+                            { :name => 'Free',
+                              :color => GREEN,
+                              :y => ((swap_disk.total_block - swap_disk.block_used) / 2**20).round(2) } ] }]
+
+    graph = { :title  => "swap: #{swap_disk.logical_name}",
+              :type   => "pie",
+              :tooltip_formatter => "function () {return '<b>'+ this.point.name +'</b>: '+ this.y +' MB'}",
+              :series => series }
+
+    default_options_graphs(graph)
+  end
 
   # Dashboard::Disk.load_all.each do |disk|
   #   disk_name = disk.device.split('/').last.split('-').last
@@ -102,21 +122,21 @@ class SystemGraph < Graph
   # end
 
   def ram
-    ram = Dashboard::Memory.new(/Mem:/)
+    ram = MoolMemory.new.to_mb
 
     series = [ { :colorByPoint => true,
-                 :data => [ { :name => 'used',
+                 :data => [ { :name => 'Used',
                               :color => RED,
                               :sliced => true,
                               :selected => true,
-                              :y => ram.used },
-                            { :name => 'free',
+                              :y => ram.mem_used.round },
+                            { :name => 'Free',
                               :color => GREEN,
-                              :y => ram.free } ] }]
+                              :y => ram.mem_free.round } ] }]
 
     graph = { :title  => I18n.t("graphs.titles.ram"),
               :type   => "pie",
-              :tooltip_formatter => "function () {return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %'}",
+              :tooltip_formatter => "function () {return '<b>'+ this.point.name +'</b>: '+ this.y +' MB'}",
               :series => series }
 
     default_options_graphs(graph)
