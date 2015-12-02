@@ -21,8 +21,8 @@
       <%= key %> = new Highcharts.Chart(<%= graph.graph! %>);
     <% end %>
 
-    <% @graphs.each_value do |graph| %>
-      new Highcharts.Chart(<%= graph.graph! %>);
+    <% @graphs.each do |key, graph| %>
+      <%= key %> = new Highcharts.Chart(<%= graph.graph! %>);
     <% end %>
 
     get_data();

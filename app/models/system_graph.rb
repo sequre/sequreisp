@@ -1,29 +1,105 @@
 class SystemGraph < Graph
-  GRAPHS = ["load_average_instant", "ram"]
+  GRAPHS = ["load_average_instant"]
 
-  Dashboard::Disk.load_all.each do |disk|
-    disk_name = disk.device.split('/').last.split('-').last
-    GRAPHS << "disk_#{disk_name}"
-    define_method("disk_#{disk_name}") do
+  MoolDisk.all.each do |disk|
+    GRAPHS << "disk_#{disk.logical_name}"
+    define_method("disk_#{disk.logical_name}") do
+      foo = []
+      bar = []
 
-    series = [ { :colorByPoint => true,
-                 :data => [ { :name => disk.data[1][:name],
-                              :color => RED,
-                              :sliced => true,
-                              :selected => true,
-                              :y => disk.data[1][:y] },
-                            { :name => disk.data[0][:name],
-                              :color => GREEN,
-                              :y => disk.data[0][:y] }] } ]
+      disk_size = disk.total_block
 
-    graph = { :title  => I18n.t("graphs.titles.disk", :name => disk_name),
-              :type   => "pie",
-              :tooltip_formatter => "function () {return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %'}",
-              :series => series }
+      first_parts = (disk.partitions + disk.slaves)
 
-    default_options_graphs(graph)
+      if first_parts.empty?
+        foo <<  { :name => disk.logical_name,
+                  :y => disk.total_block }
+
+        bar <<  { :name => 'Free',
+                  :y => disk.total_block - disk.block_used,
+                  :color => GREEN }
+        bar <<  { :name => 'Used',
+                  :y => disk.block_used,
+                  :color => RED }
+      else
+        first_parts.each do |part|
+          unless part.swap
+            second_parts = part.partitions + part.slaves
+            if second_parts.empty?
+              foo << { :name => part.logical_name,
+                       :y => part.total_block }
+
+              bar << { :name => 'Free',
+                       :y => part.total_block - part.block_used,
+                       :color => GREEN }
+              bar << { :name => 'Used',
+                       :y => part.block_used,
+                       :color => RED }
+            else
+              second_parts.each do |second_part|
+                unless second_part.swap
+                  foo << { :name =>"#{part.logical_name}-#{second_part.logical_name}",
+                           :y => second_part.total_block }
+
+                  bar << { :name => 'Free',
+                           :y => second_part.total_block - second_part.block_used,
+                           :color => GREEN }
+                  bar << { :name => 'Used',
+                           :y => second_part.block_used,
+                           :color => RED }
+                end
+              end
+            end
+          end
+        end
+      end
+
+      header = { :name => 'Browsers',
+                 :size => '60%',
+                 :data => foo,
+                 :dataLabels => {
+                   :formatter => "function () { return this.y > 5 ? this.point.name : null; }",
+                   :color => '#ffffff',
+                   :distance => -30 }
+               }
+
+      body = { :name => 'Versions',
+               :size => '80%',
+               :innerSize => '60%',
+               :data => bar }
+
+      graph = { :title  => I18n.t("graphs.titles.disk", :name => disk.logical_name),
+                :type   => "pie",
+                :series => [header, body] }
+
+      default_options_graphs(graph)
     end
   end
+
+
+  # Dashboard::Disk.load_all.each do |disk|
+  #   disk_name = disk.device.split('/').last.split('-').last
+  #   GRAPHS << "disk_#{disk_name}"
+  #   define_method("disk_#{disk_name}") do
+
+  #   series = [ { :colorByPoint => true,
+  #                :data => [ { :name => disk.data[1][:name],
+  #                             :color => RED,
+  #                             :sliced => true,
+  #                             :selected => true,
+  #                             :y => disk.data[1][:y] },
+  #                           { :name => disk.data[0][:name],
+  #                             :color => GREEN,
+  #                             :y => disk.data[0][:y] }] } ]
+
+  #   graph = { :title  => I18n.t("graphs.titles.disk", :name => disk_name),
+  #             :type   => "pie",
+  #             :tooltip_formatter => "function () {return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %'}",
+  #             :series => series }
+
+  #   default_options_graphs(graph)
+  #   end
+  # end
 
   def ram
     ram = Dashboard::Memory.new(/Mem:/)
