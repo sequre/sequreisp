@@ -72,16 +72,17 @@ class Graph
   def default_options_graphs options={}
     options[:type] ||= 'line'
     options[:xtype] ||= 'datetime'
-    options[:tooltip_formatter] ||= 'undefined'
+    options[:tooltip_formatter] ||= ''
+    options[:zoomType] ||= 'x'
 
     { :credits       => { :enabled => @minimal? false : true,
                           :text => Graph.credit_text,
                           :href => Graph.credit_href },
+      :rangeSelector => { :enabled => false },
       :chart         => { :renderTo => @render,
-                          :zoomType => 'x',
+                          :zoomType => @minimal? "" : options[:zoomType],
                           :type => options[:type] },
-      :rangeSelector => { :selected => 1 },
-       :tooltip      => { :formatter => options[:tooltip_formatter] },
+      :tooltip      => { :formatter => options[:tooltip_formatter] },
       :exporting     => { :enabled => @minimal? false : true },
       :legend        => { :enabled => @minimal? false : true,
                           :verticalAlign => 'bottom' },
@@ -89,7 +90,9 @@ class Graph
       :xAxis         => { :type => options[:xtype] },
       :yAxis         => { :title => { :text => @minimal? '' : options[:ytitle] } },
       :plotOptions   => { options[:type].to_sym => { :stacking => options[:stacking] } },
-      :series        => options[:series] }
+      :series        => options[:series],
+      :colors        => [GREEN, RED, BLUE, VIOLET]
+    }
   end
 
   def faker_values hash=nil
