@@ -1,5 +1,5 @@
 source "http://rubygems.org"
-#source "http://gems.github.com"
+source "http://gems.github.com"
 gem 'rails', '=2.3.11'
 gem 'rdoc', '=4.0.1'
 gem 'mysql', '=2.9.1'
@@ -21,9 +21,7 @@ gem 'open4', '=1.3.3'
 gem 'redis', '=3.2.1'
 gem 'interactive_editor', '=0.0.10'
 gem 'awesome_print', '=1.1.0'
-source "http://gems.github.com" do
-  gem 'mool', '=1.0.1', :git => 'https://github.com/gedera/mool'
-end
+gem 'mool', '=1.0.1', :git => 'https://github.com/gedera/mool'
 
 group :development, :test do
    gem 'faker', '=1.0.1'
