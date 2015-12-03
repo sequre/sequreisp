@@ -736,7 +736,7 @@ pt:
       daemon_redis: "Statistics generation"
   graphs:
     titles:
-      disk: "Disk: %{name}"
+      disk: "Disk: %{name} (%{size})"
       ram: "RAM Memory"
       load_average: "Load Average"
       cpu_average: "Total CPU average"
@@ -789,3 +789,8 @@ pt:
         provider_group_period_2: "Average rate transmission per week"
         provider_group_period_3: "Average rate transmission per month"
         provider_group_period_4: "Average rate transmission per year"
+      disks:
+        free: 'Livre'
+        used: 'Usava'
+        partition: 'Partition'
+        size: 'Size'

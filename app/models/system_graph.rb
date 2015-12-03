@@ -1,74 +1,56 @@
 class SystemGraph < Graph
   GRAPHS = ["load_average_instant", "ram"]
 
+  def build_partition_data(disk, partition_name=nil)
+    return if disk.swap
+    partition_name ||= disk.logical_name
+
+    @partitions_graph << { :name => partition_name,
+                           :y => (disk.total_block / 2**30).round(2),
+                           :color => @disk_partition_color.pop }
+
+    @sizes_graph << { :name => I18n.t("graphs.titles.disks.free"),
+                      :y => ((disk.total_block - disk.block_used) / 2**30).round(2),
+                      :color => GREEN }
+
+    @sizes_graph << { :name => I18n.t("graphs.titles.disks.used"),
+                      :y => (disk.block_used  / 2**30).round(2),
+                      :color => RED }
+  end
+
   MoolDisk.all.each do |disk|
     GRAPHS << "disk_#{disk.logical_name}"
     define_method("disk_#{disk.logical_name}") do
-      foo = []
-      bar = []
-
-      disk_size = disk.total_block
+      @partitions_graph = []
+      @sizes_graph = []
+      @disk_partition_color = [ "#789cb4", "#75509b", "#ef5836", "#493829", "#c04a67", "#a5bdcd", "#6b6a6a", "#39b9a1", "#1f5b83" ]
 
       first_parts = (disk.partitions + disk.slaves)
 
       if first_parts.empty?
-        foo <<  { :name => disk.logical_name,
-                  :y => disk.total_block }
-
-        bar <<  { :name => 'Free',
-                  :y => disk.total_block - disk.block_used,
-                  :color => GREEN }
-        bar <<  { :name => 'Used',
-                  :y => disk.block_used,
-                  :color => RED }
+        build_partition_data(disk)
       else
         first_parts.each do |part|
-          unless part.swap
-            second_parts = part.partitions + part.slaves
-            if second_parts.empty?
-              foo << { :name => part.logical_name,
-                       :y => part.total_block }
-
-              bar << { :name => 'Free',
-                       :y => part.total_block - part.block_used,
-                       :color => GREEN }
-              bar << { :name => 'Used',
-                       :y => part.block_used,
-                       :color => RED }
-            else
-              second_parts.each do |second_part|
-                unless second_part.swap
-                  foo << { :name =>"#{part.logical_name}-#{second_part.logical_name}",
-                           :y => second_part.total_block }
-
-                  bar << { :name => 'Free',
-                           :y => second_part.total_block - second_part.block_used,
-                           :color => GREEN }
-                  bar << { :name => 'Used',
-                           :y => second_part.block_used,
-                           :color => RED }
-                end
-              end
-            end
-          end
+          second_parts = part.partitions + part.slaves
+          second_parts.empty? ? build_partition_data(part) : second_parts.each { |spart| build_partition_data(spart, "#{part.logical_name}-#{spart.logical_name}" ) }
         end
       end
 
-      header = { :name => 'Browsers',
+      header = { :name => I18n.t("graphs.titles.disks.partition"),
                  :size => '60%',
-                 :data => foo,
+                 :data => @partitions_graph,
                  :dataLabels => {
                    :formatter => "function () { return this.y > 5 ? this.point.name : null; }",
                    :color => '#ffffff',
                    :distance => -30 }
                }
 
-      body = { :name => 'Versions',
+      body = { :name => I18n.t("graphs.titles.disks.size"),
                :size => '80%',
                :innerSize => '60%',
-               :data => bar }
+               :data => @sizes_graph }
 
-      graph = { :title  => I18n.t("graphs.titles.disk", :name => disk.logical_name),
+      graph = { :title  => I18n.t("graphs.titles.disk", { :name => disk.logical_name, :size => "#{(disk.total_block / 2**30).round(2)} GB"} ),
                 :type   => "pie",
                 :series => [header, body] }
 
@@ -80,12 +62,12 @@ class SystemGraph < Graph
   GRAPHS << "swap_disk_#{swap_disk.logical_name}"
   define_method("swap_disk_#{swap_disk.logical_name}") do
     series = [ { :colorByPoint => true,
-                 :data => [ { :name => 'Used',
+                 :data => [ { :name => I18n.t("graphs.titles.disks.used"),
                               :color => RED,
                               :sliced => true,
                               :selected => true,
                               :y => (swap_disk.block_used / 2**20).round(2) },
-                            { :name => 'Free',
+                            { :name => I18n.t("graphs.titles.disks.free"),
                               :color => GREEN,
                               :y => ((swap_disk.total_block - swap_disk.block_used) / 2**20).round(2) } ] }]
 
@@ -125,12 +107,12 @@ class SystemGraph < Graph
     ram = MoolMemory.new.to_mb
 
     series = [ { :colorByPoint => true,
-                 :data => [ { :name => 'Used',
+                 :data => [ { :name => I18n.t("graphs.titles.disks.used"),
                               :color => RED,
                               :sliced => true,
                               :selected => true,
                               :y => ram.mem_used.round },
-                            { :name => 'Free',
+                            { :name => I18n.t("graphs.titles.disks.free"),
                               :color => GREEN,
                               :y => ram.mem_free.round } ] }]
 

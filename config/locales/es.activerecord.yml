@@ -759,7 +759,7 @@ es:
       daemon_redis: "Generación de estadisticas"
   graphs:
     titles:
-      disk: "Disco: %{name}"
+      disk: "Disco: %{name} (%{size})"
       ram: "Memoria RAM"
       load_average: "Carga promedio del sistema"
       cpu_average: "Promedio total de CPU"
@@ -812,3 +812,8 @@ es:
         provider_group_period_2: "Rate promedio de transmisión por semana"
         provider_group_period_3: "Rate promedio de transmisión por mes"
         provider_group_period_4: "Rate promedio de transmisión por año"
+      disks:
+        free: 'Libre'
+        used: 'Usado'
+        partition: 'Partición'
+        size: 'Tamaño'
