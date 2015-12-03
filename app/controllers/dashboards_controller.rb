@@ -2,7 +2,7 @@ class DashboardsController < ApplicationController
   before_filter :require_user
   permissions :dashboard
   def show
-    @services = MoolService.all(Dashboard::Service::SERVICES.collect{|s| {:name => s[:name], :pattern => s[:pattern]} })
+    @services = load_services
     @daemons = Dashboard::Daemon.load_all
     @graphs_instant = {}
     @graphs = {}
@@ -26,7 +26,7 @@ class DashboardsController < ApplicationController
 
   def instant
     system_information = Configuration.system_information
-    @services = MoolService.all(Dashboard::Service::SERVICES.collect{|s| {:name => s[:name], :pattern => s[:pattern]} })
+    @services = load_services
     system_information[:services] = render_to_string :partial => "services_rows", :layout => false
     respond_to do |format|
       format.json { render :json => system_information }
@@ -48,5 +48,11 @@ class DashboardsController < ApplicationController
       flash[:error] = I18n.t('messages.dashboard.halt_error')
     end
     redirect_to :back
+  end
+
+  private
+
+  def load_services
+    MoolService.all(Dashboard::SERVICES.collect{|s| {:name => s[:name], :pattern => s[:pattern]} })
   end
 end

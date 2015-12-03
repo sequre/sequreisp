@@ -172,9 +172,9 @@ class SystemGraph < Graph
     default_options_graphs(graph)
   end
 
-  Dashboard::Cpu.new.stats.each do |key, sample|
-    GRAPHS << "#{key}_instant"
-    define_method("#{key}_instant") do
+  MoolCpu.all.each do |cpu|
+    GRAPHS << "#{cpu.cpu_name}_instant"
+    define_method("#{cpu.cpu_name}_instant") do
       data = { :total => [], :kernel => [], :iowait => [] }
 
       data = faker_values({ :size => 12,
@@ -196,7 +196,7 @@ class SystemGraph < Graph
                    :type  => "spline",
                    :data  => data[:iowait] } ]
 
-      core_number = key.split("_").last
+      core_number = cpu.cpu_name.split("_").last
 
       title = (core_number == "all")? I18n.t("graphs.titles.cpu_average") : I18n.t("graphs.titles.cpu", :number => core_number )
 
