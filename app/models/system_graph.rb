@@ -59,24 +59,26 @@ class SystemGraph < Graph
   end
 
   swap_disk = MoolDisk.swap
-  GRAPHS << "swap_disk_#{swap_disk.logical_name}"
-  define_method("swap_disk_#{swap_disk.logical_name}") do
-    series = [ { :colorByPoint => true,
-                 :data => [ { :name => I18n.t("graphs.titles.disks.used"),
-                              :color => RED,
-                              :sliced => true,
-                              :selected => true,
-                              :y => (swap_disk.block_used / 2**20).round(2) },
-                            { :name => I18n.t("graphs.titles.disks.free"),
-                              :color => GREEN,
-                              :y => ((swap_disk.total_block - swap_disk.block_used) / 2**20).round(2) } ] }]
+  if swap_disk
+    GRAPHS << "swap_disk_#{swap_disk.logical_name}"
+    define_method("swap_disk_#{swap_disk.logical_name}") do
+      series = [ { :colorByPoint => true,
+                   :data => [ { :name => I18n.t("graphs.titles.disks.used"),
+                                :color => RED,
+                                :sliced => true,
+                                :selected => true,
+                                :y => (swap_disk.block_used / 2**20).round(2) },
+                              { :name => I18n.t("graphs.titles.disks.free"),
+                                :color => GREEN,
+                                :y => ((swap_disk.total_block - swap_disk.block_used) / 2**20).round(2) } ] }]
 
-    graph = { :title  => "swap: #{swap_disk.logical_name}",
-              :type   => "pie",
-              :tooltip_formatter => "function () {return '<b>'+ this.point.name +'</b>: '+ this.y +' MB'}",
-              :series => series }
+      graph = { :title  => "swap: #{swap_disk.logical_name}",
+                :type   => "pie",
+                :tooltip_formatter => "function () {return '<b>'+ this.point.name +'</b>: '+ this.y +' MB'}",
+                :series => series }
 
-    default_options_graphs(graph)
+      default_options_graphs(graph)
+    end
   end
 
   # Dashboard::Disk.load_all.each do |disk|
