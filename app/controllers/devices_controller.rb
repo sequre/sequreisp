@@ -1,4 +1,6 @@
 class DevicesController < ApplicationController
+  before_filter :require_user
+  permissions :devices
   def index
     @search = Device.search(params[:devices_search])
     per_page = (params[:search] and params[:search][:not_paged]) ? Device.count : 20
