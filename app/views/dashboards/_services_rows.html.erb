@@ -10,8 +10,8 @@
       <td></td>
       <td></td>
       <td><%= service_data[:pid] %> </td>
-      <td><%= service_data[:cpu_percentage] %> </td>
-      <td><%= "#{service_data[:mem_percentage]} (#{(service_data[:memory_in_kb].to_f / 1024).round(2)}MB)" %> </td>
+      <td><%= service_data[:cpu_instant] %> </td>
+      <td><%= "#{service_data[:mem_instant]}" %> </td>
     </tr>
   <% end %>
 <% end %>

@@ -113,7 +113,7 @@ puts "#{F_YELLOW}#{'Daemons'.ljust(daemons_row_size)}#{CLOSE_COLOR}" + " " * 8 +
   if s = services.shift
     service_name = s.first
     service = s.last
-    puts "  #{service_name.ljust(services_row_size)} CPU: #{((service.messure.any? ? service.messure.sum{|m| m[:cpu_percentage]}.to_f : 0.0).to_s + '%').ljust(5)} MEM: #{((service.messure.any? ? (service.messure.sum{|m| m[:memory_in_kb]}.to_i / 1024) : 0).to_s + 'MB').ljust(7)} #{service.messure.any? ? "#{F_GREEN}[UP]" : "#{F_RED}[DOWN]"}#{CLOSE_COLOR}"
+    puts "  #{service_name.ljust(services_row_size)} CPU: #{((service.messure.any? ? service.messure.sum{|m| m[:cpu_percentage].to_f } : 0.0).to_s + '%').ljust(5)} MEM: #{((service.messure.any? ? (service.messure.sum{|m| m[:mem_average].to_f}) : 0).to_s + '%').ljust(7)} #{service.messure.any? ? "#{F_GREEN}[UP]" : "#{F_RED}[DOWN]"}#{CLOSE_COLOR}"
   else
     puts
   end
