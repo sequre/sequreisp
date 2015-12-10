@@ -28,12 +28,13 @@ class InterfaceGraph < Graph
                     :type  => "spline",
                     :color => COLORS[rkey[:name]],
                     :stack => rkey[:name],
-                    :data  => data.sort }
+                    :data  => data.sort,
+                    :tooltip => {:valueSuffix => ' b/s'}
+                  }
       end
 
       graph = { :title  => I18n.t("graphs.titles.interfaces.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
-                :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2) + 'b/s'}",
                 :series => series }
 
       default_options_graphs(graph)
@@ -59,12 +60,12 @@ class InterfaceGraph < Graph
                     :type  => "spline",
                     :color => COLORS[rkey[:name]],
                     :stack => rkey[:name],
-                    :data  => data }
+                    :data  => data,
+                    :tooltip => {:valueSuffix => ' b/s'} }
       end
 
       graph = { :title  => I18n.t("graphs.titles.provider_groups.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
-                :tooltip_formatter => "function() { return '<b>'+ this.series.name + '</b><br/>' + Highcharts.numberFormat(this.y, 2) + 'b/s'}",
                 :series => series }
 
       default_options_graphs(graph)

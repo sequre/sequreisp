@@ -65,12 +65,12 @@ class ContractGraph < Graph
                       :type  => "spline",
                       :color => COLORS[rkey[:sample]],
                       :stack => rkey[:up_or_down],
-                      :data  => data.sort }
+                      :data  => data.sort,
+                      :tooltip => {:valueSuffix => ' b/s'} }
         end
 
         graph = { :title  => I18n.t("graphs.titles.contracts.#{(__method__).to_s}"),
                   :ytitle => 'bps(bits/second)',
-                  :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) + 'b/s'}",
                   :series => series }
 
         default_options_graphs(graph)
@@ -101,12 +101,12 @@ class ContractGraph < Graph
                     :type  => "spline",
                     :color => COLORS[up_or_down],
                     :stack => up_or_down,
-                    :data  => data.sort }
+                    :data  => data.sort,
+                    :tooltip => {:valueSuffix => ' b/s'} }
       end
 
       graph = { :title  => I18n.t("graphs.titles.contracts.#{(__method__).to_s}"),
                 :ytitle => 'bps(bits/second)',
-                :tooltip_formatter => "function() { return '<b>'+ this.series.name +'</b><br/>'+ Highcharts.numberFormat(this.y, 2) + 'b/s'}",
                 :series => series }
 
       default_options_graphs(graph)
