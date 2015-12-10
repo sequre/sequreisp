@@ -154,5 +154,5 @@ puts
 puts "#{F_YELLOW}Disks#{CLOSE_COLOR}"
 MoolDisk.all_usable.each do |disk|
   disk.to_gb
-  puts "  #{F_MAGENTA}#{(disk.logical_name + ':').ljust(6)} [" + ("*" * (disk.used_percent/2).round(2) + "." * (disk.free_percent/2).round(2)).rjust(50,"*") + "] #{disk.used_percent.round(2)}% (#{disk.block_used.round(2)}GB/#{disk.total_block.round(2)}GB) on #{disk.mounting_point}#{CLOSE_COLOR}"
+  puts "  #{F_MAGENTA}#{(disk.logical_name + ':').ljust(6)} [" + ("*" * (disk.used_percent*100/2).round(2) + "." * (disk.free_percent*100/2).round(2)).rjust(50,"*") + "] #{(disk.used_percent*100).round(2)}% (#{disk.block_used.round(2)}GB/#{disk.total_block.round(2)}GB) on #{disk.mounting_point}#{CLOSE_COLOR}"
 end
