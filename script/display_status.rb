@@ -97,10 +97,10 @@ plans.each { |p| puts "  #{p[0].ljust(ljusts[0])} #{F_GREEN}#{p[1].ljust(ljusts[
 puts
 
 daemons = Dashboard::Daemon.load_all
-services = Dashboard::Service.load_all
+services = MoolService.all(Dashboard::SERVICES)
 
 daemons_row_size = daemons.collect{|d| d.name.length }.max
-services_row_size = services.collect{|s| s.name.length }.max
+services_row_size = services.keys.collect(&:length).max
 
 puts "#{F_YELLOW}#{'Daemons'.ljust(daemons_row_size)}#{CLOSE_COLOR}" + " " * 8 + "  #{F_YELLOW}Services#{CLOSE_COLOR}"
 [daemons.count, services.count].max.times do |i|
@@ -110,8 +110,10 @@ puts "#{F_YELLOW}#{'Daemons'.ljust(daemons_row_size)}#{CLOSE_COLOR}" + " " * 8 +
     print " " * (daemons_row_size + 8)
   end
 
-  if services[i]
-    puts "  #{services[i].name.ljust(services_row_size)} CPU: #{services[i].cpu_p.to_s.ljust(5)} MEM: #{services[i].mem.round(2).to_s.ljust(7)} #{services[i].up ? "#{F_GREEN}[UP]" : "#{F_RED}[DOWN]"}#{CLOSE_COLOR}"
+  if s = services.shift
+    service_name = s.first
+    service = s.last
+    puts "  #{service_name.ljust(services_row_size)} CPU: #{((service.messure.any? ? service.messure.sum{|m| m[:cpu_percentage].to_f } : 0.0).to_s + '%').ljust(5)} MEM: #{((service.messure.any? ? (service.messure.sum{|m| m[:mem_average].to_f}) : 0).to_s + '%').ljust(7)} #{service.messure.any? ? "#{F_GREEN}[UP]" : "#{F_RED}[DOWN]"}#{CLOSE_COLOR}"
   else
     puts
   end
@@ -141,17 +143,16 @@ if File.exist?(daemon_end_execution_time_path)
 end
 
 puts "#{F_YELLOW}CPU#{CLOSE_COLOR}"
-load_average = Dashboard::LoadAverage.new
-cpus = Dashboard::Cpu.new.stats.sort_by_key.collect{|cpu, values| {cpu => "  #{cpu.upcase.ljust(7)}: [#{F_GREEN}" + ("|" * (values[:total].to_i/2) + " " * ((100 - values[:total].to_i)/2)).rjust(50,"|") + "#{CLOSE_COLOR}#{values[:total].to_s.rjust(6)}%]"} }
+load_average = MoolLoadAverage.new
+cpus = MoolCpu.all.sort_by(&:cpu_name).collect{|cpu| {cpu => "  #{cpu.cpu_name.upcase.ljust(7)}: [#{F_GREEN}" + ("|" * (cpu.total/2) + " " * ((100 - cpu.total)/2)).rjust(50,"|") + "#{CLOSE_COLOR}#{cpu.total.to_s.rjust(6)}%]"} }
 cpu_all = cpus.pop
 cpus.map(&:values).each{|info| puts info.first }
 print cpu_all.values.first
-puts "  #{F_YELLOW}Load Average:#{CLOSE_COLOR} Now = #{load_average.now}, 5min = #{load_average.min5}, 15min = #{load_average.min15}"
+puts "  #{F_YELLOW}Load Average:#{CLOSE_COLOR} Now = #{load_average.current_loadavg}, 5min = #{load_average.last_5min_loadavg}, 15min = #{load_average.last_15min_loadavg}"
 
 puts
 puts "#{F_YELLOW}Disks#{CLOSE_COLOR}"
-Dashboard::Disk.load_all.each do |disk|
-  disk_name = disk.device.split('/').last.split('-').last
-  total_g = (disk.total/1.megabytes.to_f).round(1)
-  puts "  #{F_MAGENTA}#{disk_name}: [" + ("*" * (disk.used_p/2) + "." * (disk.free_p/2)).rjust(50,"*") + "] #{disk.used_p}% (#{total_g*disk.used_p/100}GB/#{total_g}GB) on #{disk.mount_point}#{CLOSE_COLOR}"
+MoolDisk.all_usable.each do |disk|
+  disk.to_gb
+  puts "  #{F_MAGENTA}#{(disk.logical_name + ':').ljust(6)} [" + ("*" * (disk.used_percent*100/2).round(2) + "." * (disk.free_percent*100/2).round(2)).rjust(50,"*") + "] #{(disk.used_percent*100).round(2)}% (#{disk.block_used.round(2)}GB/#{disk.total_block.round(2)}GB) on #{disk.mounting_point}#{CLOSE_COLOR}"
 end

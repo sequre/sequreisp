@@ -53,6 +53,6 @@ class DashboardsController < ApplicationController
   private
 
   def load_services
-    MoolService.all(Dashboard::SERVICES.collect{|s| {:name => s[:name], :pattern => s[:pattern]} })
+    MoolService.all(Dashboard::SERVICES)
   end
 end
