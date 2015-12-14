@@ -24,24 +24,6 @@ class InterfaceSample < ActiveRecord::Base
   named_scope :samples_to_compact, lambda { |id,limit| { :conditions => "interface_samples.interface_id = #{id}",
                                                          :limit => limit } }
 
-  named_scope :get_new_samples, lambda { |period| { :order => "sample_number DESC",
-                                                    :conditions => "interface_samples.sample_number = (SELECT MAX(sample_number)
-                                                                                                      FROM interface_samples as foo
-                                                                                                      WHERE interface_samples.period = #{period} AND
-                                                                                                            interface_samples.interface_id = foo.interface_id
-                                                                                                      ORDER BY sample_number LIMIT 1) AND
-                                                                    interface_samples.period = #{period}" }}
-
-  def self.last_samples_created
-    samples = {}
-    InterfaceSample.transaction {
-      CONF_PERIODS.count.times do |i|
-        samples["period_#{i}".to_sym] = Hash[InterfaceSample.get_new_samples(i).collect{ |i| [i.interface_id, i.sample_number.to_i] }]
-      end
-    }
-    samples
-  end
-
   def self.samples_to_compact
     samples_to_compact = {}
     InterfaceSample.transaction {

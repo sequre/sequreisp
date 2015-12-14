@@ -303,7 +303,7 @@ class Configuration < ActiveRecord::Base
   end
 
   def check_redis
-    exec_command("/bin/ps -eo command | egrep \"^/usr/local/bin/redis-server *:6379\" &>/dev/null || /etc/init.d/redis start")
+    exec_command("/bin/ps -eo command | egrep \"^/usr/local/bin/redis-server.*\" &>/dev/null || /etc/init.d/redis start")
   end
 
   def self.uptime

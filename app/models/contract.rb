@@ -33,7 +33,8 @@ class Contract < ActiveRecord::Base
   belongs_to :client
   belongs_to :plan
 
-  has_many :contract_samples
+  has_many :last_samples, :as => :model
+  has_many :contract_samples, :dependent => :destroy
   has_many :forwarded_ports, :dependent => :destroy
   accepts_nested_attributes_for :forwarded_ports, :reject_if => :all_blank, :allow_destroy => true
   has_one :klass, :dependent => :nullify
@@ -722,7 +723,7 @@ class Contract < ActiveRecord::Base
     hash = {}
     $redis.keys("#{redis_key}_*").sort.each do |key|
       hash[key] = $redis.hgetall(key)
-      hash[key][:time_human] = Time.at($redis.hget(key, "time").to_i)
+      hash[key]["time_human"] = Time.at($redis.hget(key, "time").to_i)
     end
     hash
   end

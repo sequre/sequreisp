@@ -23,24 +23,6 @@ class ContractSample < ActiveRecord::Base
   named_scope :samples_to_compact, lambda { |id,limit| { :conditions => "contract_samples.contract_id = #{id}",
                                                          :limit => limit } }
 
-  named_scope :get_new_samples, lambda { |period| { :order => "sample_number DESC",
-                                                    :conditions => "contract_samples.sample_number = (SELECT MAX(sample_number)
-                                                                                                      FROM contract_samples as foo
-                                                                                                      WHERE contract_samples.period = #{period} AND
-                                                                                                            contract_samples.contract_id = foo.contract_id
-                                                                                                      ORDER BY sample_number LIMIT 1) AND
-                                                                    contract_samples.period = #{period}" }}
-
-  def self.last_samples_created
-    samples = {}
-    ContractSample.transaction {
-      CONF_PERIODS.count.times do |i|
-        samples["period_#{i}"] = Hash[ContractSample.get_new_samples(i).collect{ |c| [c.contract_id, c.sample_number.to_i] }]
-      end
-    }
-    samples
-  end
-
   def self.samples_to_compact
     samples_to_compact = {}
     ContractSample.transaction {
