@@ -500,6 +500,7 @@ pt:
       free: "Livre"
       use: "Em uso"
     name_service:
+      sequreisp_daemon_monitor: "Wispro monitor"
       sequreisp_daemon: "wispro Daemon"
       sequreisp_redis_process: "Redis Process"
       sequreisp_compact_process: "Compact Informatio Process"

@@ -523,6 +523,7 @@ es:
       free: "Libre"
       use: "En uso"
     name_service:
+      sequreisp_daemon_monitor: "Wispro monitor"
       sequreisp_daemon: "Wispro"
       sequreisp_redis_process: "Proceso Redis"
       sequreisp_compact_process: "Proceso Compactador"
