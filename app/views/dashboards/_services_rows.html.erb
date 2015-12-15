@@ -2,16 +2,19 @@
   <tr class="even" >
     <td style="width: 14px"><%= image_tag "loader_horizontal.gif", :class => 'services_loader' %></td>
     <td><%= key %></td>
-    <td id="status_<%= s.pattern %>"><%= s.messure.present? ? "<span style=\"color: #00aa00\">UP</span>" : "<span style=\"color: #ff0000\">DOWN</span>" %></td>
+    <td id="status_<%= s.pattern %>"><%= s.messure.any? ? "<span style=\"color: #00aa00\">UP</span>" : "<span style=\"color: #ff0000\">DOWN</span>" %></td>
+    <td><%= s.messure.any? ? s.messure.first[:pid] : "-" %> </td>
+    <td><%= s.messure.any? ? s.messure.first[:cpu_instant] : "-" %> </td>
+    <td><%= s.messure.any? ? s.messure.first[:mem_instant] : "-" %> </td>
   </tr>
-  <% s.messure.each do |service_data| %>
+  <% s.messure[1..-1].to_a.each do |service_data| %>
     <tr>
       <td></td>
       <td></td>
       <td></td>
       <td><%= service_data[:pid] %> </td>
       <td><%= service_data[:cpu_instant] %> </td>
-      <td><%= "#{service_data[:mem_instant]}" %> </td>
+      <td><%= service_data[:mem_instant] %> </td>
     </tr>
   <% end %>
 <% end %>
