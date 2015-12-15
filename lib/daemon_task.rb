@@ -450,6 +450,7 @@ class DaemonRedis < DaemonTask
      counter = $redis.hget(counter_key, i.id.to_s).to_i
      generate_sample(catchs)
      $redis.hincrby(counter_key, i.id.to_s, 1)
+     @daemon_logger.debug("[CounterSamplesRedis][Interface:#{interface.id.to_s}][Value: #{counter}]")
      if counter >= 25
        samples = compact_to_db()
        transactions[:create] += samples[:create]
@@ -461,9 +462,6 @@ class DaemonRedis < DaemonTask
      InterfaceSample.massive_creation(transactions[:create])
      @daemon_logger.debug("[MassiveTransactions][InterfaceSampleModel][CREATE]")
    end
-   # keys = transactions[:create].first.keys.join(',')
-   # values = transactions[:create].map{|t| "'#{t.values.join("','")}'" }.join('),(')
-   # ActiveRecord::Base.connection.execute("INSERT INTO interface_samples (#{keys}) VALUES (#{values})")
  end
 
  def contracts_to_redis
@@ -472,12 +470,6 @@ class DaemonRedis < DaemonTask
    contract_connected = {}
    @compact_keys = ContractSample.compact_keys
    counter_key = "contract_counters"
-
-   # hfsc_class = { "up"   => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`.split("\n\n"),
-   #                "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}`.split("\n\n") }
-
-   # hfsc_class = { "up" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}`,
-   #                "down" => `/sbin/tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}` }
 
    hfsc_class={"up" => {}, "down" => {}}
    File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["up"][v[0]]=v[1]}
@@ -501,13 +493,11 @@ class DaemonRedis < DaemonTask
        parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
        @daemon_logger.debug("[TC_CLASS][#{c.class.name}:#{c.id}] #{rkey[:sample]} class hfsc #{classid} parent #{parent} contract_mark #{mark}")
        catchs["#{rkey[:name]}"] = hfsc_class[rkey[:up_or_down]][mark].to_i
-       # catchs["#{rkey[:name]}"] = hfsc_class[rkey[:up_or_down]][/class hfsc #{classid} parent #{parent}.*\n Sent (\d+) bytes/,1].to_i
-       # contract_class = hfsc_class[rkey[:up_or_down]].select{|k| k.include?("class hfsc #{classid} parent #{parent}")}.first
-       # catchs["#{rkey[:name]}"] = contract_class.split("\n").select{|k| k.include?("Sent ")}.first.split(" ")[1].to_i
      end
      counter = $redis.hget(counter_key, c.id.to_s).to_i
      generate_sample(catchs)
      $redis.hincrby(counter_key, c.id.to_s, 1)
+     @daemon_logger.debug("[CounterSamplesRedis][Contract:#{c.id.to_s}][Value: #{counter}]")
      if counter >= 25
        samples = compact_to_db()
        transactions[:create] += samples[:create]
@@ -536,14 +526,6 @@ class DaemonRedis < DaemonTask
    unless transactions[:create].empty?
      @daemon_logger.debug("[MassiveTransactions][ContractSampleModel][CREATE]")
      ContractSample.massive_creation(transactions[:create])
-   end
- end
-
- def round_robin
-   date_keys =$redis.keys("#{@redis_key}_*").sort
-   if date_keys.count == @sample_count
-     $redis.del(date_keys.first)
-     @daemon_logger.debug("[DROP_FIRST_SAMPLE][#{@relation.class.name}:#{@relation.id}]")
    end
  end
 
@@ -583,8 +565,8 @@ class DaemonRedis < DaemonTask
 
  def compact_to_db
    samples = { :create => [], :total => 0 }
-   time_period = ContractSample::CONF_PERIODS[:period_0][:time_sample]
-   period = ContractSample::CONF_PERIODS[:period_0][:period_number]
+   time_period = "#{@relation.class.name}Sample".constantize::CONF_PERIODS[:period_0][:time_sample]
+   period = "#{@relation.class.name}Sample".constantize::CONF_PERIODS[:period_0][:period_number]
    date_keys = $redis.keys("#{@redis_key}_*").sort[0..12]
    time_last_sample  = $redis.hget("#{date_keys.last}", "time").to_i #LA FECHA DE LA MAS NUEVA
 
@@ -593,7 +575,8 @@ class DaemonRedis < DaemonTask
 
    while (not date_keys.empty?) and time_last_sample >= @end_time_new_sample
      keys_to_delete = []
-     samples_to_compact = []
+     sample_empty = Hash[@compact_keys.collect{|k| [k[:name], 0] }]
+     samples_to_compact = [sample_empty]
 
      new_sample = { :period => period,
                     :sample_time => Time.at(@init_time_new_sample).utc.to_s(:db),
@@ -622,8 +605,17 @@ class DaemonRedis < DaemonTask
      @init_time_new_sample += time_period
      @end_time_new_sample  += time_period
    end
+   @daemon_logger.debug("[UPDATE_LAST_SAMPLE][#{@relation.class.name}:#{@relation.id}][Period:#{period}][SAMPLE_NUMBER:#{@init_time_new_sample}](#{Time.at(@init_time_new_sample)})")
    $redis.hmset(@redis_key, "period_#{period}", @init_time_new_sample)
    samples
+ end
+
+ def round_robin
+   date_keys =$redis.keys("#{@redis_key}_*").sort
+   if date_keys.count == @sample_count
+     $redis.del(date_keys.first)
+     @daemon_logger.debug("[DROP_FIRST_SAMPLE][#{@relation.class.name}:#{@relation.id}]")
+   end
  end
 
 end
