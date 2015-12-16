@@ -31,6 +31,10 @@ pt:
     afirmative: "Sim"
     negative: "Não"
   activerecord:
+    shared:
+      boolean:
+        true: 'Sim'
+        false: 'Não'
     models:
       address:
         one: "Endereço IP"
@@ -121,6 +125,9 @@ pt:
         start_date: "Data de início"
         is_connected: "Conectado"
         port_prios: "Portos prioritários"
+        label_id: 'id'
+        label_name: 'Nome'
+        label_plan: 'Plano'
       client:
         id: "ID"
         name: "Nome e sobrenome"
@@ -405,6 +412,7 @@ pt:
     plans:
       plugins_enabled: 'Módulos habilitados'
   buttons:
+    process: 'Processo'
     export_to_csv: "Exportação para csv"
     login: "Ingressar"
     edit: "Editar"

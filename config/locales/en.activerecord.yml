@@ -31,6 +31,10 @@ en:
     afirmative: "Yes"
     negative: "No"
   activerecord:
+    shared:
+      boolean:
+        true: 'Yes'
+        false: 'No'
     models:
       address:
         one: "IP Address"
@@ -124,6 +128,9 @@ en:
         start_date: "Start date"
         is_connected: "Connected"
         port_prios: "Priority ports"
+        label_id: 'id'
+        label_name: 'Name'
+        label_plan: 'Plan'
       client:
         id: "ID"
         name: "First name and surname"
@@ -411,6 +418,7 @@ en:
     plans:
       plugins_enabled: 'Plugins enabled'
   buttons:
+    process: 'Process'
     export_to_csv: "Export to csv"
     login: "Login"
     edit: "Edit"
