@@ -450,7 +450,7 @@ class DaemonRedis < DaemonTask
      counter = $redis.hget(counter_key, i.id.to_s).to_i
      generate_sample(catchs)
      $redis.hincrby(counter_key, i.id.to_s, 1)
-     @daemon_logger.debug("[CounterSamplesRedis][Interface:#{interface.id.to_s}][Value: #{counter}]")
+     @daemon_logger.debug("[CounterSamplesRedis][Interface:#{i.id.to_s}][Value: #{counter}]")
      if counter >= 25
        samples = compact_to_db()
        transactions[:create] += samples[:create]
