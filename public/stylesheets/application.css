@@ -83,7 +83,7 @@ div#wait_apply_changes_button {
 
 div.yield{
   background: none repeat scroll 0% 0% #dbdcdb;
-  overflow: hidden;
+  overflow: visible;
   margin-left: -20px;
   padding-left: 20px;
   width: 862px;
