@@ -21,7 +21,7 @@ gem 'open4', '=1.3.3'
 gem 'redis', '=3.2.1'
 gem 'interactive_editor', '=0.0.10'
 gem 'awesome_print', '=1.1.0'
-gem 'mool', '=1.0.1', :git => 'https://github.com/gedera/mool'
+gem 'mool', '=1.0.1'
 
 group :development, :test do
    gem 'faker', '=1.0.1'
