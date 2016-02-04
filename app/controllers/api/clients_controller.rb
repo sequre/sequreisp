@@ -19,8 +19,8 @@ class Api::ClientsController < ApplicationController
   # GET /clients
   # GET /clients.xml
   def index
-    #params[:search] ||= {}
-    @clients = Client.all
+    params[:search] ||= {}
+    @clients = Client.search(params[:search]).all
 
     respond_to do |format|
       format.json  { render :json => @clients }

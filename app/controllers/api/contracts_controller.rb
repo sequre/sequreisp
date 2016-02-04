@@ -19,8 +19,8 @@ class Api::ContractsController < ApplicationController
   # GET /contracts
   # GET /contracts.xml
   def index
-    #params[:search] ||= {}
-    @contracts = Contract.all
+    params[:search] ||= {}
+    @contracts = Contract.search(params[:search]).all
 
     respond_to do |format|
       format.json  { render :json => @contracts }
