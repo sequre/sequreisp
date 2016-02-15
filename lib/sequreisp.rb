@@ -354,7 +354,8 @@ def gen_iptables
         BootHook.run :hook => :nat_after_forwards_hook, :iptables_script => f
       end
 
-      Provider.enabled.with_klass_and_interface.each do |p|
+      providers_enabled_with_klass_and_interface = Provider.enabled.with_klass_and_interface
+      providers_enabled_with_klass_and_interface.each do |p|
         p.networks.each do |network|
           f.puts "-A POSTROUTING -o #{p.link_interface} -s #{network} -j ACCEPT"
         end
@@ -362,6 +363,8 @@ def gen_iptables
         p.avoid_nat_addresses_as_ips.each do |ip|
           f.puts "-A POSTROUTING -o #{p.link_interface} -s #{ip} -j ACCEPT"
         end
+      end
+      providers_enabled_with_klass_and_interface.each do |p|
         # do we have an ip yet?
         if p.ip.blank? or p.kind != 'static'
           f.puts "-A POSTROUTING -o #{p.link_interface}  -j MASQUERADE"
@@ -410,7 +413,6 @@ def gen_iptables
       f.puts "-A OUTPUT -o lo -j ACCEPT"
 
       contracts = Contract.descend_by_netmask
-      providers = Provider.enabled.with_klass_and_interface
       lan_interfaces = Interface.only_lan
 
       unless Configuration.in_safe_mode?
@@ -453,7 +455,7 @@ def gen_iptables
 
       f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
 
-      providers.each do |p|
+      providers_enabled_with_klass_and_interface.each do |p|
         target = p.allow_dns_queries? ? "ACCEPT" : "DROP"
         f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j #{target}"
         f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j #{target}"
@@ -487,8 +489,8 @@ def gen_iptables
         ######################end
         unless contracts.empty?
           f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "enabled", :match => "-s", :prefix_leaf => "enabled" }).to_iptables)
-          providers.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
-          #f.puts "-A enabled-MAIN -j DROP"
+          providers_enabled_with_klass_and_interface.map { |p| f.puts "-A FORWARD -o #{p.link_interface} -j enabled-MAIN" }
+          f.puts "-A enabled-MAIN -j DROP"
         end
       end
       f.puts "COMMIT"
@@ -979,7 +981,9 @@ def boot(run=true)
     Rails.logger.debug "[Boot] setup_tc"
     setup_tc
     Rails.logger.debug "[Boot] setup_iptables"
+    exec_context_commands "enabled_iptables_lock", ["touch #{DEPLOY_DIR}/tmp/iptables.lock"], I18n.t("command.human.enabled_iptables_lock")
     setup_iptables
+    exec_context_commands "disabled_iptables_lock", ["[ -f #{DEPLOY_DIR}/tmp/iptables.lock ] && rm #{DEPLOY_DIR}/tmp/iptables.lock"], I18n.t("command.human.disabled_iptables_lock")
     Rails.logger.debug "[Boot] setup_mail_relay"
     setup_mail_relay
 

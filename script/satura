@@ -1,0 +1,20 @@
+#!/bin/bash
+
+ip=$(ifconfig $1 | grep -o "inet addr:[^ ]*" | grep -o "[0-9][^ ]*")
+echo $1 $ip
+#tc qdisc del root dev $1
+for url in \
+    https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.3.tar.xz \
+    http://cdimage.debian.org/debian-cd/8.2.0/amd64/iso-cd/debian-8.2.0-amd64-CD-1.iso \
+    http://mirror.rackspace.com/archlinux/iso/2015.11.01/archlinux-2015.11.01-dual.iso \
+    http://cdimage.debian.org/debian-cd/8.2.0/amd64/iso-cd/debian-8.2.0-amd64-CD-8.iso \
+    http://releases.ubuntu.com/14.04.3/ubuntu-14.04.3-desktop-amd64.iso
+do
+    for times in $(seq 1 10)
+    do
+	wget --quiet --bind-address=$ip  -O /dev/null $url &
+    done
+done
+
+iftop -i $1
+killall -9 wget

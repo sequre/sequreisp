@@ -82,7 +82,8 @@ class IPTree
         # o << "-A #{chain} #{match} #{ip.to_cidr} -j sq.#{ip.to_cidr}"
       end
     end
-    if not @ips.empty? and need_net_processing?
+    if need_net_processing?
+    #if not @ips.empty? and need_net_processing?
       nets.each do |net|
         o << "#{indent}-A #{chain} #{match} #{net.to_cidr} -j #{prefix_leaf}.#{net.to_cidr}"
       end

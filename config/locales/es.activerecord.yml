@@ -31,6 +31,10 @@ es:
     afirmative: "Sí"
     negative: "No"
   activerecord:
+    shared:
+      boolean:
+        true: 'Si'
+        false: 'No'
     models:
       address:
         one: "Dirección IP"
@@ -120,6 +124,9 @@ es:
         unique_provider: "Usar proveedor específico para este contrato (anula el balanceo)"
         start_date: "Fecha de alta"
         is_connected: "Conectado"
+        label_id: 'id'
+        label_name: 'Nombre'
+        label_plan: 'Plan'
       client:
         id: "ID"
         name: "Nombre y apellido"
@@ -389,6 +396,7 @@ es:
     plans:
       plugins_enabled: 'Módulos habilitados'
   buttons:
+    process: 'Procesar'
     export_to_csv: "Exportar a csv"
     login: "Entrar"
     edit: "Editar"
@@ -702,6 +710,8 @@ es:
       update_provider_route: "Configurando rutas para el proveedor %{name} (%{id})"
       do_provider_up: "Do provider up"
       do_provider_down: "Do provider down"
+      enabled_iptables_lock: "Lock iptables"
+      disabled_iptables_lock: "Unlock iptables"
   daemons:
     name:
       daemon_apply_change: "Aplicar cambios"
