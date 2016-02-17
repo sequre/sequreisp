@@ -1,93 +1,135 @@
 class IPTree
   require 'ipaddr'
 
-  attr_accessor :parent, :ips, :mask
+  attr_reader :parent, :ip_list, :indent, :level, :prefix, :leaf_prefix, :match, :subnet, :nets
 
-  LIMIT = 5
-  INDENT= 0 # Dejarlo en 0 para produccion
+  LIMIT = 4
+  INDENT=2
 
-  def initialize(argument)
-    @parent = argument[:parent]
-    @prefix = argument[:prefix]
-    @match = argument[:match]
-    @mask = argument[:mask] || "MAIN"
-    @ips = argument[:ip_list]
-    @prefix_leaf = argument[:prefix_leaf]
+
+  def initialize(params)
+    # Mass initialize instance variables
+    params.each{|k,v| instance_variable_set("@#{k}", v)}
+
+    fill_in
+    validate
+    sort_ip_list
+    extract_nets
   end
 
-  def level
-    parent.nil? ? 0 : parent.level+1
+  # Raise an error if there's something wrong which is not wight
+  def validate
+    raise("match should exists and be a string") unless @match.is_a?(String)
+    raise("match should be '-s' or '-d'") if @match != "-d" and @match != "-s"
+    raise("prefix should exists and be a string") unless @prefix.is_a?(String)
+
+    # TO DO
+    #   (prefix + leaf.prefix).length < MAX to avoid iptables errors
   end
 
-  def indent
-    " "*INDENT*level
+  # Set default values for undefined variables.
+  # Usually from parent or from hardcoded constant default
+  def fill_in
+    @level  ||= (parent.nil? ?     0 : parent.level+1)
+    @indent ||= (parent.nil? ? false : parent.indent)
+    @prefix ||= (parent.nil? ?   nil : parent.prefix)
+    @match  ||= (parent.nil? ?   nil : parent.match)
+
+    # The prefix of the leaf is "leaf_prefix".
+    # Modifiers goes first, noun at the end.
+    # This class accepts "prefix_leaf" for compatibility
+    # with old versions
+    @leaf_prefix ||= @prefix_leaf
+
+    @leaf_prefix  ||= (parent.nil? ? "#{@prefix}.leaf" : parent.leaf_prefix)
+    @nets = []
   end
 
-  def prefix; @prefix || (parent && parent.prefix) || "PREFIX"; end
-  def match; @match || (parent && parent.match) || ""; end
-  def prefix_leaf; @prefix_leaf ; end
+  def sort_ip_list
+    @ip_list.sort! do |x,y|
+      # First compare the addresses
+      address_comparision=x.to_i <=> y.to_i
+      if address_comparision == 0
+        # If the addresses are the same sort by mask
+        # Specific (bigger cidr_mask) first
+        y.cidr_mask <=> x.cidr_mask
+      else
+        address_comparision
+      end
+    end.uniq!
+  end
 
-  def extremes; @extremes ||= [ips.min,ips.max]; end
+  def extract_nets
+    # Extract nets bigger than the next split
+    # Those nets will be identified at the end
+    # of THIS branch.
+    @nets=ip_list.select{|ip| ip.cidr_mask < split_mask}
+    @ip_list=@ip_list-@nets
+  end
+
+  def indent_string
+    indent ? " "*INDENT*level : ""
+  end
+
+  def extremes; @extremes ||= [ip_list.min,ip_list.max]; end
 
   def split_mask
-    @sm ||= split_mask = 33 - (extremes.first.to_i ^ extremes.last.to_i).to_s(2).size
+    # the smaller CIDR mask that can split ip_list in two lists
+    @split_mask ||= 33 - (extremes.first.to_i ^ extremes.last.to_i).to_s(2).size
   end
 
-  def biggest_network_mask
-    @biggest_network_mask ||= ips.map{|ip| ip.cidr_mask}.min
-  end
-
-  def nets
-    @nets ||= ips.select{|ip| ip.cidr_mask == biggest_network_mask}
-  end
-
-  def need_net_processing?
-    @nnp ||= (split_mask >= biggest_network_mask and biggest_network_mask != 32)
-  end
-
-  def ch_masks
-    @ch_masks ||= extremes.map{|e| IPAddr.new("#{e.to_s}/#{split_mask}").to_cidr}
+  def ch_subnets
+    @ch_subnets ||= extremes.map{|e| IPAddr.new("#{e.to_s}/#{split_mask}")}
   end
 
   def childs
-    return [] if ips.count <= LIMIT
-    @childs ||= (
-      ch = [[],[]]
-      ips.each{|ip| IPAddr.new(ch_masks[0]).include?(ip) ? ch[0] << ip : ch[1] << ip }
-      [0,1].map{|n| self.class.new(:ip_list => ch[n],:parent => self, :mask => ch_masks[n], :prefix_leaf => prefix_leaf) }
+    @childs ||=
+      (
+        if ip_list.count <= LIMIT
+          []
+        else
+          child_ip_list = [[],[]]
+          ip_list.each{|ip| child_ip_list[ch=ch_subnets[0].include?(ip) ? 0 : 1] << ip}
+          @ip_list=[]
+          [0,1].map{|n| self.class.new(:ip_list => child_ip_list[n],:parent => self, :subnet => ch_subnets[n]) }
+        end
     )
   end
 
-  def chain; @chain ||= ( "#{prefix}-#{mask}"); end
+  def chain_name; @chain_name ||= ( "#{prefix}-#{subnet ? subnet.to_cidr : "MAIN"}"); end
 
   def to_iptables
     o=[]
 
-    @ips=@ips-nets if not @ips.empty? and need_net_processing? # Saco las reded de las IPs a procesar en ramas
-
-    if parent.nil? # Cadena del nodo inicial
-      o << "#{indent}:#{chain} -"
-      o << "#{indent}-F #{chain}"
+    if parent.nil? # Initial node
+      o << "# IPTables Tree for #{ip_list.count} addresses"
+      o << "#      PREFIX: #{prefix}"
+      o << "# LEAF_PREFIX: #{leaf_prefix}"
+      o << "#       MATCH: #{match}"
+      o << "#      INDENT: #{indent}"
+      o << "#"
+      o << "#{indent_string}:#{chain_name} -"
+      o << "#{indent_string}-F #{chain_name}"
     end
 
-    childs.each do |ch| # cadena de cada hijo, seguida de las iptables de cada hijo
-      o << "#{indent}:#{ch.chain} -"
-      o << "#{indent}-F #{ch.chain}"
-      o << "#{indent}-A #{chain} #{match} #{ch.mask} -j #{ch.chain}"
+    # Child rules
+    childs.each do |ch| # Child init rules, then the child sub-tree
+      o << "#{indent_string}:#{ch.chain_name} -"
+      o << "#{indent_string}-F #{ch.chain_name}"
+      o << "#{indent_string}-A #{chain_name} #{match} #{ch.subnet} -j #{ch.chain_name}"
       o << ch.to_iptables
     end
-    if ips.count <= LIMIT # Si hay LIMIT IPs o menos aplica salto a la ip hoja
-      ips.each do |ip|
-        o << "#{indent}-A #{chain} #{match} #{ip.to_cidr} -j #{prefix_leaf}.#{ip.to_cidr}"
-        # o << "-A #{chain} #{match} #{ip.to_cidr} -j sq.#{ip.to_cidr}"
-      end
+
+    # Own IP rules (Child creation empties ip_list)
+    ip_list.each do |ip|
+      o << "#{indent_string}-A #{chain_name} #{match} #{ip.to_cidr} -j #{leaf_prefix}.#{ip.to_cidr}"
     end
-    if need_net_processing?
-    #if not @ips.empty? and need_net_processing?
-      nets.each do |net|
-        o << "#{indent}-A #{chain} #{match} #{net.to_cidr} -j #{prefix_leaf}.#{net.to_cidr}"
-      end
+
+    # Network bigger than current split
+    nets.each do |net|
+      o << "#{indent_string}-A #{chain_name} #{match} #{net.to_cidr} -j #{leaf_prefix}.#{net.to_cidr}"
     end
+
     o
   end
 end
