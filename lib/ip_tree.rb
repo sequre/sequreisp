@@ -1,11 +1,31 @@
+# Monkeypatch IPAddr object to make the mask accesible
+class IPAddr
+  def cidr_mask
+    @mask_addr.to_s(2).count("1")
+  end
+
+  def to_cidr
+    [to_string,("/"+cidr_mask.to_s unless cidr_mask == 32)].compact.join
+  end
+end
+
+# Parameters
+#    ip_list: An array of IPAddr objects
+#    prefix:  String to prepend in iptables rules and chains
+#    leaf_prefix: String to prepend in iptables final tree targets
+#    match: '-s' for source IP or '-d' for destination IP tree
+#    indent: true or false. Indent output
+#
+#    The resulting tree will reach leave iptables chains with name
+#     "#{leaf_prefix}.#{IPAddr.to_cidr}"
+#
 class IPTree
   require 'ipaddr'
 
   attr_reader :parent, :ip_list, :indent, :level, :prefix, :leaf_prefix, :match, :subnet, :nets
 
-  LIMIT = 4
-  INDENT=2
-
+  LIMIT  = 4
+  INDENT = 2
 
   def initialize(params)
     # Mass initialize instance variables
@@ -19,12 +39,11 @@ class IPTree
 
   # Raise an error if there's something wrong which is not wight
   def validate
-    raise("match should exists and be a string") unless @match.is_a?(String)
-    raise("match should be '-s' or '-d'") if @match != "-d" and @match != "-s"
-    raise("prefix should exists and be a string") unless @prefix.is_a?(String)
-
-    # TO DO
-    #   (prefix + leaf.prefix).length < MAX to avoid iptables errors
+    raise("match should exists and be a string.") unless @match.is_a?(String)
+    raise("match should be '-s' or '-d'.") if @match != "-d" and @match != "-s"
+    raise("prefix should exists and be a string.") unless @prefix.is_a?(String)
+    raise("leaf_prefix should be at most 12 chars long.") if @leaf_prefix.size > 12
+    raise("prefix should be at most 10 chars long.") if @leaf_prefix.size > 10
   end
 
   # Set default values for undefined variables.
@@ -116,7 +135,7 @@ class IPTree
     childs.each do |ch| # Child init rules, then the child sub-tree
       o << "#{indent_string}:#{ch.chain_name} -"
       o << "#{indent_string}-F #{ch.chain_name}"
-      o << "#{indent_string}-A #{chain_name} #{match} #{ch.subnet} -j #{ch.chain_name}"
+      o << "#{indent_string}-A #{chain_name} #{match} #{ch.subnet.to_cidr} -j #{ch.chain_name}"
       o << ch.to_iptables
     end
 
