@@ -90,9 +90,9 @@ class Contract < ActiveRecord::Base
   end
 
   def ip_without_netmask
-    _ip = IP.new(ip)
+    _ip = IP.new(ip) rescue nil
     # check that the mask is set only for networks
-    if _ip.mask > 0 and _ip != _ip.network
+    if _ip and _ip.mask > 0 and _ip != _ip.network
       errors.add(:ip, I18n.t('validations.contract.do_not_set_mask_if_is_not_a_network'))
     end
   end
