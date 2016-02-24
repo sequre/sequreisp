@@ -685,9 +685,11 @@ class Contract < ActiveRecord::Base
   end
 
   def rules_for_up_data_counting
-    macrule = (Configuration.filter_by_mac_address and mac_address.present?) ? "-m mac --mac-source #{mac_address}" : ""
+    # macrule = (Configuration.filter_by_mac_address and mac_address.present?) ? "-m mac --mac-source #{mac_address}" : ""
+    # [ ":count-up.#{ip_addr.to_cidr} -",
+    #   "-A count-up.#{ip_addr.to_cidr} #{macrule} -s #{ip} -m comment --comment \"data-count-#{ip}-up-data_count\"" ]
     [ ":count-up.#{ip_addr.to_cidr} -",
-      "-A count-up.#{ip_addr.to_cidr} #{macrule} -s #{ip} -m comment --comment \"data-count-#{ip}-up-data_count\"" ]
+      "-A count-up.#{ip_addr.to_cidr} -s #{ip} -m comment --comment \"data-count-#{ip}-up-data_count\"" ]
   end
 
   def rules_for_down_data_counting
