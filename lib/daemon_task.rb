@@ -336,7 +336,7 @@ class DaemonDataCounting < DaemonTask
 
   def exec_data_counting
     hash_count = { "up" => {}, "down" => {} }
-    contracts = Contract.not_disabled(:include => :current_traffic)
+    contracts = Contract.all(:include => :current_traffic)
     contract_count = contracts.count
     parse_data_count(contracts, hash_count)
 
