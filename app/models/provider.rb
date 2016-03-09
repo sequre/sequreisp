@@ -117,7 +117,7 @@ class Provider < ActiveRecord::Base
   def queue_update_commands
     cq = QueuedCommand.new
     if not interface_id_was.nil?
-      _interface = Interface.find interface_id_was
+      _interface = Interface.find(interface_id_was)
       if kind_changed? or interface_id_changed?
         case kind_was
         when "adsl"
