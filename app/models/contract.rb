@@ -244,43 +244,45 @@ class Contract < ActiveRecord::Base
 
   def queue_update_commands
     cq = QueuedCommand.new
-    _interface = Interface.find(proxy_arp_interface_id_was) rescue nil
-    if _interface
-      begin
-        p_was = proxy_arp_provider_id_was.present? ? Provider.find(proxy_arp_provider_id_was) : guess_proxy_arp_provider(ip_was) rescue nil
-        g_ip_was = proxy_arp_gateway_was.present? ? proxy_arp_gateway_was : p_was.gateway rescue nil
-        if proxy_arp_changed?
-          if proxy_arp_was
-            # User de-activate proxy_arp
-            if p_was
-              cq.command += "arp -i #{p_was.interface.name} -d #{ip_was};"
-              cq.command += "arp -i #{_interface.name} -d #{g_ip_was};"
+    unless proxy_arp_interface_id_was.nil?
+      _interface = Interface.find(proxy_arp_interface_id_was) rescue nil
+      if _interface
+        begin
+          p_was = proxy_arp_provider_id_was.present? ? Provider.find(proxy_arp_provider_id_was) : guess_proxy_arp_provider(ip_was) rescue nil
+          g_ip_was = proxy_arp_gateway_was.present? ? proxy_arp_gateway_was : p_was.gateway rescue nil
+          if proxy_arp_changed?
+            if proxy_arp_was
+              # User de-activate proxy_arp
+              if p_was
+                cq.command += "arp -i #{p_was.interface.name} -d #{ip_was};"
+                cq.command += "arp -i #{_interface.name} -d #{g_ip_was};"
+              end
+              if proxy_arp_use_lan_gateway_was
+                cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
+              else
+                cq.command += "ip ro del #{ip_was} dev #{_interface.name};"
+              end
             end
-            if proxy_arp_use_lan_gateway_was
-              cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
-            else
-              cq.command += "ip ro del #{ip_was} dev #{_interface.name};"
-            end
-          end
-        elsif proxy_arp
-          # proxy_arp does not changed but is active, so check if other options changed
-          if proxy_arp_interface_id_changed? or ip_changed? or proxy_arp_use_lan_gateway_changed? or proxy_arp_lan_gateway_changed? or proxy_arp_provider_id_changed?
-            cq.command += "arp -i #{_interface.name} -d #{g_ip_was};" if p_was and ( proxy_arp_interface_id_changed? or proxy_arp_provider_id_changed? )
-            cq.command += "arp -i #{p_was.interface.name} -d #{ip_was};" if p_was and ( ip_changed? or proxy_arp_provider_id_changed? )
+          elsif proxy_arp
+            # proxy_arp does not changed but is active, so check if other options changed
+            if proxy_arp_interface_id_changed? or ip_changed? or proxy_arp_use_lan_gateway_changed? or proxy_arp_lan_gateway_changed? or proxy_arp_provider_id_changed?
+              cq.command += "arp -i #{_interface.name} -d #{g_ip_was};" if p_was and ( proxy_arp_interface_id_changed? or proxy_arp_provider_id_changed? )
+              cq.command += "arp -i #{p_was.interface.name} -d #{ip_was};" if p_was and ( ip_changed? or proxy_arp_provider_id_changed? )
 
-            if proxy_arp_use_lan_gateway_was
-              cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
-            else
-              cq.command += "ip ro del #{ip_was} dev #{_interface.name};"
+              if proxy_arp_use_lan_gateway_was
+                cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
+              else
+                cq.command += "ip ro del #{ip_was} dev #{_interface.name};"
+              end
             end
+            #if proxy_arp_lan_gateway_changed? and proxy_arp_lan_gateway_was
+            #  cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
+            #end
           end
-          #if proxy_arp_lan_gateway_changed? and proxy_arp_lan_gateway_was
-          #  cq.command += "ip ro del #{ip_was} via #{proxy_arp_lan_gateway_was} dev #{_interface.name};"
-          #end
+        rescue => e
+          $application_logger.error(e)
+          # Rails.logger.error "ERROR: Contract::queue_update_commands #{e.inspect}"
         end
-      rescue => e
-        $application_logger.error(e)
-        # Rails.logger.error "ERROR: Contract::queue_update_commands #{e.inspect}"
       end
     end
     cq.save if not cq.command.empty?
