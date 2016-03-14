@@ -44,6 +44,7 @@ ActionController::Routing::Routes.draw do |map|
   map.namespace :api do |api|
     api.resources :clients
     api.resources :contracts
+    api.resources :plans
   end
   map.root :controller => "user_sessions", :action => "new"
 
