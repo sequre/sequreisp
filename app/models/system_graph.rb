@@ -116,8 +116,8 @@ class SystemGraph < Graph
                               :y => ram.mem_used.round },
                             { :name => I18n.t("graphs.titles.disks.free"),
                               :color => GREEN,
-                              :y => ram.mem_available.round } ] }]
-                              # :y => ram.mem_free.round } ] }]
+                              # :y => ram.mem_available.round } ] }]
+                              :y => (ram.mem_free + ram.cached + ram.buffers).round } ] }]
 
     graph = { :title  => I18n.t("graphs.titles.ram"),
               :type   => "pie",
