@@ -440,21 +440,28 @@ class DaemonRedis < DaemonTask
    @compact_keys = InterfaceSample.compact_keys
    counter_key = "interface_counters"
    Interface.all.each do |i|
+     interface_counter_key = "interface_#{i.id}_counter"
      @relation = i
      @redis_key  = i.redis_key
-     $redis.hset(counter_key, i.id.to_s, 0) unless $redis.hexists(counter_key, i.id.to_s)
+     # $redis.hset(counter_key, i.id.to_s, 0) unless $redis.hexists(counter_key, i.id.to_s)
+
+     $redis.hset(counter_key, interface_counter_key, 0) unless $redis.hexists(counter_key,  interface_counter_key)
+
      round_robin()
      catchs = {}
      @compact_keys.each { |rkey| catchs[rkey[:name]] = i.send("#{rkey[:name]}_bytes") }
      @current_time = DateTime.now.to_i
-     counter = $redis.hget(counter_key, i.id.to_s).to_i
+     # counter = $redis.hget(counter_key, i.id.to_s).to_i
+     counter = $redis.hget(counter_key, interface_counter_key).to_i
      generate_sample(catchs)
-     $redis.hincrby(counter_key, i.id.to_s, 1)
+     # $redis.hincrby(counter_key, i.id.to_s, 1)
+     $redis.hincrby(counter_key, interface_counter_key, 1)
      @daemon_logger.debug("[CounterSamplesRedis][Interface:#{i.id.to_s}][Value: #{counter}]")
      if counter >= 25
        samples = compact_to_db()
        transactions[:create] += samples[:create]
-       $redis.hset(counter_key, i.id.to_s, $redis.keys("#{@redis_key}_*").count)
+       # $redis.hset(counter_key, i.id.to_s, $redis.keys("#{@redis_key}_*").count)
+       $redis.hset(counter_key, interface_counter_key, $redis.keys("#{@redis_key}_*").count)
      end
    end
 
@@ -469,7 +476,7 @@ class DaemonRedis < DaemonTask
    traffic_data_count = {}
    contract_connected = {}
    @compact_keys = ContractSample.compact_keys
-   counter_key = "contract_counters"
+   @counter_key = "contract_counters"
 
    hfsc_class={"up" => {}, "down" => {}}
    File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["up"][v[0]]=v[1]}
@@ -481,9 +488,11 @@ class DaemonRedis < DaemonTask
 
    contracts.each do |c|
      next if c.disabled?
+     @contract_counter_key = "contract_#{i.id}_counter"
      @relation = c
      @redis_key  = c.redis_key
-     $redis.hset(counter_key, c.id.to_s, 0) unless $redis.hexists(counter_key, c.id.to_s)
+     # $redis.hset(counter_key, c.id.to_s, 0) unless $redis.hexists(counter_key, c.id.to_s)
+     $redis.hset(@counter_key, @contract_counter_key, 0) unless $redis.hexists(@counter_key, @contract_counter_key)
      round_robin()
      catchs = {}
      @compact_keys.each do |rkey|
@@ -494,9 +503,11 @@ class DaemonRedis < DaemonTask
        @daemon_logger.debug("[TC_CLASS][#{c.class.name}:#{c.id}] #{rkey[:sample]} class hfsc #{classid} parent #{parent} contract_mark #{mark}")
        catchs["#{rkey[:name]}"] = hfsc_class[rkey[:up_or_down]][mark].to_i
      end
-     counter = $redis.hget(counter_key, c.id.to_s).to_i
+     # counter = $redis.hget(counter_key, c.id.to_s).to_i
+     counter = $redis.hget(@counter_key, @contract_counter_key).to_i
      generate_sample(catchs)
-     $redis.hincrby(counter_key, c.id.to_s, 1)
+     # $redis.hincrby(counter_key, c.id.to_s, 1)
+     $redis.hincrby(@counter_key, @contract_counter_key, 1)
      @daemon_logger.debug("[CounterSamplesRedis][Contract:#{c.id.to_s}][Value: #{counter}]")
      if counter >= 25
        samples = compact_to_db()
@@ -505,7 +516,8 @@ class DaemonRedis < DaemonTask
        @daemon_logger.debug("[UpdateDataCount][Contract:#{c.id.to_s}][Value: #{traffic_data_count[c.current_traffic.id.to_s]}]") if samples[:total] > 0
        contract_connected[c.id.to_s] = samples[:total] > 0 ? 1 : 0
        @daemon_logger.debug("[UpdateContractConnected][Contract:#{c.id.to_s}][Value: #{contract_connected[c.id.to_s]}]") if samples[:total] > 0
-       $redis.hset(counter_key, c.id.to_s, $redis.keys("#{@redis_key}_*").count)
+       # $redis.hset(counter_key, c.id.to_s, $redis.keys("#{@redis_key}_*").count)
+       # $redis.hset(@counter_key, @contract_counter_key, $redis.keys("#{@redis_key}_*").count)
      end
    end
 
@@ -532,9 +544,11 @@ class DaemonRedis < DaemonTask
  def generate_sample(catchs)
    new_sample = {}
    new_key = "#{@redis_key}_#{@current_time}"
+
    last_key = $redis.keys("#{@redis_key}_*").sort.last
    last_time = $redis.hget("#{last_key}", "time")
    total_seconds = last_time.nil? ? 1 : (@current_time.to_f - last_time.to_f)
+
    $redis.hmset("#{new_key}", "time", @current_time)
    $redis.hmset("#{new_key}", "total_seconds", total_seconds)
 
@@ -565,6 +579,7 @@ class DaemonRedis < DaemonTask
 
  def compact_to_db
    samples = { :create => [], :total => 0 }
+   total_deleted_keys = 0
    time_period = "#{@relation.class.name}Sample".constantize::CONF_PERIODS[:period_0][:time_sample]
    period = "#{@relation.class.name}Sample".constantize::CONF_PERIODS[:period_0][:period_number]
    date_keys = $redis.keys("#{@redis_key}_*").sort[0..12]
@@ -598,6 +613,7 @@ class DaemonRedis < DaemonTask
        end
      end
 
+     total_deleted_keys += keys_to_delete.size
      data_acummulated = samples_to_compact.sum
      samples[:total] += data_acummulated.values.sum
      samples[:create] << new_sample.merge((data_acummulated / time_period * 8))
@@ -605,6 +621,8 @@ class DaemonRedis < DaemonTask
      @init_time_new_sample += time_period
      @end_time_new_sample  += time_period
    end
+   $redis.hincrby(@counter_key, @contract_counter_key, total_deleted_keys * -1)
+
    @daemon_logger.debug("[UPDATE_LAST_SAMPLE][#{@relation.class.name}:#{@relation.id}][Period:#{period}][SAMPLE_NUMBER:#{@init_time_new_sample}](#{Time.at(@init_time_new_sample)})")
    $redis.hmset(@redis_key, "period_#{period}", @init_time_new_sample)
    samples
