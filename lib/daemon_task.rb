@@ -438,30 +438,30 @@ class DaemonRedis < DaemonTask
  def interfaces_to_redis
    transactions = { :create => [] }
    @compact_keys = InterfaceSample.compact_keys
-   counter_key = "interface_counters"
+   @counter_key = "interface_counters"
    Interface.all.each do |i|
      interface_counter_key = "interface_#{i.id}_counter"
      @relation = i
      @redis_key  = i.redis_key
      # $redis.hset(counter_key, i.id.to_s, 0) unless $redis.hexists(counter_key, i.id.to_s)
 
-     $redis.hset(counter_key, interface_counter_key, 0) unless $redis.hexists(counter_key,  interface_counter_key)
+     $redis.hset(@counter_key, interface_counter_key, 0) unless $redis.hexists(@counter_key,  interface_counter_key)
 
      round_robin()
      catchs = {}
      @compact_keys.each { |rkey| catchs[rkey[:name]] = i.send("#{rkey[:name]}_bytes") }
      @current_time = DateTime.now.to_i
      # counter = $redis.hget(counter_key, i.id.to_s).to_i
-     counter = $redis.hget(counter_key, interface_counter_key).to_i
+     counter = $redis.hget(@counter_key, interface_counter_key).to_i
      generate_sample(catchs)
      # $redis.hincrby(counter_key, i.id.to_s, 1)
-     $redis.hincrby(counter_key, interface_counter_key, 1)
+     $redis.hincrby(@counter_key, interface_counter_key, 1)
      @daemon_logger.debug("[CounterSamplesRedis][Interface:#{i.id.to_s}][Value: #{counter}]")
      if counter >= 25
        samples = compact_to_db()
        transactions[:create] += samples[:create]
        # $redis.hset(counter_key, i.id.to_s, $redis.keys("#{@redis_key}_*").count)
-       $redis.hset(counter_key, interface_counter_key, $redis.keys("#{@redis_key}_*").count)
+       $redis.hset(@counter_key, interface_counter_key, $redis.keys("#{@redis_key}_*").count)
      end
    end
 
@@ -545,12 +545,10 @@ class DaemonRedis < DaemonTask
    new_sample = {}
    new_key = "#{@redis_key}_#{@current_time}"
 
-   last_key = $redis.keys("#{@redis_key}_*").sort.last
-   last_time = $redis.hget("#{last_key}", "time")
+   # last_key = $redis.keys("#{@redis_key}_*").sort.last
+   last_time = $redis.hget(@counter_key, "#{@relation.class.name.underscore}_#{@relation.id}_last_time")
+   last_key = last_time.nil? ? nil : "#{@redis_key}_#{last_time}"
    total_seconds = last_time.nil? ? 1 : (@current_time.to_f - last_time.to_f)
-
-   $redis.hmset("#{new_key}", "time", @current_time)
-   $redis.hmset("#{new_key}", "total_seconds", total_seconds)
 
    catchs.each do |prio_key, current_total|
      new_sample[prio_key] = { :instant => 0, :total_bytes => current_total }
@@ -560,6 +558,10 @@ class DaemonRedis < DaemonTask
      end
      $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total )
    end
+
+   $redis.hmset("#{new_key}", "time", @current_time)
+   $redis.hmset(@counter_key, "#{@relation.class.name.underscore}_#{@relation.id}_last_time", @current_time)
+   $redis.hmset("#{new_key}", "total_seconds", total_seconds)
 
    @daemon_logger.debug("[SAMPLE_GENERATED][#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
  end
