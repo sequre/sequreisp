@@ -63,7 +63,7 @@ class ConfigurationsController < ApplicationController
     else
       flash[:error] = errors
     end
-    redirect_to command_logs_path
+    redirect_to :back
   end
 
   def ajax_request
