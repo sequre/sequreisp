@@ -90,9 +90,9 @@ class Contract < ActiveRecord::Base
   end
 
   def ip_without_netmask
-    _ip = IP.new(ip)
+    _ip = IP.new(ip) rescue nil
     # check that the mask is set only for networks
-    if _ip.mask > 0 and _ip != _ip.network
+    if _ip and _ip.mask > 0 and _ip != _ip.network
       errors.add(:ip, I18n.t('validations.contract.do_not_set_mask_if_is_not_a_network'))
     end
   end
@@ -717,9 +717,11 @@ end
   end
 
   def rules_for_up_data_counting
-    macrule = (Configuration.filter_by_mac_address and mac_address.present?) ? "-m mac --mac-source #{mac_address}" : ""
+    # macrule = (Configuration.filter_by_mac_address and mac_address.present?) ? "-m mac --mac-source #{mac_address}" : ""
+    # [ ":count-up.#{ip_addr.to_cidr} -",
+    #   "-A count-up.#{ip_addr.to_cidr} #{macrule} -s #{ip} -m comment --comment \"data-count-#{ip}-up-data_count\"" ]
     [ ":count-up.#{ip_addr.to_cidr} -",
-      "-A count-up.#{ip_addr.to_cidr} #{macrule} -s #{ip} -m comment --comment \"data-count-#{ip}-up-data_count\"" ]
+      "-A count-up.#{ip_addr.to_cidr} -s #{ip} -m comment --comment \"data-count-#{ip}-up-data_count\"" ]
   end
 
   def rules_for_down_data_counting
