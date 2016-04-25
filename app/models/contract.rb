@@ -397,6 +397,7 @@ class Contract < ActiveRecord::Base
       total_down = 0
       date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
       date_keys = $redis.keys("#{redis_key}_*").sort
+      date_keys.reject!{|k| k !~ /#{redis_key}_\d+/ }
       ContractSample.compact_keys.each do |rkey|
         value = if Rails.env.production?
                   val = date_keys.empty? ? 0.0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_f) * 8)

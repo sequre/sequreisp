@@ -164,6 +164,7 @@ class Interface < ActiveRecord::Base
       date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
       if Rails.env.production?
         date_keys = $redis.keys("#{redis_key}_*").sort
+        date_keys.reject!{|k| k !~ /#{redis_key}_\d+/ }
         # time = ((date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i)
         InterfaceSample.compact_keys.each do |rkey|
           value = date_keys.empty? ? 0.0 : (($redis.hget(date_keys.last, "#{rkey[:name]}_instant").to_f / $redis.hget(date_keys.last, "total_seconds").to_i) * 8)
