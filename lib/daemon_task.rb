@@ -477,7 +477,7 @@ class DaemonRedis < DaemonTask
        File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["down"][v[0]]=v[1]}
      }
    end
-   @daemon_logger.info("[REPORT_REDIS] set hfsc_class hash: USER_TIME => #{report.utime.round(4)}, TOTAL_TIME => #{report.total.round(4)}, REAL_TIME => #{report.real.round(4)}")
+   @daemon_logger.info("[REPORT_REDIS] set hfsc_class hash: USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
 
 
    @current_time = DateTime.now.to_i
@@ -505,7 +505,7 @@ class DaemonRedis < DaemonTask
             end
           }
         end
-        @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] compact_keys each: USER_TIME => #{report_compact_keys.utime.round(4)}, TOTAL_TIME => #{report_compact_keys.total.round(4)}, REAL_TIME => #{report_compact_keys.real.round(4)}")
+        @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] compact_keys each: USER_TIME => #{report_compact_keys.utime.round(2)}, TOTAL_TIME => #{report_compact_keys.total.round(2)}, REAL_TIME => #{report_compact_keys.real.round(2)}")
         @timestamps = $redis.hkeys("#{@redis_key}_keys").to_a.sort
         round_robin()
         report_generate_sample = nil
@@ -514,7 +514,7 @@ class DaemonRedis < DaemonTask
             generate_sample(catchs)
           }
         end
-        @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] generate_sample: USER_TIME => #{report_generate_sample.utime.round(4)}, TOTAL_TIME => #{report_generate_sample.total.round(4)}, REAL_TIME => #{report_generate_sample.real.round(4)}")
+        @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] generate_sample: USER_TIME => #{report_generate_sample.utime.round(2)}, TOTAL_TIME => #{report_generate_sample.total.round(2)}, REAL_TIME => #{report_generate_sample.real.round(2)}")
 
         @daemon_logger.debug("[CounterSamplesRedis][Contract:#{c.id.to_s}][Value: #{@timestamps.size}]")
         if @timestamps.size >= 25
@@ -524,7 +524,7 @@ class DaemonRedis < DaemonTask
               samples = compact_to_db()
             }
           end
-          @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] report_compact_to_db: USER_TIME => #{report_compact_to_db.utime.round(4)}, TOTAL_TIME => #{report_compact_to_db.total.round(4)}, REAL_TIME => #{report_compact_to_db.real.round(4)}")
+          @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] report_compact_to_db: USER_TIME => #{report_compact_to_db.utime.round(2)}, TOTAL_TIME => #{report_compact_to_db.total.round(2)}, REAL_TIME => #{report_compact_to_db.real.round(2)}")
           report_commit_transactions = nil
           Benchmark.bm do |bm_commit_transactions|
             report_commit_transactions = bm_commit_transactions.report {
@@ -535,12 +535,12 @@ class DaemonRedis < DaemonTask
               @daemon_logger.debug("[UpdateContractConnected][Contract:#{c.id.to_s}][Value: #{contract_connected[c.id.to_s]}]") if samples[:total] > 0
             }
           end
-          @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] commit transactions: USER_TIME => #{report_commit_transactions.utime.round(4)}, TOTAL_TIME => #{report_commit_transactions.total.round(4)}, REAL_TIME => #{report_commit_transactions.real.round(4)}")
+          @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] commit transactions: USER_TIME => #{report_commit_transactions.utime.round(2)}, TOTAL_TIME => #{report_commit_transactions.total.round(2)}, REAL_TIME => #{report_commit_transactions.real.round(2)}")
         end
       end
     }
   end
-  @daemon_logger.info("[REPORT_REDIS] contracts each: USER_TIME => #{report.utime.round(4)}, TOTAL_TIME => #{report.total.round(4)}, REAL_TIME => #{report.real.round(4)}")
+  @daemon_logger.info("[REPORT_REDIS] contracts each: USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
 
   unless traffic_data_count.empty?
     report = nil
@@ -552,7 +552,7 @@ class DaemonRedis < DaemonTask
                                :values => traffic_data_count } )
       }
     end
-    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][TrafficModel][Data_count] USER_TIME => #{report.utime.round(4)}, TOTAL_TIME => #{report.total.round(4)}, REAL_TIME => #{report.real.round(4)}")
+    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][TrafficModel][Data_count] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
   end
 
   unless contract_connected.empty?
@@ -565,7 +565,7 @@ class DaemonRedis < DaemonTask
                                    :values => contract_connected } )
       }
     end
-    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][ContractModel][Is_Connected] USER_TIME => #{report.utime.round(4)}, TOTAL_TIME => #{report.total.round(4)}, REAL_TIME => #{report.real.round(4)}")
+    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][ContractModel][Is_Connected] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
   end
 
   unless transactions[:create].empty?
@@ -576,7 +576,7 @@ class DaemonRedis < DaemonTask
         ContractSample.massive_creation(transactions[:create])
       }
     end
-    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][ContractSampleModel][CREATE] USER_TIME => #{report.utime.round(4)}, TOTAL_TIME => #{report.total.round(4)}, REAL_TIME => #{report.real.round(4)}")
+    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][ContractSampleModel][CREATE] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
   end
  end
 
