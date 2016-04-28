@@ -470,114 +470,59 @@ class DaemonRedis < DaemonTask
    @compact_keys = ContractSample.compact_keys
 
    hfsc_class={"up" => {}, "down" => {}}
-   report = nil
-   Benchmark.bm do |x|
-     report = x.report {
-       File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["up"][v[0]]=v[1]}
-       File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["down"][v[0]]=v[1]}
-     }
-   end
-   @daemon_logger.info("[REPORT_REDIS] set hfsc_class hash: USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
-
+   File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_up"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["up"][v[0]]=v[1]}
+   File.read("| tc -s class show dev #{SequreispConfig::CONFIG["ifb_down"]}").scan(/class hfsc \d+\:([a-f0-9]*).*\n Sent (\d+) bytes/).each{|v| hfsc_class["down"][v[0]]=v[1]}
 
    @current_time = DateTime.now.to_i
 
-  report = nil
-  Benchmark.bm do |bm|
-    report = bm.report {
-      contracts = Contract.all(:include => :current_traffic)
+   contracts = Contract.all(:include => :current_traffic)
 
-      contracts.each do |c|
-        # next if c.disabled?
-        @relation  = c
-        @redis_key = c.redis_key
-        catchs = {}
-        report_compact_keys = nil
-        Benchmark.bm do |bm_compact_keys|
-          report_compact_keys = bm_compact_keys.report {
-            @compact_keys.each do |rkey|
-              tc_class = c.send("tc_#{rkey[:sample]}")
-              mark = tc_class[:mark]
-              classid = "#{tc_class[:qdisc]}:#{mark}"
-              parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
-              @daemon_logger.debug("[TC_CLASS][#{c.class.name}:#{c.id}] #{rkey[:sample]} class hfsc #{classid} parent #{parent} contract_mark #{mark}")
-              catchs["#{rkey[:name]}"] = hfsc_class[rkey[:up_or_down]][mark].to_i
-            end
-          }
-        end
-        @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] compact_keys each: USER_TIME => #{report_compact_keys.utime.round(2)}, TOTAL_TIME => #{report_compact_keys.total.round(2)}, REAL_TIME => #{report_compact_keys.real.round(2)}")
-        @timestamps = $redis.hkeys("#{@redis_key}_keys").to_a.sort
-        round_robin()
-        report_generate_sample = nil
-        Benchmark.bm do |bm_generate_sample|
-          report_generate_sample = bm_generate_sample.report {
-            generate_sample(catchs)
-          }
-        end
-        @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] generate_sample: USER_TIME => #{report_generate_sample.utime.round(2)}, TOTAL_TIME => #{report_generate_sample.total.round(2)}, REAL_TIME => #{report_generate_sample.real.round(2)}")
+   contracts.each do |c|
+     # next if c.disabled?
+     @relation  = c
+     @redis_key = c.redis_key
+     catchs = {}
+     @compact_keys.each do |rkey|
+       tc_class = c.send("tc_#{rkey[:sample]}")
+       mark = tc_class[:mark]
+       classid = "#{tc_class[:qdisc]}:#{mark}"
+       parent  = "#{tc_class[:qdisc]}:#{tc_class[:parent]}"
+       @daemon_logger.debug("[TC_CLASS][#{c.class.name}:#{c.id}] #{rkey[:sample]} class hfsc #{classid} parent #{parent} contract_mark #{mark}")
+       catchs["#{rkey[:name]}"] = hfsc_class[rkey[:up_or_down]][mark].to_i
+     end
+     @timestamps = $redis.hkeys("#{@redis_key}_keys").to_a.sort
+     round_robin()
+     generate_sample(catchs)
 
-        @daemon_logger.debug("[CounterSamplesRedis][Contract:#{c.id.to_s}][Value: #{@timestamps.size}]")
-        if @timestamps.size >= 25
-          report_compact_to_db = nil
-          Benchmark.bm do |bm_compact_to_db|
-            report_compact_to_db = bm_compact_to_db.report {
-              samples = compact_to_db()
-            }
-          end
-          @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] report_compact_to_db: USER_TIME => #{report_compact_to_db.utime.round(2)}, TOTAL_TIME => #{report_compact_to_db.total.round(2)}, REAL_TIME => #{report_compact_to_db.real.round(2)}")
-          report_commit_transactions = nil
-          Benchmark.bm do |bm_commit_transactions|
-            report_commit_transactions = bm_commit_transactions.report {
-              transactions[:create] += samples[:create]
-              traffic_data_count[c.current_traffic.id.to_s] = samples[:total] if samples[:total] > 0
-              @daemon_logger.debug("[UpdateDataCount][Contract:#{c.id.to_s}][Value: #{traffic_data_count[c.current_traffic.id.to_s]}]") if samples[:total] > 0
-              contract_connected[c.id.to_s] = samples[:total] > 0 ? 1 : 0
-              @daemon_logger.debug("[UpdateContractConnected][Contract:#{c.id.to_s}][Value: #{contract_connected[c.id.to_s]}]") if samples[:total] > 0
-            }
-          end
-          @daemon_logger.info("[REPORT_REDIS][Contract:#{c.id.to_s}] commit transactions: USER_TIME => #{report_commit_transactions.utime.round(2)}, TOTAL_TIME => #{report_commit_transactions.total.round(2)}, REAL_TIME => #{report_commit_transactions.real.round(2)}")
-        end
-      end
-    }
-  end
-  @daemon_logger.info("[REPORT_REDIS] contracts each: USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
+     @daemon_logger.debug("[CounterSamplesRedis][Contract:#{c.id.to_s}][Value: #{@timestamps.size}]")
+     if @timestamps.size >= 25
+       samples = compact_to_db()
+       transactions[:create] += samples[:create]
+       traffic_data_count[c.current_traffic.id.to_s] = samples[:total] if samples[:total] > 0
+       @daemon_logger.debug("[UpdateDataCount][Contract:#{c.id.to_s}][Value: #{traffic_data_count[c.current_traffic.id.to_s]}]") if samples[:total] > 0
+       contract_connected[c.id.to_s] = samples[:total] > 0 ? 1 : 0
+       @daemon_logger.debug("[UpdateContractConnected][Contract:#{c.id.to_s}][Value: #{contract_connected[c.id.to_s]}]") if samples[:total] > 0
+     end
+   end
 
-  unless traffic_data_count.empty?
-    report = nil
-    Benchmark.bm do |x|
-      report = x.report {
-        @daemon_logger.debug("[MassiveTransactions]TrafficModel][Data_count]")
-        Traffic.massive_sum( { :update_attr => "data_count",
-                               :condition_attr => "id",
-                               :values => traffic_data_count } )
-      }
-    end
-    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][TrafficModel][Data_count] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
-  end
+   unless traffic_data_count.empty?
+     @daemon_logger.debug("[MassiveTransactions]TrafficModel][Data_count]")
+     Traffic.massive_sum( { :update_attr => "data_count",
+                            :condition_attr => "id",
+                            :values => traffic_data_count } )
+   end
 
-  unless contract_connected.empty?
-    report = nil
-    Benchmark.bm do |x|
-      report = x.report {
-        @daemon_logger.debug("[MassiveTransactions][ContractModel][Is_Connected]")
-        Contract.massive_update( { :update_attr => "is_connected",
-                                   :condition_attr => "id",
-                                   :values => contract_connected } )
-      }
-    end
-    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][ContractModel][Is_Connected] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
-  end
+   unless contract_connected.empty?
+     @daemon_logger.debug("[MassiveTransactions][ContractModel][Is_Connected]")
+     Contract.massive_update( { :update_attr => "is_connected",
+                                :condition_attr => "id",
+                                :values => contract_connected } )
+   end
 
-  unless transactions[:create].empty?
-    report = nil
-    Benchmark.bm do |x|
-      report = x.report {
-        @daemon_logger.debug("[MassiveTransactions][ContractSampleModel][CREATE]")
-        ContractSample.massive_creation(transactions[:create])
-      }
-    end
-    @daemon_logger.info("[REPORT_REDIS][MassiveTransactions][ContractSampleModel][CREATE] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
-  end
+   unless transactions[:create].empty?
+     @daemon_logger.debug("[MassiveTransactions][ContractSampleModel][CREATE]")
+     ContractSample.massive_creation(transactions[:create])
+   end
  end
 
  def generate_sample(catchs)
