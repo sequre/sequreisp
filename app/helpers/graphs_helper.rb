@@ -72,7 +72,8 @@ module GraphsHelper
 
   def contract_rate_graph(obj)
     data = {}
-    date_keys = $redis.keys("contract_#{obj.id}_sample_*").sort
+    # date_keys = $redis.keys("contract_#{obj.id}_sample_*").sort
+    date_keys = $redis.hgetall("#{obj.redis_key}_keys").values.sort
 
     ContractSample.compact_keys.each do |rkey|
       data[rkey[:name]] = []
@@ -187,7 +188,8 @@ module GraphsHelper
     render_to = "contract_#{obj.id}_up_down"
     plan = obj.plan
     data = {:up => [], :down => []}
-    date_keys = $redis.keys("contract_#{obj.id}_sample_*")
+    # date_keys = $redis.keys("contract_#{obj.id}_sample_*")
+    date_keys = $redis.hgetall("#{obj.redis_key}_keys").values
     rkey_down = ContractSample.compact_keys.select{ |a| a[:up_or_down] == "down" }
     rkey_up   = ContractSample.compact_keys.select{ |a| a[:up_or_down] == "up" }
 
@@ -227,7 +229,8 @@ module GraphsHelper
     speed = obj.speed.map {|x| x[/\d+/]}.first.to_i
     data = {:tx => [], :rx => []}
 
-    date_keys = $redis.keys("interface_#{obj.id}_sample_*").sort
+    # date_keys = $redis.keys("interface_#{obj.id}_sample_*").sort
+    date_keys = $redis.hgetall("#{obj.redis_key}_keys").values.sort
     data = faker_values({:size => 12, :keys => {:rx => Rails.env.production? ? 0: speed * 0.99, :tx => Rails.env.production? ? 0 : speed * 0.99}}) if date_keys.empty?
 
     InterfaceSample.compact_keys.each do |rkey|
@@ -297,7 +300,8 @@ module GraphsHelper
     interfaces.each do |i|
       speed = i.speed.map {|x| x[/\d+/]}.first.to_i
       data = {:tx => [], :rx => []}
-      date_keys = $redis.keys("interface_#{i.id}_sample_*").sort
+      # date_keys = $redis.keys("interface_#{i.id}_sample_*").sort
+      date_keys = $redis.hgetall("interface_#{i.id}_sample_keys").values.sort
       data = faker_values({:size => 12, :keys => {:rx => Rails.env.production? ? 0: speed * 0.99, :tx => Rails.env.production? ? 0 : speed * 0.99}}) if date_keys.empty?
 
       date_keys.each do |key|

@@ -75,7 +75,8 @@ class InterfaceGraph < Graph
   def interface_instant
     series = []
     speed = @model.speed.map {|x| x[/\d+/]}.first.to_i
-    date_keys = $redis.keys("interface_#{@model.id}_sample_*").sort
+    # date_keys = $redis.keys("interface_#{@model.id}_sample_*").sort
+    date_keys = $redis.hgetall("#{@model.redis_key}_keys").values.sort
 
     InterfaceSample.compact_keys.each do |rkey|
       data = date_keys.empty? ? faker_values({ :size => 12,
@@ -118,7 +119,8 @@ class InterfaceGraph < Graph
 
       interface_ids.each do |id|
         sample = {}
-        date_keys = $redis.keys("interface_#{id}_sample_*").sort
+        # date_keys = $redis.keys("interface_#{id}_sample_*").sort
+        date_keys = $redis.hgetall("interface_#{id}_sample_keys").values.sort
         date_keys.each do |key|
           time = ($redis.hget("#{key}", "time").to_i + Time.now.utc_offset) * 1000
           sample[time] = (($redis.hget("#{key}", "#{rkey[:name]}_instant").to_f / $redis.hget("#{key}", "total_seconds").to_f) * 8).to_f

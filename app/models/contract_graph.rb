@@ -8,7 +8,8 @@ class ContractGraph < Graph
       series = []
       data = {}
       plan = @model.plan
-      date_keys = $redis.keys("contract_#{@model.id}_sample_*").sort
+      # date_keys = $redis.keys("contract_#{@model.id}_sample_*").sort
+      date_keys = $redis.hgetall("#{@model.redis_key}_keys").values.sort
 
       ContractSample.compact_keys.select{ |k| k[:up_or_down] == up_or_down }.each do |rkey|
         data = []
@@ -115,7 +116,8 @@ class ContractGraph < Graph
 
   def total_rate_instant
     plan = @model.plan
-    date_keys = $redis.keys("contract_#{@model.id}_sample_*")
+    # date_keys = $redis.keys("contract_#{@model.id}_sample_*")
+    date_keys = $redis.hgetall("#{@model.redis_key}_keys").values
     series = []
 
     ["up", "down"].each do |up_or_down|
