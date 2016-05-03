@@ -44,7 +44,9 @@ def gen_tc
       qdisc_add_safe tc_ifb_up, IFB_UP, "root handle 1 hfsc default fffe"
       qdisc_add_safe tc_ifb_down, IFB_DOWN, "root handle 1 hfsc default fffe"
       total_rate_up = ProviderGroup.total_rate_up
+      total_rate_up = total_rate_up > 0 ? total_rate_up : 1000000
       total_rate_down = ProviderGroup.total_rate_down
+      total_rate_down = total_rate_down > 0 ? total_rate_down : 1000000
       tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_up * 0.90).round}kbit ul m2 #{total_rate_up}kbit"
       tc_ifb_up.puts "class add dev #{IFB_UP} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
       tc_ifb_down.puts "class add dev #{IFB_DOWN} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_down * 0.90).round}kbit ul m2 #{total_rate_down}kbit"
