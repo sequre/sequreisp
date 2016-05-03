@@ -4,11 +4,28 @@ ip=$(ifconfig $1 | grep -o "inet addr:[^ ]*" | grep -o "[0-9][^ ]*")
 echo $1 $ip
 #tc qdisc del root dev $1
 for url in \
-    https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.3.tar.xz \
-    http://cdimage.debian.org/debian-cd/8.2.0/amd64/iso-cd/debian-8.2.0-amd64-CD-1.iso \
-    http://mirror.rackspace.com/archlinux/iso/2015.11.01/archlinux-2015.11.01-dual.iso \
-    http://cdimage.debian.org/debian-cd/8.2.0/amd64/iso-cd/debian-8.2.0-amd64-CD-8.iso \
-    http://releases.ubuntu.com/14.04.3/ubuntu-14.04.3-desktop-amd64.iso
+    http://download.xs4all.nl/test/1GB.bin \
+    http://mirror.widexs.nl/ftp/pub/speed/1000mb.bin \
+    http://speed.transip.nl/1000mb.bin \
+    http://www.streamservice.nl/1000mb.bin \
+    http://mirror.nl.leaseweb.net/speedtest/1000mb.bin \
+    http://www.colocenter.nl/speedtest/1000mb.bin \
+    http://speedtest.serverius.net/files/1000mb.bin \
+    http://speedtest.tele2.net/1GB.zip \
+    http://zgb-speedtest-1.tele2.net/1GB.zip \
+    http://speedtest.reliableservers.com/1GBtest.bin \
+    http://mirror.de.leaseweb.net/speedtest/1000mb.bin \
+    http://ovh.net/files/1Gio.dat \
+    http://speedtest.as5577.net/1000mb.bin \
+    http://mirror.sfo12.us.leaseweb.net/speedtest/1000mb.bin \
+    http://mirror.wdc1.us.leaseweb.net/speedtest/1000mb.bin \
+    http://www.as35662.net/1000.log \
+    http://speedtest.superhosting.cz/test.php?size=1G \
+    http://testfiles.de.vpsnine.com/testfile_1024mb \
+    http://testfiles.usnyc.vpsnine.com/testfile_1024mb \
+    http://testfiles.uschi.vpsnine.com/testfile_1024mb \
+    http://testfiles.nzakl.vpsnine.com/testfile_1024mb \
+    http://speedtest-us-chicago.swiftway.net/1000MB.bin
 do
     for times in $(seq 1 10)
     do
