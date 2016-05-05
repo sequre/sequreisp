@@ -332,6 +332,7 @@ class DaemonCheckLink < DaemonTask
       if p.kind == "dhcp"
         p.offline_time > 30 and Time.now.to_i > @time_for_kill_dhcp[p.id]
         @time_for_kill_dhcp[p.id] = (Time.now + 2.minutes).to_i
+        exec_command("/usr/bin/pkill -f 'dhclient.#{p.interface.name}'")
         @daemon_logger.debug("[KILL_DHCP] #{p.class.name}:#{p.name} try to kill #{Time.at(@time_for_kill_dhcp[p.id])}")
       end
     end
