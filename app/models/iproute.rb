@@ -29,6 +29,7 @@ class Iproute < ActiveRecord::Base
 #    if gateway.empty? and interface_id.nil?
 #    end
 #  end
+
   def route
     via = ""
     via += " via #{gateway}" if gateway.present?
