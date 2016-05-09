@@ -101,11 +101,8 @@ class UsersController < ApplicationController
     end
   end
   def generate_token
-    @user = object
-    @user.generate_token
-    @user.save
     respond_to do |format|
-      format.json { render :json => {:auth_token => @user.auth_token }}
+      format.json { render :json => {:auth_token => User.new.generate_token }}
     end
   end
   private

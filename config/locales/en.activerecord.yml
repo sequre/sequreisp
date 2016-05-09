@@ -434,7 +434,7 @@ en:
     liberate_disks: 'Liberate disks'
     assign_disks_to_cache: 'Assign to cache'
     clear_disks: 'Clean cache'
-    regenerate_token: "Regenerate API Token"
+    regenerate_token: "Generate new API Token"
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"

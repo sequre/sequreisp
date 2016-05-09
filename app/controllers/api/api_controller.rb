@@ -1,7 +1,11 @@
 class Api::ApiController < ApplicationController
+	before_filter :check_ssl, :if => 'Rails.env.production?'
 	before_filter :authenticate
   protected
 
+  def check_ssl
+    request.ssl? || render_unauthorized
+  end
   def authenticate
     authenticate_token || render_unauthorized
   end

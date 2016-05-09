@@ -5,19 +5,24 @@
   })
 </script>
 <% end %>
+<style type="text/css">
+  #user_auth_token {
+    width: 760px;
+  }
+</style>
 <script type="text/javascript">
   $(function(){
     $('#regenerate_token').click(function(){
       $('.regenerate_token_loader').show();
-      $.get('<%= generate_token_user_path %>', function(data){
+      $.get('<%= generate_token_users_path %>', function(data){
         if (data.auth_token) {
-          $('#user_auth_token').html(data.auth_token);
+          $('#user_auth_token').val(data.auth_token);
           $('#user_auth_token').css('background-color', '#00FF00').effect('pulsate', {times: 3}, null, function(){
-            $('#user_auth_token').css('background-color', '#CCC');
+            $('#user_auth_token').css('background-color', '#FFF');
           })
         } else {
           $('#user_auth_token').css('background-color', '#FF0000').effect('pulsate', {times: 3}, null, function(){
-            $('#user_auth_token').css('background-color', '#CCC');
+            $('#user_auth_token').css('background-color', '#FFF');
           })
         }
         $('.regenerate_token_loader').hide();
@@ -38,8 +43,11 @@
     <% form.inputs :name => "API" do %>
       <%= form.input :api_enabled %>
       <li><b><%= User.human_attribute_name :auth_token %></b></li>
-      <li id="user_auth_token"><%= @user.auth_token %> <%= image_tag "loader_horizontal.gif", :class => 'regenerate_token_loader' %></li>
-      <li><%= link_to t('buttons.regenerate_token'), 'javascript:void(null)', :id => 'regenerate_token' %></li>
+      <%= form.input :auth_token, :input_html => { :readonly => true } %>
+			<li>
+				<%= link_to t('buttons.regenerate_token'), 'javascript:void(null)', :id => 'regenerate_token' %>
+				<%= image_tag "loader_horizontal.gif", :class => 'regenerate_token_loader' %>
+			</li>
     <% end %>
     <%= form_extensions form%>
   <% end %>
