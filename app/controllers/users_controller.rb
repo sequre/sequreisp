@@ -100,6 +100,14 @@ class UsersController < ApplicationController
       format.xml  { head :ok }
     end
   end
+  def generate_token
+    @user = object
+    @user.generate_token
+    @user.save
+    respond_to do |format|
+      format.json { render :json => {:auth_token => @user.auth_token }}
+    end
+  end
   private
   def object
     @object ||= User.find(params[:id])

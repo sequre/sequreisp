@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU Afero General Public License
 # along with Sequreisp.  If not, see <http://www.gnu.org/licenses/>.
 
-class Api::ClientsController < ApplicationController
+class Api::ClientsController < Api::ApiController
+  permissions :clients
   # GET /clients
   # GET /clients.xml
   def index

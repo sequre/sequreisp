@@ -3,7 +3,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :configurations, :collection => {:doreload => :get, :is_apply_changes => :get }
 
-  map.resources :users
+  map.resources :users, :member => { :generate_token => :get }
 
   map.resources :avoid_balancing_hosts
 
