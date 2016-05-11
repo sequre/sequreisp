@@ -335,6 +335,7 @@ class DaemonDataCounting < DaemonTask
   end
 
   def exec_data_counting
+    log("[Daemon][#{name}][exec_data_counting] Start") if verbose?
     hash_count = { "up" => {}, "down" => {} }
     contracts = Contract.all(:include => :current_traffic)
     contract_count = contracts.count
@@ -370,12 +371,15 @@ class DaemonDataCounting < DaemonTask
             c.save if c.changed?
           end
         end
+        log("[Daemon][#{name}][exec_data_counting] End") if verbose?
       rescue => e
         log_rescue("[Daemon] ERROR Thread #{name}", e)
         # Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
       ensure
         time_last = Time.now
+        log("[Daemon][#{name}][exec_data_counting] iptables -Z Start") if verbose?
         system "iptables -t filter -Z" if Rails.env.production?
+        log("[Daemon][#{name}][exec_data_counting] iptables -Z End") if verbose?
       end
     end
   end
@@ -416,7 +420,7 @@ class DaemonRrdFeed < DaemonTask
 
   def initialize
     @time_for_exec = { :frecuency => 5.minutes }
-    @wait_for_apply_changes = true
+    @wait_for_apply_changes = false
     @proc = Proc.new { exec_daemon_rrd_feed unless Configuration.in_safe_mode? }
     super
   end
@@ -426,6 +430,7 @@ class DaemonRrdFeed < DaemonTask
   end
 
   def exec_rrd_feed
+    log("[Daemon][#{name}][exec_rrd_feed] Start") if verbose?
     client_up = tc_class(IFB_UP)
     client_down = tc_class(IFB_DOWN)
     time_c = Time.now
@@ -455,12 +460,14 @@ class DaemonRrdFeed < DaemonTask
     time_i = Time.now
 
     # SECOND we made the updates
+    sleep_time = 60.0/Contract.count
     Contract.all.each do |c|
       # if Configuration.use_global_prios
       #   rrd_update c, time_c, client_down["1"][c.class_hex], 0, client_up["1"][c.class_hex], 0
       # else
       rrd_update c, time_c, client_down["1"][c.class_prio2_hex], client_down["1"][c.class_prio3_hex], client_up["1"][c.class_prio2_hex], client_up["1"][c.class_prio3_hex]
       # end
+      sleep sleep_time
     end
 
     ProviderGroup.enabled.each do |pg|
@@ -491,6 +498,10 @@ class DaemonRrdFeed < DaemonTask
     Interface.all.each do |i|
       rrd_update i, time_i, i_down[i.id], 0, i_up[i.id], 0
     end
+    #log("[Daemon][#{name}][exec_rrd_feed] Pre sync") if verbose?
+    #system("/bin/sync")
+    #log("[Daemon][#{name}][exec_rrd_feed] Post sync") if verbose?
+    log("[Daemon][#{name}][exec_rrd_feed] End") if verbose?
   end
 
   def rrd_create(path, time)
@@ -510,7 +521,7 @@ class DaemonRrdFeed < DaemonTask
   end
 
   def rrd_update(o, time, down_prio, down_dfl, up_prio, up_dfl)
-    log("[Daemon][RRD][rrd_update] o=#{o.name}, time=#{time}, down_prio=#{down_prio}, down_dfl=#{down_dfl}, up_prio=#{up_prio}, up_dfl=#{up_dfl}") if verbose?
+    #log("[Daemon][RRD][rrd_update] o=#{o.name}, time=#{time}, down_prio=#{down_prio}, down_dfl=#{down_dfl}, up_prio=#{up_prio}, up_dfl=#{up_dfl}") if verbose?
     rrd_path = RRD_DIR + "/#{o.class.name}.#{o.id.to_s}.rrd"
     rrd_create(rrd_path, time) unless File.exists?(rrd_path)
     RRD::Wrapper.update rrd_path, "-t", "down_prio:down_dfl:up_prio:up_dfl", "#{time.strftime("%s")}:#{down_prio}:#{down_dfl}:#{up_prio}:#{up_dfl}"
