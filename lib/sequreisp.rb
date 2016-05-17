@@ -141,7 +141,7 @@ def gen_iptables
             if abh.provider
               abh.ip_addresses.each do |ip|
                 f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
-                f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
+                f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark --nfmask 1ffffff --cfmask 1ffffff"
               end
             end
           end
@@ -150,14 +150,14 @@ def gen_iptables
         threads.each do |k,t| t.join end
 
         # restauro marka en PREROUTING
-        f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
+        f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1ffffff --ctmask 0x1ffffff"
 
         # acepto si ya se de que enlace es
-        f.puts "-A PREROUTING -m mark ! --mark 0x0/0x1fffffff -j ACCEPT"
+        f.puts "-A PREROUTING -m mark ! --mark 0x0/0x1ffffff -j ACCEPT"
         # si viene desde internet marko segun el enlace por el que entró
         Provider.enabled.with_klass_and_interface.each do |p|
           f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
-          f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
+          f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark --nfmask 0x1ffffff --ctmask 0x1ffffff"
           f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT"
         end
         # tabla para evitar triangulo de nat
@@ -189,8 +189,8 @@ def gen_iptables
         # Evito balanceo para los hosts configurados
         f.puts "-A OUTPUT -j avoid_balancing"
         # restauro marka en OUTPUT pero que siga viajando
-        f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x8fffffff --ctmask 0x8fffffff"
-        f.puts "-A OUTPUT -m mark ! --mark 0x0/0x8fffffff -j ACCEPT"
+        f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x1ffffff --ctmask 0x1ffffff"
+        f.puts "-A OUTPUT -m mark ! --mark 0x0/0x1ffffff -j ACCEPT"
 
         BootHook.run :hook => :mangle_after_ouput_hook, :iptables_script => f
       end
@@ -298,7 +298,7 @@ def gen_iptables
           # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
           f.puts "-A #{chain} -j ACCEPT"
         end
-        f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
+        f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark --nfmask 0x1ffffff --ctmask 0x1ffffff"
       end
       #####################end
       f.puts "COMMIT"
