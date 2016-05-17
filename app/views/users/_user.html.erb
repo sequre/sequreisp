@@ -2,18 +2,53 @@
 <script type="text/javascript">
   $(function(){
     $('input,select,textarea').attr('disabled',true)
-  })  
+  })
 </script>
 <% end %>
+<style type="text/css">
+  #user_auth_token {
+    width: 760px;
+  }
+</style>
+<script type="text/javascript">
+  $(function(){
+    $('#regenerate_token').click(function(){
+      $('.regenerate_token_loader').show();
+      $.get('<%= generate_token_users_path %>', function(data){
+        if (data.auth_token) {
+          $('#user_auth_token').val(data.auth_token);
+          $('#user_auth_token').css('background-color', '#00FF00').effect('pulsate', {times: 3}, null, function(){
+            $('#user_auth_token').css('background-color', '#FFF');
+          })
+        } else {
+          $('#user_auth_token').css('background-color', '#FF0000').effect('pulsate', {times: 3}, null, function(){
+            $('#user_auth_token').css('background-color', '#FFF');
+          })
+        }
+        $('.regenerate_token_loader').hide();
+      },'json');
+    });
+    $('.regenerate_token_loader').hide();
+  })
+</script>
 <div id="main">
 <% semantic_form_for @user do |form| %>
   <%= error_messages @user %>
   <% form.inputs do %>
-    <%= form.input :name %> 
-    <%= form.input :email %> 
+    <%= form.input :name %>
+    <%= form.input :email %>
     <%= form.input :role_name, :as => :select, :collection => User.roles_for_select, :include_blank => false %> 
-    <%= form.input :password %> 
+    <%= form.input :password %>
     <%= form.input :password_confirmation %>
+    <% form.inputs :name => "API" do %>
+      <%= form.input :api_enabled %>
+      <li><b><%= User.human_attribute_name :auth_token %></b></li>
+      <%= form.input :auth_token, :input_html => { :readonly => true } %>
+			<li>
+				<%= link_to t('buttons.regenerate_token'), 'javascript:void(null)', :id => 'regenerate_token' %>
+				<%= image_tag "loader_horizontal.gif", :class => 'regenerate_token_loader' %>
+			</li>
+    <% end %>
     <%= form_extensions form%>
   <% end %>
   <% if current_user.may_update_user?(@user) or current_user.may_create_user? %>

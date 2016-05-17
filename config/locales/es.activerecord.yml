@@ -273,6 +273,8 @@ es:
         last_login_ip: "Dirección IP del último inicio de sesión"
         last_login_at_never: "Nunca"
         last_login_ip_unknown: "Desconocida"
+        api_enabled: "Habilitar acceso via API para este usuario"
+        auth_token: "Token de autenticación actual"
       interface:
         name: "Nombre"
         description: "Descripción"
@@ -432,6 +434,7 @@ es:
     liberate_disks: 'Liberar discos'
     assign_disks_to_cache: 'Asignar a cache'
     clear_disks: 'Limpiar cache'
+    regenerate_token: 'Generar nuevo API Token'
   backup:
     backup_db_legend: "Copia de resguardo (base de datos)"
     backup_full_legend: "Copia de resguardo completa (aplicación y base de datos)"

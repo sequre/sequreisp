@@ -273,6 +273,8 @@ en:
         last_login_ip: "IP address of last login"
         last_login_at_never: "Never"
         last_login_ip_unknown: "Unknown"
+        api_enabled: "Enable API access for this user"
+        auth_token: "Current Auth Token"
       interface:
         name: "Name"
         description: "Description"
@@ -432,6 +434,7 @@ en:
     liberate_disks: 'Liberate disks'
     assign_disks_to_cache: 'Assign to cache'
     clear_disks: 'Clean cache'
+    regenerate_token: "Generate new API Token"
   backup:
     backup_db_legend: "Backup (just database)"
     backup_full_legend: "Full backup (application and database)"
