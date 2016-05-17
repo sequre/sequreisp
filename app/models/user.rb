@@ -40,7 +40,14 @@ class User < ActiveRecord::Base
 
   validates_presence_of :name, :email, :role_name
   validate_on_update :not_change_if_demo
+  before_save :generate_token, :if => "api_enabled == true and auth_token.blank?"
 
+  def generate_token
+    self.auth_token = loop do
+      random_token = SecureRandom.hex 48
+      break random_token unless self.class.exists?(:auth_token => random_token)
+    end
+  end
   def not_change_if_demo
     if SequreispConfig::CONFIG["demo"] and email_was == "admin@wispro.co"
       errors.add(:password, I18n.t('validations.user.not_allowed_to_change_this_fields_in_demo_mode')) if password_changed?
