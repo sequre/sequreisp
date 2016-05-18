@@ -439,8 +439,7 @@ class Contract < ActiveRecord::Base
     _interface
   end
 
-  def sent_bits(prefix)
-    iface = SequreispConfig::CONFIG["ifb_#{prefix}"]
+  def sent_bits(iface)
     match = false
     rate = {}
     count = 0
@@ -505,11 +504,16 @@ class Contract < ActiveRecord::Base
       rate[:rate_up_prio2] = rate_up * 0.6
       rate[:rate_up_prio3] = rate_up * 0.25
     else
-      sent = sent_bits "down"
+      sent = {}
+      Interface.all(:conditions => { :kind => "lan" }).each do |iface|
+        sent.merge!(sent_bits(iface)) do |k, a, b|
+          a + b
+        end
+      end
       rate[:rate_down_prio1] = sent[class_prio1_hex]
       rate[:rate_down_prio2] = sent[class_prio2_hex]
       rate[:rate_down_prio3] = sent[class_prio3_hex]
-      sent = sent_bits "up"
+      sent = sent_bits SequreispConfig::CONFIG["ifb_up"]
       rate[:rate_up_prio1] = sent[class_prio1_hex]
       rate[:rate_up_prio2] = sent[class_prio2_hex]
       rate[:rate_up_prio3] = sent[class_prio3_hex]

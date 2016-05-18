@@ -57,7 +57,7 @@ def gen_tc
       Plan.all(:include => [:provider_group, :contracts]).each do |plan|
         plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ :time_modifiers, {:provider_group => :providers } ] }, :client]).each do |c|
           tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", plan)
-          tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
+          #tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
         end
       end
       # end
@@ -96,14 +96,24 @@ def gen_tc
     begin
       tc = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + iface), "w")
         unless Configuration.in_safe_mode?
-          qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
-          tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
-          tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
-          tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
-          Provider.enabled.with_klass_and_interface.each do |p|
-            tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_down}kbit ul m2 #{p.rate_down}kbit"
-            tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+          total_rate_down = ProviderGroup.total_rate_down
+          total_rate_down = total_rate_down > 0 ? total_rate_down : 1000000
+          qdisc_add_safe tc, iface, "root handle 1 hfsc default fffe"
+          tc.puts "class add dev #{iface} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_down * 0.90).round}kbit ul m2 #{total_rate_down}kbit"
+          tc.puts "class add dev #{iface} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
+          Plan.all(:include => [:provider_group, :contracts]).each do |plan|
+            plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ :time_modifiers, {:provider_group => :providers } ] }, :client]).each do |c|
+              tc.puts c.do_per_contract_prios_tc(1, 1, iface, "down", "add", plan)
+            end
           end
+          #qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+          #tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
+          #tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
+          #tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
+          #Provider.enabled.with_klass_and_interface.each do |p|
+          #  tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_down}kbit ul m2 #{p.rate_down}kbit"
+          #  tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+          #end
         end
       close_file_and_move_to_scripts tc
     rescue => e
