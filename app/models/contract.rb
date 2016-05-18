@@ -506,7 +506,7 @@ class Contract < ActiveRecord::Base
     else
       sent = {}
       Interface.all(:conditions => { :kind => "lan" }).each do |iface|
-        sent.merge!(sent_bits(iface)) do |k, a, b|
+        sent.merge!(sent_bits(iface.name)) do |k, a, b|
           a + b
         end
       end

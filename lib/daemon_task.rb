@@ -434,7 +434,7 @@ class DaemonRrdFeed < DaemonTask
     client_up = tc_class(IFB_UP)
     client_down = {}
     Interface.all(:conditions => { :kind => "lan" }).each do |iface|
-      client_down.merge!(tc_class(iface)) do |k, a, b|
+      client_down.merge!(tc_class(iface.name)) do |k, a, b|
         a + b
       end
     end
