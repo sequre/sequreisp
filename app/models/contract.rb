@@ -74,14 +74,14 @@ class Contract < ActiveRecord::Base
   validates_uniqueness_of :mac_address, :allow_nil => true, :allow_blank => true
 
   validate :state_should_be_included_in_the_list
-  validate :uniqueness_mac_address_in_interfaces_lan
+  # validate :uniqueness_mac_address_in_interfaces_lan
   validate :ip_without_netmask, :if => "ip_changed?"
 
-  def uniqueness_mac_address_in_interfaces_lan
-    if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).count > 0
-      errors.add(:mac_address, I18n.t('validations.contract.mac_address_taken_in_interface', :interface_id => interface.first.id ) )
-     end
-  end
+  # def uniqueness_mac_address_in_interfaces_lan
+  #   if (interface = Interface.only_lan.all(:conditions => { :mac_address => self.mac_address })).count > 0
+  #     errors.add(:mac_address, I18n.t('validations.contract.mac_address_taken_in_interface', :interface_id => interface.first.id ) )
+  #    end
+  # end
 
   def state_should_be_included_in_the_list
     unless AASM::StateMachine[Contract].states.map(&:name).include?(state.to_sym)
