@@ -437,6 +437,7 @@ class DaemonRrdFeed < DaemonTask
       client_down.merge!(tc_class(iface.name)) do |k, a, b|
         a + b
       end
+      log("[Daemon][#{name}][exec_rrd_feed] client_down#{client_down.inspect}") if verbose?
     end
     time_c = Time.now
 

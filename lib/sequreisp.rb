@@ -102,7 +102,7 @@ def gen_tc
           tc.puts "class add dev #{iface} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_down * 0.90).round}kbit ul m2 #{total_rate_down}kbit"
           tc.puts "class add dev #{iface} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
           Plan.all(:include => [:provider_group, :contracts]).each do |plan|
-            plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ :time_modifiers, {:provider_group => :providers } ] }, :client]).each do |c|
+            plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ {:provider_group => :providers } ] }, :client]).each do |c|
               tc.puts c.do_per_contract_prios_tc(1, 1, iface, "down", "add", plan)
             end
           end
