@@ -344,9 +344,9 @@ class DaemonDataCounting < DaemonTask
     ActiveRecord::Base.transaction do
       begin
         File.open(File.join(DEPLOY_DIR, "log/data_counting.log"), "a") do |f|
+          contracts_connected_ids = []
           contracts.each do |c|
             traffic_current = c.current_traffic || c.create_traffic_for_this_period
-            c.is_connected = false
 
             Configuration::COUNT_CATEGORIES.each do |category|
               data_total = 0
@@ -354,7 +354,7 @@ class DaemonDataCounting < DaemonTask
               data_total += hash_count["down"][c.ip][category].to_i if hash_count["down"].has_key?(c.ip)
 
               if data_total != 0
-                c.is_connected = true
+                contracts_connected_ids << c.id
                 current_traffic_count = traffic_current.data_count
                 eval("traffic_current.#{category} += data_total") if data_total <= @max_current_traffic_count
 
@@ -367,9 +367,10 @@ class DaemonDataCounting < DaemonTask
                 traffic_current.save if traffic_current.changed?
               end
             end
-
-            c.save if c.changed?
           end
+          # One (or two) queries to update them all
+          Contract.update_all('is_connected = 1', ['id in (?)', contracts_connected_ids])
+          Contract.update_all('is_connected = 0', ['id not in (?)', contracts_connected_ids])
         end
         log("[Daemon][#{name}][exec_data_counting] End") if verbose?
       rescue => e
