@@ -476,7 +476,7 @@ class DaemonRedis < DaemonTask
 
    @current_time = DateTime.now.to_i
 
-   contracts = Contract.all(:include => :current_traffic)
+   contracts = Contract.all(:include => [:current_traffic, :klass])
 
    contracts.each do |c|
      # next if c.disabled?
@@ -534,20 +534,21 @@ class DaemonRedis < DaemonTask
    last_key = last_time.nil? ? nil : "#{@redis_key}_#{last_time}"
    total_seconds = last_time.nil? ? 1 : (@current_time.to_f - last_time.to_f)
 
+   keys_and_values = []
    catchs.each do |prio_key, current_total|
      new_sample[prio_key] = { :instant => 0, :total_bytes => current_total }
      unless last_key.nil?
        last_total = $redis.hget("#{last_key}", "#{prio_key}_total_bytes").to_i
        new_sample[prio_key][:instant] = (current_total < last_total ? current_total : (current_total - last_total) )
      end
-     $redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total )
+     #$redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total )
+     keys_and_values << ["#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total]
    end
-
-   $redis.hmset("#{new_key}", "time", @current_time)
-   $redis.hmset("#{new_key}", "total_seconds", total_seconds)
+   $redis.hmset([new_key] + keys_and_values.flatten + ["total_seconds", total_seconds, "time", @current_time])
    $redis.hmset("#{@redis_key}_keys", @current_time.to_s, new_key)
 
-   @daemon_logger.debug("[SAMPLE_GENERATED][#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
+
+   #@daemon_logger.debug("[SAMPLE_GENERATED][#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
  end
 
  def next_init_time_new_sample(time_period, period, first_redis_key)
