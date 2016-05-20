@@ -541,13 +541,10 @@ class DaemonRedis < DaemonTask
        last_total = $redis.hget("#{last_key}", "#{prio_key}_total_bytes").to_i
        new_sample[prio_key][:instant] = (current_total < last_total ? current_total : (current_total - last_total) )
      end
-     #$redis.hmset("#{new_key}", "#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total )
      keys_and_values << ["#{prio_key}_instant", new_sample[prio_key][:instant], "#{prio_key}_total_bytes", current_total]
    end
    $redis.hmset([new_key] + keys_and_values.flatten + ["total_seconds", total_seconds, "time", @current_time])
    $redis.hmset("#{@redis_key}_keys", @current_time.to_s, new_key)
-
-
    #@daemon_logger.debug("[SAMPLE_GENERATED][#{@relation.class.name}:#{@relation.id}] last_sample_redis: #{$redis.hgetall(last_key).inspect}, new_sample_redis: #{$redis.hgetall(new_key).inspect}")
  end
 
@@ -591,7 +588,8 @@ class DaemonRedis < DaemonTask
        sample = {}
        time = key.to_i
        if time <= @end_time_new_sample
-        @compact_keys.each { |rkey| sample[rkey[:name]] = $redis.hget(sample_key, "#{rkey[:name]}_instant").to_i }
+         redis_sample = $redis.hgetall(sample_key)
+         @compact_keys.each { |rkey| sample[rkey[:name]] = redis_sample["#{rkey[:name]}_instant"].to_i }
          @daemon_logger.debug("[SamplesTimesRedis][#{@relation.class.name}:#{@relation.id}][YES] (#{Time.at(time)}) ---> #{new_sample.inspect}")
          keys_to_delete << key
          samples_to_compact << sample
@@ -603,10 +601,12 @@ class DaemonRedis < DaemonTask
      data_acummulated = samples_to_compact.sum
      samples[:total] += data_acummulated.values.sum
      samples[:create] << new_sample.merge((data_acummulated / time_period * 8))
-     keys_to_delete.each do |key|
-       $redis.hdel("#{@redis_key}_keys", key)
-       $redis.del("#{@redis_key}_#{key}")
+
+     unless keys_to_delete.empty?
+       $redis.hdel("#{@redis_key}_keys", keys_to_delete)
+       $redis.del(keys_to_delete.map{|key| "#{@redis_key}_#{key}"})
      end
+
      @init_time_new_sample += time_period
      @end_time_new_sample  += time_period
    end
