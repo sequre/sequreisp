@@ -115,7 +115,7 @@ class DaemonTask
                 @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
               }
             end
-           @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
+           @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
           end
         rescue Exception => e
           @daemon_logger.error(e)
@@ -148,7 +148,7 @@ class DaemonTask
                 @daemon_logger.debug("[NEXT_EXEC_TIME] #{@next_exec}")
               }
             end
-            @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report.utime}, TOTAL_TIME => #{report.total}, REAL_TIME => #{report.real}")
+            @daemon_logger.info("[REPORT_DAEMON_EXEC] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
           end
         rescue Exception => e
           @daemon_logger.error(e)
@@ -497,33 +497,47 @@ class DaemonRedis < DaemonTask
 
      @daemon_logger.debug("[CounterSamplesRedis][Contract:#{c.id.to_s}][Value: #{@timestamps.size}]")
      if @timestamps.size >= 25
-       samples = compact_to_db()
-       transactions[:create] += samples[:create]
-       traffic_data_count[c.current_traffic.id.to_s] = samples[:total] if samples[:total] > 0
-       @daemon_logger.debug("[UpdateDataCount][Contract:#{c.id.to_s}][Value: #{traffic_data_count[c.current_traffic.id.to_s]}]") if samples[:total] > 0
-       contract_connected[c.id.to_s] = samples[:total] > 0 ? 1 : 0
-       @daemon_logger.debug("[UpdateContractConnected][Contract:#{c.id.to_s}][Value: #{contract_connected[c.id.to_s]}]") if samples[:total] > 0
+       report = nil
+       Benchmark.bm do |x|
+         report = x.report {
+           samples = compact_to_db()
+           transactions[:create] += samples[:create]
+           traffic_data_count[c.current_traffic.id.to_s] = samples[:total] if samples[:total] > 0
+           contract_connected[c.id.to_s] = samples[:total] > 0 ? 1 : 0
+         }
+       end
+       @daemon_logger.info("[REPORT_COMPACT_TO_DB][[Contract:#{c.id.to_s}]] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
+
+       # @daemon_logger.debug("[UpdateDataCount][Contract:#{c.id.to_s}][Value: #{traffic_data_count[c.current_traffic.id.to_s]}]") if samples[:total] > 0
+
+       # @daemon_logger.debug("[UpdateContractConnected][Contract:#{c.id.to_s}][Value: #{contract_connected[c.id.to_s]}]") if samples[:total] > 0
      end
    end
 
-   unless traffic_data_count.empty?
-     @daemon_logger.debug("[MassiveTransactions]TrafficModel][Data_count]")
-     Traffic.massive_sum( { :update_attr => "data_count",
-                            :condition_attr => "id",
-                            :values => traffic_data_count } )
-   end
-
-   unless contract_connected.empty?
-     @daemon_logger.debug("[MassiveTransactions][ContractModel][Is_Connected]")
-     Contract.massive_update( { :update_attr => "is_connected",
+   report = nil
+   Benchmark.bm do |x|
+     report = x.report {
+       unless traffic_data_count.empty?
+         @daemon_logger.debug("[MassiveTransactions]TrafficModel][Data_count]")
+         Traffic.massive_sum( { :update_attr => "data_count",
                                 :condition_attr => "id",
-                                :values => contract_connected } )
-   end
+                                :values => traffic_data_count } )
+       end
 
-   unless transactions[:create].empty?
-     @daemon_logger.debug("[MassiveTransactions][ContractSampleModel][CREATE]")
-     ContractSample.massive_creation(transactions[:create])
+       unless contract_connected.empty?
+         @daemon_logger.debug("[MassiveTransactions][ContractModel][Is_Connected]")
+         Contract.massive_update( { :update_attr => "is_connected",
+                                    :condition_attr => "id",
+                                    :values => contract_connected } )
+       end
+
+       unless transactions[:create].empty?
+         @daemon_logger.debug("[MassiveTransactions][ContractSampleModel][CREATE]")
+         ContractSample.massive_creation(transactions[:create])
+       end
+     }
    end
+   @daemon_logger.info("[REPORT_MASSIVE_TRANSACTIONS] USER_TIME => #{report.utime.round(2)}, TOTAL_TIME => #{report.total.round(2)}, REAL_TIME => #{report.real.round(2)}")
  end
 
  def generate_sample(catchs)
