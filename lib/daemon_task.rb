@@ -336,52 +336,60 @@ class DaemonDataCounting < DaemonTask
 
   def exec_data_counting
     log("[Daemon][#{name}][exec_data_counting] Start") if verbose?
-    hash_count = { "up" => {}, "down" => {} }
-    contracts = Contract.all(:include => :current_traffic)
-    contract_count = contracts.count
-    parse_data_count(contracts, hash_count)
+    begin
+      Timeout::timeout(@time_for_exec[:frecuency].to_i) do
+        hash_count = { "up" => {}, "down" => {} }
+        contracts = Contract.all(:include => :current_traffic)
+        contract_count = contracts.count
+        parse_data_count(contracts, hash_count)
 
-    ActiveRecord::Base.transaction do
-      begin
-        File.open(File.join(DEPLOY_DIR, "log/data_counting.log"), "a") do |f|
-          contracts.each do |c|
-            traffic_current = c.current_traffic || c.create_traffic_for_this_period
-            c.is_connected = false
+        ActiveRecord::Base.transaction do
+          begin
+            File.open(File.join(DEPLOY_DIR, "log/data_counting.log"), "a") do |f|
+              contracts_connected_ids = []
+              contracts.each do |c|
+                traffic_current = c.current_traffic || c.create_traffic_for_this_period
 
-            Configuration::COUNT_CATEGORIES.each do |category|
-              data_total = 0
-              data_total += hash_count["up"][c.ip][category].to_i if hash_count["up"].has_key?(c.ip)
-              data_total += hash_count["down"][c.ip][category].to_i if hash_count["down"].has_key?(c.ip)
+                Configuration::COUNT_CATEGORIES.each do |category|
+                  data_total = 0
+                  data_total += hash_count["up"][c.ip][category].to_i if hash_count["up"].has_key?(c.ip)
+                  data_total += hash_count["down"][c.ip][category].to_i if hash_count["down"].has_key?(c.ip)
 
-              if data_total != 0
-                c.is_connected = true
-                current_traffic_count = traffic_current.data_count
-                eval("traffic_current.#{category} += data_total") if data_total <= @max_current_traffic_count
+                  if data_total != 0
+                    contracts_connected_ids << c.id
+                    current_traffic_count = traffic_current.data_count
+                    eval("traffic_current.#{category} += data_total") if data_total <= @max_current_traffic_count
 
-                #Log data counting
-                # if contract_count <= 300 and Rails.env.production?
-                #   if (data_total >= 7864320) or (eval("c.current_traffic.#{category} - current_traffic_count >= 7864320")) or (eval("(c.current_traffic.#{category} - data_total) != current_traffic_count"))
-                #     f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Category: #{category}, Data Count: #{tmp},  Data readed: #{hash_count[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
-                #   end
-                # end
-                traffic_current.save if traffic_current.changed?
+                    #Log data counting
+                    # if contract_count <= 300 and Rails.env.production?
+                    #   if (data_total >= 7864320) or (eval("c.current_traffic.#{category} - current_traffic_count >= 7864320")) or (eval("(c.current_traffic.#{category} - data_total) != current_traffic_count"))
+                    #     f.puts "#{Time.now.strftime('%d/%m/%Y %H:%M:%S')}, ip: #{c.ip}(#{c.current_traffic.id}), Category: #{category}, Data Count: #{tmp},  Data readed: #{hash_count[c.ip]}, Data Accumulated: #{c.current_traffic.data_count}"
+                    #   end
+                    # end
+                    traffic_current.save if traffic_current.changed?
+                  end
+                end
               end
+              # One (or two) queries to update them all
+              Contract.update_all('is_connected = 1', ['id in (?)', contracts_connected_ids])
+              Contract.update_all('is_connected = 0', ['id not in (?)', contracts_connected_ids])
             end
-
-            c.save if c.changed?
+          rescue => e
+            log_rescue("[Daemon] ERROR Thread #{name}", e)
+            # Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
+          ensure
+            time_last = Time.now
+            log("[Daemon][#{name}][exec_data_counting] iptables -Z Start") if verbose?
+            system "iptables -t filter -Z" if Rails.env.production?
+            log("[Daemon][#{name}][exec_data_counting] iptables -Z End") if verbose?
           end
         end
-        log("[Daemon][#{name}][exec_data_counting] End") if verbose?
-      rescue => e
-        log_rescue("[Daemon] ERROR Thread #{name}", e)
-        # Rails.logger.error "ERROR TrafficDaemonThread: #{e.inspect}"
-      ensure
-        time_last = Time.now
-        log("[Daemon][#{name}][exec_data_counting] iptables -Z Start") if verbose?
-        system "iptables -t filter -Z" if Rails.env.production?
-        log("[Daemon][#{name}][exec_data_counting] iptables -Z End") if verbose?
       end
+    rescue Timeout::Error => e
+      log_rescue("[Daemon]#{name}][exec_data_counting] Timeout::Error", e)
     end
+    log("[Daemon][#{name}][exec_data_counting] End") if verbose?
+
   end
 
   def parse_data_count(contracts, hash_count)
