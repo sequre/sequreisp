@@ -55,7 +55,7 @@ def gen_tc
       # ProviderGroup.all.each do |pg|
       #   pg.plans.each do |plan|
       Plan.all(:include => [:provider_group, :contracts]).each do |plan|
-        plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ :time_modifiers, {:provider_group => :providers } ] }, :client]).each do |c|
+        plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ {:provider_group => :providers } ] }, :client]).each do |c|
           tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", plan)
           #tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
         end
@@ -493,7 +493,7 @@ def gen_iptables
         BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
 
         ######################if
-        contracts = Contract.descend_by_netmask.all(:include => {:plan => :time_modifiers})
+        contracts = Contract.descend_by_netmask.all(:include => :plan)
         contracts.each do |c|
           f.puts c.rules_for_enabled(Configuration.filter_by_mac_address)
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
