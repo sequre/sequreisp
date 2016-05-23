@@ -505,10 +505,14 @@ class Contract < ActiveRecord::Base
       rate[:rate_up_prio3] = rate_up * 0.25
     else
       sent = {}
-      Interface.all(:conditions => { :kind => "lan" }).each do |iface|
-        sent.merge!(sent_bits(iface.name)) do |k, a, b|
-          a + b
+      if Configuration.no_ifb_on_lan
+        Interface.all(:conditions => { :kind => "lan" }).each do |iface|
+          sent.merge!(sent_bits(iface.name)) do |k, a, b|
+            a + b
+          end
         end
+      else
+        sent.merge!(sent_bits(SequreispConfig::CONFIG["ifb_down"]))
       end
       rate[:rate_down_prio1] = sent[class_prio1_hex]
       rate[:rate_down_prio2] = sent[class_prio2_hex]

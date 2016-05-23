@@ -441,12 +441,17 @@ class DaemonRrdFeed < DaemonTask
     log("[Daemon][#{name}][exec_rrd_feed] Start") if verbose?
     client_up = tc_class(IFB_UP)
     client_down = {}
-    Interface.all(:conditions => { :kind => "lan" }).each do |iface|
-      client_down.merge!(tc_class(iface.name)) do |k, a, b|
-        a + b
+    if Configuration.no_ifb_on_lan
+      Interface.all(:conditions => { :kind => "lan" }).each do |iface|
+        client_down.merge!(tc_class(iface.name)) do |k, a, b|
+          a + b
+        end
+        #log("[Daemon][#{name}][exec_rrd_feed] client_down#{client_down.inspect}") if verbose?
       end
-      log("[Daemon][#{name}][exec_rrd_feed] client_down#{client_down.inspect}") if verbose?
+    else
+      client_down.merge!(tc_class(IFB_DOWN))
     end
+
     time_c = Time.now
 
     # if Configuration.use_global_prios
