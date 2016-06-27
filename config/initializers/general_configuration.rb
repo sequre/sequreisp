@@ -1,3 +1,6 @@
+require 'sequreisp_constants'
+require 'sequreisp_logger'
+
 $redis = Redis.new(:host => 'localhost', :port => 6379)
 $log_level = "info"
 
@@ -6,8 +9,11 @@ Dir.glob(File.join(Rails.root, 'vendor', 'plugins', '**', 'config', 'daemon_task
   $daemon_configuration.merge!(YAML.load(File.read(dt)))
 end
 
-FileUtils.mkdir_p("#{DEPLOY_DIR}/log")
-FileUtils.touch(APPLICATION_LOG) unless File.exist?(APPLICATION_LOG)
+deploy = SequreispConfig::CONFIG["deploy_dir"]
+app_log = "#{deploy}/log/application.log"
+
+FileUtils.mkdir_p("#{deploy}/log")
+FileUtils.touch(app_log) unless File.exist?(app_log)
 
 # $daemon_logger ||= Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 1.megabytes)
 $application_logger ||= ApplicationLogger.new
