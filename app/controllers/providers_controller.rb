@@ -93,7 +93,7 @@ class ProvidersController < ApplicationController
   # DELETE /providers/1.xml
   def destroy
     @provider = object
-    if @provider.proxy_arp_contracts.size > 0 or Contract.find(:all, :conditions => "proxy_arp = 1").collect{|c| c.guess_proxy_arp_provider.id == @provider.id ? true : nil }.compact.size > 0
+    if @provider.proxy_arp_contracts.size > 0 or Contract.find(:all, :conditions => "proxy_arp = 1").collect{|c| c.guess_proxy_arp_provider.try(:id) == @provider.id ? true : nil }.compact.size > 0
       flash[:error] = t 'messages.provider.could_not_be_deleted_has_proxy_arp_contracts'
       redirect_to :back
     else
