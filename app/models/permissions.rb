@@ -44,9 +44,9 @@ class Permissions < Aegis::Permissions
     action :instant, :graph do
       allow :technical, :technical_readonly, :administrative, :administrative_readonly
     end
-  end
-  action :free_ips_contracts, :ips_contracts, :arping_mac_address do
-    allow :technical, :technical_readonly, :administrative, :administrative_readonly
+    action :free_ips_contracts, :ips_contracts, :arping_mac_address, :collection => true do
+      allow :technical, :technical_readonly, :administrative, :administrative_readonly
+    end
   end
 
   action :scan, :liberate, :assign_for do
