@@ -175,7 +175,9 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td><%= check_box_tag "contracts_ids[]", contract.id %></td>
-          <td><%= contract.id %></td>
+          <td><%= contract.id %> </br>
+	      (<%= contract.external_id rescue 'NaN' %>)
+	  </td>
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
             <%= link_to Graph.new(:element => contract).img("day", "small"), graph_contract_path(contract) %>
