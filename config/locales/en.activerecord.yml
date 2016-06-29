@@ -217,6 +217,7 @@ en:
         mtu: "MTU (maximum transfer unit)"
         quantum_factor: "Bandwidth that represents 1 quantum"
         nf_conntrack_max: "Maximum number of connections (nf_conntrack_max)"
+        no_ifb_on_lan: "Don't use IFB redirection on LAN interfaces (EXPERIMENTAL)"
         gc_thresh1: "ARP entries (gc_thresh1)"
         gc_thresh2: "ARP entries (gc_thresh2)"
         gc_thresh3: "ARP entries (gc_thresh3)"

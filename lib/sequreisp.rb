@@ -32,7 +32,6 @@ def close_file_and_move_to_scripts f
 end
 def gen_tc
   def qdisc_add_safe file, iface, command
-    file.puts "qdisc re dev #{iface} #{command}"
     file.puts "qdisc del dev #{iface} root"
     file.puts "qdisc re dev #{iface} #{command}"
   end
@@ -55,9 +54,11 @@ def gen_tc
       # ProviderGroup.all.each do |pg|
       #   pg.plans.each do |plan|
       Plan.all(:include => [:provider_group, :contracts]).each do |plan|
-        plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ :time_modifiers, {:provider_group => :providers } ] }, :client]).each do |c|
+        plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ {:provider_group => :providers } ] }, :client]).each do |c|
           tc_ifb_up.puts c.do_per_contract_prios_tc(1, 1, IFB_UP, "up", "add", plan)
-          tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
+          unless Configuration.no_ifb_on_lan
+            tc_ifb_down.puts c.do_per_contract_prios_tc(1, 1, IFB_DOWN, "down", "add", plan)
+          end
         end
       end
       # end
@@ -96,13 +97,26 @@ def gen_tc
     begin
       tc = File.open(File.join(BASE_SCRIPTS_TMP, TC_FILE_PREFIX + iface), "w")
         unless Configuration.in_safe_mode?
-          qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
-          tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
-          tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
-          tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
-          Provider.enabled.with_klass_and_interface.each do |p|
-            tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_down}kbit ul m2 #{p.rate_down}kbit"
-            tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+          if Configuration.no_ifb_on_lan
+            total_rate_down = ProviderGroup.total_rate_down
+            total_rate_down = total_rate_down > 0 ? total_rate_down : 1000000
+            qdisc_add_safe tc, iface, "root handle 1 hfsc default fffe"
+            tc.puts "class add dev #{iface} parent 1: classid 1:1 hfsc ls m2 #{(total_rate_down * 0.90).round}kbit ul m2 #{total_rate_down}kbit"
+            tc.puts "class add dev #{iface} parent 1: classid 1:fffe hfsc ls m2 1000mbit"
+            Plan.all(:include => [:provider_group, :contracts]).each do |plan|
+              plan.contracts.not_disabled.descend_by_netmask.all(:include => [{ :plan => [ {:provider_group => :providers } ] }, :client]).each do |c|
+                tc.puts c.do_per_contract_prios_tc(1, 1, iface, "down", "add", plan)
+              end
+            end
+          else
+            qdisc_add_safe tc, iface, "root handle 1: prio bands 3 priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+            tc.puts "filter add dev #{iface} parent 1: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev #{IFB_DOWN}"
+            tc.puts "qdisc add dev #{iface} parent 1:1 handle 2 hfsc default fffe"
+            tc.puts "class add dev #{iface} parent 2: classid 2:fffe hfsc ls m2 1000mbit"
+            Provider.enabled.with_klass_and_interface.each do |p|
+              tc.puts "class add dev #{iface} parent 2: classid 2:#{p.class_hex} hfsc ls m2 #{p.rate_down}kbit ul m2 #{p.rate_down}kbit"
+              tc.puts "filter add dev #{iface} parent 2: protocol all prio 10 handle 0x#{p.class_hex}0000/0x00ff0000 fw classid 2:#{p.class_hex}"
+            end
           end
         end
       close_file_and_move_to_scripts tc
@@ -141,7 +155,8 @@ def gen_iptables
             if abh.provider
               abh.ip_addresses.each do |ip|
                 f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
-                f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark --nfmask 0x1ffffff --cfmask 0x1ffffff"
+                # f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark --nfmask 0x1ffffff --cfmask 0x1ffffff"
+                f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
               end
             end
           end
@@ -150,14 +165,14 @@ def gen_iptables
         threads.each do |k,t| t.join end
 
         # restauro marka en PREROUTING
-        f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1ffffff --ctmask 0x1ffffff"
+        f.puts "-A PREROUTING -j CONNMARK --restore-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
 
         # acepto si ya se de que enlace es
-        f.puts "-A PREROUTING -m mark ! --mark 0x0/0x1ffffff -j ACCEPT"
+        f.puts "-A PREROUTING -m mark ! --mark 0x0/0x1fffffff -j ACCEPT"
         # si viene desde internet marko segun el enlace por el que entró
         Provider.enabled.with_klass_and_interface.each do |p|
           f.puts "-A PREROUTING -i #{p.link_interface} -j MARK --set-mark 0x#{p.mark_hex}/0x00ff0000"
-          f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark --nfmask 0x1ffffff --ctmask 0x1ffffff"
+          f.puts "-A PREROUTING -i #{p.link_interface} -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
           f.puts "-A PREROUTING -i #{p.link_interface} -j ACCEPT"
         end
         # tabla para evitar triangulo de nat
@@ -189,8 +204,8 @@ def gen_iptables
         # Evito balanceo para los hosts configurados
         f.puts "-A OUTPUT -j avoid_balancing"
         # restauro marka en OUTPUT pero que siga viajando
-        f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x1ffffff --ctmask 0x1ffffff"
-        f.puts "-A OUTPUT -m mark ! --mark 0x0/0x1ffffff -j ACCEPT"
+        f.puts "-A OUTPUT -j CONNMARK --restore-mark  --nfmask 0x8fffffff --ctmask 0x8fffffff"
+        f.puts "-A OUTPUT -m mark ! --mark 0x0/0x8fffffff -j ACCEPT"
 
         BootHook.run :hook => :mangle_after_ouput_hook, :iptables_script => f
       end
@@ -298,7 +313,7 @@ def gen_iptables
           # f.puts "-A #{chain} -m mark ! --mark #{mark_prio1} -j CONNMARK --save-mark"
           f.puts "-A #{chain} -j ACCEPT"
         end
-        f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark --nfmask 0x1ffffff --ctmask 0x1ffffff"
+        f.puts "-A POSTROUTING -m mark ! --mark 0 -j CONNMARK --save-mark --nfmask 0x1fffffff --ctmask 0x1fffffff"
       end
       #####################end
       f.puts "COMMIT"
@@ -483,7 +498,7 @@ def gen_iptables
         BootHook.run :hook => :filter_before_accept_dns_queries, :iptables_script => f
 
         ######################if
-        contracts = Contract.descend_by_netmask.all(:include => {:plan => :time_modifiers})
+        contracts = Contract.descend_by_netmask.all(:include => :plan)
         contracts.each do |c|
           f.puts c.rules_for_enabled(Configuration.filter_by_mac_address)
           BootHook.run :hook => :iptables_contract_filter, :iptables_script => f, :contract => c
@@ -893,15 +908,15 @@ end
 def setup_tc
   gen_tc
   commands = []
-  commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + IFB_UP)}"
-  commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + IFB_DOWN)}"
+  commands << "tc -force -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + IFB_UP)}"
+  commands << "tc -force -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + IFB_DOWN)}"
 
   Interface.all(:conditions => { :kind => "lan" }).each do |interface|
-    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + interface.name)}"
+    commands << "tc -force -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + interface.name)}"
   end
   Provider.enabled.with_klass_and_interface.each do |p|
     #TODO si es adsl y el ppp no está disponible falla el comando igual no pasa nada
-    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
+    commands << "tc -force -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
   end
   exec_context_commands "setup_tc", commands, I18n.t("command.human.setup_tc")
 end
