@@ -1,13 +1,14 @@
 class DaemonLogger
 
   def initialize(name, level_log, priority)
-    @log = Logger.new("#{DEPLOY_DIR}/log/wispro.log", shift_age = 7, shift_size = 10.megabytes)
+    FileUtils.rm("#{DEPLOY_DIR}/log/#{name}") if File.exist?("#{DEPLOY_DIR}/log/#{name}")
+    @log = Logger.new("#{DEPLOY_DIR}/log/#{name}.log", shift_age = 7, shift_size = 10.megabytes)
     @log.level = level_log
     @log.formatter = proc do |severity, datetime, progname, msg|
       datetime_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
       "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [Priority:#{priority}][#{severity}][#{name}][#{caller[5].scan(/:in `(.*)'/).flatten.first}] #{msg} \n"
-     end
-    @log_file_path = "#{DEPLOY_DIR}/log/#{name}"
+    end
+    @log_file_path = "#{DEPLOY_DIR}/log/#{name}.error"
     remove_log_file
     FileUtils.touch @log_file_path
   end

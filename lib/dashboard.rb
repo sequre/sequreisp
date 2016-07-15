@@ -28,11 +28,12 @@ module Dashboard
     def self.load_all
       id = 1
       daemons = []
-      Configuration.daemons.each do |daemon|
+      DaemonTask.descendants.map(&:to_s).collect(&:underscore).delete_if{|file| file.include?("comercial")}.sort.each do |daemon|
+      # Configuration.daemons.each do |daemon|
         _daemon = {}
         _daemon[:id] = id
         _daemon[:name] = daemon
-        _daemon[:status] = File.zero?("#{DEPLOY_DIR}/log/#{daemon}") ? true : false
+        _daemon[:status] = File.zero?("#{DEPLOY_DIR}/log/#{daemon}.error") ? true : false
         daemons << Daemon.new(_daemon)
         id += 1
       end

@@ -63,6 +63,7 @@ ensure
   begin
     while($running) do
       daemons.each do |daemon|
+        @general_daemon_logger.info("[STATUS_DAEMON_TRHEAD] #{daemon.name} ---> #{daemon.status}")
         unless daemon.running?
           daemon.start
           @general_daemon_logger.debug("[RESTART_DAEMON] #{daemon.name}")
