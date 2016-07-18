@@ -653,7 +653,6 @@ end
 class DaemonCompactSamples < DaemonTask
 
   def initialize
-<<<<<<< HEAD
     @time_for_exec = { }
     @wait_for_apply_changes = true
     @proc = Proc.new { exec_daemon_compact_samples }
