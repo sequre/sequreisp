@@ -218,6 +218,7 @@ pt:
         mtu: "MTU (unidade de transferência máxima)"
         quantum_factor: "Largo de banda que representa 1 quanto"
         nf_conntrack_max: "Máximo nº de conexões"
+        no_ifb_on_lan: "Não use redirecionamento IFB em interfaces LAN (EXPERIMENTAL)"
         gc_thresh1: "Entradas ARP (gc_thresh1)"
         gc_thresh2: "Entradas ARP (gc_thresh2)"
         gc_thresh3: "Entradas ARP (gc_thresh3)"
@@ -274,6 +275,8 @@ pt:
         last_login_ip: "Endereço IP do último início de sessão"
         last_login_at_never: "Jamais"
         last_login_ip_unknown: "Desconhecido"
+        api_enabled: "Permitir acesso à API para esse usuário"
+        auth_token: "Token de autenticação atual"
       interface:
         name: "Nome"
         description: "Descrição"
@@ -448,6 +451,7 @@ pt:
     liberate_disks: 'Libertar disks'
     assign_disks_to_cache: 'Atribuir a cache'
     clear_disks: 'Limpar o cache'
+    regenerate_token: "Gerar novo API token"
   backup:
     backup_db_legend: "Cópia de resguardo (base de dados)"
     backup_full_legend: "Cópia de resguardo completa (aplicativo e base de datos)"

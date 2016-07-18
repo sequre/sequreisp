@@ -9,7 +9,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :configurations, :collection => {:doreload => :get, :is_apply_changes => :get }
 
-  map.resources :users
+  map.resources :users, :collection => { :generate_token => :get }
 
   map.resources :avoid_balancing_hosts
 
@@ -53,6 +53,12 @@ ActionController::Routing::Routes.draw do |map|
   map.logout '/logout', :controller => 'user_sessions', :action => 'destroy'
 
   map.resources :devices
+
+  map.namespace :api do |api|
+    api.resources :clients
+    api.resources :contracts
+    api.resources :plans
+  end
 
   map.root :controller => "user_sessions", :action => "new"
 

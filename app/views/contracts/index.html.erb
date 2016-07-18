@@ -199,7 +199,10 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td><%= check_box_tag "contracts_ids[]", contract.id %></td>
-          <td><%= contract.id %></td>
+          <td><%= contract.id %>
+            </br>
+            <%= contract.external_id.present? ? "(#{contract.external_id})" : '' %>
+          </td>
           <td>
             <%= link_to h(contract.client.name), client_path(contract.client) %> <%=h external_client_number_and_detail_cpe_node(contract) %><br/>
 	    <div id="<%= @graphs.find{ |g| g.model.id == contract.id }.render %>" style="width: 231px; height: 126px"></div>

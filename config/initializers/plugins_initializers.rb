@@ -5,3 +5,6 @@ end
 Dir.glob(File.join(Rails.root, 'vendor', 'plugins', '**', 'db', 'migrate', '*')) do |path|
   require path
 end
+Dir.glob(File.join(Rails.root, 'vendor', 'plugins', '**', 'db', 'migrate', '*')) do |path|
+  require path
+end
