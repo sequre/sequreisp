@@ -35,16 +35,17 @@ class DaemonTask
 
   def exec_command(command)
     result_command = {}
+    child = POSIX::Spawn::Child.build(command, :timeout => 20)
     begin
-      child = POSIX::Spawn::Child.new(command, :timeout => 20)
+      child.exec!
     rescue POSIX::Spawn::TimeoutExceeded
       $application_logger.error("[Command][TimeoutExceeded] #{command}")
       @daemon_logger.info("[Command][TimeoutExceeded] #{command}")
     ensure
-      result_command[:pid]    = child.status.pid rescue ""
-      result_command[:status] = child.status.to_i rescue ""
-      result_command[:stdout] = child.out rescue ""
-      result_command[:stderr] = child.err rescue ""
+      result_command[:pid]    = child.status.pid
+      result_command[:status] = child.status.to_i
+      result_command[:stdout] = child.out
+      result_command[:stderr] = child.err
     end
     @daemon_logger.debug("[EXEC_COMMAND] command: #{command}, pid: #{result_command[:pid]}, stdout: #{result_command[:stdout]}, stdout: #{result_command[:stderr]}")
     result_command

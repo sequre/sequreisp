@@ -67,15 +67,16 @@ class Command
 
   def exec
     start = Time.now
+    child = POSIX::Spawn::Child.build(command, :timeout => 20)
     begin
-      child = POSIX::Spawn::Child.new(command, :timeout => 20)
+      child.exec!
     rescue POSIX::Spawn::TimeoutExceeded
       $application_logger.error("[Command][TimeoutExceeded] #{command}")
     ensure
-      self.pid    = child.status.pid rescue ""
-      self.status = child.status.to_i rescue ""
-      self.stdout = child.out rescue ""
-      self.stderr = child.err rescue ""
+      self.pid    = child.status.pid
+      self.status = child.status.to_i
+      self.stdout = child.out
+      self.stderr = child.err
       self.time   = (Time.now - start).round(2)
     end
   end
