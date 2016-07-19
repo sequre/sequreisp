@@ -43,6 +43,7 @@ class Backup
       $?.exitstatus == 0
     rescue => e
       $application_logger.error(e)
+      log_rescue_file(log_path, "[Model][Backup][mysqldump] #{e.message}")
       # Rails.logger.error e.inspect
     end
   end
@@ -68,7 +69,10 @@ class Backup
     _password = CONFIG["password"].blank? ? "" :  "-p#{CONFIG["password"]}"
     command = "/usr/bin/mysqldump --no-data --add-drop-table -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]} | grep '^DROP' |  /usr/bin/mysql -u#{CONFIG["username"]} #{_password} #{CONFIG["database"]}"
     success = system(command)
-    $application_logger.error(e) unless success
+    unless success
+      $application_logger.error("[Model][Backup][flush_db] Failed")
+      log_rescue_file(log_path, "[Model][Backup][flush_db] Failed")
+    end
     # Rails.logger.error("Backup::flush_db command failed: #{command}") unless success
     success
   end
@@ -80,7 +84,10 @@ class Backup
     $application_logger.debug("poping db with command: #{command}")
     # Rails.logger.debug "Backup:pop_db poping db with command: #{command}"
     success = system(command)
-    $application_logger.error("Backup::pop_db failed") unless success
+    unless success
+      $application_logger.error("Backup::pop_db failed")
+      log_rescue_file(log_path, "[Model][Backup][pop_db] Failed")
+    end
     # Rails.logger.error("Backup::pop_db failed") unless success
     success
   end
@@ -95,6 +102,7 @@ class Backup
       end
     else
       $application_logger.error("Backup::restore_full tar_command failure")
+      log_rescue_file(log_path, "[Model][Backup][restore_full] Failed")
       # Rails.logger.error("Backup::restore_full tar_command failure")
     end
     unless failsafe
