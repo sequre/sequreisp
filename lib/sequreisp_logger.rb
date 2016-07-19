@@ -49,11 +49,11 @@ class ApplicationLogger
   def initialize
     @log = Logger.new(APPLICATION_LOG, shift_age = 7, shift_size = 10.megabytes)
     @log.formatter = proc do |severity, datetime, progname, msg|
+      FileUtils.chown('sequreisp', 'sequreisp', APPLICATION_LOG) if Rails.env.production?
       datetime_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
       model, method = caller[5].scan(/\/models\/(.*)\.rb.*:in `(.*)'/).map{|i| [i.first.camelize, i.last] }.flatten
       "#{datetime_format} #{Socket.gethostname} #{SOFT_NAME}[#{Process.pid}]: [#{severity}][Model][#{model}][Method][#{method}] #{msg} \n"
     end
-    FileUtils.chown('sequreisp', 'sequreisp', APPLICATION_LOG) if Rails.env.production?
   end
 
   def info message
