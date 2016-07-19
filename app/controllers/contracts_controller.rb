@@ -18,7 +18,6 @@
 class ContractsController < ApplicationController
   before_filter :require_user
   permissions :contracts
-  permissions :arping_mac_address, :only => :arping_mac_address
   # GET /contracts
   # GET /contracts.xml
   def index
