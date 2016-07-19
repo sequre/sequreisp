@@ -35,14 +35,25 @@ class DaemonTask
 
   def exec_command(command)
     result_command = {}
-    result_command[:status] = Open4::popen4("bash -c '#{command}'") do |pid, stdin, stdout, stderr|
-      result_command[:pid] = pid
-      result_command[:stdout] = stdout.read.strip
-      result_command[:stderr] = stderr.read.strip
-    end.exitstatus
+    child = POSIX::Spawn::Child.new(command, :timeout => 15)
+    result_command[:pid]    = child.status.pid
+    result_command[:status] = child.status.to_i
+    result_command[:stdout] = child.out
+    result_command[:stderr] = child.err
     @daemon_logger.debug("[EXEC_COMMAND] command: #{command}, pid: #{result_command[:pid]}, stdout: #{result_command[:stdout]}, stdout: #{result_command[:stderr]}")
     result_command
   end
+
+  # def exec_command(command)
+  #   result_command = {}
+  #   result_command[:status] = Open4::popen4("bash -c '#{command}'") do |pid, stdin, stdout, stderr|
+  #     result_command[:pid] = pid
+  #     result_command[:stdout] = stdout.read.strip
+  #     result_command[:stderr] = stderr.read.strip
+  #   end.exitstatus
+  #   @daemon_logger.debug("[EXEC_COMMAND] command: #{command}, pid: #{result_command[:pid]}, stdout: #{result_command[:stdout]}, stdout: #{result_command[:stderr]}")
+  #   result_command
+  # end
 
   def stop; @exec_as_process ? stop_process : stop_thread; end
 

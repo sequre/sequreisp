@@ -67,13 +67,23 @@ class Command
 
   def exec
     start = Time.now
-    self.status = Open4::popen4("bash -c '#{command}'") do |pid, stdin, stdout, stderr|
-      self.pid = pid
-      self.stdout = stdout.read.strip
-      self.stderr = stderr.read.strip
-    end.exitstatus
+    child = POSIX::Spawn::Child.new(command, :timeout => 15)
+    self.pid    = child.status.pid
+    self.status = child.status.to_i
+    self.stdout = child.out
+    self.stderr = child.err
     self.time = (Time.now - start).round(2)
   end
+
+  # def exec
+  #   start = Time.now
+  #   self.status = Open4::popen4("bash -c '#{command}'") do |pid, stdin, stdout, stderr|
+  #     self.pid = pid
+  #     self.stdout = stdout.read.strip
+  #     self.stderr = stderr.read.strip
+  #   end.exitstatus
+  #   self.time = (Time.now - start).round(2)
+  # end
 
   def to_log
     "command: #{command}, status: #{status}, time: #{time}, stdout: #{stdout}, stderr: #{stderr}, pid: #{pid}"
