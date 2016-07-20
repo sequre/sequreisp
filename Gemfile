@@ -23,8 +23,7 @@ gem 'interactive_editor', '=0.0.10'
 gem 'awesome_print', '=1.1.0'
 gem 'mool', '=1.0.1'
 gem 'snmp', "=1.1.1"
-gem 'posix-spawn'
-# gem 'posix-spawn', :git => 'git://github.com/gedera/posix-spawn.git'
+gem 'posix-spawn', :git => 'git://github.com/gedera/posix-spawn.git'
 
 group :development, :test do
    gem 'faker', '=1.0.1'
