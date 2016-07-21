@@ -37,11 +37,11 @@ class AntiAbuseRule < ActiveRecord::Base
     current_jiffies = File.read('/proc/timer_list').match(/^jiffies.*/)[0].split[1].to_i
     current_hz = if File.exists?('/proc/config.gz')
       Zlib::GzipReader.open('/proc/config.gz') {|gz|
-        gz.read.match(/CONFIG_HZ=.*/)[0].split("=")[1]
+        gz.read.match(/CONFIG_HZ=.*/)[0].split("=")[1].to_i
       }
     else
-      kernel_release=`uname -r`
-      File.read("/boot/config-#{kernel_release}").match(/CONFIG_HZ=.*/).split("=")[1]
+      kernel_release=`uname -r`.chomp
+      File.read("/boot/config-#{kernel_release}").match(/CONFIG_HZ=.*/)[0].split("=")[1].to_i
     end
     entries = []
     File.open("/proc/net/xt_recent/#{table}", 'r').each_line do |l|
@@ -49,15 +49,25 @@ class AntiAbuseRule < ActiveRecord::Base
       ip = line_array[0].split("=")[1]
       contract = Contract.find_by_ip(ip)
       last_seen = line_array[4].to_i
-      packet_count = l.lenght - 8
-      entries << [{:ip => ip, :contract => contract, :last_seen => Time.now-(current_jiffies - last_seen)/current_hz, :packet_count => packet_count }]
+      packet_count = line_array.length - 8
+      entries << {:ip => ip, :contract => contract, :last_seen => Time.now-(current_jiffies - last_seen)/current_hz, :packet_count => packet_count }
     end
     entries
   end
   def entries_seen
-    get_xt_recent_info "seen" rescue []
+    begin
+      get_xt_recent_info table_seen
+    rescue => e
+      log_rescue("[AntiAbuseRule] ERROR entries_seen", e)
+      []
+    end
   end
   def entries_blocked
-    get_xt_recent_info "blocked" rescue []
+    begin
+      get_xt_recent_info table_blocked
+    rescue => e
+      log_rescue("[AntiAbuseRule] ERROR entries_blocked", e)
+      []
+    end
   end
 end
