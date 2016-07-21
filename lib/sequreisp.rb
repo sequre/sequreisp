@@ -439,24 +439,24 @@ def gen_iptables
           f.puts ":#{aar.midline_chain} -"
           f.puts ":#{aar.rearline_chain} -"
           providers_enabled_with_klass_and_interface.each do |p|
-            f.puts "iptables -A FORWARD -o #{p.link_interface} -p tcp --dport #{aar.tcp_port} -j #{aar.frontline_chain}"
+            f.puts "-A FORWARD -o #{p.link_interface} -p tcp --dport #{aar.tcp_port} -j #{aar.frontline_chain}"
           end
           if aar.log
-            f.puts "iptables -A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j LOG --log-prefix '#{aar.log_prefix_blocked}'"
+            f.puts "-A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j LOG --log-prefix '#{aar.log_prefix_blocked}'"
           end
-          f.puts "iptables -A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j DROP"
+          f.puts "-A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j DROP"
           if aar.tcp_syn_flag
-            f.puts "iptables -A #{aar.frontline_chain} -p tcp --syn -j #{aar.midline_chain}"
+            f.puts "-A #{aar.frontline_chain} -p tcp --syn -j #{aar.midline_chain}"
           else
-            f.puts "iptables -A #{aar.frontline_chain} -j #{aar.midline_chain}"
+            f.puts "-A #{aar.frontline_chain} -j #{aar.midline_chain}"
           end
 
-          f.puts "iptables -A #{aar.midline_chain} -m recent --name #{aar.table_seen} --set"
-          f.puts "iptables -A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j #{aar.rearline_chain}"
+          f.puts "-A #{aar.midline_chain} -m recent --name #{aar.table_seen} --set"
+          f.puts "-A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j #{aar.rearline_chain}"
           if aar.log
-            f.puts "iptables -A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j LOG --log-prefix '#{aar.log_prefix_seen}'"
+            f.puts "-A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j LOG --log-prefix '#{aar.log_prefix_seen}'"
           end
-          f.puts "iptables -A #{aar.rearline_chain} -m recent --name #{aar.table_blocked} --set"
+          f.puts "-A #{aar.rearline_chain} -m recent --name #{aar.table_blocked} --set"
         end
         contracts.each do |contract|
           f.puts contract.rules_for_up_data_counting
