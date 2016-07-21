@@ -535,6 +535,7 @@ def gen_iptables
           f.puts "-A enabled-MAIN -j DROP"
         end
       end
+      BootHook.run(:hook => :filter_after_all, :iptables_script => f) unless Configuration.in_safe_mode?
       f.puts "COMMIT"
       #---------#
       # /FILTER #
