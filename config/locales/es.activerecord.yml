@@ -42,6 +42,9 @@ es:
       avoid_balancing_host:
         one: "Sitio sin balanceo"
         other: "Sitios sin balanceo"
+      anti_abuse_rule:
+        one: "Regla de firewall anti abuso"
+        other: "Reglas de firewall anti abuso"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -315,6 +318,18 @@ es:
         id: 'Id'
         name: 'Ip o nombre de sitio'
         detail: 'Detail'
+      anti_abuse_rule:
+        tcp_port: "Puerto TCP"
+        ban_time: "Tiempo de bloqueo en minutos"
+        trigger_hitcount: "Cantidad de packetes que disparan el bloqueo"
+        trigger_seconds: "Cantidad de tiempo que dispara el bloqueo"
+        enabled: "Regla habilitada"
+        log: "Log habilitado"
+        tcp_syn_flag: "Packetes con flag SYN habilitado"
+        packet_count: "Cantidad de paquetes"
+        last_seen: "Ultima vez visto"
+        seen: "Visto"
+        blocked: "Bloqueado"
   formtastic:
     update: "Actualizar %{model}"
     create: "Crear %{model}"
@@ -395,6 +410,7 @@ es:
     guides: "Guías de wispro"
     support: "Soporte"
     command_log: "Log de comandos"
+    anti_abuse_rules: "Reglas de firewall anti abuso"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'

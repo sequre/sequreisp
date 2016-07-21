@@ -9,6 +9,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :avoid_proxy_hosts
 
+  map.resources :anti_abuse_rules
+
   map.resources :iproutes
 
   map.resources :audits, :member => { :go_back => :get }
