@@ -22,6 +22,9 @@ class Permissions < Aegis::Permissions
   role :administrative_readonly
   role :technical_readonly
 
+  action :apply_changes do
+    allow :technical, :administrative
+  end
   resources :clients, :plans do
     writing do
       allow :administrative, :technical
