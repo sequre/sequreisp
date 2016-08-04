@@ -442,7 +442,7 @@ def gen_iptables
             f.puts "-A FORWARD -o #{p.link_interface} -p tcp --dport #{aar.tcp_port} -j #{aar.frontline_chain}"
           end
           if aar.log
-            f.puts "-A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j LOG --log-prefix '#{aar.log_prefix_blocked}'"
+            f.puts "-A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j LOG --log-prefix \"#{aar.log_prefix_blocked}\""
           end
           f.puts "-A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j DROP"
           if aar.tcp_syn_flag
@@ -454,7 +454,7 @@ def gen_iptables
           f.puts "-A #{aar.midline_chain} -m recent --name #{aar.table_seen} --set"
           f.puts "-A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j #{aar.rearline_chain}"
           if aar.log
-            f.puts "-A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j LOG --log-prefix '#{aar.log_prefix_seen}'"
+            f.puts "-A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j LOG --log-prefix \"#{aar.log_prefix_seen}\""
           end
           f.puts "-A #{aar.rearline_chain} -m recent --name #{aar.table_blocked} --set"
         end
