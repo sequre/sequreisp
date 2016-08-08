@@ -39,7 +39,6 @@ class DaemonTask
     begin
       child.exec!
     rescue POSIX::Spawn::TimeoutExceeded
-      $application_logger.error("[Command][TimeoutExceeded] #{command}")
       @daemon_logger.info("[Command][TimeoutExceeded] #{command}")
     ensure
       result_command[:pid]    = child.status.pid
