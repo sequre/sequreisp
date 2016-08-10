@@ -22,8 +22,12 @@ class DaemonLogger
   end
 
   def error exception
-    @log.error("[MESSAGE] #{exception.message}")
-    exception.backtrace.each{ |bt| @log.error("[BRACKTRACE] #{bt}") }
+    if exception.instance_of? String
+      @log.error("[MESSAGE] #{exception}")
+    else
+      @log.error("[MESSAGE] #{exception.message}")
+      exception.backtrace.each{ |bt| @log.error("[BRACKTRACE] #{bt}") }
+    end
     error_to_file(exception)
   end
 
@@ -65,8 +69,12 @@ class ApplicationLogger
   end
 
   def error exception
-    @log.error("[MESSAGE] #{exception.message}")
-    exception.backtrace.each{ |bt| @log.error("[BRACKTRACE] #{bt}") }
+    if exception.instance_of? String
+      @log.error("[MESSAGE] #{exception}")
+    else
+      @log.error("[MESSAGE] #{exception.message}")
+      exception.backtrace.each{ |bt| @log.error("[BRACKTRACE] #{bt}") }
+    end
   end
 
 end
