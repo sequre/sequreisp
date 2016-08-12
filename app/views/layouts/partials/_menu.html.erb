@@ -93,6 +93,8 @@ ul li a:hover.no_pointer {
             <% end %>
             <% if current_user.may_index_devices? %>
             <li><%= link_to t('menu.devices'), devices_path %></li>
+            <% if current_user.may_index_anti_abuse_rules? %>
+            <li><%= link_to t('menu.anti_abuse_rules'), anti_abuse_rules_path %></li>
             <% end %>
           </ul>
         </li>

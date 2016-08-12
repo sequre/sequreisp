@@ -39,6 +39,12 @@ pt:
       address:
         one: "Endereço IP"
         other: "Endereços IP"
+      avoid_balancing_host:
+        one: "Avoid balancing host"
+        other: "Avoid balancing hosts"
+      anti_abuse_rule:
+        one: "Regra de firewall anti-abuso"
+        other: "Regras de firewall anti-abuso"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -329,6 +335,18 @@ pt:
           router: 'Router'
         brands:
           other: 'Outros'
+      anti_abuse_rule:
+        tcp_port: "Número de porta TCP"
+        ban_time: "Tempo de bloco em minutos"
+        trigger_hitcount: "Número de pacotes que desencadeia o bloco"
+        trigger_seconds: "Intervalo de tempo que desencadeia o bloco"
+        enabled: "Regra habilitado"
+        log: "Log habilitado"
+        tcp_syn_flag: "Pacotes com flag SYN habilitada"
+        packet_count: "Contagem de pacote"
+        last_seen: "Visto pela última vez"
+        seen: "Visto"
+        blocked: "Bloqueado"
   formtastic:
     update: "Atualizar %{model}"
     create: "Criar %{model}"
@@ -408,9 +426,9 @@ pt:
     help: "Ajudar"
     guides: "Guias Wispro"
     support: "Apoio"
-    command_log: "Log de ​​comando"
-    devices: "Dispositivos"
     uptime: "Uptime"
+    command_log: "Log de comando"
+    anti_abuse_rules: "Regras de firewall anti abuso"
   table_headers:
     plans:
       plugins_enabled: 'Módulos habilitados'

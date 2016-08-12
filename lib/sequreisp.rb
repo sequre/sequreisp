@@ -433,6 +433,44 @@ def gen_iptables
       lan_interfaces = Interface.only_lan
 
       unless Configuration.in_safe_mode?
+        AntiAbuseRule.all.each do |aar|
+					next unless aar.enabled
+          f.puts ":#{aar.frontline_chain} -"
+          f.puts ":#{aar.midline_chain} -"
+          f.puts ":#{aar.rearline_chain} -"
+          providers_enabled_with_klass_and_interface.each do |p|
+            f.puts "-A FORWARD -o #{p.link_interface} -p tcp --dport #{aar.tcp_port} -j #{aar.frontline_chain}"
+          end
+          if aar.log
+            f.puts "-A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j LOG --log-prefix \"#{aar.log_prefix_blocked} \""
+          end
+          f.puts "-A #{aar.frontline_chain} -m recent --update --name #{aar.table_blocked} --seconds #{aar.ban_time * 60} --hitcount 1 -j DROP"
+          if aar.tcp_syn_flag
+            f.puts "-A #{aar.frontline_chain} -p tcp --syn -j #{aar.midline_chain}"
+          else
+            f.puts "-A #{aar.frontline_chain} -j #{aar.midline_chain}"
+          end
+
+          f.puts "-A #{aar.midline_chain} -m recent --name #{aar.table_seen} --set"
+          f.puts "-A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j #{aar.rearline_chain}"
+          if aar.log
+            f.puts "-A #{aar.midline_chain} -m recent --rcheck --name #{aar.table_seen} --seconds #{aar.trigger_seconds} --hitcount #{aar.trigger_hitcount} -j LOG --log-prefix \"#{aar.log_prefix_seen} \""
+          end
+          f.puts "-A #{aar.rearline_chain} -m recent --name #{aar.table_blocked} --set"
+        end
+
+        # contracts.each do |contract|
+        #   f.puts contract.rules_for_up_data_counting
+        #   f.puts contract.rules_for_down_data_counting
+        # end # Create all leaf nodes
+
+        # unless contracts.empty?
+        #   [{ :prefix => "up", :dir =>"-s", :dir_interface => "-i" }, { :prefix => "down", :dir => "-d", :dir_interface => "-o" }].each do |way|
+        #     f.puts(IPTree.new({ :ip_list => contracts.collect(&:ip_addr), :prefix => "count-#{way[:prefix]}", :match => "#{way[:dir]}", :prefix_leaf => "count-#{way[:prefix]}" }).to_iptables)
+        #     Interface.only_lan.each { |interface| f.puts("-A FORWARD #{way[:dir_interface]} #{interface.name} -j count-#{way[:prefix]}-MAIN") }
+        #   end
+        # end
+
         f.puts "-A FORWARD -j sequreisp-allowedsites"
 
         AlwaysAllowedSite.all.each do |site|

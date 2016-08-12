@@ -42,6 +42,9 @@ en:
       avoid_balancing_host:
         one: "Avoid balancing host"
         other: "Avoid balancing hosts"
+      anti_abuse_rule:
+        one: "Anti-abuse firewall rule"
+        other: "Anti-abuse firewall rules"
       client:
         one: "Client"
         other: "Clients"
@@ -334,6 +337,18 @@ en:
           other: 'Other'
       device_brand:
         name: "Name"
+      anti_abuse_rule:
+        tcp_port: "TCP port number"
+        ban_time: "Ban time in minutes"
+        trigger_hitcount: "Number of packets that triggers the ban"
+        trigger_seconds: "Interval of time that triggers the ban"
+        enabled: "Rule enabled"
+        log: "Log enabled"
+        tcp_syn_flag: "Packets with SYN flag enabled"
+        packet_count: "Packet count"
+        last_seen: "Last seen"
+        seen: "Seen"
+        blocked: "Banned"
   formtastic:
     update: "Update %{model}"
     create: "Create %{model}"
@@ -417,6 +432,7 @@ en:
     devices: "Devices"
     device_brands: "Device Brands"
     uptime: "Uptime"
+    anti_abuse_rules: "Anti abuse firewall rules"
   table_headers:
     plans:
       plugins_enabled: 'Plugins enabled'

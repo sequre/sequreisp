@@ -1,0 +1,29 @@
+<% unless current_user.may_update_anti_abuse_rule?(@anti_abuse_rule) %>
+<script type="text/javascript">
+  $(function(){
+    $('input,select,textarea').attr('disabled',true)
+  })
+</script>
+<% end %>
+<div id="main">
+<% semantic_form_for @anti_abuse_rule do |form| %>
+  <%= error_messages @anti_abuse_rule %>
+  <% form.inputs do %>
+    <%= form.input :tcp_port, :wrapper_html => { :class => "left" } %>
+    <%= form.input :ban_time, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
+    <%= form.input :trigger_hitcount, :wrapper_html => { :class => "left" } %>
+    <%= form.input :trigger_seconds, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
+    <%= form.input :enabled, :wrapper_html => { :class => "left" } %>
+    <%= form.input :tcp_syn_flag, :wrapper_html => { :class => "left" } %>
+    <%= form.input :log, :wrapper_html => { :class => "left" } %>
+    <div style="clear: both"></div>
+  <% end %>
+  <% if current_user.may_update_anti_abuse_rule?(@anti_abuse_rule) or current_user.may_create_anti_abuse_rule? %>
+    <% form.buttons do %>
+      <%= if @commit_text.nil? then form.commit_button else form.commit_button @commit_text end %>
+    <% end %>
+  <% end %>
+<% end %>
+</div>

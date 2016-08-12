@@ -1,0 +1,57 @@
+<% content_for :title, t('menu.anti_abuse_rules') %>
+<% heading t('menu.anti_abuse_rules') + " #{AntiAbuseRule.human_attribute_name :tcp_port}: #{@anti_abuse_rule.tcp_port}" %>
+
+<div class="separador"></div>
+<div class="separador"></div>
+
+<h2> <%= AntiAbuseRule.human_attribute_name :blocked %> </h2>
+<div class="main">
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= Contract.human_attribute_name :ip %></th>
+        <th><%= Client.human_attribute_name :name %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :packet_count %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :last_seen %></th>
+      </tr>
+
+      <% @anti_abuse_rule.entries_blocked.each_with_index do |entry,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%= entry[:contract] ? link_to(entry[:ip], contract_path(entry[:contract])) : entry[:ip] %></td>
+	  <td><%= link_to entry[:contract].client.name, client_path(entry[:contract].client) rescue '-' %></td>
+          <td><%=h entry[:packet_count] %></td>
+          <td><%=l entry[:last_seen] %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="separador"></div>
+<div class="separador"></div>
+
+<h2> <%= AntiAbuseRule.human_attribute_name :seen %> </h2>
+<div class="main">
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= Contract.human_attribute_name :ip %></th>
+        <th><%= Client.human_attribute_name :name %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :packet_count %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :last_seen %></th>
+      </tr>
+
+      <% @anti_abuse_rule.entries_seen.each_with_index do |entry,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%= entry[:contract] ? link_to(entry[:ip], contract_path(entry[:contract])) : entry[:ip] %></td>
+	  <td><%= link_to entry[:contract].client.name, client_path(entry[:contract].client) rescue '-'%></td>
+          <td><%=h entry[:packet_count] %></td>
+          <td><%=l entry[:last_seen] %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+

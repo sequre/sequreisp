@@ -1,0 +1,6 @@
+<% content_for :title, t('actions.new', :model => AntiAbuseRule.human_name) %>
+<% heading t('actions.new', :model => AntiAbuseRule.human_name)  %>
+
+<%= render :partial => "shared/empty_submenu" %>
+
+<%= render @anti_abuse_rule %>

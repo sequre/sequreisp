@@ -346,7 +346,8 @@ class Contract < ActiveRecord::Base
         p_ip = IP.new "#{p.ip}/#{p.netmask_suffix}"
         provider = p if (p_ip.to_i & p_ip.netmask.to_i) == (c_ip.to_i & p_ip.netmask.to_i)
         p.addresses.each do |a|
-          provider = p if (a.ruby_ip.to_i & a.ruby_ip.netmask.to_i) == (c_ip.to_i & p_ip.netmask.to_i)
+          # provider = p if (a.ruby_ip.to_i & a.ruby_ip.netmask.to_i) == (c_ip.to_i & p_ip.netmask.to_i)
+          provider = p if (a.ruby_ip.to_i & a.ruby_ip.netmask.to_i) == (c_ip.to_i & a.ruby_ip.netmask.toI)
         end
       end
       provider

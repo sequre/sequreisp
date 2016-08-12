@@ -1,0 +1,54 @@
+<% content_for :title, t('menu.anti_abuse_rules') %>
+<% heading t('menu.anti_abuse_rules') %>
+<% render_new_button_for :anti_abuse_rule %>
+
+<%= render :partial => "shared/submenu_items"%>
+
+<div class="separador"></div>
+
+<div class="main">
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr class="odd">
+        <th><%= AntiAbuseRule.human_attribute_name :tcp_port %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :ban_time %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :trigger_hitcount %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :trigger_seconds %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :enabled %></th>
+        <th><%= AntiAbuseRule.human_attribute_name :log %></th>
+        <% if current_user.may_update_anti_abuse_rules? %>
+        <th></th>
+        <% end %>
+        <% if current_user.may_index_anti_abuse_rules? %>
+        <th></th>
+        <% end %>
+        <% if current_user.may_destroy_anti_abuse_rule?(AntiAbuseRule.new) %>
+        <th></th>
+        <% end %>
+      </tr>
+
+      <% @anti_abuse_rules.each_with_index do |anti_abuse_rule,i| %>
+        <% css_class = i%2 == 0 ? "even" : "odd" %>
+        <tr class="<%= css_class %>" >
+          <td><%=h anti_abuse_rule.tcp_port %></td>
+          <td><%=h anti_abuse_rule.ban_time %></td>
+          <td><%=h anti_abuse_rule.trigger_hitcount %></td>
+          <td><%=h anti_abuse_rule.trigger_seconds %></td>
+          <td><%=h anti_abuse_rule.enabled %></td>
+          <td><%=h anti_abuse_rule.log %></td>
+          <% if current_user.may_update_anti_abuse_rule?(anti_abuse_rule) %>
+            <td><%= link_to t('buttons.edit'), edit_anti_abuse_rule_path(anti_abuse_rule) %></td>
+          <% end %>
+          <% if current_user.may_show_anti_abuse_rule?(anti_abuse_rule) %>
+            <td><%= link_to t('buttons.show'), anti_abuse_rule_path(anti_abuse_rule) %></td>
+          <% end %>
+          <% if current_user.may_destroy_anti_abuse_rule?(anti_abuse_rule) %>
+          <td><%= link_to t('buttons.delete'), anti_abuse_rule, :confirm => t('messages.confirm'), :method => :delete %></td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= will_paginate @anti_abuse_rules %>
+</div>
+

@@ -15,6 +15,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :avoid_proxy_hosts
 
+  map.resources :anti_abuse_rules
+
   map.resources :iproutes
 
   map.resources :audits, :member => { :go_back => :get }
@@ -58,6 +60,7 @@ ActionController::Routing::Routes.draw do |map|
     api.resources :clients
     api.resources :contracts
     api.resources :plans
+    api.apply_changes 'apply_changes', :controller => 'apply_changes', :action => 'apply_changes', :method => :get
   end
 
   map.root :controller => "user_sessions", :action => "new"
