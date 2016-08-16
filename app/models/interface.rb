@@ -160,8 +160,9 @@ class Interface < ActiveRecord::Base
   def instant
     begin
       Configuration.first.check_redis
-      data = {}
       date_time_now = (DateTime.now.to_i + Time.now.utc_offset) * 1000
+      data = { :tx => [date_time_now, 0],
+               :rx => [date_time_now, 0] }
       if Rails.env.production?
         date_keys = $redis.hgetall("#{redis_key}_keys").values.sort
         # time = ((date_keys.empty? ? date_time_now : $redis.hget(date_keys.last, "time").to_i)
@@ -180,10 +181,10 @@ class Interface < ActiveRecord::Base
           data[:rx] = [ date_time_now, (rand(provider.rate_down)*1024 rescue 0) ]
         end
       end
-      data
     rescue => e
       $application_logger.error(e)
     end
+    data
   end
 
   def physical_link
