@@ -80,21 +80,22 @@ ul li a:hover.no_pointer {
               <li><%= link_to t('menu.general_configuration'), configurations_path %></li>
             <% end %>
             <% if current_user.may_index_users? %>
-            <li><%= link_to t('menu.users'), users_path %></li>
+              <li><%= link_to t('menu.users'), users_path %></li>
             <% end %>
             <% if current_user.may_index_avoid_balancing_hosts? %>
-            <li><%= link_to t('menu.avoid_balancing_hosts'), avoid_balancing_hosts_path %></li>
+              <li><%= link_to t('menu.avoid_balancing_hosts'), avoid_balancing_hosts_path %></li>
             <% end %>
             <% if current_user.may_index_always_allowed_sites?%>
-            <li><%= link_to t('menu.always_allowed_sites'), always_allowed_sites_path %></li>
+              <li><%= link_to t('menu.always_allowed_sites'), always_allowed_sites_path %></li>
             <% end %>
             <% if current_user.may_index_iproutes? %>
-            <li><%= link_to t('menu.iproutes'), iproutes_path %></li>
+              <li><%= link_to t('menu.iproutes'), iproutes_path %></li>
             <% end %>
             <% if current_user.may_index_devices? %>
-            <li><%= link_to t('menu.devices'), devices_path %></li>
+              <li><%= link_to t('menu.devices'), devices_path %></li>
+            <% end %>
             <% if current_user.may_index_anti_abuse_rules? %>
-            <li><%= link_to t('menu.anti_abuse_rules'), anti_abuse_rules_path %></li>
+              <li><%= link_to t('menu.anti_abuse_rules'), anti_abuse_rules_path %></li>
             <% end %>
           </ul>
         </li>
@@ -107,7 +108,7 @@ ul li a:hover.no_pointer {
         <li> <a id="plugins_button" class="no_pointer" href="javascript:void(null)"> <%=t 'menu.modules' %></a>
           <ul class="submenu">
             <% plugins_menu_links.each do |link| %>
-            <li> <%= link %> </li>
+              <li> <%= link %> </li>
             <% end %>
           </ul>
         </li>
