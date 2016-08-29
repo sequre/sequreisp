@@ -206,7 +206,7 @@
         <% css_class = i%2 == 0 ? "even" : "odd" %>
         <tr class="<%= css_class %>" >
           <td><%= audit.id %></td>
-          <td><%=l audit.created_at, :format => :short %></td>
+          <td><%=l audit.created_at, :format => :long %></td>
           <td><%= link_to_auditable(audit) %></td>
           <td><%=h audit.user.name rescue t 'audits.undefined' %></td>
           <td><%=h t('audits.'+audit.action) %></td>
