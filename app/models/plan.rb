@@ -45,6 +45,10 @@ class Plan < ActiveRecord::Base
   before_save :pass_cir_reuse_to_percentage, :if => lambda { |p| p.cir_strategy == CIR_STRATEGY_REUSE }
 
 
+  def after_initialize
+    self.cir_reuse = cir if cir_reuse.nil?
+  end
+
   def pass_cir_reuse_to_percentage
     self.cir = self.cir_reuse
   end
@@ -135,10 +139,6 @@ class Plan < ActiveRecord::Base
     else
       @cached_rate_down ||= ceil_down * cir_down_real
     end
-  end
-
-  def default_value_for_cir_reused
-    cir || 1.0
   end
 
   def long_download_max_to_bytes

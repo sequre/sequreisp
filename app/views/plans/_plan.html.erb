@@ -50,7 +50,7 @@
         <%= form.input :ceil_up, :wrapper_html => { :class => "left" } %>
         <div style="clear: both"></div>
 	<%= form.input :cir_strategy,  :as => :select, :collection => select_cir_strategy, :include_blank => false %>
-	<%= form.input :cir_reuse, :as => :select, :collection => (1..32).map{|val| ["1:#{val}", (1.0/val).round(2)]}, :include_blank => false, :selected => @plan.default_value_for_cir_reused, :wrapper_html => { :class => "left" } %>
+	<%= form.input :cir_reuse, :as => :select, :collection => (1..32).map{|val| ["1:#{val}", (1.0/val).round(2)]}, :include_blank => false, :wrapper_html => { :class => "left" } %>
 	<%= form.input :cir, :wrapper_html => { :class => "left" } %>
 	<div style="clear: both"></div>
 	<%= form.input :total_cir_down, :wrapper_html => { :class => "left" } %>
