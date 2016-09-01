@@ -122,11 +122,19 @@ class Plan < ActiveRecord::Base
   end
 
   def rate_up
-    @cached_rate_up ||= ceil_up * cir_up_real
+    if cir_strategy == CIR_STRATEGY_REUSE or cir_strategy == CIR_STRATEGY_PERCENTAGE
+      ceil_up * cir_up
+    else
+      @cached_rate_up ||= ceil_up * cir_up_real
+    end
   end
 
   def rate_down
-    @cached_rate_down ||= ceil_down * cir_down_real
+    if cir_strategy == CIR_STRATEGY_REUSE or cir_strategy == CIR_STRATEGY_PERCENTAGE
+      ceil_down * cir_down
+    else
+      @cached_rate_down ||= ceil_down * cir_down_real
+    end
   end
 
   def default_value_for_cir_reused
