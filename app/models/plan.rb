@@ -104,41 +104,15 @@ class Plan < ActiveRecord::Base
   end
 
   def contracts_count
-    @cached_contracts_count ||= contracts.select { |contract| contract.state != 'disabled' }.count
-  end
-
-  def cir_up_real
-    @cached_provider_group_cir_total_up ||= provider_group.cir_total_up
-    if @cached_provider_group_cir_total_up.zero?
-      0
-    else
-      @cached_cir_up_real ||= [ ((provider_group.rate_up.to_f / @cached_provider_group_cir_total_up) * cir_up ), cir_up ].min
-    end
-  end
-
-  def cir_down_real
-    @cached_provider_group_cir_total_down ||= provider_group.cir_total_down
-    if @cached_provider_group_cir_total_down.zero?
-      0
-    else
-      @cached_cir_down_real ||= [ ((provider_group.rate_down.to_f / @cached_provider_group_cir_total_down) * cir_down ), cir_down ].min
-    end
+    @cached_contracts_count ||= contracts.count(:conditions => "contracts.state != 'disabled'")
   end
 
   def rate_up
-    if cir_strategy == CIR_STRATEGY_REUSE or cir_strategy == CIR_STRATEGY_PERCENTAGE
-      ceil_up * cir_up
-    else
-      @cached_rate_up ||= ceil_up * cir_up_real
-    end
+    @cached_rate_up ||= ceil_up * cir_up
   end
 
   def rate_down
-    if cir_strategy == CIR_STRATEGY_REUSE or cir_strategy == CIR_STRATEGY_PERCENTAGE
-      ceil_down * cir_down
-    else
-      @cached_rate_down ||= ceil_down * cir_down_real
-    end
+    @cached_rate_down ||= ceil_down * cir_down
   end
 
   def long_download_max_to_bytes
