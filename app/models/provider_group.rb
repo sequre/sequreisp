@@ -76,38 +76,14 @@ class ProviderGroup < ActiveRecord::Base
   end
   def rate_down
     @cached_rate_down ||= providers.enabled.collect(&:rate_down).sum
-    # total=0
-    # providers.enabled.each do |p|
-    #   total+=p.rate_down
-    # end
-    # total
   end
-  # def remaining_rate_down(exclude_id=nil)
-  #   remaining = rate_down
-  #   plans.each do |plan|
-  #     remaining -= (plan.contracts.count * plan.rate_down)
-  #   end
-  #   remaining
-  # end
   def self.total_rate_down
     all.collect(&:rate_down).sum
   end
 
   def rate_up
     @cached_rate_up ||= providers.enabled.collect(&:rate_up).sum
-    # total=0
-    # providers.enabled.each do |p|
-    #   total+=p.rate_up
-    # end
-    # total
   end
-  # def remaining_rate_up(exclude_id=nil)
-  #   remaining = rate_up
-  #   plans.each do |plan|
-  #     remaining -= (plan.contracts.count * plan.rate_up)
-  #   end
-  #   remaining
-  # end
   def self.total_rate_up
     all.collect(&:rate_up).sum
   end
@@ -142,7 +118,7 @@ class ProviderGroup < ActiveRecord::Base
   end
   def concurrency_index_down
     begin
-      rate_down * 100 / ceil_up
+      rate_down * 100 / ceil_down
     rescue
       0
     end
@@ -155,10 +131,10 @@ class ProviderGroup < ActiveRecord::Base
     end
   end
   def ceil_down
-    @cached_ceil_down ||= contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_down }.sum
+    @cached_ceil_down ||= plans.collect{|plan| plan.ceil_down * plan.contracts_count }.sum
   end
   def ceil_up
-    @cached_ceil_up ||= contracts.not_disabled.all(:include => :plan).collect{ |c| c.plan.ceil_up }.sum
+    @cached_ceil_up ||= plans.collect{|plan| plan.ceil_up * plan.contracts_count }.sum
   end
 
   def cir_total_up
