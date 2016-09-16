@@ -46,7 +46,7 @@ class Plan < ActiveRecord::Base
 
 
   def after_initialize
-    self.cir_reuse = cir if cir_reuse.nil?
+    self.cir_reuse = cir if cir_reuse.nil? and has_attribute?(:cir)
   end
 
   def pass_cir_reuse_to_percentage
