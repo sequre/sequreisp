@@ -479,6 +479,12 @@ def gen_iptables
         end
       end
 
+      providers_enabled_with_klass_and_interface.each do |p|
+        target = p.allow_dns_queries? ? "ACCEPT" : "DROP"
+        f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j #{target}"
+        f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j #{target}"
+      end
+
       if Configuration.firewall_enabled? || Configuration.in_safe_mode?
         f.puts "-A INPUT -i lo  -j ACCEPT"
         f.puts "-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT"
@@ -496,12 +502,6 @@ def gen_iptables
       end
 
       f.puts "-A INPUT -p tcp -m multiport --dports #{Configuration.app_listen_port_available.join(',')} -j ACCEPT"
-
-      providers_enabled_with_klass_and_interface.each do |p|
-        target = p.allow_dns_queries? ? "ACCEPT" : "DROP"
-        f.puts "-A INPUT -i #{p.link_interface} -p udp --dport 53 -j #{target}"
-        f.puts "-A INPUT -i #{p.link_interface} -p tcp --dport 53 -j #{target}"
-      end
 
       f.puts "-A INPUT -p udp --dport 53 -j dns-query"
 
