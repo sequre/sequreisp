@@ -21,7 +21,20 @@ class CommandContext
 
   def exec_commands(f=nil, human=nil)
     commands.each do |c|
-      c.exec if @@run
+      if @@run
+        if c.command.match(/tc -force -b/)
+          begin
+            Timeout::timeout(120) do
+              c.exec
+            end
+          rescue Timeout::Error => e
+            @@command_logger.info "#{Time.now}, #{name}, ABORTED DUE TO TIMEOUT"
+            log_rescue("[CommandContext] TimeoutError exec_commands TIMEOUT tc", e)
+          end
+        else
+          c.exec
+        end
+      end
       @@command_logger.info "#{Time.now}, #{name}, #{c.to_log}"
       f.puts c.command if f
     end
