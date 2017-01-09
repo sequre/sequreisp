@@ -425,6 +425,7 @@ def gen_iptables
       #---------#
       f.puts "*filter"
       f.puts ":dns-query -"
+      f.puts ":dns-block-disabled -"
       f.puts ":sequreisp-allowedsites - [0:0]"
       f.puts "-A OUTPUT -o lo -j ACCEPT"
 
@@ -512,7 +513,13 @@ def gen_iptables
 
       BootHook.run(:hook => :filter_before_all, :iptables_script => f) unless Configuration.in_safe_mode?
 
+      Contract.disabled.each do |c|
+        f.puts "-A dns-block-disabled -s #{c.ip} -j DROP"
+      end
+      f.puts "-A FORWARD -p udp --dport 53 -j dns-block-disabled"
+      f.puts "-A FORWARD -p tcp --dport 53 -j dns-block-disabled"
       f.puts "-A FORWARD -p udp --dport 53 -j dns-query"
+      f.puts "-A FORWARD -p tcp --dport 53 -j dns-query"
 
       lan_interfaces.each do |i|
         f.puts "-A FORWARD -i #{i.name} -p udp --dport 53 -j ACCEPT"
