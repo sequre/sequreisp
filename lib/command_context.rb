@@ -29,7 +29,7 @@ class CommandContext
             end
           rescue Timeout::Error => e
             @@command_logger.info "#{Time.now}, #{name}, ABORTED DUE TO TIMEOUT"
-            log_rescue("[CommandContext] TimeoutError exec_commands TIMEOUT tc", e)
+            $application_logger.error(e)
           end
         else
           c.exec

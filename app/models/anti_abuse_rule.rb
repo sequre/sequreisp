@@ -1,4 +1,5 @@
 class AntiAbuseRule < ActiveRecord::Base
+  require 'sequreisp_logger'
   acts_as_audited
   def auditable_name
     "#{self.class.human_name}: #{tcp_port}"
@@ -58,7 +59,7 @@ class AntiAbuseRule < ActiveRecord::Base
     begin
       get_xt_recent_info table_seen
     rescue => e
-      log_rescue("[AntiAbuseRule] ERROR entries_seen", e)
+      $application_logger.error(e)
       []
     end
   end
@@ -66,7 +67,7 @@ class AntiAbuseRule < ActiveRecord::Base
     begin
       get_xt_recent_info table_blocked
     rescue => e
-      log_rescue("[AntiAbuseRule] ERROR entries_blocked", e)
+      $application_logger.error(e)
       []
     end
   end
