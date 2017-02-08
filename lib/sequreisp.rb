@@ -792,10 +792,10 @@ def do_provider_down(p)
   commands << "ip rule del from #{p.ip}/32 table #{p.check_link_table} prio 90"
   p.online = false
   p.ip = p.netmask = p.gateway = nil
-  p.save(false)
-  update_provider_route p, nil, false, false
-  update_provider_group_route p.provider_group, nil, false, false
-  update_fallback_route nil, false, false
+  p.save_without_applying_changes
+  update_provider_route p, false, false
+  update_provider_group_route p.provider_group, false, false
+  update_fallback_route false, false
 
   exec_context_commands "do_provider_down #{p.id}", commands, I18n.t("command.human.do_provider_down"), false
 end
