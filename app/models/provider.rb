@@ -368,33 +368,33 @@ class Provider < ActiveRecord::Base
     "#{self.class.human_name}: #{name}"
   end
 
-  # def is_online_by_rate?
-  #   Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} start"
-  #   rx = interface.rx_bytes
-  #   tx = interface.tx_bytes
-  #   sleep 2
-  #   # from bytes to bits(*8) to bps(/2) to kbps(/1024)
-  #   instant_rate_down = (interface.rx_bytes-rx)*8/2/1024
-  #   instant_rate_up = (interface.tx_bytes-tx)*8/2/1024
-  #   # min rates in kbps
-  #   min_online_rate_down = 256
-  #   min_online_rate_up = 56
-  #   result = (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
-  #   Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} result:#{result} down: #{instant_rate_down} up #{instant_rate_up}"
-  #   result
-  # end
-
   def is_online_by_rate?
+    Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} start"
+    rx = interface.rx_bytes
+    tx = interface.tx_bytes
+    sleep 2
+    # from bytes to bits(*8) to bps(/2) to kbps(/1024)
+    instant_rate_down = (interface.rx_bytes-rx)*8/2/1024
+    instant_rate_up = (interface.tx_bytes-tx)*8/2/1024
     # min rates in kbps
     min_online_rate_down = 256
     min_online_rate_up = 56
-
-    data = interface.instant
-    (data[:rx][1] / 1024 > min_online_rate_down) and (data[:tx][1] / 1024 > min_online_rate_up)
-    # instant_rate_up = $redis.hmget("interface:#{interface.name}:rate_tx", "instant").first.to_i/1024
-    # instant_rate_down = $redis.hmget("interface:#{interface.name}:rate_rx", "instant").first.to_i/1024
-    # (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
+    result = (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
+    Rails.logger.debug "Provider::is_online_by_rate? #{Time.now} provider_id: #{id} result:#{result} down: #{instant_rate_down} up #{instant_rate_up}"
+    result
   end
+
+  #def is_online_by_rate?
+  #  # min rates in kbps
+  #  min_online_rate_down = 256
+  #  min_online_rate_up = 56
+
+  #  data = interface.instant
+  #  (data[:rx][1] / 1024 > min_online_rate_down) and (data[:tx][1] / 1024 > min_online_rate_up)
+  #  # instant_rate_up = $redis.hmget("interface:#{interface.name}:rate_tx", "instant").first.to_i/1024
+  #  # instant_rate_down = $redis.hmget("interface:#{interface.name}:rate_rx", "instant").first.to_i/1024
+  #  # (instant_rate_down > min_online_rate_down and instant_rate_up > min_online_rate_up)
+  #end
 
   def self.all_ips
     provider_ips = []
