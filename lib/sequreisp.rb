@@ -781,9 +781,7 @@ def do_provider_up(p)
   end
   if p.kind == "adsl"
     commands << "ip link set #{p.link_interface} txqueuelen #{Interface::DEFAULT_TX_QUEUE_LEN_FOR_VLAN}"
-    commands << "tc qdisc del dev #{p.link_interface} root"
-    commands << "tc qdisc del dev #{p.link_interface} ingress"
-    commands << "tc -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
+    commands << "tc -force -b #{File.join(BASE_SCRIPTS, TC_FILE_PREFIX + p.link_interface)}"
   end
   exec_context_commands "do_provider_up #{p.id}", commands, I18n.t("command.human.do_provider_up"), false
 end
