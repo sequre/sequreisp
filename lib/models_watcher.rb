@@ -56,7 +56,7 @@ module ModelsWatcher
 
   def save_without_applying_changes
     @__skip_check_watched_fields_callback = true
-    save
+    save false
   end
 
 end
