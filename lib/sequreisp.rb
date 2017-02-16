@@ -1032,6 +1032,11 @@ def boot(run=true)
     exec_context_commands "enabled_iptables_lock", ["touch #{DEPLOY_DIR}/tmp/iptables.lock"], I18n.t("command.human.enabled_iptables_lock")
     setup_iptables
     exec_context_commands "disabled_iptables_lock", ["[ -f #{DEPLOY_DIR}/tmp/iptables.lock ] && rm #{DEPLOY_DIR}/tmp/iptables.lock"], I18n.t("command.human.disabled_iptables_lock")
+    begin
+      BootHook.run :hook => :post_iptables
+    rescue => e
+      log_rescue "[Boot][post_iptable_hook]", e
+    end
     Rails.logger.debug "[Boot] setup_mail_relay"
     setup_mail_relay
 
