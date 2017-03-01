@@ -484,7 +484,9 @@ class DaemonRrdFeed < DaemonTask
       # if Configuration.use_global_prios
       #   rrd_update c, time_c, client_down["1"][c.class_hex], 0, client_up["1"][c.class_hex], 0
       # else
-      rrd_update c, time_c, client_down["1"][c.class_prio2_hex], client_down["1"][c.class_prio3_hex], client_up["1"][c.class_prio2_hex], client_up["1"][c.class_prio3_hex]
+      if not client_down["1"].nil? and not client_up["1"].nil?
+        rrd_update c, time_c, client_down["1"][c.class_prio2_hex], client_down["1"][c.class_prio3_hex], client_up["1"][c.class_prio2_hex], client_up["1"][c.class_prio3_hex]
+      end
       # end
       sleep sleep_time
     end
