@@ -155,7 +155,7 @@ def gen_iptables
             if abh.provider
               abh.ip_addresses.each do |ip|
                 f.puts "-A avoid_balancing -d #{ip} -j MARK --set-mark 0x#{abh.provider.mark_hex}/0x00ff0000"
-                f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark --nfmask 0x1ffffff --cfmask 0x1ffffff"
+                f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark --nfmask 0x1ffffff --ctmask 0x1ffffff"
                 # f.puts "-A avoid_balancing -d #{ip} -j CONNMARK --save-mark"
               end
             end
