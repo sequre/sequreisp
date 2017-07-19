@@ -32,11 +32,11 @@ def rrd_create(path, time)
     "DS:down_dfl:DERIVE:600:0:644245094400",
     "DS:up_prio:DERIVE:600:0:644245094400",
     "DS:up_dfl:DERIVE:600:0:644245094400",
-    #(24x60x60/300)*30dias
+    #(24x60x60/300)*30dias cada 5 minutos
     "RRA:AVERAGE:0.5:1:8640",
-    #(24x60x60x30/300)*12meses
+    #(24x60x60x30/300)*12meses cada 2.5 horas
     "RRA:AVERAGE:0.5:30:3456",
-    #(24x60x60x30x12/300)*10años
+    #(24x60x60x30x12/300)*10años cada 30 horas
     "RRA:AVERAGE:0.5:360:2880"
 end
 
