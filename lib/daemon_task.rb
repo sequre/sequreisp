@@ -444,7 +444,9 @@ class DaemonRrdFeed < DaemonTask
     if Configuration.no_ifb_on_lan
       Interface.all(:conditions => { :kind => "lan" }).each do |iface|
         client_down.merge!(tc_class(iface.name)) do |k, a, b|
-          a + b
+          a.merge(b) do |zk, za, zb|
+            za + zb
+          end
         end
         #log("[Daemon][#{name}][exec_rrd_feed] client_down#{client_down.inspect}") if verbose?
       end
